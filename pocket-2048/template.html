@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Pocket 2048</title>
+    <style>
+      :root {
+        --paper: #f5efe6;
+        --paper-deep: #eadcc9;
+        --ink: #2f2722;
+        --ink-soft: rgba(47, 39, 34, 0.62);
+        --panel: rgba(255, 255, 255, 0.54);
+        --panel-strong: rgba(255, 248, 239, 0.94);
+        --outline: rgba(112, 87, 60, 0.12);
+        --board-base: linear-gradient(180deg, rgba(149, 123, 93, 0.24) 0%, rgba(123, 101, 79, 0.28) 100%);
+        --tile-empty: rgba(130, 107, 87, 0.1);
+        --tile-2: linear-gradient(180deg, #f1e1c9 0%, #e3ceb1 100%);
+        --tile-4: linear-gradient(180deg, #ffdcb6 0%, #efc291 100%);
+        --tile-8: linear-gradient(180deg, #ffca93 0%, #f59d53 100%);
+        --tile-16: linear-gradient(180deg, #ffbb86 0%, #ef8345 100%);
+        --tile-32: linear-gradient(180deg, #ff9f89 0%, #ea6f54 100%);
+        --tile-64: linear-gradient(180deg, #ff8799 0%, #e85576 100%);
+        --tile-128: linear-gradient(180deg, #dd9cff 0%, #bd74ff 100%);
+        --tile-256: linear-gradient(180deg, #9fbfff 0%, #6f93f7 100%);
+        --tile-512: linear-gradient(180deg, #8fdbff 0%, #43b8e5 100%);
+        --tile-1024: linear-gradient(180deg, #a9efc6 0%, #57c985 100%);
+        --tile-2048: linear-gradient(180deg, #ffef9d 0%, #ffc340 100%);
+        --shadow-soft: 0 20px 56px rgba(77, 51, 24, 0.12);
+        --shadow-panel: 0 22px 54px rgba(62, 40, 20, 0.18);
+        --radius-xl: 32px;
+        --radius-lg: 24px;
+        --radius-md: 18px;
+        --gap: 12px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        font-family:
+          "SF Pro Display",
+          "Helvetica Neue",
+          Helvetica,
+          Arial,
+          sans-serif;
+        background:
+          radial-gradient(circle at 18% 16%, rgba(255, 255, 255, 0.76) 0%, rgba(255, 255, 255, 0) 24%),
+          radial-gradient(circle at 82% 10%, rgba(255, 207, 156, 0.44) 0%, rgba(255, 207, 156, 0) 28%),
+          radial-gradient(circle at 50% 100%, rgba(241, 180, 156, 0.32) 0%, rgba(241, 180, 156, 0) 36%),
+          linear-gradient(180deg, #faf5ee 0%, var(--paper) 42%, var(--paper-deep) 100%);
+        color: var(--ink);
+        overflow: hidden;
+      }
+
+      body::before,
+      body::after {
+        content: "";
+        position: fixed;
+        border-radius: 999px;
+        pointer-events: none;
+        filter: blur(12px);
+      }
+
+      body::before {
+        width: 42vmin;
+        height: 42vmin;
+        left: -10vmin;
+        top: 52vh;
+        background: rgba(255, 218, 168, 0.22);
+      }
+
+      body::after {
+        width: 30vmin;
+        height: 30vmin;
+        right: -8vmin;
+        top: 12vh;
+        background: rgba(198, 202, 255, 0.18);
+      }
+
+      button {
+        font: inherit;
+      }
+
+      .app-shell {
+        position: relative;
+        min-height: 100vh;
+        padding:
+          max(22px, env(safe-area-inset-top))
+          20px
+          max(22px, env(safe-area-inset-bottom))
+          20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .topbar {
+        width: min(100%, 480px);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+      }
+
+      .score-pill {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 10px;
+        padding: 16px 18px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.58);
+        background: rgba(255, 255, 255, 0.48);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+      }
+
+      .score-label {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+      }
+
+      .score-value {
+        font-size: clamp(28px, 8vw, 36px);
+        font-weight: 780;
+        letter-spacing: -0.05em;
+      }
+
+      .restart-button {
+        width: 54px;
+        height: 54px;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.48);
+        color: var(--ink);
+        font-size: 22px;
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.8),
+          0 16px 30px rgba(71, 50, 25, 0.08);
+      }
+
+      .playfield {
+        width: min(100%, 560px);
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 18px;
+      }
+
+      .board {
+        position: relative;
+        width: min(100%, 560px);
+        aspect-ratio: 1;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: var(--gap);
+        padding: var(--gap);
+        border-radius: var(--radius-xl);
+        background: var(--board-base);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.7),
+          var(--shadow-soft);
+        touch-action: none;
+      }
+
+      .cell {
+        border-radius: var(--radius-md);
+        background: var(--tile-empty);
+      }
+
+      .tile-layer {
+        position: absolute;
+        inset: var(--gap);
+      }
+
+      .tile {
+        position: absolute;
+        display: grid;
+        place-items: center;
+        border-radius: var(--radius-md);
+        font-size: clamp(22px, 7vw, 38px);
+        font-weight: 800;
+        letter-spacing: -0.05em;
+        color: #fffbf4;
+        text-shadow: 0 1px 6px rgba(78, 42, 10, 0.14);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.58),
+          0 12px 24px rgba(76, 52, 24, 0.12);
+        transition:
+          transform 150ms cubic-bezier(0.2, 0.9, 0.18, 1),
+          background 120ms ease,
+          color 120ms ease,
+          box-shadow 120ms ease;
+        will-change: transform;
+      }
+
+      .tile::after {
+        content: "";
+        position: absolute;
+        inset: 2px;
+        border-radius: inherit;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.24) 0%, rgba(255, 255, 255, 0) 48%);
+      }
+
+      .tile--low {
+        color: #5b4330;
+        text-shadow: none;
+      }
+
+      .tile--low::after {
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0) 44%);
+      }
+
+      .tile--new {
+        animation: tile-pop 150ms cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      .tile--merged {
+        animation: tile-merge 180ms cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      .tile[data-value="2"] {
+        background: var(--tile-2);
+      }
+
+      .tile[data-value="4"] {
+        background: var(--tile-4);
+      }
+
+      .tile[data-value="8"] {
+        background: var(--tile-8);
+      }
+
+      .tile[data-value="16"] {
+        background: var(--tile-16);
+      }
+
+      .tile[data-value="32"] {
+        background: var(--tile-32);
+      }
+
+      .tile[data-value="64"] {
+        background: var(--tile-64);
+      }
+
+      .tile[data-value="128"] {
+        background: var(--tile-128);
+      }
+
+      .tile[data-value="256"] {
+        background: var(--tile-256);
+      }
+
+      .tile[data-value="512"] {
+        background: var(--tile-512);
+      }
+
+      .tile[data-value="1024"] {
+        background: var(--tile-1024);
+      }
+
+      .tile[data-value="2048"] {
+        background: var(--tile-2048);
+      }
+
+      .hint {
+        margin: 0;
+        font-size: 13px;
+        line-height: 1.4;
+        color: var(--ink-soft);
+        text-align: center;
+      }
+
+      .overlay {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        align-items: end;
+        justify-items: center;
+        padding: 20px;
+        background: linear-gradient(180deg, rgba(44, 33, 23, 0.08) 0%, rgba(44, 33, 23, 0.2) 100%);
+      }
+
+      .overlay[hidden] {
+        display: none;
+      }
+
+      .overlay-card {
+        width: min(100%, 420px);
+        padding: 24px;
+        border-radius: 28px;
+        background: var(--panel-strong);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.9),
+          var(--shadow-panel);
+      }
+
+      .overlay-kicker {
+        margin: 0 0 8px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+      }
+
+      .overlay-title {
+        margin: 0;
+        font-size: 30px;
+        line-height: 0.94;
+        letter-spacing: -0.05em;
+      }
+
+      .overlay-copy {
+        margin: 12px 0 18px;
+        font-size: 14px;
+        line-height: 1.45;
+        color: var(--ink-soft);
+      }
+
+      .overlay-stats {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+
+      .stat {
+        padding: 12px 14px;
+        border-radius: 18px;
+        background: rgba(239, 229, 218, 0.78);
+      }
+
+      .stat-label {
+        display: block;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+      }
+
+      .stat-value {
+        display: block;
+        margin-top: 6px;
+        font-size: 24px;
+        font-weight: 780;
+        letter-spacing: -0.04em;
+      }
+
+      .actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .overlay-button {
+        border: 0;
+        border-radius: 18px;
+        padding: 14px 16px;
+        font-size: 15px;
+        font-weight: 700;
+      }
+
+      .overlay-button--primary {
+        background: linear-gradient(180deg, #3a332d 0%, #2d2621 100%);
+        color: #fff8f0;
+      }
+
+      .overlay-button--secondary {
+        background: rgba(240, 229, 216, 0.92);
+        color: var(--ink);
+      }
+
+      @keyframes tile-pop {
+        from {
+          transform: scale(0.82);
+        }
+
+        to {
+          transform: scale(1);
+        }
+      }
+
+      @keyframes tile-merge {
+        0% {
+          transform: scale(1);
+        }
+
+        45% {
+          transform: scale(1.08);
+        }
+
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      @media (min-width: 900px) {
+        .app-shell {
+          padding: 28px 32px 32px;
+        }
+
+        .topbar {
+          width: min(100%, 760px);
+        }
+
+        .playfield {
+          width: min(100%, 760px);
+        }
+
+        .hint {
+          text-align: left;
+          width: min(100%, 560px);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar" aria-label="Pocket 2048 HUD">
+        <div class="score-pill" aria-live="polite">
+          <span class="score-label">Score</span>
+          <span class="score-value" id="scoreValue">0</span>
+        </div>
+        <button class="restart-button" id="restartButton" type="button" aria-label="Start a new run">↺</button>
+      </header>
+
+      <section class="playfield" aria-label="Pocket 2048 board area">
+        <div class="board" id="board" role="application" aria-label="Pocket 2048 board">
+          <div class="cell"></div>
+          <div class="cell"></div>
+          <div class="cell"></div>
+          <div class="cell"></div>
+          <div class="cell"></div>
+          <div class="cell"></div>
+          <div class="cell"></div>
+          <div class="cell"></div>
+          <div class="cell"></div>
+          <div class="cell"></div>
+          <div class="cell"></div>
+          <div class="cell"></div>
+          <div class="cell"></div>
+          <div class="cell"></div>
+          <div class="cell"></div>
+          <div class="cell"></div>
+          <div class="tile-layer" id="tileLayer"></div>
+        </div>
+
+        <p class="hint" id="hint">Swipe anywhere on the board to move every tile at once.</p>
+      </section>
+    </main>
+
+    <div class="overlay" id="overlay" hidden>
+      <section class="overlay-card" aria-live="polite">
+        <p class="overlay-kicker" id="overlayKicker">Run over</p>
+        <h2 class="overlay-title" id="overlayTitle">Ready for another board?</h2>
+        <p class="overlay-copy" id="overlayCopy">
+          No more moves remain. Reset instantly and chase a cleaner line to 2048.
+        </p>
+        <div class="overlay-stats">
+          <div class="stat">
+            <span class="stat-label">Score</span>
+            <span class="stat-value" id="overlayScore">0</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Best</span>
+            <span class="stat-value" id="overlayBest">0</span>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="overlay-button overlay-button--secondary" id="overlaySecondary" type="button">
+            New run
+          </button>
+          <button class="overlay-button overlay-button--primary" id="overlayPrimary" type="button">Continue</button>
+        </div>
+      </section>
+    </div>
+    <script src="https://assets.playdrop.ai/sdk/playdrop.js"></script>
+    <!-- APP_SCRIPT -->
+  </body>
+</html>
