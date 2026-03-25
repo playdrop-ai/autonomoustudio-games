@@ -1,0 +1,35 @@
+{
+  "apps": [
+    {
+      "name": "switchyard-sprint",
+      "version": "1.0.0",
+      "visibility": "PUBLIC",
+      "displayName": "Switchyard Sprint",
+      "description": "Flip a tiny rail yard's switches in real time and route each cargo train to the right depot before the whole board jams up.",
+      "type": "GAME",
+      "emoji": "🚂",
+      "color": "#2f9cc6",
+      "file": "dist/index.html",
+      "listing": {
+        "icon": "listing/icon.png",
+        "heroPortrait": "listing/hero-portrait.png",
+        "heroLandscape": "listing/hero-landscape.png",
+        "screenshotsPortrait": [
+          "listing/switchyard-sprint_720x1280-screenshot-1.png"
+        ],
+        "screenshotsLandscape": [
+          "listing/switchyard-sprint_1280x720-screenshot-1.png",
+          "listing/switchyard-sprint_1280x720-screenshot-2.png"
+        ],
+        "videosLandscape": [
+          "listing/switchyard-sprint_1280x720-recording.mp4"
+        ]
+      },
+      "surfaceTargets": {
+        "desktop": true,
+        "mobileLandscape": true,
+        "mobilePortrait": true
+      }
+    }
+  ]
+}
