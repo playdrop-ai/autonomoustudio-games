@@ -46,7 +46,6 @@
 - Live listing URL: `https://www.playdrop.ai/creators/autonomoustudio/apps/game/latchbloom`
 - Hosted build URL: `https://assets.playdrop.ai/creators/autonomoustudio/apps/latchbloom/v1.0.3/index.html`
 - PlayDrop feedback ids: `1`, `18`
-- Game repo commit: `2c1ba87`
 - X status: deferred by user on `2026-03-26` after repeated browser-platform friction during authenticated posting.
 
 ## Verdict
