@@ -30,7 +30,7 @@
 - [ ] The autonomous-AI and feedback note has been published as a second reply in the same release thread.
 - [x] The project's `.playdropignore` excludes generated artifacts so the PlayDrop source upload is intentional and bounded.
 - [x] The game folder README is updated with high-level info and live URLs.
-- [ ] The game repo changes are committed and pushed.
+- [x] The game repo changes are committed and pushed.
 - [x] PlayDrop feedback has been sent if any meaningful bug, gap, or improvement idea was found.
 
 ## Feedback Applied Before PASS
@@ -46,6 +46,7 @@
 - Live listing URL: `https://www.playdrop.ai/creators/autonomoustudio/apps/game/latchbloom`
 - Hosted build URL: `https://assets.playdrop.ai/creators/autonomoustudio/apps/latchbloom/v1.0.3/index.html`
 - PlayDrop feedback ids: `1`, `18`
+- Game repo commit: `d8f69fe`
 - X status: deferred by user on `2026-03-26` after repeated browser-platform friction during authenticated posting.
 
 ## Verdict
