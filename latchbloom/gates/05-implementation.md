@@ -6,7 +6,7 @@
 
 ## Output
 
-- Updated `Latchbloom` to the `1.0.2` ruleset with runtime backdrop loading, a preload fallback path, ghosted next-preview timing ring, compact portrait HUD placement, stable game-over spacing, and a clean PlayDrop source-upload path via `.playdropignore`.
+- Corrected `Latchbloom` to the `1.0.3` release candidate with real prod AI-generated hero/backdrop family assets wired into the live build, tuned board-to-backdrop alignment on both supported surfaces, and a cleaned PlayDrop source-upload path that keeps generated artifacts out without excluding shipped listing media.
 
 ## Inputs Reviewed
 
@@ -17,6 +17,11 @@
 - `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/src/game/backdrops.ts`
 - `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/assets/backdrops/latchbloom-board-landscape.jpg`
 - `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/assets/backdrops/latchbloom-board-portrait.jpg`
+- `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/ai-art/hero-landscape-20260326-retry-a.jpg`
+- `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/ai-art/hero-portrait-20260326-retry-a.jpg`
+- `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/ai-art/icon-20260326-retry-a.jpg`
+- `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/ai-art/backdrop-landscape-20260326-b.jpg`
+- `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/ai-art/backdrop-portrait-20260326-c.jpg`
 - `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/.playdropignore`
 - `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/src/game/logic.ts`
 - `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/src/game/render.ts`
@@ -38,19 +43,21 @@
 
 ## Feedback Applied Before PASS
 
-- The original implementation shipped the wrong fail-pressure model and hid the next spawn away from the board. That `1.0.1` fix remains, and `1.0.2` extends it with the requested ghosted blossom preview and circular charge ring so the spawn timing is readable without extra label text.
-- The `1.0.1` portrait HUD still overlapped the top of the frame and the live game still felt cheaper than the hero art. I added the runtime backdrop pipeline, aligned the board to painted portrait and landscape greenhouse backdrops, moved the portrait HUD into a safe top rail, and recaptured both supported surfaces.
-- The game-over layout was rebuilt into fixed stat rows, and the PlayDrop publish path was hardened with `.playdropignore` after the source archive was found to be pulling in generated `output/` artifacts.
+- The `1.0.2` release candidate still used documented fallback composites because PlayDrop AI image generation was unstable. After the CLI update restored prod generation, I replaced those fallback heroes, icon, and backdrop plates with real AI-generated assets and retuned the normalized board rects so the procedural pipes, latches, blossoms, and vases sit cleanly inside the painted frame.
+- The gameplay-side `1.0.2` UX fixes remain intact in `1.0.3`: ghosted lane-aware next blossom, circular charge ring, compact portrait HUD rail, and stable game-over spacing. The implementation pass only reopened once the corrected art family was actually integrated into the running build and recaptured on both supported surfaces.
+- `.playdropignore` now excludes generated artifacts without excluding the shipped `listing/` assets, so the publish input stays bounded while still carrying the new hero, icon, screenshots, and gameplay video.
 
 ## Evidence
 
 - Logic tests: `npm test`
 - Build validation: `npm run validate`
 - PlayDrop validation: `playdrop project validate .`
-- Implementation proof: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/mockups/portrait-gameplay.png`
-- Desktop implementation proof: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/mockups/desktop-gameplay.png`
-- Live desktop gameplay proof: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/live-build-1.0.2-desktop-gameplay-v2.png`
-- Live portrait gameplay proof: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/live-build-1.0.2-portrait-gameplay.png`
+- Desktop start proof: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/local-desktop-1.0.3-start.png`
+- Desktop gameplay proof: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/local-desktop-1.0.3-gameplay.png`
+- Desktop game-over proof: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/local-desktop-1.0.3-gameover.png`
+- Portrait start proof: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/local-portrait-1.0.3-start.png`
+- Portrait gameplay proof: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/local-portrait-1.0.3-gameplay.png`
+- Portrait game-over proof: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/local-portrait-1.0.3-gameover.png`
 
 ## Verdict
 

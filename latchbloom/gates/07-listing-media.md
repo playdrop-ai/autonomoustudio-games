@@ -6,7 +6,7 @@
 
 ## Output
 
-- Refreshed the `1.0.2` listing family with matched portrait and landscape heroes, a full-bleed square icon, gameplay backdrops derived from the same greenhouse art family, updated copy for the ghosted charge-ring preview, and new real-build screenshots plus a landscape gameplay MP4.
+- Refreshed the `1.0.3` listing family with real prod AI-generated matched heroes, a real prod AI-generated full-bleed square icon, dedicated gameplay backdrop plates generated from that same family, updated real-build screenshots, and a refreshed landscape gameplay MP4 from the corrected build.
 
 ## Inputs Reviewed
 
@@ -21,18 +21,14 @@
 - `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/listing/latchbloom_720x1280-screenshot-2.png`
 - `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/listing/latchbloom_1280x720-screenshot-1.png`
 - `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/listing/latchbloom_1280x720-recording.mp4`
-- `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/ai-art/hero-landscape-ai-a.jpg`
+- `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/ai-art/hero-landscape-20260326-retry-a.jpg`
+- `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/ai-art/hero-portrait-20260326-retry-a.jpg`
+- `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/ai-art/icon-20260326-retry-a.jpg`
+- `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/ai-art/backdrop-landscape-20260326-b.jpg`
+- `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/ai-art/backdrop-portrait-20260326-c.jpg`
 - `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/ai-art/hero-portrait-ai-a.jpg`
 - `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/ai-art/icon-ai-a.jpg`
-- `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/ai-art/hero-landscape-1.0.2-fallback.png`
-- `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/ai-art/hero-portrait-1.0.2-fallback-portraitbase.png`
-- `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/ai-art/icon-1.0.2-fallback.png`
-- `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/ai-art/backdrop-landscape-1.0.2-fallback.png`
-- `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/ai-art/backdrop-portrait-1.0.2-fallback.png`
-- `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/tools/listing-art/compositor.html`
-- `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/tools/listing-art/icon-compositor.html`
-- `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/tools/listing-art/backdrop-compositor.html`
-- `playdrop ai jobs browse --json --limit 12`
+- `playdrop ai jobs browse --type image --limit 20 --json`
 
 ## Checklist Results
 
@@ -51,36 +47,37 @@
 
 ## Feedback Applied Before PASS
 
-- The original `1.0.0` listing art skipped the PlayDrop exploration and AI generation path entirely. The `1.0.2` pass kept that exploration requirement and then pushed further on the family match, centered title treatment, and full-bleed icon rule.
-- Fresh `1.0.2` PlayDrop AI generation attempts all failed with temporary `503 high demand` metadata-generation errors, so the shipped heroes, icon, and gameplay backdrops were rebuilt from the approved PlayDrop-generated `1.0.1` base art and documented as a fallback instead of pretending they were brand-new AI outputs.
-- The original media also showed the old thorn-era build. I replaced every screenshot and the gameplay video with deterministic captures from the `1.0.2` build featuring the painted greenhouse backdrop, strike HUD, and ghosted charge-ring preview.
+- The original `1.0.0` listing art skipped the PlayDrop exploration and AI generation path entirely, and the shipped `1.0.2` patch still relied on documented fallback composites because the prod AI image path was unstable. The corrective `1.0.3` pass only closed once fresh prod generation succeeded and the fallback assets were fully replaced.
+- I generated the landscape hero first, approved it as the family anchor, then used that image plus the portrait gameplay surface as the reference chain for the portrait hero. The icon was then regenerated from the same family so the title treatment, greenhouse lighting, brass cabinet language, and floral palette all stay coherent.
+- The gameplay backdrop plates were generated as separate “environment only” assets from that same family, then the live board overlays were aligned on top. The original media also showed the old fallback art path, so I replaced every screenshot and the gameplay video with captures from the corrected `1.0.3` build featuring the approved AI backdrop family.
 - The final listing copy now explains the exact match rule, the bouquet clear behavior, the global 3-strike fail condition, and the meaning of the next preview ring.
 
 ## Prompt Log And Reference Chain
 
-- Failed PlayDrop AI job `latchbloom-hero-landscape-1-0-2-a` (`16:9`, `2026-03-26T15:07:28Z`)
-  - Prompt: `Premium fantasy greenhouse puzzle game key art. Keep the same lush teal glasshouse, brass mechanics, glowing rose iris sun mint palette, dreamy moonlit atmosphere, and centered cabinet silhouette as the reference. Recompose it as a landscape hero image with a strong centered composition and a clean central band for the title treatment. Rich flowers and glass details around the cabinet, but no UI, no screenshots, no readable text, no logos, no watermarks.`
-- Failed PlayDrop AI job `latchbloom-icon-1-0-2-a` (`1:1`, `2026-03-26T15:07:28Z`)
-  - Prompt: `Premium full-bleed square game icon in the same teal brass floral glasshouse style as the reference. Center an ornate brass latch-flower emblem that fills the square, with edge-to-edge background detail and glow. No white matte, no empty border, no circular badge on a flat field, no text, no watermarks.`
-- Failed PlayDrop AI job `latchbloom-hero-landscape-1-0-2-b` (`16:9`, `2026-03-26T15:21:39Z`)
-  - Prompt: `Cinematic premium key art for a greenhouse routing arcade game. Ornate glasshouse interior at twilight with teal glass, brass framing, luminous blossom orbs, and subtle golden latch motifs. Strong centered composition with a clean middle band reserved for the game title overlay. Cohesive painterly finish, high contrast focal lighting, no text, no watermark.`
-- Visual reference pool used for the failed jobs and the fallback family review:
-  - `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/ai-art/hero-landscape-ai-a.jpg`
-  - `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/ai-art/hero-portrait-ai-a.jpg`
-  - `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/ai-art/icon-ai-a.jpg`
-- Final shipped fallback outputs:
-  - `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/ai-art/hero-landscape-1.0.2-fallback.png`
-  - `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/ai-art/hero-portrait-1.0.2-fallback-portraitbase.png`
-  - `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/ai-art/icon-1.0.2-fallback.png`
-  - `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/ai-art/backdrop-landscape-1.0.2-fallback.png`
-  - `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/ai-art/backdrop-portrait-1.0.2-fallback.png`
+- Approved family anchor
+  - Selected landscape hero ref: `asset:autonomoustudio/latchbloom-hero-landscape-20260326-retry-a@r1`
+  - Prompt: `Premium key art for Latchbloom, an ornate greenhouse routing arcade game. Use the attached gameplay reference for the brass routing cabinet silhouette, teal glasshouse framing, blossom palette, and dreamy moonlit atmosphere. Compose a polished 16:9 landscape hero with a strong centered composition and a centered lower title treatment reading "Latchbloom". No UI, no screenshot framing, no watermark.`
+- Portrait sibling generation
+  - Selected portrait hero ref: `asset:autonomoustudio/latchbloom-hero-portrait-20260326-retry-a@r1`
+  - Alternate portrait candidate reviewed: `asset:autonomoustudio/latchbloom-hero-portrait-20260326-retry-b@r1`
+  - Prompt: `Reframe the approved Latchbloom landscape hero into a 9:16 portrait hero while preserving the same greenhouse, brass cabinet, floral palette, lighting, and centered title treatment. Keep the product looking like the same art family, only re-composed for portrait. No UI, no watermark.`
+- Icon generation
+  - Selected icon ref: `asset:autonomoustudio/latchbloom-icon-20260326-retry-a@r1`
+  - Alternate icon candidate reviewed: `asset:autonomoustudio/latchbloom-icon-20260326-retry-b@r1`
+  - Prompt: `Create a premium full-bleed square icon for Latchbloom using the approved hero as style reference. Center a readable ornate brass latch-flower emblem that fills the square, with rich teal glasshouse background detail to the edges. No white matte, no empty border, no floating circular badge, no text, no watermark.`
+- Gameplay backdrop generation
+  - Selected landscape backdrop ref: `asset:autonomoustudio/latchbloom-backdrop-landscape-20260326-b@r1`
+  - Selected portrait backdrop ref: `asset:autonomoustudio/latchbloom-backdrop-portrait-20260326-c@r1`
+  - Rejected portrait backdrop candidate: `asset:autonomoustudio/latchbloom-backdrop-portrait-20260326-a@r1` because it introduced too much fake gameplay structure inside the play area
+  - Landscape prompt: `Using the approved Latchbloom hero as style reference, create a 16:9 gameplay backdrop that contains only the greenhouse frame, glass, cabinet border, and interior lighting needed for the live board overlay. No title, no UI, no pipes, no latches, no blossoms, no vases, no gameplay tokens, no watermark.`
+  - Portrait prompt: `Using the approved Latchbloom hero as style reference, create a 9:16 gameplay backdrop that contains only the greenhouse frame, glass, cabinet border, and interior lighting needed for the live board overlay. Keep the center play window clean and uninterrupted. No title, no UI, no pipes, no latches, no blossoms, no vases, no gameplay tokens, no watermark.`
 
 ## Family Review
 
-- The shipped landscape and portrait heroes share the same teal-glass greenhouse, brass routing cabinet, floral palette, and centered `Latchbloom` title treatment.
-- The shipped icon is a true full-bleed square with background detail to the edges. It no longer reads like a badge floating on a white matte.
-- The gameplay backdrop family now reuses that same greenhouse language, so the live game no longer materially undersells the listing art.
-- The fallback compositor route beat the stale `1.0.1` assets because it enforced the centered-title, full-bleed, and same-family constraints immediately while the fresh PlayDrop AI jobs were failing upstream.
+- The shipped landscape and portrait heroes now clearly belong to the same family: same greenhouse shell, same brass routing cabinet, same blossom palette, and a centered `Latchbloom` title treatment in both aspect ratios.
+- The shipped icon is a true full-bleed square with background detail to the edges. It no longer reads like a badge floating inside a white matte or empty border field.
+- The gameplay backdrop family now reuses that same greenhouse language with environment-only art, so the live game no longer materially undersells the listing art.
+- Compared against the earlier fallback assets, the final `1.0.3` family wins on consistency, title placement, and credibility. It now looks like one intentional product rather than a mixed chain of recovered assets.
 
 ## Evidence
 
@@ -91,7 +88,8 @@
 - Landscape screenshot confirmed: `1280x720`
 - Gameplay video confirmed: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/listing/latchbloom_1280x720-recording.mp4` (`1280x720`, `15.0s`, `20fps`)
 - Validation passed after wiring final media: `npm run validate`, `playdrop project validate .`
-- Live listing proof: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/live-listing-1.0.2-desktop.png`
+- Local landscape screenshot proof: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/listing/latchbloom_1280x720-screenshot-1.png`
+- Local portrait screenshot proof: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/listing/latchbloom_720x1280-screenshot-1.png`
 
 ## Verdict
 

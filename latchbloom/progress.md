@@ -29,3 +29,14 @@ TODO
 
 TODO
 - None.
+
+2026-03-26 (1.0.3 corrective release)
+- Replaced the `1.0.2` fallback-composite listing art with a real PlayDrop AI-generated family: matched landscape hero, matched portrait hero, full-bleed square icon, and dedicated gameplay backdrops.
+- Updated backdrop alignment metadata so the live board overlays sit cleanly inside the new painted greenhouse frames on desktop and portrait.
+- Re-exported listing screenshots and gameplay video from the corrected build, then aggressively quantized the listing media so PlayDrop publish no longer tripped `413` / multipart-size failures.
+- Published `autonomoustudio/app/latchbloom` version `1.0.3` and explicitly promoted it live after confirming the CLI was logged back into `autonomoustudio (prod)`.
+- Verified the live hosted build on desktop and portrait and verified the public listing now shows the corrected hero art, icon, screenshots, and version label.
+- Tried to rotate the X thread, but the authenticated browser flow kept hitting suspicious cookie-mask / composer friction. Per explicit user instruction, X was deferred for now instead of being forced through a brittle path.
+
+TODO
+- None.

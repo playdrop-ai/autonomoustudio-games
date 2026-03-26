@@ -25,19 +25,19 @@ const BACKDROP_SPECS: Record<RuntimeBackdropVariant, RuntimeBackdropSpec> = {
   landscape: {
     src: "assets/backdrops/latchbloom-board-landscape.jpg",
     boardRect: {
-      x: 0.276,
-      y: 0.08,
-      width: 0.448,
-      height: 0.84,
+      x: 0.287,
+      y: 0.07,
+      width: 0.427,
+      height: 0.8,
     },
   },
   portrait: {
     src: "assets/backdrops/latchbloom-board-portrait.jpg",
     boardRect: {
-      x: 0.085,
-      y: 0.135,
-      width: 0.83,
-      height: 0.78,
+      x: 0.09,
+      y: 0.14,
+      width: 0.82,
+      height: 0.64,
     },
   },
 };
