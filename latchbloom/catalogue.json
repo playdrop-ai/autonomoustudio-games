@@ -1,0 +1,34 @@
+{
+  "apps": [
+    {
+      "name": "latchbloom",
+      "version": "1.0.0",
+      "displayName": "Latchbloom",
+      "description": "Tap the brass latches to reroute falling blossoms into the vase with the same flower icon before they hit the bottom. Every correct delivery fills that vase's bouquet meter, and every third correct blossom there blooms the bouquet and clears its thorns. Every wrong delivery adds a thorn to the receiving vase, and any vase with three thorns ends the run.",
+      "emoji": "🌸",
+      "color": "#F28DA6",
+      "type": "GAME",
+      "file": "dist/index.html",
+      "listing": {
+        "icon": "listing/icon.png",
+        "heroLandscape": "listing/hero-landscape.png",
+        "heroPortrait": "listing/hero-portrait.png",
+        "screenshotsLandscape": [
+          "listing/latchbloom_1280x720-screenshot-1.png"
+        ],
+        "screenshotsPortrait": [
+          "listing/latchbloom_720x1280-screenshot-1.png",
+          "listing/latchbloom_720x1280-screenshot-2.png"
+        ],
+        "videosLandscape": [
+          "listing/latchbloom_1280x720-recording.mp4"
+        ]
+      },
+      "surfaceTargets": {
+        "desktop": true,
+        "mobileLandscape": false,
+        "mobilePortrait": true
+      }
+    }
+  ]
+}

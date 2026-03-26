@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23ff6f98'/%3E%3Cpath d='M32 10L40 24L54 32L40 40L32 54L24 40L10 32L24 24Z' fill='%23fff8f4'/%3E%3C/svg%3E" />
+    <title>Latchbloom Listing Art</title>
+    <style>
+      :root {
+        --night-0: #09131d;
+        --night-1: #0f1f2f;
+        --night-2: #1a1632;
+        --glass-a: #163a4c;
+        --glass-b: #0f2433;
+        --frame-a: #3a667f;
+        --frame-b: #153043;
+        --mint: #9ee3cf;
+        --paper: #f7fff8;
+        --ink-soft: rgba(247, 255, 248, 0.74);
+        --gold-0: #f7d88d;
+        --gold-1: #d8902e;
+        --rose: #ff6f98;
+        --iris: #8a7bff;
+        --sun: #ffd765;
+        --mint-bloom: #56d8ac;
+      }
+
+      * { box-sizing: border-box; }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        font-family: "Avenir Next", "Trebuchet MS", sans-serif;
+        color: var(--paper);
+        background:
+          radial-gradient(circle at 16% 16%, rgba(28, 70, 84, 0.42), rgba(28, 70, 84, 0) 28%),
+          radial-gradient(circle at 84% 18%, rgba(77, 40, 112, 0.32), rgba(77, 40, 112, 0) 26%),
+          radial-gradient(circle at 72% 84%, rgba(35, 110, 117, 0.2), rgba(35, 110, 117, 0) 30%),
+          linear-gradient(180deg, var(--night-0) 0%, var(--night-1) 50%, var(--night-2) 100%);
+      }
+
+      body::before,
+      body::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+
+      body::before {
+        background:
+          linear-gradient(90deg, rgba(243, 255, 249, 0.05) 0 1%, transparent 1% 100%) 9% 0 / 12% 100% repeat-x;
+        opacity: 0.3;
+      }
+
+      body::after {
+        background:
+          radial-gradient(circle at 12% 74%, rgba(255, 214, 101, 0.16), transparent 20%),
+          radial-gradient(circle at 88% 20%, rgba(255, 111, 152, 0.18), transparent 20%);
+      }
+
+      body[data-variant="icon"] .portrait-frame,
+      body[data-variant="icon"] .landscape-frame,
+      body[data-variant="portrait"] .icon-frame,
+      body[data-variant="portrait"] .landscape-frame,
+      body[data-variant="landscape"] .icon-frame,
+      body[data-variant="landscape"] .portrait-frame {
+        display: none;
+      }
+
+      .frame {
+        position: relative;
+        width: 100%;
+        height: 100%;
+      }
+
+      .spark {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: rgba(255, 245, 210, 0.8);
+        box-shadow: 0 0 28px rgba(255, 245, 210, 0.24);
+      }
+
+      .board {
+        position: absolute;
+        overflow: hidden;
+        border-radius: 40px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 24%),
+          linear-gradient(180deg, var(--glass-a) 0%, var(--glass-b) 100%);
+        box-shadow:
+          inset 0 0 0 6px rgba(58, 102, 127, 0.92),
+          0 36px 72px rgba(5, 8, 16, 0.42);
+      }
+
+      .board::before {
+        content: "";
+        position: absolute;
+        inset: 18px;
+        border-radius: 28px;
+        border: 2px solid rgba(237, 255, 247, 0.14);
+      }
+
+      .lane {
+        position: absolute;
+        width: 12%;
+        border-radius: 999px;
+        background: rgba(220, 255, 244, 0.11);
+        box-shadow: inset 0 0 0 2px rgba(109, 225, 207, 0.18);
+      }
+
+      .path {
+        position: absolute;
+        height: 18px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, rgba(238, 253, 247, 0.18), rgba(109, 225, 207, 0.56), rgba(238, 253, 247, 0.18));
+        transform-origin: left center;
+        filter: blur(0.5px);
+      }
+
+      .latch {
+        position: absolute;
+        width: 82px;
+        height: 82px;
+        border-radius: 999px;
+        background: linear-gradient(180deg, var(--gold-0), var(--gold-1));
+        box-shadow:
+          0 12px 20px rgba(56, 30, 9, 0.38),
+          inset 0 0 0 8px rgba(86, 50, 18, 0.58);
+      }
+
+      .latch::before,
+      .latch::after {
+        content: "";
+        position: absolute;
+        left: 24%;
+        top: 43%;
+        width: 52%;
+        height: 10%;
+        border-radius: 999px;
+        background: rgba(255, 248, 223, 0.92);
+      }
+
+      .latch.cross::before { transform: rotate(34deg); }
+      .latch.cross::after { transform: rotate(-34deg); background: rgba(243, 203, 111, 0.92); }
+      .latch.straight::before { transform: rotate(0deg); }
+      .latch.straight::after { transform: rotate(90deg); background: rgba(243, 203, 111, 0.92); }
+
+      .flower {
+        position: absolute;
+        width: 78px;
+        height: 78px;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        box-shadow: 0 0 30px rgba(255, 255, 255, 0.12);
+      }
+
+      .flower::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background: radial-gradient(circle, rgba(255,255,255,0.3), rgba(255,255,255,0));
+      }
+
+      .flower span {
+        position: relative;
+        font-size: 34px;
+        line-height: 1;
+      }
+
+      .flower.rose { background: var(--rose); }
+      .flower.iris { background: var(--iris); }
+      .flower.sun { background: var(--sun); color: #45300a; }
+      .flower.mint { background: var(--mint-bloom); }
+
+      .vase {
+        position: absolute;
+        width: 15%;
+        height: 18%;
+        bottom: 4%;
+        border-radius: 0 0 32px 32px;
+        background: linear-gradient(180deg, rgba(35, 75, 103, 0.92), rgba(19, 42, 62, 0.94));
+        box-shadow: inset 0 0 0 2px rgba(255,255,255,0.05);
+      }
+
+      .vase::before {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: -28px;
+        width: 48px;
+        height: 48px;
+        transform: translateX(-50%);
+        border-radius: 999px;
+        background: var(--flower-color, var(--rose));
+        box-shadow: 0 0 24px rgba(255,255,255,0.18);
+      }
+
+      .vase::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: -16px;
+        width: 20px;
+        height: 20px;
+        transform: translateX(-50%);
+        border-radius: 999px;
+        background: rgba(247,255,248,0.9);
+      }
+
+      .title {
+        position: absolute;
+        margin: 0;
+        font-size: clamp(72px, 10vw, 132px);
+        line-height: 0.92;
+        letter-spacing: -0.06em;
+        font-weight: 800;
+      }
+
+      .tagline {
+        position: absolute;
+        margin: 0;
+        max-width: 24ch;
+        font-size: clamp(24px, 2vw, 34px);
+        line-height: 1.12;
+        color: var(--ink-soft);
+      }
+
+      .icon-frame .board {
+        inset: 10%;
+      }
+
+      .icon-frame .latch {
+        width: 26%;
+        height: 26%;
+        left: 37%;
+        top: 35%;
+      }
+
+      .icon-frame .flower {
+        width: 22%;
+        height: 22%;
+      }
+
+      .icon-frame .flower.main {
+        left: 56%;
+        top: 18%;
+      }
+
+      .icon-frame .flower.secondary {
+        left: 18%;
+        top: 58%;
+      }
+
+      .icon-frame .path.a {
+        width: 30%;
+        left: 24%;
+        top: 49%;
+        transform: rotate(32deg);
+      }
+
+      .icon-frame .path.b {
+        width: 30%;
+        left: 50%;
+        top: 45%;
+        transform: rotate(-32deg);
+      }
+
+      .portrait-frame .title {
+        left: 9%;
+        top: 8%;
+      }
+
+      .portrait-frame .board {
+        left: 8%;
+        right: 8%;
+        top: 24%;
+        bottom: 7%;
+      }
+
+      .portrait-frame .tagline {
+        left: 9%;
+        top: 18%;
+      }
+
+      .portrait-frame .flower.hero {
+        width: 16%;
+        height: 8.5%;
+        right: 12%;
+        top: 10%;
+      }
+
+      .landscape-frame .title {
+        left: 8%;
+        top: 18%;
+        max-width: 4.6ch;
+      }
+
+      .landscape-frame .tagline {
+        left: 8%;
+        top: 45%;
+      }
+
+      .landscape-frame .board {
+        left: 44%;
+        right: 8%;
+        top: 12%;
+        bottom: 12%;
+      }
+
+      .landscape-frame .flower.hero {
+        width: 12%;
+        height: 17%;
+        left: 30%;
+        top: 16%;
+      }
+    </style>
+  </head>
+  <body data-variant="portrait">
+    <div class="frame icon-frame">
+      <div class="board"></div>
+      <div class="path a"></div>
+      <div class="path b"></div>
+      <div class="latch cross"></div>
+      <div class="flower rose main"><span>✿</span></div>
+      <div class="flower sun secondary"><span>✦</span></div>
+      <div class="spark" style="left: 22%; top: 18%;"></div>
+      <div class="spark" style="left: 74%; top: 72%;"></div>
+    </div>
+
+    <div class="frame portrait-frame">
+      <h1 class="title">Latchbloom</h1>
+      <p class="tagline">Route every blossom before the greenhouse chokes.</p>
+      <div class="flower hero rose"><span>✿</span></div>
+      <div class="board">
+        <div class="lane" style="left: 11%; top: 7%; height: 72%;"></div>
+        <div class="lane" style="left: 31%; top: 7%; height: 72%;"></div>
+        <div class="lane" style="left: 51%; top: 7%; height: 72%;"></div>
+        <div class="lane" style="left: 71%; top: 7%; height: 72%;"></div>
+
+        <div class="path" style="width: 28%; left: 11%; top: 18%; transform: rotate(34deg);"></div>
+        <div class="path" style="width: 28%; left: 31%; top: 18%; transform: rotate(-34deg);"></div>
+        <div class="path" style="width: 28%; left: 51%; top: 46%; transform: rotate(34deg);"></div>
+        <div class="path" style="width: 28%; left: 71%; top: 46%; transform: rotate(-34deg);"></div>
+
+        <div class="latch cross" style="left: 19%; top: 16%;"></div>
+        <div class="latch straight" style="left: 59%; top: 16%;"></div>
+        <div class="latch cross" style="left: 39%; top: 31%;"></div>
+        <div class="latch straight" style="left: 19%; top: 48%;"></div>
+        <div class="latch cross" style="left: 59%; top: 48%;"></div>
+
+        <div class="flower rose" style="left: 12%; top: 56%;"><span>✿</span></div>
+        <div class="flower iris" style="left: 32%; top: 72%;"><span>✦</span></div>
+        <div class="flower sun" style="left: 54%; top: 38%;"><span>✶</span></div>
+        <div class="flower mint" style="left: 68%; top: 24%;"><span>✤</span></div>
+
+        <div class="vase" style="left: 8%; --flower-color: var(--rose);"></div>
+        <div class="vase" style="left: 29%; --flower-color: var(--iris);"></div>
+        <div class="vase" style="left: 50%; --flower-color: var(--sun);"></div>
+        <div class="vase" style="left: 71%; --flower-color: var(--mint-bloom);"></div>
+      </div>
+      <div class="spark" style="left: 14%; top: 22%;"></div>
+      <div class="spark" style="left: 84%; top: 20%;"></div>
+      <div class="spark" style="left: 76%; top: 84%;"></div>
+    </div>
+
+    <div class="frame landscape-frame">
+      <h1 class="title">Latchbloom</h1>
+      <p class="tagline">Tap the brass latches and turn chaos into bouquets.</p>
+      <div class="flower hero sun"><span>✶</span></div>
+      <div class="board">
+        <div class="lane" style="left: 10%; top: 8%; height: 72%;"></div>
+        <div class="lane" style="left: 30%; top: 8%; height: 72%;"></div>
+        <div class="lane" style="left: 50%; top: 8%; height: 72%;"></div>
+        <div class="lane" style="left: 70%; top: 8%; height: 72%;"></div>
+
+        <div class="path" style="width: 28%; left: 10%; top: 18%; transform: rotate(34deg);"></div>
+        <div class="path" style="width: 28%; left: 30%; top: 18%; transform: rotate(-34deg);"></div>
+        <div class="path" style="width: 28%; left: 50%; top: 42%; transform: rotate(34deg);"></div>
+        <div class="path" style="width: 28%; left: 70%; top: 42%; transform: rotate(-34deg);"></div>
+
+        <div class="latch cross" style="left: 18%; top: 16%;"></div>
+        <div class="latch straight" style="left: 58%; top: 16%;"></div>
+        <div class="latch cross" style="left: 38%; top: 31%;"></div>
+        <div class="latch straight" style="left: 18%; top: 46%;"></div>
+        <div class="latch cross" style="left: 58%; top: 46%;"></div>
+
+        <div class="flower rose" style="left: 18%; top: 6%;"><span>✿</span></div>
+        <div class="flower iris" style="left: 28%; top: 62%;"><span>✦</span></div>
+        <div class="flower sun" style="left: 48%; top: 34%;"><span>✶</span></div>
+        <div class="flower mint" style="left: 68%; top: 54%;"><span>✤</span></div>
+
+        <div class="vase" style="left: 8%; --flower-color: var(--rose);"></div>
+        <div class="vase" style="left: 29%; --flower-color: var(--iris);"></div>
+        <div class="vase" style="left: 50%; --flower-color: var(--sun);"></div>
+        <div class="vase" style="left: 71%; --flower-color: var(--mint-bloom);"></div>
+      </div>
+      <div class="spark" style="left: 18%; top: 22%;"></div>
+      <div class="spark" style="left: 84%; top: 20%;"></div>
+      <div class="spark" style="left: 76%; top: 82%;"></div>
+    </div>
+
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const variant = params.get("variant");
+      if (variant === "icon" || variant === "portrait" || variant === "landscape") {
+        document.body.dataset.variant = variant;
+      }
+    </script>
+  </body>
+</html>
