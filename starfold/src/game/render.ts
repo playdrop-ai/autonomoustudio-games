@@ -15,7 +15,7 @@ import {
   type TurnStage,
 } from "./logic";
 
-type OverlayMode = "start" | "gameover" | null;
+type OverlayMode = "gameover" | null;
 
 export interface Layout {
   width: number;
@@ -109,9 +109,7 @@ export class CanvasRenderer {
 
     this.drawHud(model.score, model.ashCount, model.comboLabel);
 
-    if (model.overlay === "start") {
-      this.drawStartOverlay();
-    } else if (model.overlay === "gameover") {
+    if (model.overlay === "gameover") {
       this.drawGameOverOverlay(model.score, model.bestScore);
     }
   }
@@ -327,23 +325,6 @@ export class CanvasRenderer {
       ctx.fillText(comboLabel.text, layout.boardX + layout.boardWidth / 2, layout.boardY - 34);
       ctx.restore();
     }
-  }
-
-  private drawStartOverlay(): void {
-    const { ctx, layout } = this;
-    ctx.fillStyle = "#f0c875";
-    ctx.font = "700 18px 'Avenir Next', 'Trebuchet MS', sans-serif";
-    ctx.textAlign = "left";
-    ctx.fillText("CONSTELLATION SWIPE", layout.boardX, 84);
-
-    ctx.fillStyle = "#fff6de";
-    ctx.font = "800 60px 'Avenir Next', 'Trebuchet MS', sans-serif";
-    ctx.fillText("Starfold", layout.boardX, 142);
-
-    ctx.fillStyle = "#dddae8";
-    ctx.font = "500 22px 'Avenir Next', 'Trebuchet MS', sans-serif";
-    ctx.fillText("Swipe the shrine. Trigger chains. Keep the ash back.", layout.boardX, 176);
-    ctx.fillText("Tap anywhere to begin.", layout.boardX, 206);
   }
 
   private drawGameOverOverlay(score: number, bestScore: number): void {

@@ -246,8 +246,8 @@ function floodGroup(board: Board, visited: boolean[][], startRow: number, startC
     for (const neighbor of neighbors(current.row, current.col)) {
       if (visited[neighbor.row]![neighbor.col]) continue;
       const tile = board[neighbor.row]![neighbor.col]!;
-      visited[neighbor.row]![neighbor.col] = true;
       if (tile.kind !== kind) continue;
+      visited[neighbor.row]![neighbor.col] = true;
       group.push(neighbor);
       queue.push(neighbor);
     }

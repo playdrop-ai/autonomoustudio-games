@@ -3,7 +3,7 @@
 import { applyMove, boardKinds, createInitialState, type GameState, type Move, type TurnStage } from "./game/logic";
 import { CanvasRenderer, type ComboLabel } from "./game/render";
 
-type Screen = "start" | "playing" | "gameover";
+type Screen = "playing" | "gameover";
 
 declare global {
   interface Window {
@@ -63,9 +63,10 @@ void (async () => {
   document.body.appendChild(canvas);
 
   const renderer = new CanvasRenderer(canvas);
-  let gameState = createInitialState();
+  const forcedSeed = readSeedFromLocation();
+  let gameState = createInitialState(forcedSeed);
   let bestScore = readBestScore();
-  let screen: Screen = "start";
+  let screen: Screen = "playing";
   let activeStage: ActiveStage | null = null;
   let queuedStages: TurnStage[] = [];
   let drag: DragState | null = null;
@@ -73,7 +74,7 @@ void (async () => {
   let lastFrame = performance.now();
 
   function startNewRun(): void {
-    gameState = createInitialState();
+    gameState = createInitialState(forcedSeed);
     screen = "playing";
     activeStage = null;
     queuedStages = [];
@@ -159,7 +160,7 @@ void (async () => {
             progress: Math.min(1, (now - activeStage.startTime) / activeStage.duration),
           }
         : null,
-      overlay: screen === "start" ? "start" : screen === "gameover" ? "gameover" : null,
+      overlay: screen === "gameover" ? "gameover" : null,
       comboLabel,
     });
     requestAnimationFrame(render);
@@ -168,10 +169,6 @@ void (async () => {
   canvas.addEventListener("pointerdown", (event) => {
     canvas.setPointerCapture(event.pointerId);
 
-    if (screen === "start") {
-      startNewRun();
-      return;
-    }
     if (screen === "gameover") {
       startNewRun();
       return;
@@ -256,6 +253,13 @@ function readBestScore(): number {
   if (!raw) return 0;
   const parsed = Number.parseInt(raw, 10);
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function readSeedFromLocation(): number | undefined {
+  const raw = new URL(window.location.href).searchParams.get("seed");
+  if (!raw) return undefined;
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isFinite(parsed) ? parsed >>> 0 : undefined;
 }
 
 function writeBestScore(score: number): void {

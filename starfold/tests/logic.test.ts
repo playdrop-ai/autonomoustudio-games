@@ -8,6 +8,7 @@ import {
   countAsh,
   createBoardFromKinds,
   createInitialState,
+  findGroups,
   type GameState,
 } from "../src/game/logic.ts";
 
@@ -78,4 +79,21 @@ test("spawns ash every fourth move", () => {
     state = applyMove(state, { axis: "row", index: move % 6, direction: 1 }).state;
   }
   assert.ok(state.ashCount >= 1);
+});
+
+test("finds every orthogonally connected group from the screenshot case", () => {
+  const board = createBoardFromKinds([
+    ["leaf", "wave", "moon", "sun", "ember"],
+    ["sun", "moon", "leaf", "leaf", "leaf"],
+    ["ember", "ember", "ember", "ember", "leaf"],
+    ["wave", "sun", "moon", "wave", "wave"],
+    ["sun", "moon", "moon", "moon", "leaf"],
+    ["ash", "leaf", "wave", "wave", "wave"],
+  ]).board;
+
+  const groupSizes = findGroups(board)
+    .map((group) => group.length)
+    .sort((left, right) => left - right);
+
+  assert.deepEqual(groupSizes, [3, 4, 4, 4]);
 });

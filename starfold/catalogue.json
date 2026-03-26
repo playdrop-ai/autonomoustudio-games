@@ -2,9 +2,9 @@
   "apps": [
     {
       "name": "starfold",
-      "version": "1.0.0",
+      "version": "1.0.2",
       "displayName": "Starfold",
-      "description": "Swipe whole rows and columns of glowing sigils to weave cascading constellations before ash consumes the shrine.",
+      "description": "Swipe one whole row or column. After each move, any orthogonally connected group of 3+ matching sigils disappears. Clear beside ash to cleanse it before 10 ash tiles consume the shrine.",
       "emoji": "✨",
       "color": "#F0C875",
       "type": "GAME",
@@ -22,6 +22,9 @@
         ],
         "videosPortrait": [
           "listing/starfold_720x1280-recording.mp4"
+        ],
+        "videosLandscape": [
+          "listing/starfold_1280x720-recording.mp4"
         ]
       },
       "surfaceTargets": {

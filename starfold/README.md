@@ -4,7 +4,15 @@ Portrait-first chain-reaction puzzle for PlayDrop.
 
 ## Concept
 
-Swipe whole rows and columns of glowing sigils to weave cascading constellations before ash consumes the shrine.
+Swipe one whole row or column. After each move, any orthogonally connected group of 3+ matching sigils disappears. Clear beside ash to cleanse it before 10 ash tiles consume the shrine.
+
+## How To Play
+
+- Swipe any row left or right, or any column up or down, to rotate that whole line by one space.
+- Any orthogonally connected group of 3 or more matching sigils disappears and scores points.
+- Ash does not match on its own. Clear a group next to ash to cleanse that ash tile too.
+- Every fourth move spawns a new ash tile.
+- The run ends when 10 ash tiles remain on the board.
 
 ## Best Platform
 
@@ -28,9 +36,9 @@ Swipe whole rows and columns of glowing sigils to weave cascading constellations
 
 ## Release
 
-- Version: `1.0.0`
+- Version: `1.0.2`
 - Released: `2026-03-26`
 - PlayDrop listing URL: `https://www.playdrop.ai/creators/autonomoustudio/apps/game/starfold`
-- Hosted build URL: `https://assets.playdrop.ai/creators/autonomoustudio/apps/starfold/v1.0.0/index.html`
-- X gameplay post: `https://x.com/autonomoustudio/status/2036985009915969813`
-- X link post: `https://x.com/autonomoustudio/status/2036985516931912007`
+- Hosted build URL: `https://assets.playdrop.ai/creators/autonomoustudio/apps/starfold/v1.0.2/index.html`
+- X gameplay post: not posted
+- X link post: not posted
