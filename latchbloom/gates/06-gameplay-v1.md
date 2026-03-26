@@ -6,16 +6,19 @@
 
 ## Output
 
-- Reviewed live gameplay locally on portrait and desktop, including a real latch toggle, score updates, thorn pressure, game-over, and restart flow.
+- Re-ran the gameplay gate on the `1.0.1` build with browser-rendered portrait and desktop proof, explicit HUD/overlay readability checks, and a full idle/casual/expert balance sweep.
 
 ## Inputs Reviewed
 
 - `/Users/oliviermichon/Documents/autonomoustudio-internal/guidelines/V1_GATE_GUIDELINES.md`
 - `/Users/oliviermichon/Documents/autonomoustudio-internal/checklists/06-gameplay-v1.md`
 - `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/SIMPLIFY_v1.md`
-- `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/portrait-gameplay.png`
-- `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/portrait-after-toggle.png`
-- `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/desktop-gameplay.png`
+- `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/mockups/portrait-start.png`
+- `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/mockups/portrait-gameplay.png`
+- `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/mockups/portrait-gameover.png`
+- `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/mockups/desktop-gameplay.png`
+- `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/mockups/desktop-gameover.png`
+- `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/balance/balance-report.md`
 
 ## Checklist Results
 
@@ -25,19 +28,25 @@
 - [x] Performance is good enough on every supported surface.
 - [x] Gameplay presentation is edge to edge and does not look like a webpage card.
 - [x] Active gameplay is free of nonessential UI clutter.
+- [x] Start and game-over screens do not occlude critical playfield.
+- [x] Loss proximity is glanceable and next-preview clearly communicates both what and where.
 - [x] The game quality matches `SIMPLIFY_v1.md`, not the pre-simplify wish list.
+- [x] If this is an endless score game, the balance has been swept with idle/casual/expert policies and the target medians hold: casual 60-120s, expert 300s+, and expert p25 240s+.
 - [x] There are no obvious gameplay, UX, art, or polish failures left for the release gate to catch.
 
 ## Feedback Applied Before PASS
 
-- The first portrait review still had overlong start-header copy, and the first manual latch click used a guessed coordinate that missed the actual hit target. I shortened the copy, exposed the live layout in debug state, and reran the pointer test until the latch state changed under a real browser click.
+- The original `1.0.0` review should have failed for unclear loss pressure and for the detached next preview. I changed the release HUD to a global top-right 3-pip strike meter and a single in-board next-preview above the actual incoming lane, then rechecked both surfaces.
+- The original portrait start and game-over framing also should have failed. The final gate only passed after replacing those treatments with bottom sheets and re-capturing browser-rendered proof.
+- Endless-play balance is now backed by a scripted sweep instead of subjective feel. The passing report records idle, casual, and expert results against the target windows.
 
 ## Evidence
 
-- Portrait start proof: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/portrait-start.png`
-- Portrait gameplay proof: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/portrait-gameplay.png`
-- Portrait latch-toggle proof: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/portrait-after-toggle.png`
-- Desktop gameplay proof: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/desktop-gameplay.png`
+- Balance report: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/balance/balance-report.md`
+- Portrait gameplay proof: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/mockups/portrait-gameplay.png`
+- Portrait game-over proof: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/mockups/portrait-gameover.png`
+- Desktop gameplay proof: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/mockups/desktop-gameplay.png`
+- Desktop game-over proof: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/mockups/desktop-gameover.png`
 
 ## Verdict
 

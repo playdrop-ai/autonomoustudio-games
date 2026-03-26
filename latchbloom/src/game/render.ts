@@ -1,8 +1,8 @@
 import {
   BLOSSOM_KINDS,
   LANE_COUNT,
-  PREVIEW_COUNT,
   ROW_COUNT,
+  STRIKE_LIMIT,
   activePairs,
   nextLaneForRow,
   type Blossom,
@@ -111,6 +111,9 @@ export class CanvasRenderer {
     this.drawVases(model.state, model.screen === "gameover");
     this.drawBlossoms(model.state, model.screen === "gameover");
     this.drawGlassHighlight(model.screen === "gameover");
+    if (model.screen !== "gameover") {
+      this.drawNextPreview(model.state);
+    }
     if (model.screen === "playing") {
       this.drawHud(model);
     }
@@ -351,22 +354,6 @@ export class CanvasRenderer {
         const dotX = x - 24 + dot * 24;
         this.fillCircle(dotX, vaseY + 26, 7.5, dot < vase.meter ? palette.fill : "rgba(33,66,87,0.72)");
       }
-
-      for (let thorn = 0; thorn < vase.thorns; thorn += 1) {
-        const tx = x - 24 + thorn * 24;
-        const ctx = this.ctx;
-        ctx.save();
-        ctx.strokeStyle = "#2a1718";
-        ctx.lineWidth = 5;
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
-        ctx.beginPath();
-        ctx.moveTo(tx, vaseY - 52);
-        ctx.lineTo(tx + 8, vaseY - 70);
-        ctx.lineTo(tx + 16, vaseY - 52);
-        ctx.stroke();
-        ctx.restore();
-      }
     }
   }
 
@@ -432,20 +419,23 @@ export class CanvasRenderer {
     ctx.fillStyle = "#9ee3cf";
     ctx.font = "700 22px 'Trebuchet MS', 'Avenir Next', sans-serif";
     ctx.textAlign = "right";
-    ctx.fillText("NEXT", this.width - 64, 108);
+    ctx.fillText("STRIKES", this.width - 64, 108);
+    ctx.font = "600 15px 'Trebuchet MS', 'Avenir Next', sans-serif";
+    ctx.fillStyle = "#c6ddd8";
+    ctx.fillText("3 and out", this.width - 64, 156);
+
+    for (let index = 0; index < STRIKE_LIMIT; index += 1) {
+      const x = this.width - 156 + index * 36;
+      const y = 126;
+      const lit = index < model.state.strikes;
+      const color = index === 0 ? "#f3cc6b" : index === 1 ? "#f0a94d" : "#ff6f86";
+      this.fillCircle(x, y, 13, lit ? color : "rgba(58,87,99,0.5)");
+      this.fillCircle(x, y, 6, lit ? "rgba(255,248,227,0.88)" : "rgba(166,197,189,0.16)");
+    }
     ctx.textAlign = "left";
 
-    for (let index = 0; index < PREVIEW_COUNT; index += 1) {
-      const kind = model.state.queue[index];
-      if (!kind) continue;
-      const x = this.width - 112 - index * 52;
-      const y = 126;
-      const palette = BLOSSOM_PALETTE[kind];
-      this.fillCircle(x, y, 19, palette.fill);
-      this.drawFlowerIcon(kind, x, y, 11, 1);
-    }
-
-    if (model.accent && model.accent.opacity > 0) {
+    const portraitish = this.width <= this.height;
+    if (model.accent && model.accent.opacity > 0 && !portraitish) {
       ctx.save();
       ctx.globalAlpha = model.accent.opacity;
       ctx.fillStyle = model.accent.color;
@@ -457,59 +447,113 @@ export class CanvasRenderer {
     ctx.restore();
   }
 
-  private drawStartOverlay(): void {
+  private drawNextPreview(state: GameState): void {
+    const packet = state.nextSpawn;
+    const x = this.layout.laneCenters[packet.lane]!;
+    const labelY = this.layout.boardY + 38;
+    const tokenY = this.layout.boardY + 74;
+    const palette = BLOSSOM_PALETTE[packet.kind];
     const ctx = this.ctx;
+
+    this.fillRoundedRect(x - 34, labelY - 16, 68, 28, 14, "rgba(10,27,38,0.82)");
     ctx.save();
-    this.fillRoundedRect(36, 36, this.width - 72, 228, 28, "rgba(9,19,29,0.24)");
+    ctx.textAlign = "center";
     ctx.fillStyle = "#9ee3cf";
-    ctx.font = "700 22px 'Trebuchet MS', 'Avenir Next', sans-serif";
-    ctx.fillText("GREENHOUSE ROUTING ARCADE", 64, 108);
+    ctx.font = "700 14px 'Trebuchet MS', 'Avenir Next', sans-serif";
+    ctx.fillText("NEXT", x, labelY + 5);
+    ctx.restore();
 
-    ctx.fillStyle = "#f7fff8";
-    ctx.font = "700 58px 'Trebuchet MS', 'Avenir Next', sans-serif";
-    ctx.fillText("Latchbloom", 60, 162);
+    this.fillGlow(x, tokenY, 34, "rgba(109,225,207,0.18)");
+    this.fillCircle(x, tokenY, 22, palette.fill);
+    this.drawFlowerIcon(packet.kind, x, tokenY, 12, 1);
 
-    ctx.fillStyle = "#c4ddd8";
-    ctx.font = "500 23px 'Trebuchet MS', 'Avenir Next', sans-serif";
-    ctx.fillText("Tap latches to reroute blossoms.", 60, 206);
-    ctx.fillText("Match the vases. Keep thorns down.", 60, 236);
-
-    this.drawButton(this.width / 2 - 148, this.height - 204, 296, 92, "Open The Glasshouse");
+    ctx.save();
+    ctx.strokeStyle = "rgba(237,255,247,0.24)";
+    ctx.lineWidth = 3;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(x, tokenY + 28);
+    ctx.lineTo(x, this.layout.rowBoundaries[0]! - 12);
+    ctx.stroke();
     ctx.restore();
   }
 
-  private drawGameOverOverlay(score: number, bestScore: number): void {
-    const panelWidth = Math.min(740, this.width - 80);
-    const panelHeight = Math.min(650, this.height - 120);
-    const panelX = (this.width - panelWidth) / 2;
-    const panelY = (this.height - panelHeight) / 2;
+  private drawStartOverlay(): void {
+    const portraitish = this.width <= this.height;
+    const sheetWidth = Math.min(portraitish ? this.width - 36 : 620, this.width - 36);
+    const sheetHeight = portraitish ? 264 : 252;
+    const sheetX = (this.width - sheetWidth) / 2;
+    const sheetY = this.height - sheetHeight - 26;
+    const ctx = this.ctx;
 
-    this.fillRoundedRect(panelX, panelY, panelWidth, panelHeight, 40, "rgba(13,22,32,0.76)");
-    this.fillRoundedRect(panelX + 18, panelY + 18, panelWidth - 36, panelHeight - 36, 32, "rgba(17,34,50,0.96)");
+    this.fillRoundedRect(sheetX, sheetY, sheetWidth, sheetHeight, 34, "rgba(8,19,29,0.78)");
+    this.fillRoundedRect(sheetX + 12, sheetY + 12, sheetWidth - 24, sheetHeight - 24, 28, "rgba(15,33,47,0.96)");
+
+    ctx.save();
+    ctx.fillStyle = "#9ee3cf";
+    ctx.font = "700 18px 'Trebuchet MS', 'Avenir Next', sans-serif";
+    ctx.fillText("GREENHOUSE ROUTING ARCADE", sheetX + 28, sheetY + 44);
+
+    ctx.fillStyle = "#f7fff8";
+    ctx.font = portraitish ? "700 44px 'Trebuchet MS', 'Avenir Next', sans-serif" : "700 40px 'Trebuchet MS', 'Avenir Next', sans-serif";
+    ctx.fillText("Latchbloom", sheetX + 28, sheetY + 92);
+
+    ctx.fillStyle = "#c4ddd8";
+    ctx.font = portraitish ? "500 18px 'Trebuchet MS', 'Avenir Next', sans-serif" : "500 19px 'Trebuchet MS', 'Avenir Next', sans-serif";
+    const bodyLines = portraitish
+      ? ["Route blossoms into matching vases.", "Bouquets clear 1 strike.", "Three strikes ends the run."]
+      : ["Route blossoms into matching vases.", "Bouquets clear 1 strike. Three strikes ends the run."];
+    for (let index = 0; index < bodyLines.length; index += 1) {
+      ctx.fillText(bodyLines[index]!, sheetX + 28, sheetY + 132 + index * 24);
+    }
+    ctx.restore();
+
+    this.drawButton(sheetX + 28, sheetY + sheetHeight - 78, sheetWidth - 56, 56, "Open The Glasshouse");
+  }
+
+  private drawGameOverOverlay(score: number, bestScore: number): void {
+    const portraitish = this.width <= this.height;
+    const panelWidth = Math.min(portraitish ? this.width - 36 : 640, this.width - 36);
+    const panelHeight = portraitish ? 334 : 286;
+    const panelX = (this.width - panelWidth) / 2;
+    const panelY = this.height - panelHeight - 26;
+
+    this.fillRoundedRect(panelX, panelY, panelWidth, panelHeight, 36, "rgba(9,18,27,0.82)");
+    this.fillRoundedRect(panelX + 12, panelY + 12, panelWidth - 24, panelHeight - 24, 28, "rgba(16,32,47,0.98)");
 
     const ctx = this.ctx;
     ctx.save();
-    ctx.textAlign = "center";
+    ctx.fillStyle = "#9ee3cf";
+    ctx.font = "700 18px 'Trebuchet MS', 'Avenir Next', sans-serif";
+    ctx.fillText("RUN OVER", panelX + 28, panelY + 44);
+
     ctx.fillStyle = "#f8fff8";
-    ctx.font = "700 42px 'Trebuchet MS', 'Avenir Next', sans-serif";
-    ctx.fillText("The Greenhouse Choked", this.width / 2, panelY + 138);
+    ctx.font = portraitish ? "700 30px 'Trebuchet MS', 'Avenir Next', sans-serif" : "700 32px 'Trebuchet MS', 'Avenir Next', sans-serif";
+    const titleLines = portraitish ? ["Three strikes shut", "the greenhouse."] : ["Three strikes shut the greenhouse."];
+    for (let index = 0; index < titleLines.length; index += 1) {
+      ctx.fillText(titleLines[index]!, panelX + 28, panelY + 86 + index * 34);
+    }
 
     ctx.fillStyle = "#c4ddd8";
-    ctx.font = "500 24px 'Trebuchet MS', 'Avenir Next', sans-serif";
-    ctx.fillText("One more clean bouquet would have cleared the thorns.", this.width / 2, panelY + 188);
+    ctx.font = portraitish ? "500 18px 'Trebuchet MS', 'Avenir Next', sans-serif" : "500 19px 'Trebuchet MS', 'Avenir Next', sans-serif";
+    const detailLines = portraitish ? ["Build bouquets to erase strikes.", "Keep the flow alive longer."] : ["Build bouquets to erase strikes and keep the flow alive longer."];
+    for (let index = 0; index < detailLines.length; index += 1) {
+      ctx.fillText(detailLines[index]!, panelX + 28, panelY + (portraitish ? 154 : 146) + index * 24);
+    }
 
+    ctx.textAlign = "left";
     ctx.fillStyle = "#9ee3cf";
-    ctx.font = "700 22px 'Trebuchet MS', 'Avenir Next', sans-serif";
-    ctx.fillText("RUN SCORE", this.width / 2 - 150, panelY + 344);
-    ctx.fillText("BEST", this.width / 2 + 150, panelY + 344);
+    ctx.font = "700 18px 'Trebuchet MS', 'Avenir Next', sans-serif";
+    ctx.fillText("RUN SCORE", panelX + 28, panelY + (portraitish ? 222 : 186));
+    ctx.fillText("BEST", panelX + panelWidth * 0.58, panelY + (portraitish ? 222 : 186));
 
     ctx.fillStyle = "#fff3c2";
-    ctx.font = "700 54px 'Trebuchet MS', 'Avenir Next', sans-serif";
-    ctx.fillText(this.formatScore(score), this.width / 2 - 150, panelY + 420);
-    ctx.fillText(this.formatScore(bestScore), this.width / 2 + 150, panelY + 420);
+    ctx.font = portraitish ? "700 44px 'Trebuchet MS', 'Avenir Next', sans-serif" : "700 40px 'Trebuchet MS', 'Avenir Next', sans-serif";
+    ctx.fillText(this.formatScore(score), panelX + 28, panelY + (portraitish ? 270 : 230));
+    ctx.fillText(this.formatScore(bestScore), panelX + panelWidth * 0.58, panelY + (portraitish ? 270 : 230));
     ctx.restore();
 
-    this.drawButton(this.width / 2 - 150, panelY + panelHeight - 150, 300, 88, "Bloom Again");
+    this.drawButton(panelX + 28, panelY + panelHeight - (portraitish ? 78 : 66), panelWidth - 56, portraitish ? 56 : 48, "Bloom Again");
   }
 
   private drawButton(x: number, y: number, width: number, height: number, label: string): void {
@@ -522,9 +566,9 @@ export class CanvasRenderer {
     const ctx = this.ctx;
     ctx.save();
     ctx.fillStyle = "#322006";
-    ctx.font = "700 26px 'Trebuchet MS', 'Avenir Next', sans-serif";
+    ctx.font = "700 22px 'Trebuchet MS', 'Avenir Next', sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText(label, x + width / 2, y + height / 2 + 9);
+    ctx.fillText(label, x + width / 2, y + height / 2 + 7);
     ctx.restore();
   }
 

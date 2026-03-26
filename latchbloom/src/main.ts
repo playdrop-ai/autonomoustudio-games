@@ -1,7 +1,9 @@
 /// <reference types="playdrop-sdk-types" />
 
 import { CanvasRenderer, type AccentLabel } from "./game/render";
+import { applyCasualToggle, applyExpertToggle, type AutoplayMode } from "./game/autoplay";
 import {
+  STRIKE_LIMIT,
   createInitialState,
   toggleLatch,
   updateGame,
@@ -16,9 +18,10 @@ declare global {
       score: number;
       bestScore: number;
       streak: number;
-      queue: string[];
+      strikes: number;
+      nextSpawn: { kind: string; lane: number };
       blossoms: Array<{ kind: string; segment: number; fromLane: number; toLane: number; progress: number }>;
-      vases: Array<{ target: string; meter: number; thorns: number }>;
+      vases: Array<{ target: string; meter: number }>;
       latches: string[][];
       layout: {
         boardX: number;
@@ -29,6 +32,12 @@ declare global {
         latchRows: number[];
       };
     };
+    __latchbloomControls?: {
+      startRun: () => void;
+      toggleLatch: (row: number, pairIndex: number) => void;
+    };
+    render_game_to_text?: () => string;
+    advanceTime?: (ms: number) => void;
   }
 }
 
@@ -59,11 +68,17 @@ void (async () => {
   let bestScore = readBestScore();
   let accent: AccentLabel | null = null;
   let lastFrame = performance.now();
+  const autoplayMode = readAutoplayFromLocation();
+  let autoplayTimerMs = 0;
+
+  const autoplayReactionMs =
+    autoplayMode === "expert" ? 50 : autoplayMode === "casual" ? 350 : Number.POSITIVE_INFINITY;
 
   function startRun(): void {
     gameState = createInitialState(forcedSeed);
     screen = "playing";
     accent = null;
+    autoplayTimerMs = 0;
   }
 
   function finishRun(): void {
@@ -90,7 +105,7 @@ void (async () => {
         };
       } else if (event.kind === "wrong") {
         accent = {
-          text: "THORNS +1",
+          text: "STRIKE",
           color: "#ff9ba7",
           opacity: 1,
         };
@@ -100,11 +115,17 @@ void (async () => {
     }
   }
 
-  function update(now: number): void {
-    const elapsed = Math.min(64, now - lastFrame);
-    lastFrame = now;
+  function step(elapsed: number): void {
+    if (autoplayMode && screen !== "playing") {
+      startRun();
+    }
 
     if (screen === "playing") {
+      autoplayTimerMs += elapsed;
+      while (autoplayTimerMs >= autoplayReactionMs) {
+        gameState = autoplayMode === "expert" ? applyExpertToggle(gameState) : applyCasualToggle(gameState);
+        autoplayTimerMs -= autoplayReactionMs;
+      }
       const result = updateGame(gameState, elapsed);
       gameState = result.state;
       applyEvents(result.events);
@@ -120,14 +141,17 @@ void (async () => {
     }
   }
 
-  function render(now: number): void {
-    update(now);
+  function publishDebug(): void {
     window.__latchbloomDebug = {
       screen,
       score: gameState.score,
       bestScore,
       streak: gameState.streak,
-      queue: gameState.queue.slice(),
+      strikes: gameState.strikes,
+      nextSpawn: {
+        kind: gameState.nextSpawn.kind,
+        lane: gameState.nextSpawn.lane,
+      },
       blossoms: gameState.blossoms.map((blossom) => ({
         kind: blossom.kind,
         segment: blossom.segment,
@@ -138,7 +162,6 @@ void (async () => {
       vases: gameState.vases.map((vase) => ({
         target: vase.target,
         meter: vase.meter,
-        thorns: vase.thorns,
       })),
       latches: gameState.latches.map((row) => row.slice()),
       layout: (() => {
@@ -153,14 +176,69 @@ void (async () => {
         };
       })(),
     };
+  }
+
+  function renderFrame(): void {
+    publishDebug();
+    window.__latchbloomControls = {
+      startRun: () => {
+        startRun();
+        renderFrame();
+      },
+      toggleLatch: (row, pairIndex) => {
+        if (screen !== "playing") return;
+        gameState = toggleLatch(gameState, row, pairIndex);
+        renderFrame();
+      },
+    };
     renderer.render({
       state: gameState,
       screen,
       bestScore,
       accent,
     });
+  }
+
+  function render(now: number): void {
+    const elapsed = Math.min(64, now - lastFrame);
+    lastFrame = now;
+    step(elapsed);
+    renderFrame();
     requestAnimationFrame(render);
   }
+
+  window.render_game_to_text = () =>
+    JSON.stringify({
+      coordinateSystem: "origin top-left, x right, y down",
+      screen,
+      score: gameState.score,
+      bestScore,
+      strikes: gameState.strikes,
+      nextSpawn: gameState.nextSpawn,
+      blossoms: gameState.blossoms.map((blossom) => ({
+        kind: blossom.kind,
+        segment: blossom.segment,
+        fromLane: blossom.fromLane,
+        toLane: blossom.toLane,
+        progress: Number(blossom.progress.toFixed(3)),
+      })),
+      vases: gameState.vases.map((vase) => ({
+        target: vase.target,
+        meter: vase.meter,
+        warning: Number(vase.wrongTimer.toFixed(3)),
+      })),
+      latches: gameState.latches.map((row) => row.slice()),
+    });
+
+  window.advanceTime = (ms: number) => {
+    const steps = Math.max(1, Math.round(ms / 16));
+    const stepMs = ms / steps;
+    for (let index = 0; index < steps; index += 1) {
+      step(stepMs);
+    }
+    lastFrame = performance.now();
+    renderFrame();
+  };
 
   canvas.addEventListener("pointerdown", (event) => {
     canvas.setPointerCapture(event.pointerId);
@@ -222,6 +300,12 @@ function readSeedFromLocation(): number | undefined {
   if (!raw) return undefined;
   const parsed = Number.parseInt(raw, 10);
   return Number.isFinite(parsed) ? parsed >>> 0 : undefined;
+}
+
+function readAutoplayFromLocation(): AutoplayMode | null {
+  const raw = new URL(window.location.href).searchParams.get("autoplay");
+  if (raw === "casual" || raw === "expert") return raw;
+  return null;
 }
 
 async function createHostBridge(): Promise<{ setLoadingState: (state: { status: "loading" | "ready" | "error"; message?: string; progress?: number }) => void }> {

@@ -6,19 +6,20 @@
 
 ## Output
 
-- Built a runnable `Latchbloom` game with tested routing logic, responsive canvas rendering, start/gameover flow, and local browser proof on supported surfaces.
+- Updated `Latchbloom` to the `1.0.1` ruleset with global strikes, a lane-aware in-board next preview, elapsed-time difficulty tiers, corrected start/game-over framing, and deterministic browser hooks for verification and capture.
 
 ## Inputs Reviewed
 
 - `/Users/oliviermichon/Documents/autonomoustudio-internal/checklists/05-implementation.md`
 - `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/SIMPLIFY_v1.md`
-- `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/mockups/portrait-gameplay.svg`
-- `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/mockups/desktop-gameplay.svg`
-- `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/src/main.ts`
+- `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/mockups/portrait-gameplay.png`
+- `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/mockups/desktop-gameplay.png`
 - `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/src/game/logic.ts`
 - `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/src/game/render.ts`
+- `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/src/game/autoplay.ts`
+- `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/src/main.ts`
 - `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/tests/logic.test.ts`
-- local Playwright screenshots and debug-state checks in `output/playwright/`
+- `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/scripts/balance-report.mjs`
 
 ## Checklist Results
 
@@ -33,16 +34,17 @@
 
 ## Feedback Applied Before PASS
 
-- The first local browser pass exposed HUD text colliding with the start overlay and a PlayDrop SDK error when the build ran outside the hosted shell. I fixed that by drawing the HUD only during active play, tightening the start copy, and skipping PlayDrop init when `playdrop_channel` is absent.
-- I also exposed live layout coordinates in the debug state so I could verify a real pointer click flipped a latch, instead of trusting a guessed canvas coordinate.
+- The original implementation shipped the wrong fail-pressure model and hid the next spawn away from the board. I replaced per-vase thorns with a global 3-strike system, moved next-preview into the board above the actual entry lane, and updated bouquet bursts to clear one strike.
+- The original start and game-over layouts also should have failed on portrait readability. I rebuilt both as bottom sheets and then fixed a desktop game-over spacing bug found in the browser-rendered mockup pass.
+- I added deterministic `window.advanceTime(ms)` and optional query-param autoplay for capture and verification so screenshots, video, and surface checks can be reproduced from the real build.
 
 ## Evidence
 
-- Local logic tests: `npm test`
+- Logic tests: `npm test`
 - Build validation: `npm run validate`
 - PlayDrop validation: `playdrop project validate .`
-- Portrait gameplay proof: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/portrait-gameplay.png`
-- Desktop gameplay proof: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/desktop-gameplay.png`
+- Implementation proof: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/mockups/portrait-gameplay.png`
+- Desktop implementation proof: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/mockups/desktop-gameplay.png`
 
 ## Verdict
 

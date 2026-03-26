@@ -6,12 +6,16 @@ Latchbloom
 
 ## One-line Value Proposition
 
-Route falling blossoms through a live greenhouse before thorn buildup chokes the run.
+Route falling blossoms through a live greenhouse, build bouquets, and erase strikes before the run shuts down.
 
 ## Description
 
 Tap the brass latches to reroute falling blossoms into the matching vases before they hit the bottom.
 
-Every correct delivery fills that vase's bouquet meter. Every wrong delivery adds a thorn to the receiving vase.
+Watch the in-board next preview to see both which blossom is coming and which lane it will enter from.
 
-A vase only blooms when you land three correct blossoms there, and that bloom clears its thorns. If any vase reaches three thorns, the greenhouse chokes and the run ends.
+Every correct delivery fills that vase's bouquet meter. Land three correct blossoms in the same vase to bloom a bouquet.
+
+Each bouquet clears 1 global strike if you have any. Every wrong delivery adds 1 global strike.
+
+Three strikes total shuts the greenhouse and ends the run.

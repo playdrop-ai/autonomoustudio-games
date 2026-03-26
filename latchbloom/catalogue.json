@@ -2,9 +2,9 @@
   "apps": [
     {
       "name": "latchbloom",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "displayName": "Latchbloom",
-      "description": "Tap the brass latches to reroute falling blossoms into the vase with the same flower icon before they hit the bottom. Every correct delivery fills that vase's bouquet meter, and every third correct blossom there blooms the bouquet and clears its thorns. Every wrong delivery adds a thorn to the receiving vase, and any vase with three thorns ends the run.",
+      "description": "Tap the brass latches to reroute falling blossoms into the vase with the same flower icon before they hit the bottom. Every correct delivery fills that vase's bouquet meter, and every third correct blossom there blooms the bouquet and clears 1 strike. Every wrong delivery adds a global strike. You can survive 3 strikes total, and the next blossom preview shows both the flower and the lane it will enter from.",
       "emoji": "🌸",
       "color": "#F28DA6",
       "type": "GAME",

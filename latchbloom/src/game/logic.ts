@@ -1,14 +1,16 @@
 export const LANE_COUNT = 4;
 export const ROW_COUNT = 5;
-export const PREVIEW_COUNT = 2;
 export const BOUQUET_GOAL = 3;
-export const THORN_LIMIT = 3;
-export const SPEED_STEP_DELIVERIES = 8;
-export const MAX_SPEED_LEVEL = 8;
+export const STRIKE_LIMIT = 3;
 
 export type BlossomKind = "rose" | "iris" | "sun" | "mint";
 export type LatchState = "straight" | "cross";
 export type Screen = "start" | "playing" | "gameover";
+
+export interface SpawnPacket {
+  kind: BlossomKind;
+  lane: number;
+}
 
 export interface Blossom {
   id: number;
@@ -17,12 +19,12 @@ export interface Blossom {
   toLane: number;
   segment: number;
   progress: number;
+  travelDuration: number;
 }
 
 export interface VaseState {
   target: BlossomKind;
   meter: number;
-  thorns: number;
   burstTimer: number;
   wrongTimer: number;
 }
@@ -30,12 +32,15 @@ export interface VaseState {
 export interface GameState {
   latches: LatchState[][];
   blossoms: Blossom[];
-  queue: BlossomKind[];
+  nextSpawn: SpawnPacket;
+  lastSpawn: SpawnPacket | null;
   vases: VaseState[];
   nextId: number;
   score: number;
   streak: number;
   totalCorrect: number;
+  strikes: number;
+  elapsedMs: number;
   spawnTimer: number;
   rngState: number;
   gameOver: boolean;
@@ -58,19 +63,62 @@ export type GameEvent =
       kind: "wrong";
       blossom: BlossomKind;
       lane: number;
+      strikes: number;
     }
   | {
       kind: "burst";
       blossom: BlossomKind;
       lane: number;
       bonus: number;
+      clearedStrike: boolean;
+      strikes: number;
     }
   | {
       kind: "gameover";
       lane: number;
+      strikes: number;
     };
 
 export const BLOSSOM_KINDS: BlossomKind[] = ["rose", "iris", "sun", "mint"];
+
+export interface DifficultyTier {
+  spawnInterval: number;
+  travelDuration: number;
+  sameLaneRepeatChance: number | null;
+  sameKindRepeatChance: number | null;
+  maxActiveBlossoms: number;
+}
+
+export const DIFFICULTY_TIERS: readonly DifficultyTier[] = [
+  {
+    spawnInterval: 4200,
+    travelDuration: 6500,
+    sameLaneRepeatChance: 0.9,
+    sameKindRepeatChance: 0.75,
+    maxActiveBlossoms: 1,
+  },
+  {
+    spawnInterval: 3400,
+    travelDuration: 5600,
+    sameLaneRepeatChance: 0.82,
+    sameKindRepeatChance: 0.6,
+    maxActiveBlossoms: 1,
+  },
+  {
+    spawnInterval: 3000,
+    travelDuration: 5200,
+    sameLaneRepeatChance: 0.75,
+    sameKindRepeatChance: 0.5,
+    maxActiveBlossoms: 2,
+  },
+  {
+    spawnInterval: 2600,
+    travelDuration: 4800,
+    sameLaneRepeatChance: 0.55,
+    sameKindRepeatChance: 0.3,
+    maxActiveBlossoms: 3,
+  },
+] as const;
 
 const DEFAULT_LATCHES: LatchState[][] = [
   ["cross", "straight"],
@@ -82,21 +130,17 @@ const DEFAULT_LATCHES: LatchState[][] = [
 
 export function createInitialState(seed = Date.now() >>> 0): GameState {
   let rngState = seed >>> 0;
-  const queue: BlossomKind[] = [];
-  for (let index = 0; index < PREVIEW_COUNT; index += 1) {
-    const pick = randomKind(rngState);
-    queue.push(pick.kind);
-    rngState = pick.rngState;
-  }
+  const spawnPick = createSpawnPacket(rngState, null, 0);
+  rngState = spawnPick.rngState;
 
   return {
     latches: DEFAULT_LATCHES.map((row) => row.slice()),
     blossoms: [],
-    queue,
+    nextSpawn: spawnPick.packet,
+    lastSpawn: null,
     vases: BLOSSOM_KINDS.map((target) => ({
       target,
       meter: 0,
-      thorns: 0,
       burstTimer: 0,
       wrongTimer: 0,
     })),
@@ -104,6 +148,8 @@ export function createInitialState(seed = Date.now() >>> 0): GameState {
     score: 0,
     streak: 0,
     totalCorrect: 0,
+    strikes: 0,
+    elapsedMs: 0,
     spawnTimer: 0,
     rngState,
     gameOver: false,
@@ -115,7 +161,8 @@ export function cloneState(state: GameState): GameState {
     ...state,
     latches: state.latches.map((row) => row.slice()),
     blossoms: state.blossoms.map((blossom) => ({ ...blossom })),
-    queue: state.queue.slice(),
+    nextSpawn: { ...state.nextSpawn },
+    lastSpawn: state.lastSpawn ? { ...state.lastSpawn } : null,
     vases: state.vases.map((vase) => ({ ...vase })),
   };
 }
@@ -147,14 +194,19 @@ export function targetLaneForKind(kind: BlossomKind): number {
   return BLOSSOM_KINDS.indexOf(kind);
 }
 
-export function spawnIntervalForCorrect(totalCorrect: number): number {
-  const level = Math.min(MAX_SPEED_LEVEL, Math.floor(totalCorrect / SPEED_STEP_DELIVERIES));
-  return Math.max(760, 1750 - level * 110);
+export function difficultyTierForElapsed(elapsedMs: number): DifficultyTier {
+  if (elapsedMs < 20_000) return DIFFICULTY_TIERS[0]!;
+  if (elapsedMs < 60_000) return DIFFICULTY_TIERS[1]!;
+  if (elapsedMs < 120_000) return DIFFICULTY_TIERS[2]!;
+  return DIFFICULTY_TIERS[3]!;
 }
 
-export function travelDurationForCorrect(totalCorrect: number): number {
-  const level = Math.min(MAX_SPEED_LEVEL, Math.floor(totalCorrect / SPEED_STEP_DELIVERIES));
-  return Math.max(2500, 4300 - level * 170);
+export function spawnIntervalForElapsed(elapsedMs: number): number {
+  return difficultyTierForElapsed(elapsedMs).spawnInterval;
+}
+
+export function travelDurationForElapsed(elapsedMs: number): number {
+  return difficultyTierForElapsed(elapsedMs).travelDuration;
 }
 
 export function updateGame(state: GameState, elapsedMs: number): { state: GameState; events: GameEvent[] } {
@@ -166,14 +218,18 @@ export function updateGame(state: GameState, elapsedMs: number): { state: GameSt
 
   if (next.gameOver) return { state: next, events };
 
+  next.elapsedMs += elapsedMs;
   next.spawnTimer += elapsedMs;
-  const spawnInterval = spawnIntervalForCorrect(next.totalCorrect);
+  let tier = difficultyTierForElapsed(next.elapsedMs);
+  let spawnInterval = tier.spawnInterval;
   while (next.spawnTimer >= spawnInterval && !next.gameOver) {
+    if (next.blossoms.length >= tier.maxActiveBlossoms) break;
     next.spawnTimer -= spawnInterval;
     spawnBlossom(next, events);
+    tier = difficultyTierForElapsed(next.elapsedMs);
+    spawnInterval = tier.spawnInterval;
   }
 
-  const segmentDuration = travelDurationForCorrect(next.totalCorrect) / (ROW_COUNT + 1);
   const survivors: Blossom[] = [];
   for (const blossom of next.blossoms) {
     let remaining = elapsedMs;
@@ -181,6 +237,7 @@ export function updateGame(state: GameState, elapsedMs: number): { state: GameSt
     let delivered = false;
 
     while (remaining > 0 && !delivered) {
+      const segmentDuration = active.travelDuration / (ROW_COUNT + 1);
       const timeLeft = (1 - active.progress) * segmentDuration;
       if (remaining < timeLeft) {
         active.progress += remaining / segmentDuration;
@@ -232,22 +289,23 @@ function handleDelivery(state: GameState, blossom: Blossom, events: GameEvent[])
 
     if (vase.meter >= BOUQUET_GOAL) {
       vase.meter = 0;
-      vase.thorns = 0;
       vase.burstTimer = 1;
       const bonus = 360 + Math.min(240, state.totalCorrect * 4);
       state.score += bonus;
-      events.push({ kind: "burst", blossom: blossom.kind, lane, bonus });
+      const clearedStrike = state.strikes > 0;
+      if (clearedStrike) state.strikes -= 1;
+      events.push({ kind: "burst", blossom: blossom.kind, lane, bonus, clearedStrike, strikes: state.strikes });
     }
     return;
   }
 
-  vase.thorns += 1;
   vase.wrongTimer = 1;
   state.streak = 0;
-  events.push({ kind: "wrong", blossom: blossom.kind, lane });
-  if (vase.thorns >= THORN_LIMIT) {
+  state.strikes += 1;
+  events.push({ kind: "wrong", blossom: blossom.kind, lane, strikes: state.strikes });
+  if (state.strikes >= STRIKE_LIMIT) {
     state.gameOver = true;
-    events.push({ kind: "gameover", lane });
+    events.push({ kind: "gameover", lane, strikes: state.strikes });
   }
 }
 
@@ -261,35 +319,71 @@ function decayEffects(state: GameState, elapsedMs: number): void {
 }
 
 function spawnBlossom(state: GameState, events: GameEvent[]): void {
-  const spawnedKind = state.queue.shift() ?? "rose";
-  const lanePick = randomLane(state.rngState);
-  state.rngState = lanePick.rngState;
-  const refillPick = randomKind(state.rngState);
+  const packet = state.nextSpawn;
+  const refillPick = createSpawnPacket(state.rngState, packet, state.elapsedMs);
   state.rngState = refillPick.rngState;
-  state.queue.push(refillPick.kind);
+  state.lastSpawn = { ...packet };
+  state.nextSpawn = refillPick.packet;
 
   const blossom: Blossom = {
     id: state.nextId,
-    kind: spawnedKind,
-    fromLane: lanePick.lane,
-    toLane: nextLaneForRow(lanePick.lane, 0, state.latches),
+    kind: packet.kind,
+    fromLane: packet.lane,
+    toLane: nextLaneForRow(packet.lane, 0, state.latches),
     segment: 0,
     progress: 0,
+    travelDuration: travelDurationForElapsed(state.elapsedMs),
   };
   state.nextId += 1;
   state.blossoms.push(blossom);
-  events.push({ kind: "spawn", blossom: spawnedKind, lane: lanePick.lane });
+  events.push({ kind: "spawn", blossom: packet.kind, lane: packet.lane });
 }
 
-function randomKind(rngState: number): { kind: BlossomKind; rngState: number } {
-  const next = lcg(rngState);
-  const index = next % BLOSSOM_KINDS.length;
-  return { kind: BLOSSOM_KINDS[index]!, rngState: next };
+function createSpawnPacket(
+  rngState: number,
+  previous: SpawnPacket | null,
+  elapsedMs: number,
+): { packet: SpawnPacket; rngState: number } {
+  const tier = difficultyTierForElapsed(elapsedMs);
+  const lanePick = randomChoiceWithRepeatBias(
+    [0, 1, 2, 3] as const,
+    previous?.lane,
+    tier.sameLaneRepeatChance,
+    rngState,
+  );
+  const kindPick = randomChoiceWithRepeatBias(
+    BLOSSOM_KINDS,
+    previous?.kind,
+    tier.sameKindRepeatChance,
+    lanePick.rngState,
+  );
+  return {
+    packet: {
+      kind: kindPick.value,
+      lane: lanePick.value,
+    },
+    rngState: kindPick.rngState,
+  };
 }
 
-function randomLane(rngState: number): { lane: number; rngState: number } {
+function randomChoiceWithRepeatBias<T extends string | number>(
+  choices: readonly T[],
+  previous: T | undefined,
+  repeatChance: number | null,
+  rngState: number,
+): { value: T; rngState: number } {
   const next = lcg(rngState);
-  return { lane: next % LANE_COUNT, rngState: next };
+  if (previous === undefined || repeatChance === null) {
+    return { value: choices[next % choices.length]!, rngState: next };
+  }
+
+  if (next / 0x1_0000_0000 < repeatChance) {
+    return { value: previous, rngState: next };
+  }
+
+  const alternatives = choices.filter((entry) => entry !== previous);
+  const reroll = lcg(next);
+  return { value: alternatives[reroll % alternatives.length]!, rngState: reroll };
 }
 
 function lcg(value: number): number {

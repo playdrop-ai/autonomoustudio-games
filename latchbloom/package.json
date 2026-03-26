@@ -1,12 +1,13 @@
 {
   "name": "latchbloom",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "private": true,
   "scripts": {
     "build": "node build.mjs",
     "dev": "node build.mjs --watch",
     "test": "node --test tests/**/*.test.ts",
+    "balance:report": "node scripts/balance-report.mjs",
     "validate": "tsc --noEmit && npm run build",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json}\""
   },

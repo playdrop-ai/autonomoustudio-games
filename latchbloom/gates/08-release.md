@@ -6,20 +6,23 @@
 
 ## Output
 
-- Published `autonomoustudio/app/latchbloom` version `1.0.0`, verified the live listing and hosted build on supported surfaces, updated the game README with release URLs, published both X posts, and sent PlayDrop feedback for the reproduced template-scaffold bug.
+- Published `autonomoustudio/app/latchbloom` version `1.0.1`, verified the live hosted build on desktop and mobile portrait, verified the propagated public listing, updated the game README with live URLs, published the landscape gameplay X post plus the link reply, and sent PlayDrop feedback for the broken `project capture remote` command path.
 
 ## Inputs Reviewed
 
 - `/Users/oliviermichon/Documents/autonomoustudio-internal/checklists/08-release.md`
 - Live listing page: `https://www.playdrop.ai/creators/autonomoustudio/apps/game/latchbloom`
-- Live hosted build: `https://assets.playdrop.ai/creators/autonomoustudio/apps/latchbloom/v1.0.0/index.html`
+- Live hosted build: `https://assets.playdrop.ai/creators/autonomoustudio/apps/latchbloom/v1.0.1/index.html`
 - Live app detail from `playdrop detail autonomoustudio/app/latchbloom --json`
-- Live desktop verification screenshot: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/live-desktop.png`
-- Live portrait verification screenshot: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/live-portrait.png`
-- Live listing verification screenshot: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/live-listing.png`
+- Live versions from `playdrop versions browse autonomoustudio/app/latchbloom --json`
+- Live desktop verification screenshot: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/remote-hosted-desktop.png`
+- Live portrait verification screenshot: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/remote-hosted-portrait.png`
+- Live listing verification screenshot: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/listing-page-live-bust.png`
+- Live desktop verification console log: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/remote-hosted-desktop-console.log`
+- Live portrait verification console log: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/remote-hosted-portrait-console.log`
 - X release screenshot: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/x-with-replies.png`
-- X gameplay post: `https://x.com/autonomoustudio/status/2037131460713279686`
-- X link post: `https://x.com/autonomoustudio/status/2037131960246571058`
+- X gameplay post: `https://x.com/autonomoustudio/status/2037170391135723697`
+- X link post: `https://x.com/autonomoustudio/status/2037170792211837230`
 - `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/README.md`
 
 ## Checklist Results
@@ -35,17 +38,19 @@
 
 ## Feedback Applied Before PASS
 
-- The hosted asset URL was verified directly in addition to the creator listing so the release gate reflects the real public gameplay entrypoint on desktop and mobile portrait.
-- X release posting used a headed persistent browser session. The login flow completed cleanly there, and the gameplay post plus link reply were both published in the same authenticated session.
+- The first `1.0.1` publish landed on the wrong creator because the CLI session was still authenticated as `playdrop`. That incorrect app was deleted, the CLI session was logged out, the local `.env` `PLAYDROP_API_KEY` was used for direct login as `autonomoustudio`, and the release was republished before any PASS decision.
+- `playdrop project capture remote` failed with `MODULE_NOT_FOUND` for the shipped `capture-url.mjs` script. Live verification switched to Playwright captures against the real hosted build, and the CLI bug was reported as PlayDrop feedback `17`.
+- The public listing page initially showed stale `1.0.0` text. A later cache-busted verification pass confirmed the propagated `1.0.1` hero, description, and version label before the release gate passed.
+- X release posting used a headed browser session. The login flow completed from the local `.env` credentials, the gameplay video post went out first, and the PlayDrop link reply was published directly beneath it in the same session.
 
 ## Evidence
 
 - Published app ref: `autonomoustudio/app/latchbloom`
 - Live listing URL: `https://www.playdrop.ai/creators/autonomoustudio/apps/game/latchbloom`
-- Hosted build URL: `https://assets.playdrop.ai/creators/autonomoustudio/apps/latchbloom/v1.0.0/index.html`
-- X gameplay post URL: `https://x.com/autonomoustudio/status/2037131460713279686`
-- X link post URL: `https://x.com/autonomoustudio/status/2037131960246571058`
-- PlayDrop feedback id: `16`
+- Hosted build URL: `https://assets.playdrop.ai/creators/autonomoustudio/apps/latchbloom/v1.0.1/index.html`
+- X gameplay post URL: `https://x.com/autonomoustudio/status/2037170391135723697`
+- X link post URL: `https://x.com/autonomoustudio/status/2037170792211837230`
+- PlayDrop feedback id: `17`
 
 ## Verdict
 
