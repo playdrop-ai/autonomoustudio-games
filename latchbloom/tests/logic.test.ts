@@ -10,6 +10,7 @@ import {
   ROW_COUNT,
   STRIKE_LIMIT,
   spawnIntervalForElapsed,
+  spawnChargeForState,
   targetLaneForKind,
   toggleLatch,
   travelDurationForElapsed,
@@ -178,4 +179,20 @@ test("difficulty tiers depend on elapsed time, not score", () => {
   prepared.totalCorrect = 200;
   const result = updateGame(prepared, spawnIntervalForElapsed(0)).state;
   assert.equal(result.blossoms[0]!.travelDuration, 6500);
+});
+
+test("spawn charge starts empty, fills to one, and clamps while blocked", () => {
+  const state = createInitialState(20);
+  const prepared = cloneState(state);
+
+  assert.equal(spawnChargeForState(prepared), 0);
+
+  prepared.spawnTimer = 2100;
+  assert.equal(spawnChargeForState(prepared), 0.5);
+
+  prepared.spawnTimer = 4200;
+  assert.equal(spawnChargeForState(prepared), 1);
+
+  prepared.spawnTimer = 9000;
+  assert.equal(spawnChargeForState(prepared), 1);
 });

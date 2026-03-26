@@ -1,10 +1,12 @@
 /// <reference types="playdrop-sdk-types" />
 
+import { preloadBackdropPack } from "./game/backdrops";
 import { CanvasRenderer, type AccentLabel } from "./game/render";
 import { applyCasualToggle, applyExpertToggle, type AutoplayMode } from "./game/autoplay";
 import {
   STRIKE_LIMIT,
   createInitialState,
+  spawnChargeForState,
   toggleLatch,
   updateGame,
   type GameEvent,
@@ -20,6 +22,8 @@ declare global {
       streak: number;
       strikes: number;
       nextSpawn: { kind: string; lane: number };
+      spawnCharge01: number;
+      backdropVariant: "landscape" | "portrait" | "procedural";
       blossoms: Array<{ kind: string; segment: number; fromLane: number; toLane: number; progress: number }>;
       vases: Array<{ target: string; meter: number }>;
       latches: string[][];
@@ -61,7 +65,9 @@ void (async () => {
   canvas.style.touchAction = "none";
   document.body.appendChild(canvas);
 
-  const renderer = new CanvasRenderer(canvas);
+  host.setLoadingState({ status: "loading", message: "Loading backdrop art", progress: 0.34 });
+  const backdropPack = await preloadBackdropPack();
+  const renderer = new CanvasRenderer(canvas, backdropPack);
   const forcedSeed = readSeedFromLocation();
   let gameState = createInitialState(forcedSeed);
   let screen: Screen = "start";
@@ -142,12 +148,15 @@ void (async () => {
   }
 
   function publishDebug(): void {
+    const layout = renderer.getLayout();
     window.__latchbloomDebug = {
       screen,
       score: gameState.score,
       bestScore,
       streak: gameState.streak,
       strikes: gameState.strikes,
+      spawnCharge01: Number(spawnChargeForState(gameState).toFixed(3)),
+      backdropVariant: layout.backdropVariant,
       nextSpawn: {
         kind: gameState.nextSpawn.kind,
         lane: gameState.nextSpawn.lane,
@@ -164,17 +173,14 @@ void (async () => {
         meter: vase.meter,
       })),
       latches: gameState.latches.map((row) => row.slice()),
-      layout: (() => {
-        const layout = renderer.getLayout();
-        return {
-          boardX: layout.boardX,
-          boardY: layout.boardY,
-          boardWidth: layout.boardWidth,
-          boardHeight: layout.boardHeight,
-          laneCenters: layout.laneCenters.slice(),
-          latchRows: layout.latchRows.slice(),
-        };
-      })(),
+      layout: {
+        boardX: layout.boardX,
+        boardY: layout.boardY,
+        boardWidth: layout.boardWidth,
+        boardHeight: layout.boardHeight,
+        laneCenters: layout.laneCenters.slice(),
+        latchRows: layout.latchRows.slice(),
+      },
     };
   }
 
@@ -196,6 +202,7 @@ void (async () => {
       screen,
       bestScore,
       accent,
+      spawnCharge01: spawnChargeForState(gameState),
     });
   }
 
@@ -214,6 +221,8 @@ void (async () => {
       score: gameState.score,
       bestScore,
       strikes: gameState.strikes,
+      spawnCharge01: Number(spawnChargeForState(gameState).toFixed(3)),
+      backdropVariant: renderer.getLayout().backdropVariant,
       nextSpawn: gameState.nextSpawn,
       blossoms: gameState.blossoms.map((blossom) => ({
         kind: blossom.kind,

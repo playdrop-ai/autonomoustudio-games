@@ -6,7 +6,7 @@
 
 ## Output
 
-- Re-ran the gameplay gate on the `1.0.1` build with browser-rendered portrait and desktop proof, explicit HUD/overlay readability checks, and a full idle/casual/expert balance sweep.
+- Re-ran the gameplay gate on the `1.0.2` build with browser-rendered portrait and desktop proof, explicit HUD/overlay readability checks, marketing-parity review, and the full idle/casual/expert balance sweep.
 
 ## Inputs Reviewed
 
@@ -36,9 +36,10 @@
 
 ## Feedback Applied Before PASS
 
-- The original `1.0.0` review should have failed for unclear loss pressure and for the detached next preview. I changed the release HUD to a global top-right 3-pip strike meter and a single in-board next-preview above the actual incoming lane, then rechecked both surfaces.
-- The original portrait start and game-over framing also should have failed. The final gate only passed after replacing those treatments with bottom sheets and re-capturing browser-rendered proof.
-- Endless-play balance is now backed by a scripted sweep instead of subjective feel. The passing report records idle, casual, and expert results against the target windows.
+- The original `1.0.0` review should have failed for unclear loss pressure and for the detached next preview. That fix landed in `1.0.1`, but `1.0.2` only passed after the preview became a ghosted in-board token with a readable charge ring and the portrait HUD was moved fully above the painted frame.
+- The original portrait start and game-over framing also should have failed. The final gate only passed after replacing those treatments with bottom sheets, rebuilding the game-over stat stack, and re-capturing browser-rendered proof.
+- Endless-play balance stayed on the passing `1.0.1` schedule. I reran the scripted sweep after the visual patch and confirmed the casual median remained within `60-120s` and expert results still cleared the `300s+` / `240s+` targets without further retuning.
+- Marketing parity was rechecked after the new listing family landed. The live gameplay no longer reads materially cheaper than the hero art because the board now sits inside the same greenhouse visual language used by the listing.
 
 ## Evidence
 
@@ -47,6 +48,8 @@
 - Portrait game-over proof: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/mockups/portrait-gameover.png`
 - Desktop gameplay proof: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/mockups/desktop-gameplay.png`
 - Desktop game-over proof: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/mockups/desktop-gameover.png`
+- Live portrait gameplay proof: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/live-build-1.0.2-portrait-gameplay.png`
+- Live desktop gameplay proof: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/live-build-1.0.2-desktop-gameplay-v2.png`
 
 ## Verdict
 

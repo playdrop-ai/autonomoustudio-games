@@ -6,7 +6,7 @@
 
 ## Output
 
-- Replaced the weak `1.0.0` source-only mockup review with browser-rendered `1.0.1` captures at shipping resolutions for start, gameplay, and game-over on portrait and desktop.
+- Re-ran the mockup gate on browser-rendered `1.0.2` captures at shipping resolutions for start, gameplay, and game-over on portrait and desktop after the visual-polish patch.
 
 ## Inputs Reviewed
 
@@ -34,15 +34,16 @@
 
 ## Feedback Applied Before PASS
 
-- The original `1.0.0` gate should have failed because the portrait start and game-over screens covered too much of the board and were only reviewed from SVG source. I redid the mockup review using browser-rendered PNG captures from the actual build after converting start and game-over into bottom-sheet overlays that preserve the playfield silhouette.
-- The original mockups also encoded the old thorn system and detached preview treatment. The final reference set now shows the shipped global strike meter and in-board lane-aware next preview.
+- The original `1.0.0` gate should have failed because the portrait start and game-over screens covered too much of the board and were only reviewed from SVG source. The `1.0.2` pass keeps the browser-rendered review requirement and rechecks the bottom-sheet framing after the new backdrop art was integrated.
+- The earlier `1.0.1` mockups also understated the requested visual parity and still left the preview timing and portrait HUD placement too easy to miss. The final reference set now shows the painted greenhouse background, the ghosted blossom with charge ring, the top-rail portrait HUD, and the corrected game-over spacing.
 
 ## Evidence
 
 - Browser-rendered mockup set: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/mockups`
 - Start proof: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/mockups/portrait-start.png`
 - Gameplay proof: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/mockups/portrait-gameplay.png`
-- Game-over proof: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/mockups/desktop-gameover.png`
+- Game-over proof: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/mockups/portrait-gameover.png`
+- Desktop gameplay proof: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/mockups/desktop-gameplay.png`
 
 ## Verdict
 

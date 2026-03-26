@@ -209,6 +209,11 @@ export function travelDurationForElapsed(elapsedMs: number): number {
   return difficultyTierForElapsed(elapsedMs).travelDuration;
 }
 
+export function spawnChargeForState(state: Pick<GameState, "elapsedMs" | "spawnTimer">): number {
+  const interval = spawnIntervalForElapsed(state.elapsedMs);
+  return Math.max(0, Math.min(1, state.spawnTimer / interval));
+}
+
 export function updateGame(state: GameState, elapsedMs: number): { state: GameState; events: GameEvent[] } {
   if (elapsedMs <= 0) return { state, events: [] };
 

@@ -1,4 +1,10 @@
 import {
+  backdropVariantForViewport,
+  type RuntimeBackdropAsset,
+  type RuntimeBackdropPack,
+  type RuntimeBackdropVariant,
+} from "./backdrops";
+import {
   BLOSSOM_KINDS,
   LANE_COUNT,
   ROW_COUNT,
@@ -20,6 +26,11 @@ export interface AccentLabel {
 export interface Layout {
   width: number;
   height: number;
+  backdropVariant: RuntimeBackdropVariant | "procedural";
+  backdropDrawX: number;
+  backdropDrawY: number;
+  backdropDrawWidth: number;
+  backdropDrawHeight: number;
   boardX: number;
   boardY: number;
   boardWidth: number;
@@ -36,6 +47,7 @@ export interface RenderModel {
   screen: Screen;
   bestScore: number;
   accent: AccentLabel | null;
+  spawnCharge01: number;
 }
 
 interface BlossomPalette {
@@ -54,13 +66,15 @@ const BLOSSOM_PALETTE: Record<BlossomKind, BlossomPalette> = {
 export class CanvasRenderer {
   private readonly canvas: HTMLCanvasElement;
   private readonly ctx: CanvasRenderingContext2D;
+  private readonly backdropPack: RuntimeBackdropPack | null;
   private width = 1;
   private height = 1;
   private dpr = 1;
   private layout: Layout = this.computeLayout(1, 1);
 
-  constructor(canvas: HTMLCanvasElement) {
+  constructor(canvas: HTMLCanvasElement, backdropPack: RuntimeBackdropPack | null = null) {
     this.canvas = canvas;
+    this.backdropPack = backdropPack;
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("[latchbloom] canvas 2D context unavailable");
     this.ctx = ctx;
@@ -112,7 +126,7 @@ export class CanvasRenderer {
     this.drawBlossoms(model.state, model.screen === "gameover");
     this.drawGlassHighlight(model.screen === "gameover");
     if (model.screen !== "gameover") {
-      this.drawNextPreview(model.state);
+      this.drawNextPreview(model);
     }
     if (model.screen === "playing") {
       this.drawHud(model);
@@ -127,15 +141,42 @@ export class CanvasRenderer {
 
   private computeLayout(width: number, height: number): Layout {
     const portraitish = width <= height;
-    const safePadding = portraitish ? 34 : 56;
-    const maxBoardHeight = portraitish ? height - 146 : height - 102;
-    const idealHeight = portraitish ? Math.min(980, maxBoardHeight) : Math.min(792, maxBoardHeight);
-    const boardHeight = Math.max(620, idealHeight);
-    const boardWidth = portraitish
-      ? Math.min(width - safePadding * 2, boardHeight * 0.6)
-      : Math.min(width - safePadding * 2, boardHeight * 0.86);
-    const boardX = (width - boardWidth) / 2;
-    const boardY = portraitish ? Math.max(126, (height - boardHeight) / 2 + 24) : Math.max(52, (height - boardHeight) / 2);
+    const activeBackdrop = this.getBackdropForViewport(width, height);
+
+    let boardX: number;
+    let boardY: number;
+    let boardWidth: number;
+    let boardHeight: number;
+    let backdropDrawX = 0;
+    let backdropDrawY = 0;
+    let backdropDrawWidth = width;
+    let backdropDrawHeight = height;
+    let backdropVariant: RuntimeBackdropVariant | "procedural" = "procedural";
+
+    if (activeBackdrop) {
+      const drawRect = this.coverRect(activeBackdrop.image.naturalWidth, activeBackdrop.image.naturalHeight, width, height);
+      backdropDrawX = drawRect.x;
+      backdropDrawY = drawRect.y;
+      backdropDrawWidth = drawRect.width;
+      backdropDrawHeight = drawRect.height;
+      backdropVariant = activeBackdrop.variant;
+
+      boardX = drawRect.x + drawRect.width * activeBackdrop.boardRect.x;
+      boardY = drawRect.y + drawRect.height * activeBackdrop.boardRect.y;
+      boardWidth = drawRect.width * activeBackdrop.boardRect.width;
+      boardHeight = drawRect.height * activeBackdrop.boardRect.height;
+    } else {
+      const safePadding = portraitish ? 34 : 56;
+      const maxBoardHeight = portraitish ? height - 228 : height - 102;
+      const idealHeight = portraitish ? Math.min(980, maxBoardHeight) : Math.min(792, maxBoardHeight);
+      boardHeight = Math.max(600, idealHeight);
+      boardWidth = portraitish
+        ? Math.min(width - safePadding * 2, boardHeight * 0.6)
+        : Math.min(width - safePadding * 2, boardHeight * 0.86);
+      boardX = (width - boardWidth) / 2;
+      boardY = portraitish ? Math.max(164, (height - boardHeight) / 2 + 34) : Math.max(52, (height - boardHeight) / 2);
+    }
+
     const laneInset = boardWidth * 0.15;
     const laneCenters = Array.from({ length: LANE_COUNT }, (_, index) => boardX + laneInset + (index * (boardWidth - laneInset * 2)) / (LANE_COUNT - 1));
     const topY = boardY + boardHeight * 0.12;
@@ -148,6 +189,11 @@ export class CanvasRenderer {
     return {
       width,
       height,
+      backdropVariant,
+      backdropDrawX,
+      backdropDrawY,
+      backdropDrawWidth,
+      backdropDrawHeight,
       boardX,
       boardY,
       boardWidth,
@@ -160,6 +206,33 @@ export class CanvasRenderer {
     };
   }
 
+  private getBackdropForViewport(width: number, height: number): (RuntimeBackdropAsset & { variant: RuntimeBackdropVariant }) | null {
+    if (!this.backdropPack) return null;
+    const variant = backdropVariantForViewport(width, height);
+    const backdrop = this.backdropPack[variant];
+    return {
+      ...backdrop,
+      variant,
+    };
+  }
+
+  private coverRect(
+    sourceWidth: number,
+    sourceHeight: number,
+    targetWidth: number,
+    targetHeight: number,
+  ): { x: number; y: number; width: number; height: number } {
+    const scale = Math.max(targetWidth / sourceWidth, targetHeight / sourceHeight);
+    const width = sourceWidth * scale;
+    const height = sourceHeight * scale;
+    return {
+      x: (targetWidth - width) / 2,
+      y: (targetHeight - height) / 2,
+      width,
+      height,
+    };
+  }
+
   private drawBackground(): void {
     const ctx = this.ctx;
     const gradient = ctx.createLinearGradient(0, 0, this.width, this.height);
@@ -168,6 +241,24 @@ export class CanvasRenderer {
     gradient.addColorStop(1, "#1a1632");
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, this.width, this.height);
+
+    if (this.layout.backdropVariant !== "procedural" && this.backdropPack) {
+      const backdrop = this.backdropPack[this.layout.backdropVariant];
+      ctx.drawImage(
+        backdrop.image,
+        this.layout.backdropDrawX,
+        this.layout.backdropDrawY,
+        this.layout.backdropDrawWidth,
+        this.layout.backdropDrawHeight,
+      );
+      const glaze = ctx.createLinearGradient(0, 0, 0, this.height);
+      glaze.addColorStop(0, "rgba(8,15,24,0.12)");
+      glaze.addColorStop(0.7, "rgba(9,19,29,0)");
+      glaze.addColorStop(1, "rgba(6,14,22,0.18)");
+      ctx.fillStyle = glaze;
+      ctx.fillRect(0, 0, this.width, this.height);
+      return;
+    }
 
     this.fillGlow(this.width * 0.12, this.height * 0.14, this.width * 0.16, "rgba(28,70,84,0.34)");
     this.fillGlow(this.width * 0.84, this.height * 0.18, this.width * 0.14, "rgba(67,35,90,0.28)");
@@ -199,6 +290,7 @@ export class CanvasRenderer {
   }
 
   private drawBoardShell(): void {
+    if (this.layout.backdropVariant !== "procedural") return;
     const ctx = this.ctx;
     const { boardX, boardY, boardWidth, boardHeight } = this.layout;
     this.drawRoundedRect(boardX - 18, boardY - 18, boardWidth + 36, boardHeight + 36, 46, "rgba(22,53,73,0.38)", 28);
@@ -215,16 +307,17 @@ export class CanvasRenderer {
   private drawLaneBackplates(dim: boolean): void {
     const ctx = this.ctx;
     const { laneCenters, rowBoundaries, vaseY } = this.layout;
+    const hasBackdrop = this.layout.backdropVariant !== "procedural";
     for (const x of laneCenters) {
       ctx.save();
       ctx.lineCap = "round";
-      ctx.strokeStyle = `rgba(213,255,241,${dim ? 0.08 : 0.13})`;
+      ctx.strokeStyle = `rgba(213,255,241,${dim ? 0.08 : hasBackdrop ? 0.09 : 0.13})`;
       ctx.lineWidth = 68;
       ctx.beginPath();
       ctx.moveTo(x, rowBoundaries[0]! - 40);
       ctx.bezierCurveTo(x - 8, rowBoundaries[1]! + 18, x + 10, rowBoundaries[3]! + 28, x, vaseY - 68);
       ctx.stroke();
-      ctx.strokeStyle = `rgba(109,225,207,${dim ? 0.12 : 0.24})`;
+      ctx.strokeStyle = `rgba(109,225,207,${dim ? 0.12 : hasBackdrop ? 0.18 : 0.24})`;
       ctx.lineWidth = 4;
       ctx.stroke();
       ctx.restore();
@@ -406,35 +499,51 @@ export class CanvasRenderer {
 
   private drawHud(model: RenderModel): void {
     const ctx = this.ctx;
+    const portraitish = this.width <= this.height;
     ctx.save();
-    ctx.fillStyle = "#9ee3cf";
-    ctx.font = "700 22px 'Trebuchet MS', 'Avenir Next', sans-serif";
-    ctx.letterSpacing = "0.12em";
-    ctx.fillText("SCORE", 64, 108);
+    if (portraitish) {
+      const railY = Math.max(26, this.layout.boardY - 88);
+      const railLeft = Math.max(18, this.layout.boardX + 16);
+      const railRight = Math.min(this.width - 18, this.layout.boardX + this.layout.boardWidth - 16);
 
-    ctx.fillStyle = "#f8fff8";
-    ctx.font = "700 42px 'Trebuchet MS', 'Avenir Next', sans-serif";
-    ctx.fillText(this.formatScore(model.state.score), 64, 154);
+      ctx.fillStyle = "#9ee3cf";
+      ctx.font = "700 14px 'Trebuchet MS', 'Avenir Next', sans-serif";
+      ctx.letterSpacing = "0.12em";
+      ctx.fillText("SCORE", railLeft, railY + 14);
 
-    ctx.fillStyle = "#9ee3cf";
-    ctx.font = "700 22px 'Trebuchet MS', 'Avenir Next', sans-serif";
-    ctx.textAlign = "right";
-    ctx.fillText("STRIKES", this.width - 64, 108);
-    ctx.font = "600 15px 'Trebuchet MS', 'Avenir Next', sans-serif";
-    ctx.fillStyle = "#c6ddd8";
-    ctx.fillText("3 and out", this.width - 64, 156);
+      ctx.fillStyle = "#f8fff8";
+      ctx.font = "700 34px 'Trebuchet MS', 'Avenir Next', sans-serif";
+      ctx.fillText(this.formatScore(model.state.score), railLeft, railY + 48);
 
-    for (let index = 0; index < STRIKE_LIMIT; index += 1) {
-      const x = this.width - 156 + index * 36;
-      const y = 126;
-      const lit = index < model.state.strikes;
-      const color = index === 0 ? "#f3cc6b" : index === 1 ? "#f0a94d" : "#ff6f86";
-      this.fillCircle(x, y, 13, lit ? color : "rgba(58,87,99,0.5)");
-      this.fillCircle(x, y, 6, lit ? "rgba(255,248,227,0.88)" : "rgba(166,197,189,0.16)");
+      for (let index = 0; index < STRIKE_LIMIT; index += 1) {
+        const x = railRight - 74 + index * 28;
+        const y = railY + 24;
+        const lit = index < model.state.strikes;
+        const color = index === 0 ? "#f3cc6b" : index === 1 ? "#f0a94d" : "#ff6f86";
+        this.fillCircle(x, y, 10, lit ? color : "rgba(58,87,99,0.5)");
+        this.fillCircle(x, y, 4.5, lit ? "rgba(255,248,227,0.88)" : "rgba(166,197,189,0.16)");
+      }
+    } else {
+      ctx.fillStyle = "#9ee3cf";
+      ctx.font = "700 22px 'Trebuchet MS', 'Avenir Next', sans-serif";
+      ctx.letterSpacing = "0.12em";
+      ctx.fillText("SCORE", 64, 108);
+
+      ctx.fillStyle = "#f8fff8";
+      ctx.font = "700 42px 'Trebuchet MS', 'Avenir Next', sans-serif";
+      ctx.fillText(this.formatScore(model.state.score), 64, 154);
+
+      for (let index = 0; index < STRIKE_LIMIT; index += 1) {
+        const x = this.width - 156 + index * 36;
+        const y = 116;
+        const lit = index < model.state.strikes;
+        const color = index === 0 ? "#f3cc6b" : index === 1 ? "#f0a94d" : "#ff6f86";
+        this.fillCircle(x, y, 13, lit ? color : "rgba(58,87,99,0.5)");
+        this.fillCircle(x, y, 6, lit ? "rgba(255,248,227,0.88)" : "rgba(166,197,189,0.16)");
+      }
     }
     ctx.textAlign = "left";
 
-    const portraitish = this.width <= this.height;
     if (model.accent && model.accent.opacity > 0 && !portraitish) {
       ctx.save();
       ctx.globalAlpha = model.accent.opacity;
@@ -447,35 +556,44 @@ export class CanvasRenderer {
     ctx.restore();
   }
 
-  private drawNextPreview(state: GameState): void {
-    const packet = state.nextSpawn;
+  private drawNextPreview(model: RenderModel): void {
+    const packet = model.state.nextSpawn;
     const x = this.layout.laneCenters[packet.lane]!;
-    const labelY = this.layout.boardY + 38;
-    const tokenY = this.layout.boardY + 74;
+    const portraitish = this.width <= this.height;
+    const tokenY = Math.max(34, this.layout.boardY - (portraitish ? 40 : 24));
+    const ringRadius = portraitish ? 28 : 26;
+    const tokenRadius = portraitish ? 19 : 17;
     const palette = BLOSSOM_PALETTE[packet.kind];
     const ctx = this.ctx;
 
-    this.fillRoundedRect(x - 34, labelY - 16, 68, 28, 14, "rgba(10,27,38,0.82)");
-    ctx.save();
-    ctx.textAlign = "center";
-    ctx.fillStyle = "#9ee3cf";
-    ctx.font = "700 14px 'Trebuchet MS', 'Avenir Next', sans-serif";
-    ctx.fillText("NEXT", x, labelY + 5);
-    ctx.restore();
-
-    this.fillGlow(x, tokenY, 34, "rgba(109,225,207,0.18)");
-    this.fillCircle(x, tokenY, 22, palette.fill);
-    this.drawFlowerIcon(packet.kind, x, tokenY, 12, 1);
+    this.fillGlow(x, tokenY, ringRadius + 10, "rgba(109,225,207,0.12)");
 
     ctx.save();
-    ctx.strokeStyle = "rgba(237,255,247,0.24)";
-    ctx.lineWidth = 3;
+    ctx.strokeStyle = "rgba(235,255,248,0.14)";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(x, tokenY, ringRadius, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(158,227,207,0.88)";
+    ctx.lineWidth = 4;
     ctx.lineCap = "round";
     ctx.beginPath();
-    ctx.moveTo(x, tokenY + 28);
-    ctx.lineTo(x, this.layout.rowBoundaries[0]! - 12);
+    ctx.arc(
+      x,
+      tokenY,
+      ringRadius,
+      -Math.PI / 2,
+      -Math.PI / 2 + Math.PI * 2 * model.spawnCharge01,
+    );
     ctx.stroke();
     ctx.restore();
+
+    ctx.save();
+    ctx.globalAlpha = 0.72;
+    this.fillCircle(x, tokenY, tokenRadius, this.withAlpha(palette.fill, 0.76));
+    ctx.restore();
+    this.drawFlowerIcon(packet.kind, x, tokenY, portraitish ? 11 : 10, 0.86);
   }
 
   private drawStartOverlay(): void {
@@ -513,8 +631,8 @@ export class CanvasRenderer {
 
   private drawGameOverOverlay(score: number, bestScore: number): void {
     const portraitish = this.width <= this.height;
-    const panelWidth = Math.min(portraitish ? this.width - 36 : 640, this.width - 36);
-    const panelHeight = portraitish ? 334 : 286;
+    const panelWidth = Math.min(portraitish ? this.width - 36 : 648, this.width - 36);
+    const panelHeight = portraitish ? 372 : 312;
     const panelX = (this.width - panelWidth) / 2;
     const panelY = this.height - panelHeight - 26;
 
@@ -540,20 +658,33 @@ export class CanvasRenderer {
     for (let index = 0; index < detailLines.length; index += 1) {
       ctx.fillText(detailLines[index]!, panelX + 28, panelY + (portraitish ? 154 : 146) + index * 24);
     }
-
-    ctx.textAlign = "left";
-    ctx.fillStyle = "#9ee3cf";
-    ctx.font = "700 18px 'Trebuchet MS', 'Avenir Next', sans-serif";
-    ctx.fillText("RUN SCORE", panelX + 28, panelY + (portraitish ? 222 : 186));
-    ctx.fillText("BEST", panelX + panelWidth * 0.58, panelY + (portraitish ? 222 : 186));
-
-    ctx.fillStyle = "#fff3c2";
-    ctx.font = portraitish ? "700 44px 'Trebuchet MS', 'Avenir Next', sans-serif" : "700 40px 'Trebuchet MS', 'Avenir Next', sans-serif";
-    ctx.fillText(this.formatScore(score), panelX + 28, panelY + (portraitish ? 270 : 230));
-    ctx.fillText(this.formatScore(bestScore), panelX + panelWidth * 0.58, panelY + (portraitish ? 270 : 230));
     ctx.restore();
 
+    const cardY = panelY + (portraitish ? 198 : 182);
+    const cardGap = 16;
+    const cardWidth = (panelWidth - 56 - cardGap) / 2;
+    const cardHeight = portraitish ? 92 : 84;
+    this.drawStatCard(panelX + 28, cardY, cardWidth, cardHeight, "RUN SCORE", this.formatScore(score));
+    this.drawStatCard(panelX + 28 + cardWidth + cardGap, cardY, cardWidth, cardHeight, "BEST", this.formatScore(bestScore));
+
     this.drawButton(panelX + 28, panelY + panelHeight - (portraitish ? 78 : 66), panelWidth - 56, portraitish ? 56 : 48, "Bloom Again");
+  }
+
+  private drawStatCard(x: number, y: number, width: number, height: number, label: string, value: string): void {
+    this.fillRoundedRect(x, y, width, height, 22, "rgba(12,31,43,0.74)");
+    this.strokeRoundedRect(x, y, width, height, 22, "rgba(158,227,207,0.14)", 2);
+
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.fillStyle = "#9ee3cf";
+    ctx.font = "700 15px 'Trebuchet MS', 'Avenir Next', sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(label, x + width / 2, y + 24);
+
+    ctx.fillStyle = "#fff3c2";
+    ctx.font = "700 34px 'Trebuchet MS', 'Avenir Next', sans-serif";
+    ctx.fillText(value, x + width / 2, y + 66);
+    ctx.restore();
   }
 
   private drawButton(x: number, y: number, width: number, height: number, label: string): void {

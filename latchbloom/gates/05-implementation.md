@@ -6,7 +6,7 @@
 
 ## Output
 
-- Updated `Latchbloom` to the `1.0.1` ruleset with global strikes, a lane-aware in-board next preview, elapsed-time difficulty tiers, corrected start/game-over framing, and deterministic browser hooks for verification and capture.
+- Updated `Latchbloom` to the `1.0.2` ruleset with runtime backdrop loading, a preload fallback path, ghosted next-preview timing ring, compact portrait HUD placement, stable game-over spacing, and a clean PlayDrop source-upload path via `.playdropignore`.
 
 ## Inputs Reviewed
 
@@ -14,6 +14,10 @@
 - `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/SIMPLIFY_v1.md`
 - `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/mockups/portrait-gameplay.png`
 - `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/mockups/desktop-gameplay.png`
+- `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/src/game/backdrops.ts`
+- `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/assets/backdrops/latchbloom-board-landscape.jpg`
+- `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/assets/backdrops/latchbloom-board-portrait.jpg`
+- `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/.playdropignore`
 - `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/src/game/logic.ts`
 - `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/src/game/render.ts`
 - `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/src/game/autoplay.ts`
@@ -34,9 +38,9 @@
 
 ## Feedback Applied Before PASS
 
-- The original implementation shipped the wrong fail-pressure model and hid the next spawn away from the board. I replaced per-vase thorns with a global 3-strike system, moved next-preview into the board above the actual entry lane, and updated bouquet bursts to clear one strike.
-- The original start and game-over layouts also should have failed on portrait readability. I rebuilt both as bottom sheets and then fixed a desktop game-over spacing bug found in the browser-rendered mockup pass.
-- I added deterministic `window.advanceTime(ms)` and optional query-param autoplay for capture and verification so screenshots, video, and surface checks can be reproduced from the real build.
+- The original implementation shipped the wrong fail-pressure model and hid the next spawn away from the board. That `1.0.1` fix remains, and `1.0.2` extends it with the requested ghosted blossom preview and circular charge ring so the spawn timing is readable without extra label text.
+- The `1.0.1` portrait HUD still overlapped the top of the frame and the live game still felt cheaper than the hero art. I added the runtime backdrop pipeline, aligned the board to painted portrait and landscape greenhouse backdrops, moved the portrait HUD into a safe top rail, and recaptured both supported surfaces.
+- The game-over layout was rebuilt into fixed stat rows, and the PlayDrop publish path was hardened with `.playdropignore` after the source archive was found to be pulling in generated `output/` artifacts.
 
 ## Evidence
 
@@ -45,6 +49,8 @@
 - PlayDrop validation: `playdrop project validate .`
 - Implementation proof: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/mockups/portrait-gameplay.png`
 - Desktop implementation proof: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/mockups/desktop-gameplay.png`
+- Live desktop gameplay proof: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/live-build-1.0.2-desktop-gameplay-v2.png`
+- Live portrait gameplay proof: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/live-build-1.0.2-portrait-gameplay.png`
 
 ## Verdict
 

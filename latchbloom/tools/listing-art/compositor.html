@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Latchbloom Hero Compositor</title>
+    <style>
+      :root {
+        --bg: #08131d;
+        --paper: #f7f4ea;
+        --paper-shadow: rgba(11, 18, 26, 0.74);
+        --gold-0: #ffefbe;
+        --gold-1: #f2c86d;
+        --gold-2: #bf8540;
+        --glass: rgba(12, 25, 36, 0.22);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: var(--bg);
+      }
+
+      body {
+        position: relative;
+        font-family: "Didot", "Bodoni 72", "Baskerville", serif;
+        color: var(--paper);
+      }
+
+      body.variant-landscape {
+        width: 1600px;
+        height: 900px;
+      }
+
+      body.variant-portrait {
+        width: 1080px;
+        height: 1920px;
+      }
+
+      .stage {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        background:
+          radial-gradient(circle at 18% 18%, rgba(100, 188, 179, 0.28), rgba(100, 188, 179, 0) 30%),
+          radial-gradient(circle at 82% 20%, rgba(255, 190, 105, 0.24), rgba(255, 190, 105, 0) 26%),
+          linear-gradient(180deg, #0a1620 0%, #112033 45%, #171428 100%);
+      }
+
+      .base-image {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: saturate(1.02) contrast(1.02);
+      }
+
+      .wash,
+      .vignette,
+      .bloom {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+
+      .wash {
+        background:
+          linear-gradient(180deg, rgba(8, 18, 27, 0.16) 0%, rgba(8, 18, 27, 0.04) 34%, rgba(8, 18, 27, 0.22) 100%),
+          linear-gradient(90deg, rgba(8, 18, 27, 0.18) 0%, rgba(8, 18, 27, 0) 26%, rgba(8, 18, 27, 0) 74%, rgba(8, 18, 27, 0.18) 100%);
+      }
+
+      .vignette {
+        box-shadow: inset 0 0 180px rgba(5, 10, 15, 0.42);
+      }
+
+      .bloom {
+        background:
+          radial-gradient(circle at 50% 46%, rgba(255, 235, 180, 0.12), rgba(255, 235, 180, 0) 24%),
+          radial-gradient(circle at 50% 48%, rgba(105, 227, 207, 0.12), rgba(105, 227, 207, 0) 36%);
+      }
+
+      .title-block {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        display: grid;
+        place-items: center;
+        gap: 18px;
+        width: min(78%, 1200px);
+        padding: 40px 56px;
+        border-radius: 40px;
+        background: linear-gradient(180deg, rgba(10, 20, 30, 0.08), rgba(10, 20, 30, 0.18));
+        backdrop-filter: blur(1.5px);
+      }
+
+      body.variant-portrait .title-block {
+        width: min(86%, 860px);
+        padding: 54px 48px;
+        border-radius: 48px;
+      }
+
+      .title-glow {
+        position: absolute;
+        inset: auto 10% auto 10%;
+        height: 220px;
+        top: 50%;
+        transform: translateY(-50%);
+        border-radius: 999px;
+        background: radial-gradient(circle, rgba(255, 214, 126, 0.22), rgba(255, 214, 126, 0) 72%);
+        filter: blur(14px);
+      }
+
+      .eyebrow {
+        display: none;
+        font-family: "Futura", "Gill Sans", sans-serif;
+        font-size: 28px;
+        font-weight: 700;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: rgba(240, 242, 234, 0.9);
+      }
+
+      .title {
+        position: relative;
+        margin: 0;
+        text-align: center;
+        font-size: 170px;
+        line-height: 0.9;
+        letter-spacing: -0.06em;
+        font-weight: 700;
+        color: transparent;
+        background: linear-gradient(180deg, var(--gold-0) 0%, var(--gold-1) 46%, var(--gold-2) 100%);
+        background-clip: text;
+        -webkit-background-clip: text;
+        text-shadow:
+          0 2px 0 rgba(255, 248, 228, 0.26),
+          0 18px 42px rgba(11, 18, 26, 0.44),
+          0 0 48px rgba(255, 223, 149, 0.14);
+      }
+
+      body.variant-portrait .title {
+        font-size: 184px;
+      }
+
+      .subtitle {
+        display: none;
+        max-width: 18ch;
+        margin: 0;
+        text-align: center;
+        font-family: "Avenir Next", "Trebuchet MS", sans-serif;
+        font-size: 34px;
+        line-height: 1.14;
+        letter-spacing: 0.02em;
+        color: rgba(247, 244, 234, 0.88);
+        text-shadow: 0 8px 30px var(--paper-shadow);
+      }
+
+      body.variant-portrait .subtitle {
+        font-size: 42px;
+      }
+
+      .frame {
+        position: absolute;
+        inset: 28px;
+        border-radius: 38px;
+        box-shadow:
+          inset 0 0 0 1px rgba(247, 244, 234, 0.08),
+          inset 0 0 0 10px rgba(10, 20, 30, 0.08);
+        pointer-events: none;
+      }
+
+      body.variant-portrait .frame {
+        inset: 34px;
+        border-radius: 48px;
+      }
+    </style>
+  </head>
+  <body class="variant-landscape">
+    <div class="stage">
+      <img class="base-image" alt="" />
+      <div class="wash"></div>
+      <div class="bloom"></div>
+      <div class="title-glow"></div>
+      <div class="title-block">
+        <div class="eyebrow"></div>
+        <h1 class="title">Latchbloom</h1>
+        <p class="subtitle"></p>
+      </div>
+      <div class="vignette"></div>
+      <div class="frame"></div>
+    </div>
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const variant = params.get("variant") === "portrait" ? "portrait" : "landscape";
+      const bg = params.get("bg") || "";
+      const title = params.get("title") || "Latchbloom";
+      const eyebrow = params.get("eyebrow") || "";
+      const subtitle = params.get("subtitle") || "";
+
+      document.body.className = `variant-${variant}`;
+      document.querySelector(".base-image").src = bg;
+      document.querySelector(".title").textContent = title;
+
+      const eyebrowEl = document.querySelector(".eyebrow");
+      if (eyebrow) {
+        eyebrowEl.textContent = eyebrow;
+        eyebrowEl.style.display = "block";
+      }
+
+      const subtitleEl = document.querySelector(".subtitle");
+      if (subtitle) {
+        subtitleEl.textContent = subtitle;
+        subtitleEl.style.display = "block";
+      }
+    </script>
+  </body>
+</html>

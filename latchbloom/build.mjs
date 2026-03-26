@@ -1,9 +1,11 @@
 import * as esbuild from 'esbuild';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 
 const HTML_TEMPLATE = 'template.html';
 const HTML_TARGET = 'dist/index.html';
+const STATIC_ASSETS_SOURCE = 'assets';
+const STATIC_ASSETS_TARGET = 'dist/assets';
 
 const buildOptions = {
   entryPoints: ['src/main.ts'],
@@ -39,11 +41,18 @@ function inlineHtml(result) {
   console.log(`[latchbloom] Wrote ${HTML_TARGET}`);
 }
 
+function syncStaticAssets() {
+  rmSync(STATIC_ASSETS_TARGET, { recursive: true, force: true });
+  if (!existsSync(STATIC_ASSETS_SOURCE)) return;
+  cpSync(STATIC_ASSETS_SOURCE, STATIC_ASSETS_TARGET, { recursive: true });
+}
+
 buildOptions.plugins.push({
   name: 'inline-template',
   setup(build) {
     build.onEnd(result => {
       if (result.errors.length > 0) return;
+      syncStaticAssets();
       inlineHtml(result);
     });
   },
