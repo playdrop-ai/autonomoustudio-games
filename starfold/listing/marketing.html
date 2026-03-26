@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Starfold Listing Art</title>
+    <style>
+      :root {
+        --night-0: #090712;
+        --night-1: #130d26;
+        --night-2: #251638;
+        --gold: #f0c875;
+        --gold-deep: #8b6635;
+        --paper: #fff6de;
+        --ink-soft: rgba(255, 246, 222, 0.72);
+        --sun-a: #ffd67c;
+        --sun-b: #e99d2d;
+        --moon-a: #d9dbff;
+        --moon-b: #7b7de5;
+        --wave-a: #b4f3ff;
+        --wave-b: #33b0d9;
+        --leaf-a: #d2ffe0;
+        --leaf-b: #4cc27d;
+        --ember-a: #ffc4b0;
+        --ember-b: #f1695e;
+        --ash-a: #61566a;
+        --ash-b: #342f3b;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        font-family:
+          "Avenir Next",
+          "Trebuchet MS",
+          sans-serif;
+        color: var(--paper);
+        background:
+          radial-gradient(circle at 18% 14%, rgba(94, 78, 165, 0.62) 0%, rgba(94, 78, 165, 0) 28%),
+          radial-gradient(circle at 82% 18%, rgba(224, 101, 92, 0.28) 0%, rgba(224, 101, 92, 0) 24%),
+          radial-gradient(circle at 68% 84%, rgba(56, 157, 191, 0.18) 0%, rgba(56, 157, 191, 0) 30%),
+          linear-gradient(180deg, var(--night-0) 0%, var(--night-1) 50%, var(--night-2) 100%);
+      }
+
+      body::before,
+      body::after {
+        content: "";
+        position: absolute;
+        border-radius: 999px;
+        filter: blur(24px);
+        pointer-events: none;
+      }
+
+      body::before {
+        width: 32vmin;
+        height: 32vmin;
+        left: -8vmin;
+        top: 52%;
+        background: rgba(240, 200, 117, 0.16);
+      }
+
+      body::after {
+        width: 26vmin;
+        height: 26vmin;
+        right: -7vmin;
+        top: 10%;
+        background: rgba(87, 139, 255, 0.16);
+      }
+
+      body[data-variant="icon"] .portrait-frame,
+      body[data-variant="icon"] .landscape-frame,
+      body[data-variant="portrait"] .icon-frame,
+      body[data-variant="portrait"] .landscape-frame,
+      body[data-variant="landscape"] .icon-frame,
+      body[data-variant="landscape"] .portrait-frame {
+        display: none;
+      }
+
+      .frame {
+        position: relative;
+        width: 100%;
+        height: 100%;
+      }
+
+      .spark {
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(255, 246, 222, 0.7);
+        box-shadow: 0 0 24px rgba(255, 246, 222, 0.24);
+      }
+
+      .board {
+        position: absolute;
+        border-radius: 38px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 24%),
+          linear-gradient(180deg, rgba(38, 29, 68, 0.98) 0%, rgba(18, 14, 36, 0.98) 100%);
+        box-shadow:
+          inset 0 0 0 4px rgba(240, 200, 117, 0.72),
+          0 36px 72px rgba(7, 6, 18, 0.46);
+      }
+
+      .board::before {
+        content: "";
+        position: absolute;
+        inset: -14px;
+        border-radius: 48px;
+        background: linear-gradient(145deg, rgba(240, 200, 117, 0.16), rgba(240, 200, 117, 0));
+        z-index: -1;
+      }
+
+      .title {
+        position: absolute;
+        margin: 0;
+        font-size: clamp(72px, 10vw, 138px);
+        line-height: 0.92;
+        font-weight: 800;
+        letter-spacing: -0.06em;
+      }
+
+      .chip {
+        position: absolute;
+        display: grid;
+        place-items: center;
+        border-radius: 28px;
+        box-shadow:
+          0 20px 34px rgba(4, 3, 10, 0.32),
+          inset 0 1px 0 rgba(255, 255, 255, 0.28);
+      }
+
+      .chip::before {
+        content: "";
+        position: absolute;
+        inset: 4px;
+        border-radius: inherit;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0));
+      }
+
+      .chip svg {
+        width: 54%;
+        height: 54%;
+        position: relative;
+        z-index: 1;
+      }
+
+      .sun {
+        background: linear-gradient(180deg, var(--sun-a), var(--sun-b));
+      }
+
+      .moon {
+        background: linear-gradient(180deg, var(--moon-a), var(--moon-b));
+      }
+
+      .wave {
+        background: linear-gradient(180deg, var(--wave-a), var(--wave-b));
+      }
+
+      .leaf {
+        background: linear-gradient(180deg, var(--leaf-a), var(--leaf-b));
+      }
+
+      .ember {
+        background: linear-gradient(180deg, var(--ember-a), var(--ember-b));
+      }
+
+      .ash {
+        background: linear-gradient(180deg, var(--ash-a), var(--ash-b));
+      }
+
+      .swipe-trail {
+        position: absolute;
+        height: 12px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, rgba(255, 246, 222, 0), rgba(255, 246, 222, 0.88), rgba(255, 246, 222, 0));
+        transform: rotate(-18deg);
+        filter: blur(1px);
+      }
+
+      .icon-frame .board {
+        inset: 12%;
+      }
+
+      .icon-frame .chip {
+        width: 31%;
+        height: 31%;
+      }
+
+      .portrait-frame .title {
+        left: 9%;
+        top: 8%;
+      }
+
+      .portrait-frame .board {
+        left: 8%;
+        right: 8%;
+        top: 26%;
+        bottom: 8%;
+      }
+
+      .portrait-frame .chip {
+        width: 23%;
+        height: 12.5%;
+      }
+
+      .landscape-frame .title {
+        left: 8%;
+        top: 18%;
+        max-width: 5ch;
+      }
+
+      .landscape-frame .board {
+        left: 44%;
+        right: 8%;
+        top: 15%;
+        bottom: 15%;
+      }
+
+      .landscape-frame .chip {
+        width: 15%;
+        height: 22%;
+      }
+    </style>
+  </head>
+  <body data-variant="portrait">
+    <div class="frame icon-frame">
+      <div class="board"></div>
+      <div class="spark" style="left: 20%; top: 18%;"></div>
+      <div class="spark" style="left: 74%; top: 24%;"></div>
+      <div class="spark" style="left: 64%; top: 78%;"></div>
+      <div class="chip moon" style="left: 18%; top: 22%; transform: rotate(-10deg);">
+        <svg viewBox="0 0 100 100" fill="none"><path d="M67 18c-6 2-18 9-18 28 0 17 12 24 18 26-7 9-17 14-30 14-23 0-41-18-41-40S14 6 37 6c14 0 24 4 30 12z" fill="#f4f2ff"/><circle cx="54" cy="43" r="15" fill="#8b8dff"/></svg>
+      </div>
+      <div class="chip sun" style="left: 38%; top: 13%; transform: rotate(8deg);">
+        <svg viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="18" stroke="#fff8df" stroke-width="8"/><g stroke="#fff8df" stroke-width="8" stroke-linecap="round"><path d="M50 6v18"/><path d="M50 76v18"/><path d="M6 50h18"/><path d="M76 50h18"/><path d="M20 20l13 13"/><path d="M67 67l13 13"/><path d="M20 80l13-13"/><path d="M67 33l13-13"/></g></svg>
+      </div>
+      <div class="chip ember" style="left: 48%; top: 43%; transform: rotate(6deg);">
+        <svg viewBox="0 0 100 100" fill="none"><path d="M50 8c9 12 22 22 22 38 0 13-10 26-22 40-12-14-22-27-22-40 0-16 13-26 22-38z" fill="#fff2d9"/><path d="M50 26c6 8 14 15 14 25 0 8-6 15-14 24-8-9-14-16-14-24 0-10 8-17 14-25z" fill="#ff8462"/></svg>
+      </div>
+      <div class="chip ash" style="left: 24%; top: 54%; transform: rotate(-4deg);">
+        <svg viewBox="0 0 100 100" fill="none"><path d="M16 28 38 14l28 10 18 24-12 30-32 8-20-18-4-24z" fill="#6b5a68"/><path d="M28 30 54 42 38 76" stroke="#ff9f66" stroke-width="7" stroke-linecap="round"/><path d="M54 42 74 60" stroke="#ff9f66" stroke-width="6" stroke-linecap="round"/></svg>
+      </div>
+      <div class="chip wave" style="left: 54%; top: 66%; transform: rotate(10deg);">
+        <svg viewBox="0 0 100 100" fill="none"><path d="M6 38c12-10 21-10 33 0s21 10 33 0 21-10 22-10" stroke="#ecfdff" stroke-width="8" stroke-linecap="round"/><path d="M6 62c12-10 21-10 33 0s21 10 33 0 21-10 22-10" stroke="#ecfdff" stroke-width="8" stroke-linecap="round"/></svg>
+      </div>
+    </div>
+
+    <div class="frame portrait-frame">
+      <h1 class="title">Starfold</h1>
+      <div class="spark" style="left: 10%; top: 24%;"></div>
+      <div class="spark" style="left: 82%; top: 20%;"></div>
+      <div class="spark" style="left: 76%; top: 82%;"></div>
+      <div class="board"></div>
+      <div class="swipe-trail" style="left: 22%; top: 44%; width: 54%;"></div>
+      <div class="chip moon" style="left: 14%; top: 34%; transform: rotate(-8deg);"><svg viewBox="0 0 100 100" fill="none"><path d="M67 18c-6 2-18 9-18 28 0 17 12 24 18 26-7 9-17 14-30 14-23 0-41-18-41-40S14 6 37 6c14 0 24 4 30 12z" fill="#f4f2ff"/><circle cx="54" cy="43" r="15" fill="#8b8dff"/></svg></div>
+      <div class="chip sun" style="left: 37%; top: 30%; transform: rotate(5deg);"><svg viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="18" stroke="#fff8df" stroke-width="8"/><g stroke="#fff8df" stroke-width="8" stroke-linecap="round"><path d="M50 6v18"/><path d="M50 76v18"/><path d="M6 50h18"/><path d="M76 50h18"/><path d="M20 20l13 13"/><path d="M67 67l13 13"/><path d="M20 80l13-13"/><path d="M67 33l13-13"/></g></svg></div>
+      <div class="chip leaf" style="left: 60%; top: 36%; transform: rotate(8deg);"><svg viewBox="0 0 100 100" fill="none"><path d="M18 58c0-22 18-40 40-40 10 0 19 4 26 10-1 30-24 54-54 54-7-7-12-15-12-24z" fill="#effff4"/><path d="M26 72c18-20 29-31 48-48" stroke="#58d388" stroke-width="7" stroke-linecap="round"/></svg></div>
+      <div class="chip ember" style="left: 18%; top: 52%; transform: rotate(-4deg);"><svg viewBox="0 0 100 100" fill="none"><path d="M50 8c9 12 22 22 22 38 0 13-10 26-22 40-12-14-22-27-22-40 0-16 13-26 22-38z" fill="#fff2d9"/><path d="M50 26c6 8 14 15 14 25 0 8-6 15-14 24-8-9-14-16-14-24 0-10 8-17 14-25z" fill="#ff8462"/></svg></div>
+      <div class="chip ash" style="left: 42%; top: 58%; transform: rotate(10deg);"><svg viewBox="0 0 100 100" fill="none"><path d="M16 28 38 14l28 10 18 24-12 30-32 8-20-18-4-24z" fill="#6b5a68"/><path d="M28 30 54 42 38 76" stroke="#ff9f66" stroke-width="7" stroke-linecap="round"/><path d="M54 42 74 60" stroke="#ff9f66" stroke-width="6" stroke-linecap="round"/></svg></div>
+      <div class="chip wave" style="left: 64%; top: 62%; transform: rotate(-7deg);"><svg viewBox="0 0 100 100" fill="none"><path d="M6 38c12-10 21-10 33 0s21 10 33 0 21-10 22-10" stroke="#ecfdff" stroke-width="8" stroke-linecap="round"/><path d="M6 62c12-10 21-10 33 0s21 10 33 0 21-10 22-10" stroke="#ecfdff" stroke-width="8" stroke-linecap="round"/></svg></div>
+    </div>
+
+    <div class="frame landscape-frame">
+      <h1 class="title">Starfold</h1>
+      <div class="spark" style="left: 16%; top: 16%;"></div>
+      <div class="spark" style="left: 32%; top: 72%;"></div>
+      <div class="spark" style="left: 84%; top: 18%;"></div>
+      <div class="board"></div>
+      <div class="swipe-trail" style="left: 52%; top: 34%; width: 30%;"></div>
+      <div class="chip moon" style="left: 50%; top: 22%; transform: rotate(-10deg);"><svg viewBox="0 0 100 100" fill="none"><path d="M67 18c-6 2-18 9-18 28 0 17 12 24 18 26-7 9-17 14-30 14-23 0-41-18-41-40S14 6 37 6c14 0 24 4 30 12z" fill="#f4f2ff"/><circle cx="54" cy="43" r="15" fill="#8b8dff"/></svg></div>
+      <div class="chip sun" style="left: 64%; top: 18%; transform: rotate(7deg);"><svg viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="18" stroke="#fff8df" stroke-width="8"/><g stroke="#fff8df" stroke-width="8" stroke-linecap="round"><path d="M50 6v18"/><path d="M50 76v18"/><path d="M6 50h18"/><path d="M76 50h18"/><path d="M20 20l13 13"/><path d="M67 67l13 13"/><path d="M20 80l13-13"/><path d="M67 33l13-13"/></g></svg></div>
+      <div class="chip leaf" style="left: 78%; top: 26%; transform: rotate(4deg);"><svg viewBox="0 0 100 100" fill="none"><path d="M18 58c0-22 18-40 40-40 10 0 19 4 26 10-1 30-24 54-54 54-7-7-12-15-12-24z" fill="#effff4"/><path d="M26 72c18-20 29-31 48-48" stroke="#58d388" stroke-width="7" stroke-linecap="round"/></svg></div>
+      <div class="chip ash" style="left: 56%; top: 52%; transform: rotate(-5deg);"><svg viewBox="0 0 100 100" fill="none"><path d="M16 28 38 14l28 10 18 24-12 30-32 8-20-18-4-24z" fill="#6b5a68"/><path d="M28 30 54 42 38 76" stroke="#ff9f66" stroke-width="7" stroke-linecap="round"/><path d="M54 42 74 60" stroke="#ff9f66" stroke-width="6" stroke-linecap="round"/></svg></div>
+      <div class="chip ember" style="left: 69%; top: 48%; transform: rotate(8deg);"><svg viewBox="0 0 100 100" fill="none"><path d="M50 8c9 12 22 22 22 38 0 13-10 26-22 40-12-14-22-27-22-40 0-16 13-26 22-38z" fill="#fff2d9"/><path d="M50 26c6 8 14 15 14 25 0 8-6 15-14 24-8-9-14-16-14-24 0-10 8-17 14-25z" fill="#ff8462"/></svg></div>
+      <div class="chip wave" style="left: 82%; top: 54%; transform: rotate(-8deg);"><svg viewBox="0 0 100 100" fill="none"><path d="M6 38c12-10 21-10 33 0s21 10 33 0 21-10 22-10" stroke="#ecfdff" stroke-width="8" stroke-linecap="round"/><path d="M6 62c12-10 21-10 33 0s21 10 33 0 21-10 22-10" stroke="#ecfdff" stroke-width="8" stroke-linecap="round"/></svg></div>
+    </div>
+
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const variant = params.get("variant");
+      if (variant === "icon" || variant === "portrait" || variant === "landscape") {
+        document.body.dataset.variant = variant;
+      }
+    </script>
+  </body>
+</html>
