@@ -3,7 +3,17 @@ import assert from "node:assert/strict";
 
 import {
   applyMove,
+  ashBurstCountForMove,
+  ashIntervalForMove,
   ASH_INTERVAL,
+  DOUBLE_ASH_START,
+  ENDGAME_ASH_INTERVAL,
+  ENDGAME_ASH_START,
+  MIDGAME_ASH_INTERVAL,
+  MIDGAME_ASH_START,
+  SUDDEN_DEATH_ASH_BURST,
+  SUDDEN_DEATH_ASH_INTERVAL,
+  SUDDEN_DEATH_ASH_START,
   boardKinds,
   countAsh,
   createBoardFromKinds,
@@ -79,6 +89,17 @@ test("spawns ash every fourth move", () => {
     state = applyMove(state, { axis: "row", index: move % 6, direction: 1 }).state;
   }
   assert.ok(state.ashCount >= 1);
+});
+
+test("ash spread ramps up later in the run", () => {
+  assert.equal(ashIntervalForMove(4), ASH_INTERVAL);
+  assert.equal(ashIntervalForMove(MIDGAME_ASH_START), MIDGAME_ASH_INTERVAL);
+  assert.equal(ashIntervalForMove(ENDGAME_ASH_START), ENDGAME_ASH_INTERVAL);
+  assert.equal(ashIntervalForMove(SUDDEN_DEATH_ASH_START), SUDDEN_DEATH_ASH_INTERVAL);
+  assert.equal(ashBurstCountForMove(4), 1);
+  assert.equal(ashBurstCountForMove(MIDGAME_ASH_START), 1);
+  assert.equal(ashBurstCountForMove(DOUBLE_ASH_START), 2);
+  assert.equal(ashBurstCountForMove(SUDDEN_DEATH_ASH_START), SUDDEN_DEATH_ASH_BURST);
 });
 
 test("finds every orthogonally connected group from the screenshot case", () => {

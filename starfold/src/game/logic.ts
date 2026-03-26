@@ -2,6 +2,14 @@ export const BOARD_ROWS = 6;
 export const BOARD_COLS = 5;
 export const ASH_LIMIT = 10;
 export const ASH_INTERVAL = 4;
+export const MIDGAME_ASH_INTERVAL = 3;
+export const ENDGAME_ASH_INTERVAL = 2;
+export const MIDGAME_ASH_START = 24;
+export const ENDGAME_ASH_START = 48;
+export const DOUBLE_ASH_START = 80;
+export const SUDDEN_DEATH_ASH_INTERVAL = 1;
+export const SUDDEN_DEATH_ASH_START = 120;
+export const SUDDEN_DEATH_ASH_BURST = 3;
 
 export type SigilKind = "sun" | "moon" | "wave" | "leaf" | "ember";
 export type TileKind = SigilKind | "ash";
@@ -162,9 +170,11 @@ export function applyMove(state: GameState, move: Move): TurnResult {
   }
 
   const moves = state.moves + 1;
-  if (moves % ASH_INTERVAL === 0) {
-    const ashResult = addAsh(board, rngState);
-    if (ashResult) {
+  const ashBursts = ashBurstCountForMove(moves);
+  if (ashBursts > 0) {
+    for (let burst = 0; burst < ashBursts; burst += 1) {
+      const ashResult = addAsh(board, rngState);
+      if (!ashResult) break;
       stages.push({
         kind: "ash",
         before: board,
@@ -205,6 +215,19 @@ export function countAsh(board: Board): number {
     }
   }
   return count;
+}
+
+export function ashIntervalForMove(moves: number): number {
+  if (moves >= SUDDEN_DEATH_ASH_START) return SUDDEN_DEATH_ASH_INTERVAL;
+  if (moves >= ENDGAME_ASH_START) return ENDGAME_ASH_INTERVAL;
+  if (moves >= MIDGAME_ASH_START) return MIDGAME_ASH_INTERVAL;
+  return ASH_INTERVAL;
+}
+
+export function ashBurstCountForMove(moves: number): number {
+  if (moves % ashIntervalForMove(moves) !== 0) return 0;
+  if (moves >= SUDDEN_DEATH_ASH_START) return SUDDEN_DEATH_ASH_BURST;
+  return moves >= DOUBLE_ASH_START ? 2 : 1;
 }
 
 export function findGroups(board: Board): Position[][] {

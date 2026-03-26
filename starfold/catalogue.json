@@ -2,9 +2,9 @@
   "apps": [
     {
       "name": "starfold",
-      "version": "1.0.2",
+      "version": "1.0.3",
       "displayName": "Starfold",
-      "description": "Swipe one whole row or column. After each move, any orthogonally connected group of 3+ matching sigils disappears. Clear beside ash to cleanse it before 10 ash tiles consume the shrine.",
+      "description": "Swipe one whole row or column. After each move, any orthogonally connected group of 3+ matching sigils disappears. Clear beside ash to cleanse it before 10 ash tiles consume the shrine. Ash starts slow, then turns relentless in long runs.",
       "emoji": "✨",
       "color": "#F0C875",
       "type": "GAME",
