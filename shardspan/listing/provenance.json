@@ -1,0 +1,59 @@
+{
+  "game": "Shardspan",
+  "generatedAt": "2026-03-27T03:55:00-04:00",
+  "playdropResearch": {
+    "studioAndPublicGamesReviewed": [
+      "mnouz/app/stackdrop",
+      "ksomoracz/app/project-throttle",
+      "vasio01/app/cosmic_pool"
+    ],
+    "notes": [
+      "Avoid reusing endless-runner framing or glossy sci-fi poster language that would make the low-detail shipped build feel misrepresented.",
+      "Keep the listing honest to the real floating-bridge layout, the amber/cobalt bridge-state rule, and the small purple-and-white runner silhouette."
+    ]
+  },
+  "aiExploration": {
+    "tool": "Canva generate_design",
+    "prompt": "Create three distinct marketing poster concepts for an original game called Shardspan. The game is a desktop-only 3D relay sprint set over a deep blue void with floating amber bridges, cobalt bridges, black relay pedestals, white crystal shards, a tiny purple-and-white robot runner, and sparse floating islands. Show the title SHARDSPAN clearly in the central composition. Keep the art honest to the shipped game: low-detail geometry, bold color blocking, and simple shapes, not a hyper-detailed sci-fi movie poster. Explore three directions: one close relay-and-runner action poster, one wide course poster, and one abstract shard-and-bridge poster.",
+    "jobId": "18273663-fcbb-437c-bc42-e600bfaa2d4f",
+    "candidateIds": [
+      "dg-78a93e2a-5eed-4963-8fec-eddb1536e647",
+      "dg-94b03c64-09e7-442c-b46f-0c62edd5ad30",
+      "dg-99a6af1a-002f-4783-8964-5ce591499fe4",
+      "dg-9c13ffb5-013b-443c-a2e3-8d5268f9f4b9"
+    ],
+    "candidateUrls": [
+      "https://www.canva.com/d/3j8n-A2AXRK7m6m",
+      "https://www.canva.com/d/Oerapoqn-YYZIeU",
+      "https://www.canva.com/d/pByaT5o-aww__nQ",
+      "https://www.canva.com/d/46dpIjPmbWEdSji"
+    ],
+    "exportNote": "Direct thumbnail fetches from the returned Canva URLs resolved to HTML wrappers in this environment, so the AI batch stayed at concept-exploration level only and was not used as final media."
+  },
+  "captureSources": {
+    "landscapeScreenshots": [
+      "/Users/oliviermichon/Documents/autonomoustudio-games/shardspan/listing/shardspan_1280x720-screenshot-1.png",
+      "/Users/oliviermichon/Documents/autonomoustudio-games/shardspan/listing/shardspan_1280x720-screenshot-2.png"
+    ],
+    "portraitScreenshots": [
+      "/Users/oliviermichon/Documents/autonomoustudio-games/shardspan/listing/shardspan_720x1280-screenshot-1.png",
+      "/Users/oliviermichon/Documents/autonomoustudio-games/shardspan/listing/shardspan_720x1280-screenshot-2.png"
+    ],
+    "landscapeVideo": "/Users/oliviermichon/Documents/autonomoustudio-games/shardspan/listing/shardspan_1280x720-recording.mp4",
+    "capturePipeline": [
+      "npm run capture:listing",
+      "npm run render:listing"
+    ]
+  },
+  "finalFamily": {
+    "heroLandscape": "/Users/oliviermichon/Documents/autonomoustudio-games/shardspan/listing/hero-landscape.png",
+    "heroPortrait": "/Users/oliviermichon/Documents/autonomoustudio-games/shardspan/listing/hero-portrait.png",
+    "icon": "/Users/oliviermichon/Documents/autonomoustudio-games/shardspan/listing/icon.png",
+    "approach": "Hand-authored HTML/CSS composition rendered through Playwright from real Shardspan capture frames.",
+    "whyItWon": [
+      "The final family guarantees that the title, palette, relay crystal silhouette, and amber-versus-cobalt bridge language all match the shipped build exactly.",
+      "The final icon is full-bleed square art, not a badge on a matte, and it keeps the shard-and-span motif readable at small size.",
+      "The final heroes stay visually stronger than raw screenshots without inventing detail that the live build does not actually ship."
+    ]
+  }
+}

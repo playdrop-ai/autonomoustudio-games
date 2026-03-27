@@ -1,0 +1,657 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Shardspan</title>
+    <style>
+      @font-face {
+        font-family: "Lilita One";
+        src: url("./assets/fonts/lilita_one_regular.ttf") format("truetype");
+      }
+
+      :root {
+        color-scheme: only light;
+        --bg-top: #1e2f5b;
+        --bg-bottom: #354f88;
+        --panel: rgba(11, 18, 36, 0.82);
+        --panel-border: rgba(255, 255, 255, 0.14);
+        --text: #f5f7fb;
+        --muted: #c8d3ec;
+        --amber: #f0b43f;
+        --cobalt: #59a6ff;
+        --danger: #ff6b6b;
+        --ink: #10182d;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
+      }
+
+      body {
+        font-family: "Lilita One", "Trebuchet MS", sans-serif;
+        color: var(--text);
+        overscroll-behavior: none;
+      }
+
+      body.touch-device,
+      body.touch-device #app,
+      body.touch-device #game-canvas {
+        touch-action: none;
+      }
+
+      #app {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+      }
+
+      #game-canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      .overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background:
+          radial-gradient(circle at top right, rgba(89, 166, 255, 0.18), transparent 34%),
+          linear-gradient(180deg, rgba(6, 10, 22, 0.25), rgba(6, 10, 22, 0.62));
+      }
+
+      .overlay[hidden] {
+        display: none;
+      }
+
+      .panel {
+        width: min(760px, calc(100vw - 40px));
+        max-height: calc(100vh - 40px);
+        overflow-y: auto;
+        padding: 26px 28px 24px;
+        border-radius: 28px;
+        border: 1px solid var(--panel-border);
+        background: var(--panel);
+        box-shadow: 0 28px 90px rgba(0, 0, 0, 0.35);
+        backdrop-filter: blur(10px);
+      }
+
+      .eyebrow {
+        margin: 0 0 10px;
+        font-size: 12px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      h1 {
+        margin: 0 0 14px;
+        font-size: clamp(34px, 6vw, 58px);
+        line-height: 0.92;
+      }
+
+      .summary {
+        margin: 0 0 18px;
+        color: var(--muted);
+        font-family: "Trebuchet MS", "Avenir Next", sans-serif;
+        font-size: 15px;
+        line-height: 1.55;
+      }
+
+      .overlay-stats {
+        margin: 0 0 18px;
+        padding-left: 18px;
+        color: var(--muted);
+        font-family: "Trebuchet MS", "Avenir Next", sans-serif;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      .controls-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        margin: 0 0 20px;
+      }
+
+      .controls-card {
+        padding: 14px 16px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .controls-card h2 {
+        margin: 0 0 8px;
+        font-size: 18px;
+      }
+
+      .controls-list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        color: var(--muted);
+        font-family: "Trebuchet MS", "Avenir Next", sans-serif;
+        font-size: 14px;
+        line-height: 1.55;
+      }
+
+      .controls-list strong {
+        color: var(--text);
+      }
+
+      .cta-row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        appearance: none;
+        border: 0;
+        border-radius: 999px;
+        padding: 14px 22px;
+        background: var(--amber);
+        color: var(--ink);
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 10px 24px rgba(240, 180, 63, 0.22);
+      }
+
+      #secondary-button {
+        background: rgba(255, 255, 255, 0.16);
+        color: var(--text);
+        box-shadow: none;
+      }
+
+      #secondary-button[hidden] {
+        display: none;
+      }
+
+      .hud {
+        position: absolute;
+        inset: 0;
+        z-index: 8;
+        pointer-events: none;
+      }
+
+      .hud-cluster {
+        position: absolute;
+        top: max(18px, env(safe-area-inset-top));
+        right: max(18px, env(safe-area-inset-right));
+        display: grid;
+        gap: 12px;
+        width: min(420px, calc(100vw - 36px));
+      }
+
+      .hud-card {
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(10, 16, 32, 0.62);
+        box-shadow: 0 20px 44px rgba(0, 0, 0, 0.24);
+        backdrop-filter: blur(10px);
+      }
+
+      .timer-card {
+        padding: 12px 14px 14px;
+      }
+
+      .hud-label {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.66);
+      }
+
+      .timer-value {
+        font-size: 30px;
+        line-height: 1;
+      }
+
+      .timer-track {
+        height: 12px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .timer-fill {
+        width: 100%;
+        height: 100%;
+        border-radius: inherit;
+        transform-origin: left center;
+        background: var(--amber);
+      }
+
+      .pill-row {
+        display: flex;
+        gap: 10px;
+      }
+
+      .pill {
+        flex: 1;
+        padding: 10px 12px;
+        border-radius: 18px;
+      }
+
+      .pill-value {
+        margin-top: 4px;
+        font-size: 24px;
+        line-height: 1;
+      }
+
+      .next-card {
+        padding: 12px 14px;
+      }
+
+      #next-objective {
+        font-family: "Trebuchet MS", "Avenir Next", sans-serif;
+        font-size: 14px;
+        line-height: 1.45;
+        color: var(--muted);
+      }
+
+      .debug-panel {
+        position: absolute;
+        top: max(18px, env(safe-area-inset-top));
+        right: max(18px, env(safe-area-inset-right));
+        z-index: 8;
+        display: grid;
+        gap: 8px;
+        width: min(420px, calc(100vw - 36px));
+        padding: 10px;
+        border-radius: 20px;
+        background: rgba(255, 252, 244, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.7);
+        box-shadow: 0 14px 30px rgba(15, 23, 42, 0.18);
+      }
+
+      .debug-panel[hidden] {
+        display: none;
+      }
+
+      .debug-button {
+        min-width: 72px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: transparent;
+        box-shadow: none;
+        color: #475569;
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .debug-button[aria-pressed="true"] {
+        background: rgba(15, 23, 42, 0.92);
+        color: #f8fafc;
+      }
+
+      .debug-button[disabled] {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+
+      .debug-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        align-items: center;
+      }
+
+      .debug-label {
+        min-width: 58px;
+        padding-right: 2px;
+        color: #334155;
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .debug-status {
+        margin: 0;
+        padding: 10px 12px;
+        border-radius: 14px;
+        background: rgba(15, 23, 42, 0.07);
+        color: #1e293b;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+          "Courier New", monospace;
+        font-size: 11px;
+        line-height: 1.45;
+        white-space: pre-wrap;
+      }
+
+      #touch-controls {
+        position: absolute;
+        inset: 0;
+        z-index: 7;
+        pointer-events: none;
+      }
+
+      #touch-controls[hidden] {
+        display: none;
+      }
+
+      #touch-joystick-zone {
+        position: absolute;
+        left: max(18px, env(safe-area-inset-left));
+        bottom: max(18px, env(safe-area-inset-bottom));
+        width: 170px;
+        height: 170px;
+        border-radius: 999px;
+        pointer-events: auto;
+        touch-action: none;
+      }
+
+      .touch-button-stack {
+        position: absolute;
+        right: max(18px, env(safe-area-inset-right));
+        bottom: max(18px, env(safe-area-inset-bottom));
+        pointer-events: auto;
+      }
+
+      .touch-button {
+        width: 86px;
+        height: 86px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        background: rgba(15, 23, 42, 0.24);
+        color: #f8fafc;
+      }
+
+      #desktop-control-hints {
+        position: absolute;
+        left: max(18px, env(safe-area-inset-left));
+        bottom: max(18px, env(safe-area-inset-bottom));
+        z-index: 6;
+        pointer-events: none;
+      }
+
+      #desktop-control-hints[hidden] {
+        display: none;
+      }
+
+      .desktop-control-cluster {
+        display: grid;
+        grid-template-columns: 62px 62px 62px 142px;
+        grid-template-rows: 54px 54px;
+        gap: 10px;
+        align-items: end;
+      }
+
+      .desktop-key-row {
+        display: contents;
+      }
+
+      .desktop-key {
+        min-width: 62px;
+        height: 54px;
+        padding: 0 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        background: rgba(15, 23, 42, 0.32);
+        color: rgba(241, 245, 249, 0.88);
+        font-size: 17px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        box-shadow: 0 18px 38px rgba(15, 23, 42, 0.2);
+        transition:
+          background-color 120ms ease,
+          border-color 120ms ease,
+          color 120ms ease,
+          box-shadow 120ms ease,
+          transform 120ms ease;
+      }
+
+      .desktop-key.space {
+        min-width: 142px;
+        border-radius: 18px;
+        font-size: 15px;
+        letter-spacing: 0.08em;
+      }
+
+      #desktop-key-w {
+        grid-column: 2;
+        grid-row: 1;
+      }
+
+      #desktop-key-a {
+        grid-column: 1;
+        grid-row: 2;
+      }
+
+      #desktop-key-s {
+        grid-column: 2;
+        grid-row: 2;
+      }
+
+      #desktop-key-d {
+        grid-column: 3;
+        grid-row: 2;
+      }
+
+      #desktop-key-space {
+        grid-column: 4;
+        grid-row: 2;
+      }
+
+      .desktop-key[data-pressed="true"] {
+        background: rgba(248, 250, 252, 0.2);
+        border-color: rgba(248, 250, 252, 0.42);
+        color: #ffffff;
+        box-shadow:
+          0 0 0 1px rgba(248, 250, 252, 0.12),
+          0 18px 38px rgba(125, 211, 252, 0.18);
+        transform: translateY(-1px);
+      }
+
+      @media (max-width: 860px) {
+        .controls-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .panel {
+          width: min(100%, calc(100vw - 20px));
+          padding: 20px 18px 18px;
+        }
+
+        .hud-cluster {
+          width: min(100%, calc(100vw - 20px));
+          left: 10px;
+          right: 10px;
+          top: 10px;
+        }
+
+        .pill-row {
+          flex-direction: column;
+        }
+
+        .summary,
+        .controls-list,
+        #next-objective {
+          font-size: 13px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game-canvas" aria-label="Shardspan"></canvas>
+      <div id="overlay" class="overlay">
+        <div class="panel">
+          <p id="overlay-eyebrow" class="eyebrow">Desktop Relay</p>
+          <h1 id="overlay-title">Shardspan</h1>
+          <p id="overlay-summary" class="summary">
+            Touch the relays in order. Each relay flips which bridge color is solid. Falling rewinds
+            you to the last cleared relay and burns 4 seconds.
+          </p>
+          <ul id="overlay-stats" class="overlay-stats"></ul>
+          <div class="controls-grid">
+            <section class="controls-card">
+              <h2>Controls</h2>
+              <ul class="controls-list">
+                <li><strong>Move</strong> WASD or arrow keys</li>
+                <li><strong>Camera</strong> drag the mouse</li>
+                <li><strong>Jump</strong> Space</li>
+                <li><strong>Goal</strong> relays I through IV, then the exit gate</li>
+              </ul>
+            </section>
+            <section class="controls-card">
+              <h2>Relay Rules</h2>
+              <ul class="controls-list">
+                <li><strong>Amber or cobalt</strong> shows which bridges are solid now</li>
+                <li><strong>Next cue</strong> points to the live target and what it changes</li>
+                <li><strong>Timer</strong> starts on your first move, not on the button press</li>
+                <li><strong>Falls</strong> respawn you at the last relay with a 4s penalty</li>
+              </ul>
+            </section>
+          </div>
+          <div class="cta-row">
+            <button id="start-button" type="button">Start Relay</button>
+            <button id="secondary-button" type="button" hidden>Back to Briefing</button>
+          </div>
+        </div>
+      </div>
+      <div class="hud">
+        <div class="hud-cluster">
+          <div class="hud-card timer-card">
+            <div class="hud-label">
+              <span>Dusk Remaining</span>
+              <span id="timer-value" class="timer-value">0:48.0</span>
+            </div>
+            <div class="timer-track">
+              <div id="timer-fill" class="timer-fill"></div>
+            </div>
+          </div>
+          <div class="pill-row">
+            <div class="hud-card pill">
+              <div class="hud-label">Relay Progress</div>
+              <div id="progress-value" class="pill-value">0/4</div>
+            </div>
+            <div class="hud-card pill">
+              <div class="hud-label">Active Bridges</div>
+              <div id="phase-value" class="pill-value">AMBER solid</div>
+            </div>
+          </div>
+          <div class="hud-card next-card">
+            <div class="hud-label">Next Objective</div>
+            <div id="next-objective">Relay I - Touch to wake the cobalt span.</div>
+          </div>
+        </div>
+      </div>
+      <div id="debug-panel" class="debug-panel" hidden>
+        <div class="debug-row">
+          <span class="debug-label">View</span>
+          <button class="debug-button" id="render-mode-button" type="button" aria-pressed="true">Render</button>
+          <button class="debug-button" id="physics-mode-button" type="button" aria-pressed="false">Physics</button>
+        </div>
+        <div class="debug-row">
+          <span class="debug-label">Camera</span>
+          <button class="debug-button" id="follow-camera-button" type="button" aria-pressed="true">Follow</button>
+          <button class="debug-button" id="topdown-camera-button" type="button" aria-pressed="false">Topdown</button>
+        </div>
+        <div class="debug-row">
+          <span class="debug-label">Ghost</span>
+          <button class="debug-button" id="ghost-start-button" type="button" aria-pressed="false">Start</button>
+          <button class="debug-button" id="ghost-stop-button" type="button" aria-pressed="false">Stop</button>
+          <button class="debug-button" id="ghost-reset-button" type="button" aria-pressed="false">Reset</button>
+        </div>
+        <div class="debug-row">
+          <span class="debug-label">Step</span>
+          <button class="debug-button" id="pause-button" type="button" aria-pressed="false">Pause</button>
+          <button class="debug-button" id="step-frame-button" type="button" aria-pressed="false">1f</button>
+          <button class="debug-button" id="step-ten-frames-button" type="button" aria-pressed="false">10f</button>
+        </div>
+        <div class="debug-row">
+          <span class="debug-label">Show</span>
+          <button class="debug-button" id="axes-toggle-button" type="button" aria-pressed="false">Axes</button>
+          <button class="debug-button" id="triggers-toggle-button" type="button" aria-pressed="false">Triggers</button>
+          <button class="debug-button" id="camera-gizmo-toggle-button" type="button" aria-pressed="false">Camera</button>
+        </div>
+        <pre id="debug-status" class="debug-status"></pre>
+      </div>
+      <div id="touch-controls" hidden>
+        <div id="touch-joystick-zone"></div>
+        <div class="touch-button-stack">
+          <button id="jump-button" class="touch-button" type="button">Jump</button>
+        </div>
+      </div>
+      <div id="desktop-control-hints" hidden aria-hidden="true">
+        <div class="desktop-control-cluster">
+          <div class="desktop-key-row top">
+            <div id="desktop-key-w" class="desktop-key w-key" data-pressed="false">W</div>
+          </div>
+          <div class="desktop-key-row bottom">
+            <div id="desktop-key-a" class="desktop-key" data-pressed="false">A</div>
+            <div id="desktop-key-s" class="desktop-key" data-pressed="false">S</div>
+            <div id="desktop-key-d" class="desktop-key" data-pressed="false">D</div>
+            <div id="desktop-key-space" class="desktop-key space" data-pressed="false">Space</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="https://assets.playdrop.ai/sdk/playdrop.js"></script>
+    <script type="module">
+      (async () => {
+        const host = window;
+        if (!host.playdrop) {
+          throw new Error("[shardspan] window.playdrop unavailable");
+        }
+        if (!host.__starterKit3dPlatformerSdkPromise__) {
+          host.__starterKit3dPlatformerSdkPromise__ =
+            typeof host.playdrop.init === "function"
+              ? host.playdrop.init()
+              : (async () => {
+                  if (typeof host.playdrop.initialize === "function") {
+                    await host.playdrop.initialize();
+                  }
+                  return host.playdrop;
+                })();
+        }
+        const sdk = await host.__starterKit3dPlatformerSdkPromise__;
+        host.__starterKit3dPlatformerSdk__ = sdk;
+        const three = await sdk.libs.three.load({
+          addons: ["loaders/GLTFLoader.js"],
+        });
+        const rapier = await sdk.libs.rapier.load();
+        const nipplejs = await sdk.libs.nipplejs.load();
+        host.__starterKit3dPlatformerVendorRuntime__ = {
+          THREE: three,
+          GLTFLoader: three.GLTFLoader,
+          RAPIER: rapier,
+          nipplejs,
+        };
+        await import("./app.js");
+      })().catch((error) => {
+        console.error("[shardspan] bootstrap failed", error);
+        window.playdrop?.host?.setLoadingState?.({
+          status: "error",
+          message: error && error.message ? error.message : "Failed to load Shardspan",
+        });
+      });
+    </script>
+  </body>
+</html>

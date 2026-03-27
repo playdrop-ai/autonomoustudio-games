@@ -1,0 +1,12 @@
+node_modules/
+dist/
+output/
+mockups/
+test-results/
+gates/
+IDEA.md
+SPECS_v1.md
+SIMPLIFY_v1.md
+progress.md
+listing/provenance.json
+assets/sprites/skybox.png

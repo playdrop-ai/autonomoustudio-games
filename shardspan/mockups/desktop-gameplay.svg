@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" fill="none">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0.92" y2="1">
+      <stop offset="0%" stop-color="#130f26"/>
+      <stop offset="46%" stop-color="#1d1b3c"/>
+      <stop offset="100%" stop-color="#101827"/>
+    </linearGradient>
+    <linearGradient id="stoneTop" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#7f7387"/>
+      <stop offset="100%" stop-color="#60586b"/>
+    </linearGradient>
+    <linearGradient id="grassTop" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#38475a"/>
+      <stop offset="100%" stop-color="#2b3645"/>
+    </linearGradient>
+    <linearGradient id="amberBridge" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fff2b0"/>
+      <stop offset="100%" stop-color="#ffb646"/>
+    </linearGradient>
+    <linearGradient id="azureBridge" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#d4f7ff"/>
+      <stop offset="100%" stop-color="#4fbfff"/>
+    </linearGradient>
+    <linearGradient id="amberBeam" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff0a8" stop-opacity="0"/>
+      <stop offset="40%" stop-color="#ffe97d" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#ffb146" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="azureBeam" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d6fbff" stop-opacity="0"/>
+      <stop offset="40%" stop-color="#95ecff" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#4db8ff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="buttonFill" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffef9c"/>
+      <stop offset="100%" stop-color="#ffb147"/>
+    </linearGradient>
+    <linearGradient id="timerFill" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ffdf7a"/>
+      <stop offset="100%" stop-color="#ff6f78"/>
+    </linearGradient>
+    <style>
+      .eyebrow { fill: #9fb0c8; font: 600 18px/1.2 "Avenir Next", Helvetica, Arial, sans-serif; letter-spacing: 0.28em; }
+      .title { fill: #f8f4ec; font: 800 72px/1 "Avenir Next", Helvetica, Arial, sans-serif; letter-spacing: -0.04em; }
+      .subtitle { fill: #d5dcec; font: 500 29px/1.42 "Avenir Next", Helvetica, Arial, sans-serif; }
+      .buttonLabel { fill: #24160b; font: 800 30px/1 "Avenir Next", Helvetica, Arial, sans-serif; letter-spacing: -0.02em; }
+      .hintLabel { fill: #8c9ab5; font: 700 15px/1 "Avenir Next", Helvetica, Arial, sans-serif; letter-spacing: 0.18em; text-transform: uppercase; }
+      .controlLabel { fill: #e4e9f3; font: 700 16px/1 "Avenir Next", Helvetica, Arial, sans-serif; }
+      .hudLabel { fill: #9fb0c8; font: 700 16px/1 "Avenir Next", Helvetica, Arial, sans-serif; letter-spacing: 0.22em; }
+      .hudValue { fill: #f8f4ec; font: 800 42px/1 "Avenir Next", Helvetica, Arial, sans-serif; letter-spacing: -0.04em; }
+      .phaseLabel { fill: #f8f4ec; font: 700 20px/1 "Avenir Next", Helvetica, Arial, sans-serif; }
+      .accentLabel { fill: #ffcf68; font: 700 20px/1 "Avenir Next", Helvetica, Arial, sans-serif; letter-spacing: 0.1em; }
+      .panelTitle { fill: #f8f4ec; font: 800 44px/1 "Avenir Next", Helvetica, Arial, sans-serif; letter-spacing: -0.04em; }
+      .panelCopy { fill: #ced6e8; font: 500 22px/1.45 "Avenir Next", Helvetica, Arial, sans-serif; }
+      .panelLabel { fill: #91a1bd; font: 700 15px/1 "Avenir Next", Helvetica, Arial, sans-serif; letter-spacing: 0.22em; }
+      .panelValue { fill: #f8f4ec; font: 800 40px/1 "Avenir Next", Helvetica, Arial, sans-serif; letter-spacing: -0.03em; }
+      .panelMiniValue { fill: #f8f4ec; font: 800 34px/1 "Avenir Next", Helvetica, Arial, sans-serif; letter-spacing: -0.03em; }
+    </style>
+  </defs>
+  
+      
+    <rect width="1600" height="900" fill="url(#sky)"/>
+    <circle cx="1210" cy="164" r="112" fill="#ffb56e" opacity="0.18"/>
+    <circle cx="1350" cy="196" r="178" fill="#6d67ff" opacity="0.14"/>
+    <ellipse cx="800" cy="844" rx="710" ry="176" fill="#06080f" opacity="0.4"/>
+    <path d="M0 672 C240 628 480 724 760 672 C1010 624 1300 548 1600 620 L1600 900 L0 900 Z" fill="#0a1020" opacity="0.9"/>
+    <path d="M0 702 C280 646 520 760 820 708 C1070 664 1320 590 1600 654 L1600 900 L0 900 Z" fill="#111a2d" opacity="0.72"/>
+    <circle cx="118" cy="96" r="2.2" fill="#fff2d8" opacity="0.8"/><circle cx="118" cy="96" r="9" fill="#fff2d8" opacity="0.08"/>
+<circle cx="232" cy="168" r="2.2" fill="#fff2d8" opacity="0.8"/><circle cx="232" cy="168" r="9" fill="#fff2d8" opacity="0.08"/>
+<circle cx="362" cy="118" r="2.2" fill="#fff2d8" opacity="0.8"/><circle cx="362" cy="118" r="9" fill="#fff2d8" opacity="0.08"/>
+<circle cx="488" cy="214" r="2.2" fill="#fff2d8" opacity="0.8"/><circle cx="488" cy="214" r="9" fill="#fff2d8" opacity="0.08"/>
+<circle cx="672" cy="126" r="2.2" fill="#fff2d8" opacity="0.8"/><circle cx="672" cy="126" r="9" fill="#fff2d8" opacity="0.08"/>
+<circle cx="842" cy="206" r="2.2" fill="#fff2d8" opacity="0.8"/><circle cx="842" cy="206" r="9" fill="#fff2d8" opacity="0.08"/>
+<circle cx="986" cy="118" r="2.2" fill="#fff2d8" opacity="0.8"/><circle cx="986" cy="118" r="9" fill="#fff2d8" opacity="0.08"/>
+<circle cx="1144" cy="92" r="2.2" fill="#fff2d8" opacity="0.8"/><circle cx="1144" cy="92" r="9" fill="#fff2d8" opacity="0.08"/>
+<circle cx="1296" cy="142" r="2.2" fill="#fff2d8" opacity="0.8"/><circle cx="1296" cy="142" r="9" fill="#fff2d8" opacity="0.08"/>
+<circle cx="1450" cy="102" r="2.2" fill="#fff2d8" opacity="0.8"/><circle cx="1450" cy="102" r="9" fill="#fff2d8" opacity="0.08"/>
+<circle cx="1358" cy="278" r="2.2" fill="#fff2d8" opacity="0.8"/><circle cx="1358" cy="278" r="9" fill="#fff2d8" opacity="0.08"/>
+<circle cx="1194" cy="312" r="2.2" fill="#fff2d8" opacity="0.8"/><circle cx="1194" cy="312" r="9" fill="#fff2d8" opacity="0.08"/>
+<circle cx="1036" cy="244" r="2.2" fill="#fff2d8" opacity="0.8"/><circle cx="1036" cy="244" r="9" fill="#fff2d8" opacity="0.08"/>
+<circle cx="872" cy="298" r="2.2" fill="#fff2d8" opacity="0.8"/><circle cx="872" cy="298" r="9" fill="#fff2d8" opacity="0.08"/>
+<circle cx="706" cy="240" r="2.2" fill="#fff2d8" opacity="0.8"/><circle cx="706" cy="240" r="9" fill="#fff2d8" opacity="0.08"/>
+<circle cx="548" cy="314" r="2.2" fill="#fff2d8" opacity="0.8"/><circle cx="548" cy="314" r="9" fill="#fff2d8" opacity="0.08"/>
+  
+      
+    
+    <g>
+      <polygon points="220,612 470,612 442,726 248,726" fill="url(#stoneTop)"/>
+      <polygon points="470,612 442,726 442,834 470,720" fill="#5d5466"/>
+      <polygon points="248,726 442,726 442,834 248,834" fill="#453d53"/>
+      <polygon points="220,612 248,726 248,834 220,720" fill="#2b2432"/>
+      <polygon points="254,628 436,628 422,712 268,712" fill="url(#grassTop)" opacity="0.9"/>
+      <ellipse cx="345" cy="852" rx="85" ry="24" fill="#080b13" opacity="0.32"/>
+    </g>
+  
+
+    <g>
+      <polygon points="566,486 796,486 768,592 594,592" fill="url(#stoneTop)"/>
+      <polygon points="796,486 768,592 768,692 796,586" fill="#5d5466"/>
+      <polygon points="594,592 768,592 768,692 594,692" fill="#453d53"/>
+      <polygon points="566,486 594,592 594,692 566,586" fill="#2b2432"/>
+      <polygon points="600,502 762,502 748,578 614,578" fill="url(#grassTop)" opacity="0.9"/>
+      <ellipse cx="681" cy="710" rx="78.2" ry="24" fill="#080b13" opacity="0.32"/>
+    </g>
+  
+
+    <g>
+      <polygon points="964,352 1178,352 1150,448 992,448" fill="url(#stoneTop)"/>
+      <polygon points="1178,352 1150,448 1150,540 1178,444" fill="#5d5466"/>
+      <polygon points="992,448 1150,448 1150,540 992,540" fill="#453d53"/>
+      <polygon points="964,352 992,448 992,540 964,444" fill="#2b2432"/>
+      <polygon points="998,368 1144,368 1130,434 1012,434" fill="url(#grassTop)" opacity="0.9"/>
+      <ellipse cx="1071" cy="558" rx="72.76" ry="24" fill="#080b13" opacity="0.32"/>
+    </g>
+  
+
+    <g>
+      <polygon points="1290,260 1470,260 1442,346 1318,346" fill="url(#stoneTop)"/>
+      <polygon points="1470,260 1442,346 1442,430 1470,344" fill="#5d5466"/>
+      <polygon points="1318,346 1442,346 1442,430 1318,430" fill="#453d53"/>
+      <polygon points="1290,260 1318,346 1318,430 1290,344" fill="#2b2432"/>
+      <polygon points="1324,276 1436,276 1422,332 1338,332" fill="url(#grassTop)" opacity="0.9"/>
+      <ellipse cx="1380" cy="448" rx="61.2" ry="24" fill="#080b13" opacity="0.32"/>
+    </g>
+  
+
+    <g>
+      <polygon points="760,244 968,244 940,338 788,338" fill="url(#stoneTop)"/>
+      <polygon points="968,244 940,338 940,428 968,334" fill="#5d5466"/>
+      <polygon points="788,338 940,338 940,428 788,428" fill="#453d53"/>
+      <polygon points="760,244 788,338 788,428 760,334" fill="#2b2432"/>
+      <polygon points="794,260 934,260 920,324 808,324" fill="url(#grassTop)" opacity="0.9"/>
+      <ellipse cx="864" cy="446" rx="70.72" ry="24" fill="#080b13" opacity="0.32"/>
+    </g>
+  
+    
+      <g opacity="0.18">
+        <polygon points="426,689.52 438,667.52 464.9866666666667,648.2421333333333 452.9866666666667,670.2421333333333" fill="url(#amberBridge)" stroke="#ffe39f" stroke-width="2"/>
+        <polygon points="426,689.52 452.9866666666667,670.2421333333333 452.9866666666667,692.2421333333333 426,711.52" fill="#1a1722"/>
+      </g>
+    
+
+      <g opacity="0.18">
+        <polygon points="456.6666666666667,667.6133333333333 468.6666666666667,645.6133333333333 495.65333333333336,626.3354666666667 483.65333333333336,648.3354666666667" fill="url(#amberBridge)" stroke="#ffe39f" stroke-width="2"/>
+        <polygon points="456.6666666666667,667.6133333333333 483.65333333333336,648.3354666666667 483.65333333333336,670.3354666666667 456.6666666666667,689.6133333333333" fill="#1a1722"/>
+      </g>
+    
+
+      <g opacity="0.18">
+        <polygon points="487.3333333333333,645.7066666666667 499.3333333333333,623.7066666666667 526.3199999999999,604.4288 514.3199999999999,626.4288" fill="url(#amberBridge)" stroke="#ffe39f" stroke-width="2"/>
+        <polygon points="487.3333333333333,645.7066666666667 514.3199999999999,626.4288 514.3199999999999,648.4288 487.3333333333333,667.7066666666667" fill="#1a1722"/>
+      </g>
+    
+
+      <g opacity="0.18">
+        <polygon points="518,623.8 530,601.8 556.9866666666667,582.5221333333333 544.9866666666667,604.5221333333333" fill="url(#amberBridge)" stroke="#ffe39f" stroke-width="2"/>
+        <polygon points="518,623.8 544.9866666666667,604.5221333333333 544.9866666666667,626.5221333333333 518,645.8" fill="#1a1722"/>
+      </g>
+    
+
+      <g opacity="0.18">
+        <polygon points="548.6666666666666,601.8933333333333 560.6666666666666,579.8933333333333 587.6533333333333,560.6154666666666 575.6533333333333,582.6154666666666" fill="url(#amberBridge)" stroke="#ffe39f" stroke-width="2"/>
+        <polygon points="548.6666666666666,601.8933333333333 575.6533333333333,582.6154666666666 575.6533333333333,604.6154666666666 548.6666666666666,623.8933333333333" fill="#1a1722"/>
+      </g>
+    
+    
+      <g opacity="1">
+        <polygon points="752,558.08 764,536.08 801.5466666666666,515.4293333333334 789.5466666666666,537.4293333333334" fill="url(#azureBridge)" stroke="#bce8ff" stroke-width="2"/>
+        <polygon points="752,558.08 789.5466666666666,537.4293333333334 789.5466666666666,559.4293333333334 752,580.08" fill="#342c3f"/>
+      </g>
+    
+
+      <g opacity="1">
+        <polygon points="794.6666666666666,534.6133333333333 806.6666666666666,512.6133333333333 844.2133333333333,491.9626666666667 832.2133333333333,513.9626666666667" fill="url(#azureBridge)" stroke="#bce8ff" stroke-width="2"/>
+        <polygon points="794.6666666666666,534.6133333333333 832.2133333333333,513.9626666666667 832.2133333333333,535.9626666666667 794.6666666666666,556.6133333333333" fill="#342c3f"/>
+      </g>
+    
+
+      <g opacity="1">
+        <polygon points="837.3333333333334,511.1466666666667 849.3333333333334,489.1466666666667 886.88,468.49600000000004 874.88,490.49600000000004" fill="url(#azureBridge)" stroke="#bce8ff" stroke-width="2"/>
+        <polygon points="837.3333333333334,511.1466666666667 874.88,490.49600000000004 874.88,512.4960000000001 837.3333333333334,533.1466666666668" fill="#342c3f"/>
+      </g>
+    
+
+      <g opacity="1">
+        <polygon points="880,487.68 892,465.68 929.5466666666666,445.02933333333334 917.5466666666666,467.02933333333334" fill="url(#azureBridge)" stroke="#bce8ff" stroke-width="2"/>
+        <polygon points="880,487.68 917.5466666666666,467.02933333333334 917.5466666666666,489.02933333333334 880,509.68" fill="#342c3f"/>
+      </g>
+    
+
+      <g opacity="1">
+        <polygon points="922.6666666666666,464.2133333333333 934.6666666666666,442.2133333333333 972.2133333333333,421.56266666666664 960.2133333333333,443.56266666666664" fill="url(#azureBridge)" stroke="#bce8ff" stroke-width="2"/>
+        <polygon points="922.6666666666666,464.2133333333333 960.2133333333333,443.56266666666664 960.2133333333333,465.56266666666664 922.6666666666666,486.2133333333333" fill="#342c3f"/>
+      </g>
+    
+    
+      <g opacity="0.18">
+        <polygon points="1134,417.28 1146,395.28 1175.3333333333333,380.78933333333333 1163.3333333333333,402.78933333333333" fill="url(#amberBridge)" stroke="#ffe39f" stroke-width="2"/>
+        <polygon points="1134,417.28 1163.3333333333333,402.78933333333333 1163.3333333333333,424.78933333333333 1134,439.28" fill="#1a1722"/>
+      </g>
+    
+
+      <g opacity="0.18">
+        <polygon points="1167.3333333333333,400.81333333333333 1179.3333333333333,378.81333333333333 1208.6666666666665,364.3226666666667 1196.6666666666665,386.3226666666667" fill="url(#amberBridge)" stroke="#ffe39f" stroke-width="2"/>
+        <polygon points="1167.3333333333333,400.81333333333333 1196.6666666666665,386.3226666666667 1196.6666666666665,408.3226666666667 1167.3333333333333,422.81333333333333" fill="#1a1722"/>
+      </g>
+    
+
+      <g opacity="0.18">
+        <polygon points="1200.6666666666667,384.34666666666664 1212.6666666666667,362.34666666666664 1242,347.856 1230,369.856" fill="url(#amberBridge)" stroke="#ffe39f" stroke-width="2"/>
+        <polygon points="1200.6666666666667,384.34666666666664 1230,369.856 1230,391.856 1200.6666666666667,406.34666666666664" fill="#1a1722"/>
+      </g>
+    
+
+      <g opacity="0.18">
+        <polygon points="1234,367.88 1246,345.88 1275.3333333333333,331.38933333333335 1263.3333333333333,353.38933333333335" fill="url(#amberBridge)" stroke="#ffe39f" stroke-width="2"/>
+        <polygon points="1234,367.88 1263.3333333333333,353.38933333333335 1263.3333333333333,375.38933333333335 1234,389.88" fill="#1a1722"/>
+      </g>
+    
+
+      <g opacity="0.18">
+        <polygon points="1267.3333333333333,351.41333333333336 1279.3333333333333,329.41333333333336 1308.6666666666665,314.9226666666667 1296.6666666666665,336.9226666666667" fill="url(#amberBridge)" stroke="#ffe39f" stroke-width="2"/>
+        <polygon points="1267.3333333333333,351.41333333333336 1296.6666666666665,336.9226666666667 1296.6666666666665,358.9226666666667 1267.3333333333333,373.41333333333336" fill="#1a1722"/>
+      </g>
+    
+    
+      <g opacity="0.38">
+        <polygon points="752,558.08 764,536.08 771.6266666666667,499.38986666666665 759.6266666666667,521.3898666666666" fill="url(#amberBridge)" stroke="#ffe39f" stroke-width="2"/>
+        <polygon points="752,558.08 759.6266666666667,521.3898666666666 759.6266666666667,543.3898666666666 752,580.08" fill="#1a1722"/>
+      </g>
+    
+
+      <g opacity="0.38">
+        <polygon points="760.6666666666666,516.3866666666667 772.6666666666666,494.38666666666666 780.2933333333333,457.6965333333333 768.2933333333333,479.6965333333333" fill="url(#amberBridge)" stroke="#ffe39f" stroke-width="2"/>
+        <polygon points="760.6666666666666,516.3866666666667 768.2933333333333,479.6965333333333 768.2933333333333,501.6965333333333 760.6666666666666,538.3866666666667" fill="#1a1722"/>
+      </g>
+    
+
+      <g opacity="0.38">
+        <polygon points="769.3333333333334,474.6933333333334 781.3333333333334,452.6933333333334 788.96,416.00320000000005 776.96,438.00320000000005" fill="url(#amberBridge)" stroke="#ffe39f" stroke-width="2"/>
+        <polygon points="769.3333333333334,474.6933333333334 776.96,438.00320000000005 776.96,460.00320000000005 769.3333333333334,496.6933333333334" fill="#1a1722"/>
+      </g>
+    
+
+      <g opacity="0.38">
+        <polygon points="778,433 790,411 797.6266666666667,374.30986666666666 785.6266666666667,396.30986666666666" fill="url(#amberBridge)" stroke="#ffe39f" stroke-width="2"/>
+        <polygon points="778,433 785.6266666666667,396.30986666666666 785.6266666666667,418.30986666666666 778,455" fill="#1a1722"/>
+      </g>
+    
+
+      <g opacity="0.38">
+        <polygon points="786.6666666666666,391.30666666666673 798.6666666666666,369.30666666666673 806.2933333333333,332.6165333333334 794.2933333333333,354.6165333333334" fill="url(#amberBridge)" stroke="#ffe39f" stroke-width="2"/>
+        <polygon points="786.6666666666666,391.30666666666673 794.2933333333333,354.6165333333334 794.2933333333333,376.6165333333334 786.6666666666666,413.30666666666673" fill="#1a1722"/>
+      </g>
+    
+    
+    <g>
+      <ellipse cx="681" cy="514" rx="76" ry="18" fill="#ffd76f" opacity="0.12"/>
+      <rect x="671" y="368" width="20" height="138" rx="10" fill="url(#amberBeam)" opacity="0.54"/>
+      <polygon points="681,340 699,374 681,408 663,374" fill="#ffd76f" opacity="0.66"/>
+      <polygon points="681,420 705,474 681,512 657,474" fill="#1b2030"/>
+    </g>
+  
+
+    <g>
+      <ellipse cx="1071" cy="380" rx="76" ry="18" fill="#72d9ff" opacity="0.26"/>
+      <rect x="1061" y="234" width="20" height="138" rx="10" fill="url(#azureBeam)" opacity="0.95"/>
+      <polygon points="1071,206 1089,240 1071,274 1053,240" fill="#72d9ff" opacity="1"/>
+      <polygon points="1071,286 1095,340 1071,378 1047,340" fill="#1b2030"/>
+    </g>
+  
+
+    <g>
+      <ellipse cx="1380" cy="288" rx="76" ry="18" fill="#ffd76f" opacity="0.12"/>
+      <rect x="1370" y="142" width="20" height="138" rx="10" fill="url(#amberBeam)" opacity="0.54"/>
+      <polygon points="1380,114 1398,148 1380,182 1362,148" fill="#ffd76f" opacity="0.66"/>
+      <polygon points="1380,194 1404,248 1380,286 1356,248" fill="#1b2030"/>
+    </g>
+  
+    
+    <g transform="translate(880 402) rotate(-14) scale(1.08)">
+      <ellipse cx="0" cy="48" rx="22" ry="10" fill="#080b13" opacity="0.34"/>
+      <rect x="-9" y="-24" width="18" height="40" rx="9" fill="#ffe6ad"/>
+      <rect x="-18" y="-8" width="36" height="18" rx="9" fill="#f9737f"/>
+      <circle cx="0" cy="-36" r="14" fill="#ffe6ad"/>
+      <rect x="-22" y="8" width="10" height="28" rx="5" fill="#6bd2ff"/>
+      <rect x="12" y="8" width="10" height="28" rx="5" fill="#6bd2ff"/>
+      <rect x="-12" y="32" width="9" height="24" rx="4.5" fill="#2f3448"/>
+      <rect x="3" y="32" width="9" height="24" rx="4.5" fill="#2f3448"/>
+    </g>
+  
+    
+    <g transform="translate(82 70)">
+      <text x="0" y="0" class="hudLabel">TIME</text>
+      <text x="0" y="54" class="hudValue">42.8</text>
+      <rect x="0" y="78" width="240" height="18" rx="9" fill="#172133"/>
+      <rect x="0" y="78" width="136.79999999999998" height="18" rx="9" fill="url(#timerFill)"/>
+    </g>
+    <g transform="translate(1248 70)">
+      <text x="270" y="0" text-anchor="end" class="hudLabel">RELAY</text>
+      <text x="270" y="54" text-anchor="end" class="hudValue">2 / 4</text>
+      <rect x="40" y="78" width="230" height="22" rx="11" fill="#152030"/>
+      <rect x="40" y="78" width="230" height="22" rx="11" fill="#ffffff" opacity="0.05"/>
+      <text x="155" y="94" text-anchor="middle" class="phaseLabel" fill="#7ad8ff">Azure Route</text>
+    </g>
+    <g transform="translate(654 58)">
+      <rect width="292" height="62" rx="22" fill="#111826" opacity="0.86"/>
+      <text x="146" y="24" text-anchor="middle" class="hintLabel">NEXT</text>
+      <text x="146" y="48" text-anchor="middle" class="phaseLabel">Beacon Three</text>
+    </g>
+  
+  
+    
+</svg>

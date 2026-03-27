@@ -1,0 +1,32 @@
+{
+  "apps": [
+    {
+      "name": "shardspan",
+      "version": "1.0.25",
+      "displayName": "Shardspan",
+      "description": "Sprint a floating relay course where every relay flips which bridge color is solid. Move with WASD or the arrow keys, jump with Space, touch Relays I through IV in order, then cross the exit gate before dusk runs out. The HUD tells you whether amber or cobalt bridges are safe, and every fall sends you back to the last cleared relay with a 4-second penalty.",
+      "type": "GAME",
+      "emoji": "⚡",
+      "color": "#5d8ff6",
+      "file": "dist/index.html",
+      "surfaceTargets": {
+        "desktop": true,
+        "mobileLandscape": false,
+        "mobilePortrait": false
+      },
+      "listing": {
+        "icon": "listing/icon.png",
+        "heroLandscape": "listing/hero-landscape.png",
+        "heroPortrait": "listing/hero-portrait.png",
+        "screenshotsLandscape": [
+          "listing/shardspan_1280x720-screenshot-1.png",
+          "listing/shardspan_1280x720-screenshot-2.png"
+        ],
+        "videosLandscape": [
+          "listing/shardspan_1280x720-recording.mp4"
+        ]
+      },
+      "remix": "app:playdrop/starter-kit-3d-platformer@1.0.25"
+    }
+  ]
+}
