@@ -6,15 +6,15 @@
 
 ## Output
 
-- Published `autonomoustudio/app/latchbloom` version `1.0.3`, verified the live hosted build on desktop and mobile portrait, verified the propagated public listing and corrected listing media, updated the game README with live URLs, and recorded the user-approved defer of X posting after repeated suspicious browser friction in the authenticated flow.
+- Published `autonomoustudio/app/latchbloom` version `1.0.4`, confirmed the hosted build URL for the new version, updated the game README with the new live URL, and kept the user-approved defer of X posting after repeated suspicious browser friction in the authenticated flow.
 
 ## Inputs Reviewed
 
 - `/Users/oliviermichon/Documents/autonomoustudio-internal/checklists/08-release.md`
 - Live listing page: `https://www.playdrop.ai/creators/autonomoustudio/apps/game/latchbloom`
-- Live hosted build: `https://assets.playdrop.ai/creators/autonomoustudio/apps/latchbloom/v1.0.3/index.html`
+- Live hosted build: `https://assets.playdrop.ai/creators/autonomoustudio/apps/latchbloom/v1.0.4/index.html`
 - Live app detail from `playdrop creations browse --json --limit 20`
-- Live publish confirmation from `playdrop creations apps versions publish latchbloom 1.0.3 --creator autonomoustudio --json`
+- Live publish confirmation from `playdrop creations apps versions publish latchbloom 1.0.4 --creator autonomoustudio --json`
 - Live desktop verification screenshot: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/live-build-1.0.3-desktop-gameplay.png`
 - Live portrait verification screenshot: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/live-build-1.0.3-portrait-gameplay.png`
 - Live listing verification screenshot: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/live-listing-1.0.3-desktop.png`
@@ -35,16 +35,16 @@
 
 ## Feedback Applied Before PASS
 
-- The first `1.0.3` blocker was not the game itself but the art pipeline: the earlier `1.0.2` release had used fallback composites because PlayDrop AI generation was intermittently failing. Once the CLI was updated and real generation recovered, the hero pair, icon, and gameplay backdrops were regenerated properly and swapped into the live listing and build.
-- The `1.0.3` publish path hit source-size pressure again until the refreshed listing assets were heavily quantized. With `.playdropignore` in place and the listing media compressed, `playdrop project publish .` and the explicit version publish both succeeded.
-- The PlayDrop CLI had drifted back to the wrong creator session during the recovery work. Re-authenticating from the local `.env` restored `autonomoustudio (prod)`, after which the publish and live verification were done on the correct account.
+- The earlier `1.0.3` corrective release already restored the real PlayDrop AI-generated hero pair and gameplay backdrop family after the `1.0.2` fallback-composite miss.
+- This `1.0.4` wrap-up focused on the final approved gameplay UI/layout polish, plus one last icon simplification pass using the landscape hero as the generation reference.
+- The PlayDrop CLI session was rechecked immediately before publish, confirmed as `autonomoustudio (prod)`, and the explicit `publish` plus `set-current` steps both succeeded for `1.0.4`.
 - X posting was attempted again from the authenticated browser profile, but the composer flow repeatedly reintroduced cookie-mask / suspicious-activity-like friction after upload. Per explicit user instruction, X was deferred rather than forcing a brittle or misleading social closeout.
 
 ## Evidence
 
 - Published app ref: `autonomoustudio/app/latchbloom`
 - Live listing URL: `https://www.playdrop.ai/creators/autonomoustudio/apps/game/latchbloom`
-- Hosted build URL: `https://assets.playdrop.ai/creators/autonomoustudio/apps/latchbloom/v1.0.3/index.html`
+- Hosted build URL: `https://assets.playdrop.ai/creators/autonomoustudio/apps/latchbloom/v1.0.4/index.html`
 - PlayDrop feedback ids: `1`, `18`
 - X status: deferred by user on `2026-03-26` after repeated browser-platform friction during authenticated posting.
 

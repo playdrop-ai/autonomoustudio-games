@@ -54,16 +54,27 @@ void (async () => {
   document.title = "Latchbloom";
   document.body.style.margin = "0";
   document.body.style.overflow = "hidden";
-  document.body.style.background = "#09131d";
+  document.body.style.background = "#000";
   document.body.style.touchAction = "none";
+
+  const stage = document.createElement("div");
+  stage.id = "latchbloom-stage";
+  stage.style.position = "fixed";
+  stage.style.inset = "0";
+  stage.style.background = "#000";
+  stage.style.overflow = "hidden";
+  stage.style.touchAction = "none";
+  document.body.appendChild(stage);
 
   const canvas = document.createElement("canvas");
   canvas.id = "latchbloom-canvas";
+  canvas.style.position = "absolute";
+  canvas.style.inset = "0";
   canvas.style.display = "block";
-  canvas.style.width = "100vw";
-  canvas.style.height = "100vh";
+  canvas.style.width = "100%";
+  canvas.style.height = "100%";
   canvas.style.touchAction = "none";
-  document.body.appendChild(canvas);
+  stage.appendChild(canvas);
 
   host.setLoadingState({ status: "loading", message: "Loading backdrop art", progress: 0.34 });
   const backdropPack = await preloadBackdropPack();
@@ -86,6 +97,11 @@ void (async () => {
     accent = null;
     autoplayTimerMs = 0;
   }
+
+  const overlay = createScreenOverlay(stage, () => {
+    startRun();
+    renderFrame();
+  });
 
   function finishRun(): void {
     screen = "gameover";
@@ -186,6 +202,12 @@ void (async () => {
 
   function renderFrame(): void {
     publishDebug();
+    overlay.update({
+      screen,
+      score: gameState.score,
+      bestScore,
+      portrait: window.innerWidth <= window.innerHeight,
+    });
     window.__latchbloomControls = {
       startRun: () => {
         startRun();
@@ -251,14 +273,7 @@ void (async () => {
 
   canvas.addEventListener("pointerdown", (event) => {
     canvas.setPointerCapture(event.pointerId);
-    if (screen === "start") {
-      startRun();
-      return;
-    }
-    if (screen === "gameover") {
-      startRun();
-      return;
-    }
+    if (screen !== "playing") return;
 
     const latch = renderer.locateLatch(event.clientX, event.clientY);
     if (!latch) return;
@@ -345,4 +360,243 @@ async function createHostBridge(): Promise<{ setLoadingState: (state: { status: 
       playdrop.host?.setLoadingState?.(state);
     },
   };
+}
+
+function createScreenOverlay(
+  host: HTMLElement,
+  onAction: () => void,
+): {
+  update: (params: { screen: Screen; score: number; bestScore: number; portrait: boolean }) => void;
+} {
+  ensureOverlayStyles();
+
+  const root = document.createElement("div");
+  root.id = "latchbloom-overlay";
+  root.hidden = true;
+
+  const sheet = document.createElement("section");
+  sheet.className = "latchbloom-sheet";
+
+  const eyebrow = document.createElement("div");
+  eyebrow.className = "latchbloom-eyebrow";
+  sheet.appendChild(eyebrow);
+
+  const title = document.createElement("h1");
+  title.className = "latchbloom-title";
+  sheet.appendChild(title);
+
+  const body = document.createElement("p");
+  body.className = "latchbloom-body";
+  sheet.appendChild(body);
+
+  const stats = document.createElement("div");
+  stats.className = "latchbloom-stats";
+  const scoreCard = createStatCard("RUN SCORE");
+  const bestCard = createStatCard("BEST");
+  stats.append(scoreCard.card, bestCard.card);
+  sheet.appendChild(stats);
+
+  const button = document.createElement("button");
+  button.className = "latchbloom-button";
+  button.type = "button";
+  button.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    onAction();
+  });
+  sheet.appendChild(button);
+
+  root.appendChild(sheet);
+  host.appendChild(root);
+
+  return {
+    update({ screen, score, bestScore, portrait }) {
+      root.dataset.portrait = portrait ? "true" : "false";
+      root.hidden = screen === "playing";
+      if (screen === "playing") return;
+
+      if (screen === "start") {
+        root.dataset.mode = "start";
+        eyebrow.textContent = "GREENHOUSE ROUTING ARCADE";
+        title.textContent = "Latchbloom";
+        body.textContent =
+          "Route blossoms into matching vases. Bouquets clear 1 strike. Three strikes end the run.";
+        stats.hidden = true;
+        button.textContent = "Open The Glasshouse";
+      } else {
+        root.dataset.mode = "gameover";
+        eyebrow.textContent = "RUN OVER";
+        title.textContent = "Three strikes shut the greenhouse.";
+        body.textContent = "Build bouquets to erase strikes and keep the flow alive longer.";
+        scoreCard.value.textContent = formatScore(score);
+        bestCard.value.textContent = formatScore(bestScore);
+        stats.hidden = false;
+        button.textContent = "Bloom Again";
+      }
+    },
+  };
+}
+
+function createStatCard(label: string): { card: HTMLDivElement; value: HTMLDivElement } {
+  const card = document.createElement("div");
+  card.className = "latchbloom-stat";
+
+  const labelNode = document.createElement("div");
+  labelNode.className = "latchbloom-stat-label";
+  labelNode.textContent = label;
+  card.appendChild(labelNode);
+
+  const value = document.createElement("div");
+  value.className = "latchbloom-stat-value";
+  card.appendChild(value);
+
+  return { card, value };
+}
+
+function ensureOverlayStyles(): void {
+  if (document.getElementById("latchbloom-overlay-styles")) return;
+  const style = document.createElement("style");
+  style.id = "latchbloom-overlay-styles";
+  style.textContent = `
+    #latchbloom-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      padding: 18px;
+      box-sizing: border-box;
+      pointer-events: none;
+    }
+
+    #latchbloom-overlay[data-portrait="false"] {
+      padding: 24px;
+    }
+
+    #latchbloom-overlay[hidden] {
+      display: none;
+    }
+
+    .latchbloom-sheet {
+      width: min(620px, calc(100vw - 36px));
+      padding: 22px 24px 20px;
+      border-radius: 28px;
+      background: rgba(10, 22, 31, 0.94);
+      border: 1px solid rgba(158, 227, 207, 0.14);
+      box-shadow: 0 18px 56px rgba(0, 0, 0, 0.36);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      pointer-events: auto;
+      box-sizing: border-box;
+    }
+
+    #latchbloom-overlay[data-portrait="true"] .latchbloom-sheet {
+      width: calc(100vw - 36px);
+      max-width: none;
+      border-radius: 24px;
+      padding: 18px 18px 16px;
+      gap: 10px;
+    }
+
+    .latchbloom-eyebrow {
+      color: #9ee3cf;
+      font: 700 13px/1.1 "Trebuchet MS", "Avenir Next", sans-serif;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .latchbloom-title {
+      margin: 0;
+      color: #f8fff8;
+      font: 700 42px/1.02 "Trebuchet MS", "Avenir Next", sans-serif;
+    }
+
+    #latchbloom-overlay[data-mode="gameover"] .latchbloom-title {
+      font-size: 34px;
+      line-height: 1.08;
+    }
+
+    #latchbloom-overlay[data-portrait="true"] .latchbloom-title {
+      font-size: 30px;
+    }
+
+    #latchbloom-overlay[data-portrait="true"][data-mode="start"] .latchbloom-title {
+      font-size: 36px;
+    }
+
+    .latchbloom-body {
+      margin: 0;
+      color: #c4ddd8;
+      font: 500 18px/1.34 "Trebuchet MS", "Avenir Next", sans-serif;
+    }
+
+    #latchbloom-overlay[data-portrait="true"] .latchbloom-body {
+      font-size: 16px;
+      line-height: 1.32;
+    }
+
+    .latchbloom-stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 2px;
+    }
+
+    .latchbloom-stats[hidden] {
+      display: none;
+    }
+
+    .latchbloom-stat {
+      border-radius: 18px;
+      background: rgba(12, 31, 43, 0.74);
+      border: 1px solid rgba(158, 227, 207, 0.12);
+      padding: 12px 12px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      min-height: 78px;
+      box-sizing: border-box;
+    }
+
+    .latchbloom-stat-label {
+      color: #9ee3cf;
+      font: 700 12px/1 "Trebuchet MS", "Avenir Next", sans-serif;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .latchbloom-stat-value {
+      color: #fff3c2;
+      font: 700 32px/1 "Trebuchet MS", "Avenir Next", sans-serif;
+      text-align: center;
+    }
+
+    #latchbloom-overlay[data-portrait="true"] .latchbloom-stat-value {
+      font-size: 28px;
+    }
+
+    .latchbloom-button {
+      border: 0;
+      border-radius: 999px;
+      height: 56px;
+      padding: 0 24px;
+      background: linear-gradient(135deg, #f9da90, #e9aa37);
+      color: #322006;
+      font: 700 22px/1 "Trebuchet MS", "Avenir Next", sans-serif;
+      cursor: pointer;
+    }
+
+    #latchbloom-overlay[data-portrait="true"] .latchbloom-button {
+      height: 52px;
+      font-size: 20px;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+function formatScore(score: number): string {
+  return score.toLocaleString("en-US");
 }

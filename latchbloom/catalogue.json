@@ -2,7 +2,7 @@
   "apps": [
     {
       "name": "latchbloom",
-      "version": "1.0.3",
+      "version": "1.0.4",
       "displayName": "Latchbloom",
       "description": "Tap the brass latches to reroute falling blossoms into the vase with the same flower icon before they hit the bottom. A ghosted blossom above the board shows exactly what will spawn next and which lane it will enter from, with a ring that fills as the spawn approaches. Every correct delivery fills that vase's bouquet meter, every third correct blossom there blooms a bouquet and clears 1 strike, every wrong delivery adds a global strike, and 3 strikes shuts the greenhouse.",
       "emoji": "🌸",

@@ -40,3 +40,104 @@ TODO
 
 TODO
 - None.
+
+2026-03-26 (post-release screen review)
+- Built `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/latchbloom-1.0.3-six-screen-composite.png` from the local `1.0.3` desktop and portrait intro/gameplay/game-over captures for direct visual review.
+- Confirmed one remaining layout bug on desktop game over: the CTA button still rises high enough to crop the bottom of the run-score / best stat cards.
+- Noted two hierarchy/readability issues to address in a follow-up UI polish pass:
+  - intro cards still hide too much of the lower playfield, especially on portrait, so the player does not see the full vase-target setup before starting
+  - score / strike / next-preview affordances are still visually too subtle relative to the new greenhouse background, especially on portrait
+
+TODO
+- Fix the desktop game-over stat/button overlap and tighten HUD/readability on both surfaces.
+
+2026-03-27 (local validation-only polish pass)
+- Switched the runtime backdrop strategy to reuse the landscape greenhouse plate on both surfaces. Portrait now crops that same landscape art, bottom-aligns it, and leaves a clean dark band at the top for HUD space.
+- Removed the extra on-canvas container chrome from the art-backed board so gameplay now renders only the pipes, switches, vases, blossoms, and HUD over the painted background.
+- Changed draw order so falling blossoms render under the brass switches instead of over them.
+- Replaced the start/game-over canvas overlays with HTML sheet layout so text, stat cards, and the CTA button flow correctly without overlap.
+- Reworked HUD placement: desktop now uses a shared score/strike panel with strikes under the score, and portrait uses the empty top band for score + strike pips.
+- Regenerated local listing art variants with PlayDrop AI:
+  - centered landscape hero: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/listing/hero-landscape.png`
+  - portrait sibling derived from that centered landscape hero: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/listing/hero-portrait.png`
+  - simplified single-element icon: `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/listing/icon.png`
+- Captured a fresh local review set and assembled `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/latchbloom-local-review-composite.png` for user validation.
+
+TODO
+- Await user validation before any further balancing, listing refresh, or republish work.
+
+2026-03-27 (portrait square-backdrop iteration)
+- Generated a square-expanded portrait backdrop from the approved landscape greenhouse plate via PlayDrop AI and copied it into `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/assets/backdrops/latchbloom-board-portrait-square.jpg`.
+- Reworked the portrait runtime backdrop spec to use that square source with a portrait-specific `boardRect` and standard cover fitting, replacing the older bottom-aligned landscape workaround.
+- Validated locally with real browser captures at `720x1280` after starting a deterministic run and advancing time.
+- Saved the updated portrait review artifacts:
+  - `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/portrait-square-review-start.png`
+  - `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/portrait-square-review-gameplay.png`
+  - `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/portrait-square-review-composite.png`
+- Validation status: `npm run validate` passes and Playwright console error log is clean.
+
+TODO
+- Await user validation before deciding whether portrait HUD contrast or board placement need another micro-adjustment.
+
+2026-03-27 (portrait board-lower pass)
+- Lowered the portrait gameplay overlay stack by about `11%` of viewport height while keeping the square portrait backdrop fixed in place. This shifts the pipes, switches, vases, blossoms, and lane-aware next preview downward together on mobile.
+- Rebuilt and re-captured the full six-screen local review set:
+  - `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/review-desktop-start.png`
+  - `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/review-desktop-gameplay.png`
+  - `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/review-desktop-gameover.png`
+  - `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/review-mobile-start.png`
+  - `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/review-mobile-gameplay.png`
+  - `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/review-mobile-gameover.png`
+- Assembled a fresh combined review board at `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/review-composite-desktop-mobile-v2.png`.
+- Validation status: `npm run validate` passes and the Playwright console log is still clean.
+
+TODO
+- Await visual approval before any additional mobile alignment tweaks or republish work.
+
+2026-03-27 (portrait top-extension pass)
+- Kept the portrait bottom anchor where it was and extended the portrait gameplay stack upward by about `5%` of current board height, so the top routes and switch area sit a little higher without lifting the vases.
+- Re-captured the full six-screen review set and rebuilt the combined comparison board at `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/review-composite-desktop-mobile-v3.png`.
+- Validation stayed clean: `npm run validate` passed and the Playwright console log remained empty.
+
+TODO
+- Await visual approval before any further portrait alignment changes or republish work.
+
+2026-03-27 (portrait top-extension +3%)
+- Increased the portrait upward extension again by another `3%` of board height, taking the mobile top reach from the previous `5%` extension to `8%` total while keeping the same bottom anchor.
+- Re-captured the full six-screen local review set and rebuilt the combined board at `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/review-composite-desktop-mobile-v4.png`.
+- Validation stayed clean again: `npm run validate` passed and the browser console log was empty.
+
+TODO
+- Await visual approval before any further alignment tweaks or republish work.
+
+2026-03-27 (next-preview lower pass)
+- Lowered the next-blossom preview token and progress ring by about `10%` of board height so it sits closer to the gameplay field on both desktop and mobile.
+- Re-captured the full six-screen local review set and rebuilt the combined board at `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/review-composite-desktop-mobile-v5.png`.
+- Validation remained clean: `npm run validate` passed and the browser console log was empty.
+
+TODO
+- Await visual approval before any further placement tweaks or republish work.
+
+2026-03-27 (mobile HUD padding/container pass)
+- Added separate portrait HUD containers for score and strikes, with more padding from the top-left and top-right corners on mobile.
+- Kept desktop HUD unchanged.
+- Re-captured the full six-screen local review set and rebuilt the combined board at `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/review-composite-desktop-mobile-v6.png`.
+- Validation remained clean: `npm run validate` passed and the browser console log was empty.
+
+TODO
+- Await visual approval before any further UI tweaks or republish work.
+
+2026-03-27 (HUD inset double pass)
+- Doubled the HUD corner insets on both desktop and mobile so the score and strike panels sit farther from the screen corners.
+- On mobile this increased both the horizontal inset and the top offset for the separate score and strike panels.
+- On desktop this moved the shared score/strike panel farther down and right from the top-left corner.
+- Re-captured the full six-screen local review set and rebuilt the combined board at `/Users/oliviermichon/Documents/autonomoustudio-games/latchbloom/output/playwright/review-composite-desktop-mobile-v7.png`.
+- Validation remained clean: `npm run validate` passed and the browser console log was empty.
+
+TODO
+- Await visual approval before any further HUD or layout tweaks or republish work.
+
+2026-03-27 (1.0.4 release wrap-up)
+- Replaced the local listing icon with the final PlayDrop AI-generated `final-a` candidate after the last simplification pass, keeping the approved hero pair unchanged.
+- Bumped the project metadata to `1.0.4`, ran `npm run validate`, and passed `playdrop project validate .`.
+- Published `autonomoustudio/app/latchbloom` version `1.0.4` from the verified `autonomoustudio (prod)` session, explicitly published it, set it current, and confirmed the hosted build URL responds successfully.

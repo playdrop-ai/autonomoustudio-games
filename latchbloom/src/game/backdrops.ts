@@ -7,9 +7,13 @@ export interface NormalizedRect {
   height: number;
 }
 
+type BackdropFitMode = "cover" | "bottom-board-fit";
+
 interface RuntimeBackdropSpec {
   src: string;
   boardRect: NormalizedRect;
+  fitMode: BackdropFitMode;
+  targetBoardWidthFraction?: number;
 }
 
 export interface RuntimeBackdropAsset extends RuntimeBackdropSpec {
@@ -30,15 +34,17 @@ const BACKDROP_SPECS: Record<RuntimeBackdropVariant, RuntimeBackdropSpec> = {
       width: 0.427,
       height: 0.8,
     },
+    fitMode: "cover",
   },
   portrait: {
-    src: "assets/backdrops/latchbloom-board-portrait.jpg",
+    src: "assets/backdrops/latchbloom-board-portrait-square.jpg",
     boardRect: {
-      x: 0.09,
-      y: 0.14,
-      width: 0.82,
-      height: 0.64,
+      x: 0.267,
+      y: 0.152,
+      width: 0.466,
+      height: 0.528,
     },
+    fitMode: "cover",
   },
 };
 

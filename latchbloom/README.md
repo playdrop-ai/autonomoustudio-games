@@ -38,9 +38,9 @@ Tap brass latches to reroute falling blossoms into the matching vases, bloom bou
 
 ## Release
 
-- Version: `1.0.3`
+- Version: `1.0.4`
 - Released: `2026-03-26`
 - PlayDrop listing URL: `https://www.playdrop.ai/creators/autonomoustudio/apps/game/latchbloom`
-- Hosted build URL: `https://assets.playdrop.ai/creators/autonomoustudio/apps/latchbloom/v1.0.3/index.html`
-- Listing/media refresh: real PlayDrop AI-generated hero pair, icon, and gameplay backdrops replaced the earlier fallback composites.
+- Hosted build URL: `https://assets.playdrop.ai/creators/autonomoustudio/apps/latchbloom/v1.0.4/index.html`
+- Listing/media refresh: real PlayDrop AI-generated hero pair remains in place, the icon now uses the final simplified single-element generation pass, and the square-expanded portrait backdrop plus approved HUD/layout polish are in the shipped build.
 - X release thread: deferred on `2026-03-26` after repeated suspicious-activity-style friction in the authenticated browser flow.
