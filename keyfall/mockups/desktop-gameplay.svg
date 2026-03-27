@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" fill="none">
+  <defs>
+    <linearGradient id="bgFill" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#070c14"/>
+      <stop offset="58%" stop-color="#0d1622"/>
+      <stop offset="100%" stop-color="#1b1221"/>
+    </linearGradient>
+    <linearGradient id="laneFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c5d8dd"/>
+      <stop offset="100%" stop-color="#576872"/>
+    </linearGradient>
+    <linearGradient id="buttonFill" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fff2ba"/>
+      <stop offset="100%" stop-color="#ffc56a"/>
+    </linearGradient>
+    <filter id="runwayGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="20"/>
+    </filter>
+    <filter id="tapGlowBlue" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+    <filter id="tapGlowPink" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+    <filter id="tapGlowGold" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+    <style>
+      text { font-family: "Avenir Next", "SF Pro Display", "Trebuchet MS", sans-serif; }
+      .title { fill: #f7fbff; font-size: 58px; font-weight: 700; letter-spacing: 0.05em; }
+      .hudTag { fill: #9eb7c7; font-size: 20px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+      .hudValue { fill: #f7fbff; font-size: 40px; font-weight: 700; }
+      .button { fill: #16110a; font-size: 24px; font-weight: 700; letter-spacing: 0.06em; }
+      .panelValue { fill: #f7fbff; font-size: 72px; font-weight: 700; }
+      .panelLabel { fill: #aabfd0; font-size: 24px; font-weight: 600; letter-spacing: 0.08em; }
+    </style>
+  </defs>
+  
+    
+    <rect width="1600" height="900" fill="url(#bgFill)"/>
+    <circle cx="256" cy="162" r="288" fill="#1f314a" opacity="0.4"/>
+    <circle cx="1344" cy="198" r="320" fill="#341d40" opacity="0.34"/>
+    <circle cx="800" cy="738" r="704" fill="#0c4d5b" opacity="0.18"/>
+    <circle cx="224.00000000000003" cy="108" r="1.8" fill="#fff2c8" opacity="0.72"/><circle cx="224.00000000000003" cy="108" r="6" fill="#fff2c8" opacity="0.08"/><circle cx="416" cy="306" r="1.8" fill="#fff2c8" opacity="0.72"/><circle cx="416" cy="306" r="6" fill="#fff2c8" opacity="0.08"/><circle cx="1184" cy="126.00000000000001" r="1.8" fill="#fff2c8" opacity="0.72"/><circle cx="1184" cy="126.00000000000001" r="6" fill="#fff2c8" opacity="0.08"/><circle cx="1408" cy="252.00000000000003" r="1.8" fill="#fff2c8" opacity="0.72"/><circle cx="1408" cy="252.00000000000003" r="6" fill="#fff2c8" opacity="0.08"/><circle cx="1120" cy="558" r="1.8" fill="#fff2c8" opacity="0.72"/><circle cx="1120" cy="558" r="6" fill="#fff2c8" opacity="0.08"/><circle cx="352" cy="666" r="1.8" fill="#fff2c8" opacity="0.72"/><circle cx="352" cy="666" r="6" fill="#fff2c8" opacity="0.08"/><circle cx="864" cy="792" r="1.8" fill="#fff2c8" opacity="0.72"/><circle cx="864" cy="792" r="6" fill="#fff2c8" opacity="0.08"/>
+  
+    
+    <g>
+      
+    <g filter="url(#runwayGlow)">
+      <polygon points="410,818 620,818 753,162 682,162 980,818 1190,818 918,162 847,162" fill="#78e7ff" opacity="0.14"/>
+    </g>
+  
+      
+        <polygon points="420,818 610,818 745,162 690,162" fill="url(#laneFill)" opacity="0.94"/>
+      
+        <polygon points="610,818 800,818 800,162 745,162" fill="url(#laneFill)" opacity="0.82"/>
+      
+        <polygon points="800,818 990,818 855,162 800,162" fill="url(#laneFill)" opacity="0.94"/>
+      
+        <polygon points="990,818 1180,818 910,162 855,162" fill="url(#laneFill)" opacity="0.82"/>
+      
+      
+    <line x1="420" y1="818" x2="690" y2="162" stroke="#d7fbff" stroke-opacity="0.18" stroke-width="3"/>
+  
+    <line x1="610" y1="818" x2="745" y2="162" stroke="#d7fbff" stroke-opacity="0.18" stroke-width="3"/>
+  
+    <line x1="800" y1="818" x2="800" y2="162" stroke="#d7fbff" stroke-opacity="0.18" stroke-width="3"/>
+  
+    <line x1="990" y1="818" x2="855" y2="162" stroke="#d7fbff" stroke-opacity="0.18" stroke-width="3"/>
+  
+    <line x1="1180" y1="818" x2="910" y2="162" stroke="#d7fbff" stroke-opacity="0.18" stroke-width="3"/>
+  
+      
+    <line x1="468" y1="605.2" x2="1132" y2="605.2" stroke="#69e6ff" stroke-opacity="0.15" stroke-width="5"/>
+  
+    <line x1="535.5" y1="466.7" x2="1064.5" y2="466.7" stroke="#69e6ff" stroke-opacity="0.15" stroke-width="5"/>
+  
+    <line x1="603" y1="328.20000000000005" x2="997" y2="328.20000000000005" stroke="#69e6ff" stroke-opacity="0.15" stroke-width="5"/>
+  
+    <line x1="657" y1="217.39999999999998" x2="943" y2="217.39999999999998" stroke="#69e6ff" stroke-opacity="0.15" stroke-width="5"/>
+  
+      
+    <g filter="url(#tapGlowBlue)">
+      <polygon points="495.77479999999997,588.111 607.1252,588.111 621.044,644.449 481.856,644.449" fill="#5be7ff" fill-opacity="0.96"/>
+      <polygon points="506.90984,597.12508 595.99016,597.12508 609.90896,633.1813999999999 492.99104,633.1813999999999" fill="#f7fbff" fill-opacity="0.18"/>
+    </g>
+  
+    <g filter="url(#tapGlowPink)">
+      <polygon points="824.9608000000001,535.006 927.2392,535.006 940.024,586.754 812.176,586.754" fill="#ff7e9f" fill-opacity="0.96"/>
+      <polygon points="835.1886400000001,543.28568 917.01136,543.28568 929.79616,576.4044 822.4038400000001,576.4044" fill="#f7fbff" fill-opacity="0.18"/>
+    </g>
+  
+    <polygon points="949.796,505.48 1066.304,505.48 983.24768,361.44 927.5523199999999,361.44" fill="#ffd97f" fill-opacity="0.22"/>
+    
+    <g filter="url(#tapGlowGold)">
+      <polygon points="961.4468,481.901 1054.6532000000002,481.901 1066.304,529.059 949.796,529.059" fill="#ffd97f" fill-opacity="0.96"/>
+      <polygon points="970.7674400000001,489.44628 1045.3325600000003,489.44628 1056.9833600000002,519.6274 959.1166400000001,519.6274" fill="#f7fbff" fill-opacity="0.18"/>
+    </g>
+  
+  
+    <g filter="url(#tapGlowBlue)">
+      <polygon points="694.2042,434.1065 779.2458,434.1065 789.876,477.1335 683.5740000000001,477.1335" fill="#5be7ff" fill-opacity="0.96"/>
+      <polygon points="702.70836,440.99082 770.7416400000001,440.99082 781.37184,468.52810000000005 692.07816,468.52810000000005" fill="#f7fbff" fill-opacity="0.18"/>
+    </g>
+  
+    <g filter="url(#tapGlowPink)">
+      <polygon points="594.9188,375.691 669.9812000000001,375.691 679.364,413.66900000000004 585.5360000000001,413.66900000000004" fill="#ff7e9f" fill-opacity="0.96"/>
+      <polygon points="602.4250400000001,381.76748 662.47496,381.76748 671.85776,406.07340000000005 593.0422400000001,406.07340000000005" fill="#f7fbff" fill-opacity="0.18"/>
+    </g>
+  
+    <g filter="url(#tapGlowGold)">
+      <polygon points="712.2618,349.1385 782.7882000000001,349.1385 791.604,384.8215 703.446,384.8215" fill="#ffd97f" fill-opacity="0.96"/>
+      <polygon points="719.31444,354.84778 775.7355600000001,354.84778 784.55136,377.6849 710.49864,377.6849" fill="#f7fbff" fill-opacity="0.18"/>
+    </g>
+  
+    <g filter="url(#tapGlowBlue)">
+      <polygon points="815.4406,306.6545 878.7094000000001,306.6545 886.618,338.66550000000007 807.532,338.66550000000007" fill="#5be7ff" fill-opacity="0.96"/>
+      <polygon points="821.76748,311.77626 872.3825200000001,311.77626 880.2911200000001,332.2633000000001 813.85888,332.2633000000001" fill="#f7fbff" fill-opacity="0.18"/>
+    </g>
+  
+    <g filter="url(#tapGlowBlue)">
+      <polygon points="909.5906000000001,306.65450000000004 972.8594,306.65450000000004 980.768,338.6655 901.6820000000001,338.6655" fill="#5be7ff" fill-opacity="0.96"/>
+      <polygon points="915.9174800000001,311.77626000000004 966.5325200000001,311.77626000000004 974.4411200000001,332.2633 908.0088800000001,332.2633" fill="#f7fbff" fill-opacity="0.18"/>
+    </g>
+  
+    <rect x="883.618" y="316.89802000000003" width="21.064000000000078" height="11.523960000000011" rx="5.761980000000006" fill="#5be7ff" fill-opacity="0.38"/>
+  
+    <g filter="url(#tapGlowPink)">
+      <polygon points="812.5624,237.61800000000005 864.0375999999999,237.61800000000005 870.4719999999999,263.66200000000003 806.128,263.66200000000003" fill="#ff7e9f" fill-opacity="0.96"/>
+      <polygon points="817.70992,241.78504000000004 858.8900799999999,241.78504000000004 865.3244799999999,258.45320000000004 811.27552,258.45320000000004" fill="#f7fbff" fill-opacity="0.18"/>
+    </g>
+  
+      
+    <g>
+      <line x1="436.4" y1="716" x2="1163.6" y2="716" stroke="#fff0b5" stroke-width="6" stroke-opacity="0.95"/>
+      <line x1="442.4" y1="730" x2="1157.6" y2="730" stroke="#ff7f9a" stroke-width="2" stroke-opacity="0.44"/>
+    </g>
+  
+      
+        <g transform="translate(720 102)">
+          <rect width="44" height="44" rx="12.32" fill="#0e1620" opacity="0.82"/>
+          <rect x="12" y="11" width="20" height="22" rx="10" fill="#5be7ff"/>
+        </g>
+      
+        <g transform="translate(778 102)">
+          <rect width="44" height="44" rx="12.32" fill="#0e1620" opacity="0.82"/>
+          <rect x="8" y="11" width="14" height="22" rx="7" fill="#5be7ff"/><rect x="22" y="11" width="14" height="22" rx="7" fill="#ff7e9f"/>
+        </g>
+      
+        <g transform="translate(836 102)">
+          <rect width="44" height="44" rx="12.32" fill="#0e1620" opacity="0.82"/>
+          <rect x="14" y="8" width="16" height="28" rx="8" fill="#ffd97f"/>
+        </g>
+      
+      
+    <text x="128" y="72" class="hudTag">Score</text>
+    <text x="128" y="112" class="hudValue">12840</text>
+    <text x="1472" y="72" text-anchor="end" class="hudTag">GLASS</text>
+    <text x="1472" y="112" text-anchor="end" class="hudValue">x24</text>
+    <circle cx="725" cy="114" r="11" fill="#fff0b5" fill-opacity="0.95"/><circle cx="775" cy="114" r="11" fill="#fff0b5" fill-opacity="0.95"/><circle cx="825" cy="114" r="11" fill="#fff0b5" fill-opacity="0.95"/><circle cx="875" cy="114" r="11" fill="#18222f" fill-opacity="1"/>
+  
+    </g>
+  
+  
+</svg>

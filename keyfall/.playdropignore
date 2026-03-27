@@ -1,0 +1,6 @@
+node_modules/
+dist/
+output/
+mockups/
+listing/
+.playwright-cli/

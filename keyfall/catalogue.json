@@ -1,0 +1,20 @@
+{
+  "apps": [
+    {
+      "name": "keyfall",
+      "version": "0.1.0",
+      "displayName": "Keyfall",
+      "description": "A portrait-first endless rhythm runway about taps, holds, and chords on a minimal 3D keyboard lane.",
+      "type": "GAME",
+      "file": "dist/index.html",
+      "surfaceTargets": {
+        "desktop": true,
+        "mobileLandscape": false,
+        "mobilePortrait": true
+      },
+      "emoji": "🎹",
+      "color": "#58D3C3",
+      "templateSource": "playdrop/template/typescript_template"
+    }
+  ]
+}

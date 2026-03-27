@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+  <defs>
+    <linearGradient id="icon-a-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#08131d"/>
+      <stop offset="58%" stop-color="#102433"/>
+      <stop offset="100%" stop-color="#170f1b"/>
+    </linearGradient>
+    <linearGradient id="icon-a-runway" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#aab8bf"/>
+      <stop offset="100%" stop-color="#6f818a"/>
+    </linearGradient>
+    <filter id="icon-a-blur"><feGaussianBlur stdDeviation="28"/></filter>
+    <filter id="icon-a-soft"><feGaussianBlur stdDeviation="58"/></filter>
+    <filter id="icon-a-title"><feDropShadow dx="0" dy="16" stdDeviation="24" flood-color="#050b13" flood-opacity="0.42"/></filter>
+    <filter id="icon-a-shot-shadow"><feDropShadow dx="0" dy="24" stdDeviation="36" flood-color="#050b13" flood-opacity="0.38"/></filter>
+    <linearGradient id="icon-a-shade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#06111a" stop-opacity="0.72"/>
+      <stop offset="35%" stop-color="#06111a" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#06111a" stop-opacity="0.58"/>
+    </linearGradient>
+    <style>
+      text { font-family: "Avenir Next", "SF Pro Display", "Trebuchet MS", sans-serif; }
+    </style>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#icon-a-bg)"/>
+  <circle cx="184.32" cy="225.28" r="204.8" fill="#123a58" opacity="0.18"/>
+  <circle cx="839.68" cy="184.32" r="184.32" fill="#351739" opacity="0.16"/>
+  <circle cx="512" cy="620" r="300" stroke="#69e6ff" stroke-width="4" stroke-opacity="0.1" fill="none"/><circle cx="512" cy="620" r="404" stroke="#69e6ff" stroke-width="4" stroke-opacity="0.082" fill="none"/><circle cx="512" cy="620" r="508" stroke="#69e6ff" stroke-width="4" stroke-opacity="0.064" fill="none"/>
+
+    <polygon points="246,840 778,840 639.68,164 384.32,164" fill="url(#icon-a-runway)" opacity="0.94"/>
+    <line x1="379" y1="840" x2="448.15999999999997" y2="164" stroke="#d7fbff" stroke-opacity="0.18" stroke-width="4"/>
+    <line x1="512" y1="840" x2="512" y2="164" stroke="#d7fbff" stroke-opacity="0.18" stroke-width="4"/>
+    <line x1="645" y1="840" x2="575.8399999999999" y2="164" stroke="#d7fbff" stroke-opacity="0.18" stroke-width="4"/>
+    <line x1="230" y1="691.28" x2="794" y2="691.28" stroke="#69e6ff" stroke-opacity="0.16" stroke-width="6"/>
+    <line x1="234" y1="529.04" x2="790" y2="529.04" stroke="#69e6ff" stroke-opacity="0.14" stroke-width="5"/>
+    <line x1="238" y1="380.32" x2="786" y2="380.32" stroke="#69e6ff" stroke-opacity="0.12" stroke-width="4"/>
+  
+
+    <g filter="url(#icon-a-blur)">
+      <rect x="382" y="624" width="112" height="112" rx="25" fill="#63e6ff" opacity="0.28"/>
+    </g>
+    <rect x="382" y="624" width="112" height="112" rx="25" fill="#63e6ff"/>
+    <rect x="395.44" y="637.44" width="85.12" height="31.360000000000003" rx="11.25" fill="#f7fbff" opacity="0.16"/>
+  
+
+    <g filter="url(#icon-a-blur)">
+      <rect x="532" y="430" width="102" height="102" rx="22" fill="#ff88a5" opacity="0.28"/>
+    </g>
+    <rect x="532" y="430" width="102" height="102" rx="22" fill="#ff88a5"/>
+    <rect x="544.24" y="442.24" width="77.52" height="28.560000000000002" rx="9.9" fill="#f7fbff" opacity="0.16"/>
+  
+
+    <g filter="url(#icon-a-blur)">
+      <rect x="614" y="298" width="74" height="74" rx="16" fill="#ffd780" opacity="0.28"/>
+    </g>
+    <rect x="614" y="298" width="74" height="74" rx="16" fill="#ffd780"/>
+    <rect x="622.88" y="306.88" width="56.24" height="20.720000000000002" rx="7.2" fill="#f7fbff" opacity="0.16"/>
+  
+</svg>
