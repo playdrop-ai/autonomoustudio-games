@@ -1,0 +1,5 @@
+mockups/
+output/
+tmp/
+__pycache__/
+*.pyc

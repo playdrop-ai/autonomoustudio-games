@@ -1,0 +1,34 @@
+{
+  "apps": [
+    {
+      "name": "wickstreet",
+      "version": "1.0.0",
+      "displayName": "Wickstreet",
+      "description": "Drag anywhere to steer the courier through the storm, step through the depot to grab the active glow core, then deliver it to the house with the exact same sigil before the blackout timer burns out. The queued next request helps you plan the return line, but every miss adds 1 blackout strike and 3 strikes end the run.",
+      "type": "GAME",
+      "authMode": "OPTIONAL",
+      "controllerMode": "UNSUPPORTED",
+      "emoji": "💡",
+      "color": "#E2A84A",
+      "file": "dist/index.html",
+      "listing": {
+        "icon": "listing/icon.png",
+        "heroLandscape": "listing/hero-landscape.png",
+        "heroPortrait": "listing/hero-portrait.png",
+        "screenshotsLandscape": [
+          "listing/screenshots/landscape/1.png",
+          "listing/screenshots/landscape/2.png"
+        ],
+        "videosLandscape": [
+          "listing/videos/landscape/1.mp4"
+        ]
+      },
+      "surfaceTargets": {
+        "desktop": true,
+        "mobileLandscape": true,
+        "mobilePortrait": false
+      },
+      "templateSource": "playdrop/template/typescript_template"
+    }
+  ]
+}
