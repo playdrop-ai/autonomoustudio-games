@@ -1,0 +1,35 @@
+{
+  "apps": [
+    {
+      "name": "drifthook",
+      "version": "1.0.0",
+      "displayName": "Drifthook",
+      "description": "Hold to drop the lantern lure, release to reel it back, and catch the leftmost fish shown in the order strip. The next fish has to match exactly; a wrong fish or snag costs 1 knot and resets the order, while landing all 3 fish in sequence scores big and repairs 1 knot. Lose all 4 knots and the lake wins.",
+      "type": "GAME",
+      "emoji": "🎣",
+      "color": "#E6B85C",
+      "file": "dist/index.html",
+      "listing": {
+        "icon": "listing/icon.png",
+        "heroLandscape": "listing/hero-landscape.png",
+        "heroPortrait": "listing/hero-portrait.png",
+        "screenshotsLandscape": [
+          "listing/drifthook_1280x720-screenshot-1.png"
+        ],
+        "screenshotsPortrait": [
+          "listing/drifthook_720x1280-screenshot-1.png",
+          "listing/drifthook_720x1280-screenshot-2.png"
+        ],
+        "videosLandscape": [
+          "listing/drifthook_1280x720-recording.mp4"
+        ]
+      },
+      "surfaceTargets": {
+        "desktop": true,
+        "mobileLandscape": false,
+        "mobilePortrait": true
+      },
+      "templateSource": "playdrop/template/typescript_template"
+    }
+  ]
+}

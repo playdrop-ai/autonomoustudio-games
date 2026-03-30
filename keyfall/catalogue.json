@@ -2,9 +2,9 @@
   "apps": [
     {
       "name": "keyfall",
-      "version": "0.1.0",
+      "version": "0.4.0",
       "displayName": "Keyfall",
-      "description": "A portrait-first endless rhythm runway about taps, holds, and chords on a minimal 3D keyboard lane.",
+      "description": "A portrait-first rhythm runway with 3 selectable tracks, 3 difficulty levels, and lead-MIDI-driven AI charts on a minimalist 3D lane set.",
       "type": "GAME",
       "file": "dist/index.html",
       "surfaceTargets": {

@@ -1,14 +1,21 @@
 {
   "name": "keyfall",
-  "version": "0.1.0",
+  "version": "0.4.0",
   "type": "module",
   "private": true,
   "scripts": {
     "build": "node build.mjs",
     "dev": "node build.mjs --watch",
     "test": "node --experimental-strip-types --test tests/**/*.test.ts",
+    "charts:build": "python3 scripts/build_audio_charts.py",
+    "charts:validate": "python3 scripts/build_audio_charts.py --check",
+    "charts:render": "python3 scripts/render_chart_analysis.py",
     "balance:report": "node --experimental-strip-types scripts/simulate-balance.ts",
-    "validate": "npm run test && tsc --noEmit && npm run build",
+    "chart:report": "node --experimental-strip-types scripts/chart-report.ts",
+    "playtest:content": "node scripts/playtest-content.mjs",
+    "capture:marketing": "node scripts/capture-marketing-video.mjs",
+    "capture:songs": "node scripts/capture-song-videos.mjs",
+    "validate": "npm run charts:validate && npm run test && tsc --noEmit && npm run build",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json}\""
   },
   "devDependencies": {
@@ -22,6 +29,7 @@
     "@playdrop/web-bridge": "file:vendor/playdrop/web-bridge.tgz",
     "esbuild": "^0.24.0",
     "playdrop-sdk-types": "file:vendor/playdrop-sdk-types.tgz",
+    "playwright": "^1.58.1",
     "prettier": "^3.2.5",
     "typescript": "^5.9.2"
   },

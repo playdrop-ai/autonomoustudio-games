@@ -1,4 +1,5 @@
 import type { PreviewCluster, Screen } from "../game/logic.ts";
+import { DIFFICULTIES, SONG_IDS, type DifficultyId, type SongId } from "../game/songbook.ts";
 
 export interface UIState {
   screen: Screen;
@@ -8,8 +9,11 @@ export interface UIState {
   bestCombo: number;
   lives: number;
   songLabel: string;
+  difficultyLabel: string;
   preview: PreviewCluster[];
   muted: boolean;
+  selectedSongId: SongId;
+  selectedDifficulty: DifficultyId;
 }
 
 export interface UIRefs {
@@ -21,13 +25,16 @@ export interface UIRefs {
   songValue: HTMLDivElement;
   livesValue: HTMLDivElement;
   startOverlay: HTMLDivElement;
-  gameOverOverlay: HTMLDivElement;
+  resultOverlay: HTMLDivElement;
   startButton: HTMLButtonElement;
   retryButton: HTMLButtonElement;
   muteButton: HTMLButtonElement;
-  gameOverScore: HTMLDivElement;
-  gameOverBest: HTMLDivElement;
-  gameOverCombo: HTMLDivElement;
+  resultTitle: HTMLDivElement;
+  resultScore: HTMLDivElement;
+  resultBest: HTMLDivElement;
+  resultCombo: HTMLDivElement;
+  songButtons: Record<SongId, HTMLButtonElement>;
+  difficultyButtons: Record<DifficultyId, HTMLButtonElement>;
 }
 
 export function createUI(): UIRefs {
@@ -62,16 +69,18 @@ export function createUI(): UIRefs {
 
   const scoreTag = label("Score", 28, 28);
   const scoreValue = value("0", 28, 56, "left");
-  const songValue = value("GLASS", 0, 56, "right");
+  const songValue = value("SYNTH", 0, 56, "right");
   songValue.style.right = "28px";
   songValue.style.fontSize = "clamp(34px, 8vw, 46px)";
   songValue.style.lineHeight = "0.9";
   songValue.style.textAlign = "right";
+
   const comboValue = value("x1", 0, 100, "right");
   comboValue.style.right = "28px";
   comboValue.style.fontSize = "clamp(30px, 7vw, 42px)";
   comboValue.style.lineHeight = "0.9";
   comboValue.style.textAlign = "right";
+
   const livesValue = document.createElement("div");
   livesValue.style.position = "absolute";
   livesValue.style.left = "50%";
@@ -79,35 +88,52 @@ export function createUI(): UIRefs {
   livesValue.style.transform = "translateX(-50%)";
   livesValue.style.display = "flex";
   livesValue.style.gap = "12px";
+
   const preview = document.createElement("div");
   preview.style.position = "absolute";
   preview.style.left = "50%";
   preview.style.top = "124px";
   preview.style.transform = "translateX(-50%)";
-  preview.style.display = "flex";
+  preview.style.display = "none";
   preview.style.gap = "10px";
   preview.style.alignItems = "center";
 
   const muteButton = chipButton("Mute");
   muteButton.style.position = "absolute";
   muteButton.style.left = "50%";
-  muteButton.style.bottom = "calc(env(safe-area-inset-bottom, 0px) + 16px)";
+  muteButton.style.top = "82px";
   muteButton.style.transform = "translateX(-50%)";
+  muteButton.style.padding = "8px 14px";
   muteButton.style.pointerEvents = "auto";
 
   const startOverlay = overlayPanel("Keyfall");
+  const songButtons = SONG_IDS.reduce<Record<SongId, HTMLButtonElement>>((acc, songId) => {
+    acc[songId] = selectorButton(songId.toUpperCase());
+    return acc;
+  }, {} as Record<SongId, HTMLButtonElement>);
+  const difficultyButtons = DIFFICULTIES.reduce<Record<DifficultyId, HTMLButtonElement>>((acc, difficulty) => {
+    acc[difficulty] = selectorButton(difficulty === "medium" ? "MED" : difficulty.toUpperCase());
+    return acc;
+  }, {} as Record<DifficultyId, HTMLButtonElement>);
+
+  startOverlay.append(sectionRow(Object.values(songButtons)));
+  startOverlay.append(sectionRow(Object.values(difficultyButtons)));
+  startOverlay.appendChild(laneHintRow());
   const startButton = actionButton("Play");
   startOverlay.appendChild(startButton);
 
-  const gameOverOverlay = overlayPanel("");
-  const gameOverScore = overlayValue("0");
-  const gameOverBest = overlayMeta("Best 0");
-  const gameOverCombo = overlayMeta("Combo 0");
-  const retryButton = actionButton("Retry");
-  gameOverOverlay.append(gameOverScore, gameOverBest, gameOverCombo, retryButton);
-  gameOverOverlay.style.visibility = "hidden";
+  const resultOverlay = overlayPanel("");
+  const resultTitle = overlayMeta("MISS");
+  resultTitle.style.fontSize = "clamp(24px, 6vw, 30px)";
+  resultTitle.style.letterSpacing = "0.18em";
+  const resultScore = overlayValue("0");
+  const resultBest = overlayMeta("Best 0");
+  const resultCombo = overlayMeta("Combo 0");
+  const retryButton = actionButton("Again");
+  resultOverlay.append(resultTitle, resultScore, resultBest, resultCombo, retryButton);
+  resultOverlay.style.visibility = "hidden";
 
-  hud.append(scoreTag, scoreValue, songValue, comboValue, livesValue, preview, muteButton, startOverlay, gameOverOverlay);
+  hud.append(scoreTag, scoreValue, songValue, comboValue, livesValue, preview, muteButton, startOverlay, resultOverlay);
 
   return {
     stage,
@@ -118,13 +144,16 @@ export function createUI(): UIRefs {
     songValue,
     livesValue,
     startOverlay,
-    gameOverOverlay,
+    resultOverlay,
     startButton,
     retryButton,
     muteButton,
-    gameOverScore,
-    gameOverBest,
-    gameOverCombo,
+    resultTitle,
+    resultScore,
+    resultBest,
+    resultCombo,
+    songButtons,
+    difficultyButtons,
   };
 }
 
@@ -137,11 +166,19 @@ export function updateUI(refs: UIRefs, state: UIState): void {
   refs.livesValue.replaceChildren(...Array.from({ length: 4 }, (_, index) => pip(index < state.lives)));
   refs.preview.replaceChildren(...state.preview.map((entry) => previewItem(entry)));
 
+  for (const songId of SONG_IDS) {
+    syncSelector(refs.songButtons[songId], songId === state.selectedSongId);
+  }
+  for (const difficulty of DIFFICULTIES) {
+    syncSelector(refs.difficultyButtons[difficulty], difficulty === state.selectedDifficulty);
+  }
+
   refs.startOverlay.style.visibility = state.screen === "start" ? "visible" : "hidden";
-  refs.gameOverOverlay.style.visibility = state.screen === "gameover" ? "visible" : "hidden";
-  refs.gameOverScore.textContent = String(state.score);
-  refs.gameOverBest.textContent = `Best ${state.bestScore}`;
-  refs.gameOverCombo.textContent = `Combo ${state.bestCombo}`;
+  refs.resultOverlay.style.visibility = state.screen === "gameover" || state.screen === "clear" ? "visible" : "hidden";
+  refs.resultTitle.textContent = state.screen === "clear" ? "CLEAR" : "MISS";
+  refs.resultScore.textContent = String(state.score);
+  refs.resultBest.textContent = `Best ${state.bestScore}`;
+  refs.resultCombo.textContent = `Combo ${state.bestCombo}`;
 }
 
 function label(text: string, left: number, top: number): HTMLDivElement {
@@ -177,7 +214,7 @@ function overlayPanel(title: string): HTMLDivElement {
   panel.style.left = "50%";
   panel.style.top = "34%";
   panel.style.transform = "translate(-50%, -34%)";
-  panel.style.width = "min(72vw, 360px)";
+  panel.style.width = "min(76vw, 380px)";
   panel.style.padding = "22px";
   panel.style.borderRadius = "28px";
   panel.style.display = "flex";
@@ -212,6 +249,16 @@ function actionButton(text: string): HTMLButtonElement {
   return button;
 }
 
+function selectorButton(text: string): HTMLButtonElement {
+  const button = chipButton(text);
+  button.style.minWidth = "92px";
+  button.style.padding = "12px 14px";
+  button.style.fontWeight = "800";
+  button.style.letterSpacing = "0.08em";
+  button.style.textTransform = "uppercase";
+  return button;
+}
+
 function chipButton(text: string): HTMLButtonElement {
   const button = document.createElement("button");
   button.textContent = text;
@@ -222,6 +269,24 @@ function chipButton(text: string): HTMLButtonElement {
   button.style.color = "#f7fbff";
   button.style.font = "600 16px \"Avenir Next\", sans-serif";
   return button;
+}
+
+function sectionRow(buttons: HTMLButtonElement[]): HTMLDivElement {
+  const row = document.createElement("div");
+  row.style.display = "flex";
+  row.style.flexWrap = "wrap";
+  row.style.gap = "10px";
+  row.style.justifyContent = "center";
+  row.style.width = "100%";
+  buttons.forEach((button) => row.appendChild(button));
+  return row;
+}
+
+function syncSelector(button: HTMLButtonElement, selected: boolean): void {
+  button.style.background = selected ? "rgba(255, 239, 185, 0.94)" : "rgba(10, 16, 24, 0.58)";
+  button.style.color = selected ? "#17120d" : "#f7fbff";
+  button.style.borderColor = selected ? "rgba(255, 239, 185, 0.94)" : "rgba(255,255,255,0.12)";
+  button.style.boxShadow = selected ? "0 8px 22px rgba(255, 239, 185, 0.18)" : "none";
 }
 
 function overlayValue(text: string): HTMLDivElement {
@@ -240,6 +305,30 @@ function overlayMeta(text: string): HTMLDivElement {
   element.style.fontWeight = "700";
   element.style.color = "#a7b9c9";
   return element;
+}
+
+function laneHintRow(): HTMLDivElement {
+  const row = document.createElement("div");
+  row.style.display = "flex";
+  row.style.gap = "10px";
+  row.style.alignItems = "center";
+  row.style.justifyContent = "center";
+  row.style.marginTop = "2px";
+  ["D", "F", "J", "K"].forEach((key) => {
+    const pill = document.createElement("div");
+    pill.textContent = key;
+    pill.style.minWidth = "40px";
+    pill.style.padding = "10px 0";
+    pill.style.borderRadius = "14px";
+    pill.style.background = "rgba(255,255,255,0.08)";
+    pill.style.border = "1px solid rgba(255,255,255,0.12)";
+    pill.style.textAlign = "center";
+    pill.style.fontSize = "18px";
+    pill.style.fontWeight = "800";
+    pill.style.letterSpacing = "0.08em";
+    row.appendChild(pill);
+  });
+  return row;
 }
 
 function pip(active: boolean): HTMLDivElement {
@@ -262,12 +351,12 @@ function previewItem(entry: PreviewCluster): HTMLDivElement {
   item.style.justifyContent = "center";
   item.style.gap = "4px";
   if (entry.kind === "hold") {
-    const bar = laneBar("#ffd780");
+    const bar = laneBar("#0b0d11");
     bar.style.height = "28px";
     item.appendChild(bar);
   } else {
-    entry.lanes.forEach((_, index) => {
-      item.appendChild(laneBar(index === 0 ? "#63e6ff" : "#ff88a5"));
+    entry.lanes.forEach(() => {
+      item.appendChild(laneBar("#0b0d11"));
     });
   }
   return item;

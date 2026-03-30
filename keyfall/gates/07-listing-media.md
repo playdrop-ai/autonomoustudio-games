@@ -102,20 +102,10 @@ Result:
   - `/Users/oliviermichon/Documents/autonomoustudio-games/keyfall/listing/hero-landscape-final.png`
   - `/Users/oliviermichon/Documents/autonomoustudio-games/keyfall/listing/hero-portrait-final.png`
   - `/Users/oliviermichon/Documents/autonomoustudio-games/keyfall/listing/icon-final.png`
-- Candidate art:
-  - `/Users/oliviermichon/Documents/autonomoustudio-games/keyfall/listing/hero-landscape-a.png`
-  - `/Users/oliviermichon/Documents/autonomoustudio-games/keyfall/listing/hero-landscape-b.png`
-  - `/Users/oliviermichon/Documents/autonomoustudio-games/keyfall/listing/hero-landscape-c.png`
-  - `/Users/oliviermichon/Documents/autonomoustudio-games/keyfall/listing/hero-portrait-a.png`
-  - `/Users/oliviermichon/Documents/autonomoustudio-games/keyfall/listing/hero-portrait-b.png`
-  - `/Users/oliviermichon/Documents/autonomoustudio-games/keyfall/listing/hero-portrait-c.png`
-  - `/Users/oliviermichon/Documents/autonomoustudio-games/keyfall/listing/icon-a.png`
-  - `/Users/oliviermichon/Documents/autonomoustudio-games/keyfall/listing/icon-b.png`
-  - `/Users/oliviermichon/Documents/autonomoustudio-games/keyfall/listing/icon-c.png`
 - Gameplay video:
   - `/Users/oliviermichon/Documents/autonomoustudio-games/keyfall/listing/keyfall-gameplay.mp4`
-- Fallback art renderer:
-  - `/Users/oliviermichon/Documents/autonomoustudio-games/keyfall/scripts/render-listing-assets.mjs`
+- Repo cleanup note:
+  - Intermediate candidate exports and the one-off fallback art renderer were removed from the public repo after final selection so only the shipped assets remain tracked.
 
 ## Verdict
 

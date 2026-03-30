@@ -1,0 +1,173 @@
+Original prompt: follow the same process as new_game automation but make a game like piano tile, optimized for mobile portrait but also playable on desktop using keyboard. You will probably need to generate music using the playdrop cli ai generation tool. you can have up to 10 songs and up to 10 sfx. Art style should be 3D but minimalistic.
+
+2026-03-27 polish pass
+- User feedback: onboarding feels too hard, charts should ramp level by level, and taps need tighter sync with the music.
+- Planned fixes: deterministic chart generation from song structure, simpler early songs, explicit lead-in and audio sync, fresh balance run, browser verification.
+- Shipped in this pass:
+  - Expanded to 6 procedural songs and kept 5 gameplay SFX.
+  - Replaced RNG charting with deterministic chart generation from each song's beat and pitch data.
+  - Added a 900 ms run lead-in and audio timeline anchoring so the synth playback follows the game clock.
+  - Added arrow-key aliases for desktop play and richer `render_game_to_text` output for future automation.
+- Validation:
+  - `npm run validate` passes.
+  - Full content playtest passed with `npm run playtest:content` across 18 phrases in both desktop and portrait.
+  - `npm run chart:report -- 18` shows a readable first cycle and denser second-cycle remixes.
+  - `npm run balance:report` now shows a softer opening with a real late ramp: idle median 7312 ms, casual median 301024 ms, expert still clears the 6 minute cap.
+- Follow-up note:
+  - Published `0.1.1` to PlayDrop and verified the hosted bundle directly at `https://assets.playdrop.ai/creators/autonomoustudio/apps/keyfall/v0.1.1/index.html`.
+
+2026-03-27 piano-tiles grammar correction
+- User feedback: Keyfall did not read like Piano Tiles. The old build used colored note semantics, occasional multi-lane events, and floating block shapes that made desktop play unclear.
+- Reference check:
+  - Inspected the user-provided Piano Tiles 3 reference shell on Playgama.
+  - Confirmed the target read is the classic grammar: four obvious lanes, black tiles on a light runway, simple lane ownership, and elongated holds instead of neon block types.
+- Shipped in this pass:
+  - Removed chord generation from the charting rules and kept note grammar single-lane only.
+  - Kept later difficulty through denser single-lane rhythms and elongated holds instead of simultaneous notes.
+  - Rebuilt the scene as a clearer 3D piano runway: light lanes, black tiles, stronger separators, and a visible strike edge.
+  - Hid the top preview chips and moved the mute control away from the strike zone.
+  - Recut the marketing video so it shows the corrected lane language and a strong winning run.
+- Validation:
+  - `npm run validate` passes.
+  - `npm run playtest:content` passes on desktop and portrait after the lane/read refactor.
+  - New capture exported to `listing/keyfall-gameplay.mp4`.
+
+2026-03-27 AI track selector release
+- User request: replace the old endless six-song structure with a start screen that offers 3 selectable tracks and 3 selectable difficulty levels while keeping the same 3D lane presentation and tile gameplay.
+- Shipped in this pass:
+  - Added a selector-driven songbook with `SYNTH`, `PIANO`, and `ROCK`, each with `easy`, `medium`, and `hard` charts.
+  - Kept the current procedural runtime score as the `SYNTH` option.
+  - Generated two real PlayDrop AI music tracks:
+    - `assets/audio/piano-etude.mp3`
+    - `assets/audio/rock-drive.mp3`
+  - Built offline audio-analysis tooling in `scripts/build_audio_charts.py` using beat, onset, chroma, and centroid analysis to author static charts for the AI tracks.
+  - Refactored runtime audio so procedural and file-backed tracks both lock to the same game clock.
+  - Rebuilt the start UI so users can pick track and difficulty before play.
+  - Fixed the browser QA harness to wait on the app control bridge instead of `networkidle`, which was stalling once MP3 preload was part of boot.
+  - Reworked `scripts/simulate-balance.ts` to report against the new `song x difficulty x policy` structure instead of the removed endless loop.
+- Validation:
+  - `python3 scripts/build_audio_charts.py`
+  - `npm run validate`
+  - `npm run chart:report`
+  - `npm run balance:report`
+  - `npm run playtest:content`
+  - `npm run capture:marketing`
+  - `playdrop project validate .`
+  - `playdrop project publish .`
+- Publish:
+  - Published `0.2.0`
+  - Verified `autonomoustudio/app/keyfall` reports `currentVersion: 0.2.0`
+  - Verified hosted bundle at `https://assets.playdrop.ai/creators/autonomoustudio/apps/keyfall/v0.2.0/index.html`
+
+2026-03-27 selector hotfix and song captures
+- User feedback: clicking on the intro popup started the game immediately, which made song selection unreliable.
+- Root cause:
+  - Stage-level pointer input was accepting bubbled clicks from the intro overlay, so clicking any overlay surface could trigger `beginRun()`.
+- Fix:
+  - Updated `src/main.ts` so stage pointer input only accepts events that originate from the actual playfield surface.
+- Validation:
+  - `npm run validate`
+  - Local Playwright selector check:
+    - clicking `ROCK`, `PIANO`, and `HARD` keeps the game in `start`
+    - clicking `Play` then transitions to `playing`
+  - Hosted bundle Playwright selector check passed on `https://assets.playdrop.ai/creators/autonomoustudio/apps/keyfall/v0.2.1/index.html`
+- Media:
+  - Added `scripts/capture-song-videos.mjs`
+  - Exported audio-backed gameplay clips:
+    - `listing/videos/keyfall-piano-gameplay.mp4`
+    - `listing/videos/keyfall-rock-gameplay.mp4`
+  - Verified both exported clips contain `h264` video and `aac` audio streams
+- Publish:
+  - Published `0.2.1`
+  - Verified `autonomoustudio/app/keyfall` reports `currentVersion: 0.2.1`
+  - Verified hosted bundle at `https://assets.playdrop.ai/creators/autonomoustudio/apps/keyfall/v0.2.1/index.html`
+
+2026-03-27 song-driven AI chart rebuild
+- User feedback: the piano and rock tile charts did not reflect the underlying songs closely enough. The previous offline authoring path still behaved like a snapped heuristic router instead of a music-driven chart pipeline.
+- Root cause findings from the old pipeline:
+  - Onsets were hard-snapped to a half-beat grid before runtime, creating audible drift.
+  - Lane routing was dominated by a static anchor pattern rather than phrase contour.
+  - Holds came from empty gaps instead of measured sustain.
+  - Rock charting over-trusted sparse hook detections and underused rhythmic reinforcement.
+- Shipped in this pass:
+  - Replaced `scripts/build_audio_charts.py` with a two-stage offline analyzer/chart builder.
+  - Added reusable analysis output in `src/game/generated/aiTrackAnalysis.json`.
+  - Extended AI chart data with `beatAnchors`, `sections`, `sourceRole`, `confidence`, `phraseId`, and `motifId`.
+  - Replaced motif/lane routing with phrase-aware contour routing and stable motif reuse.
+  - Derived `easy`, `medium`, and `hard` as real subsets of one authored master chart per AI song.
+  - Tightened the rock pipeline so it keeps more musically relevant accent reinforcement without degenerating into drum spam.
+  - Added `scripts/render_chart_analysis.py` plus `npm run charts:render` to generate visual chart-overview proofs for piano and rock.
+  - Updated runtime note metadata and tests so the richer chart data is preserved through gameplay.
+- Validation:
+  - `python3 scripts/build_audio_charts.py`
+  - `npm run charts:validate`
+  - `npm run validate`
+  - `npm run chart:report`
+  - `npm run balance:report`
+  - `npm run playtest:content`
+  - `npm run charts:render`
+  - `npm run capture:songs`
+- Current post-rebuild metrics:
+  - Piano: `easy 66`, `medium 114`, `hard 214`
+  - Rock: `easy 34`, `medium 70`, `hard 109`
+  - Timing error check now reports `0 ms` median / `0 ms` p90 / `0 ms` max because generated chart times stay on the detected source events rather than being resnapped.
+  - Motif lane mismatch rate is `0.0` for both AI songs and subset integrity passes for both.
+
+2026-03-28 transcription-driven chart rebuild
+- User feedback: the previous "song-driven" pass still was not actually transcribing the music. The chart needed to reflect real piano/guitar note events rather than onset heuristics on the mixed master.
+- Root cause:
+  - The prior pipeline still picked heuristic candidates from onset envelopes and CQT peaks.
+  - It did not reconstruct note-on events from the songs.
+  - Rock charting still worked from the full mix instead of a guitar-focused stem.
+- Shipped in this pass:
+  - Installed a real audio toolchain around `basic-pitch` and `demucs`.
+  - Replaced AI-track candidate generation with transcription-derived note events.
+  - Piano now charts from Basic Pitch note transcription on the full piano track.
+  - Rock now separates an `other` stem with Demucs, then transcribes that stem and charts from the resulting riff/hook note events.
+  - Kept beat anchors, motif IDs, lane routing, and difficulty derivation on top of those transcribed note events.
+  - Added `requirements-audio.txt` to make the Python chart-authoring stack reproducible.
+  - Refreshed chart overlays and gameplay videos from the new transcription charts.
+- Validation:
+  - `python3 scripts/build_audio_charts.py`
+  - `npm run validate`
+  - `npm run balance:report`
+  - `npm run chart:report`
+  - `npm run playtest:content`
+  - `npm run charts:render`
+  - `npm run capture:songs`
+- Current post-transcription metrics:
+  - Piano: `easy 92`, `medium 120`, `hard 233`
+  - Rock: `easy 91`, `medium 100`, `hard 232`
+  - Casual clear rates:
+    - Piano: `easy 0.75`, `medium 0.625`, `hard 0`
+    - Rock: `easy 1.0`, `medium 1.0`, `hard 0.5`
+  - The charts are now built from transcribed note start times, not snapped synthetic candidate times.
+
+2026-03-28 lead-MIDI chart cleanup
+- User feedback: the first transcription-driven pass still was not close to the quality bar for charted rhythm games. The charts needed to read like the song, not like raw note extraction noise.
+- Root cause:
+  - We were charting directly from transcription candidates, which still let polyphonic clutter leak into the note stream.
+  - Sustain thresholds were too loose, creating hold-heavy charts that did not read like piano-tiles gameplay.
+  - The hard charts needed more musically grounded density between lead notes.
+- Shipped in this pass:
+  - Added explicit MIDI export artifacts for both AI tracks:
+    - raw transcription MIDI
+    - cleaned lead MIDI
+  - Added a pYIN-based lead extractor and aligned that monophonic lead against Basic Pitch note events.
+  - Rebuilt piano and rock chart candidates from the cleaned lead line instead of from raw transcription clusters.
+  - Added support-note harvesting between lead notes so hard charts keep real riff/arpeggio density without degenerating into random note spam.
+  - Tightened master hold thresholds so sustains are rare and intentional instead of dominating the charts.
+  - Refreshed chart overviews, browser playtests, and captured song videos from the new charts.
+- Validation:
+  - `npm run validate`
+  - `npm run chart:report`
+  - `npm run balance:report`
+  - `npm run charts:render`
+  - `npm run playtest:content`
+  - `npm run capture:songs`
+- Current post-cleanup metrics:
+  - Piano: `easy 71`, `medium 86`, `hard 146`
+  - Rock: `easy 62`, `medium 71`, `hard 139`
+  - Piano casual clear rates: `easy 1.0`, `medium 0.875`, `hard 0.625`
+  - Rock casual clear rates: `easy 1.0`, `medium 1.0`, `hard 1.0`
+  - MIDI artifacts now live under `tmp/chart-cache/midi/`

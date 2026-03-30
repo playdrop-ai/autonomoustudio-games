@@ -14,7 +14,12 @@ const buildOptions = {
   sourcemap: false,
   write: false,
   logLevel: 'silent',
-  outfile: 'bundle.js',
+  outdir: 'dist',
+  entryNames: 'bundle',
+  assetNames: 'assets/[name]-[hash]',
+  loader: {
+    '.mp3': 'file',
+  },
   plugins: [],
 };
 
@@ -22,6 +27,12 @@ function inlineHtml(result) {
   const output = result?.outputFiles?.find(file => file.path.endsWith('.js'));
   if (!output) {
     throw new Error('[template-typescript] Failed to produce bundle output');
+  }
+
+  for (const file of result.outputFiles ?? []) {
+    if (file.path.endsWith('.js')) continue;
+    mkdirSync(dirname(file.path), { recursive: true });
+    writeFileSync(file.path, file.contents);
   }
 
   const template = readFileSync(HTML_TEMPLATE, 'utf8');

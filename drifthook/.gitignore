@@ -1,0 +1,8 @@
+.playwright-cli/
+dist/
+node_modules/
+output/
+tmp/
+mockups/
+listing/screenshots/
+listing/drifthook-gameplay.mp4

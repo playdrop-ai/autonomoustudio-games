@@ -1,20 +1,29 @@
-import { SONGS, type SongConfig } from "./songs.ts";
+import {
+  DIFFICULTIES,
+  SONG_IDS,
+  getDefaultDifficulty,
+  getDefaultSongId,
+  getSongDefinition,
+  summarizeChart,
+  type ChartSourceRole,
+  type ChartDefinition,
+  type DifficultyId,
+  type SongDefinition,
+  type SongId,
+} from "./songbook.ts";
 
 export const LANE_COUNT = 4;
 export const INITIAL_LIVES = 4;
-export const PHRASE_BEATS = 16;
-export const PHRASES_PER_SONG = 2;
 export const HIT_WINDOWS = {
-  perfect: 70,
-  good: 130,
+  perfect: 80,
+  good: 150,
 } as const;
 
-const LOOKAHEAD_PHRASES = 6;
 const NOTE_CLEAR_MS = 540;
 const HOLD_SCORE = 60;
 const TAP_SCORE = 100;
 
-export type Screen = "start" | "playing" | "gameover";
+export type Screen = "start" | "playing" | "gameover" | "clear";
 export type NoteKind = "tap" | "hold";
 export type Judgement = "perfect" | "good" | "miss";
 
@@ -25,8 +34,10 @@ export interface NoteEvent {
   timeMs: number;
   beatMs: number;
   durationMs: number;
-  phraseIndex: number;
-  songIndex: number;
+  sourceRole: ChartSourceRole;
+  confidence: number;
+  phraseId: number | string;
+  motifId: string | number | null;
   hits: boolean[];
   hitQuality: Judgement | null;
   resolved: boolean;
@@ -36,25 +47,35 @@ export interface NoteEvent {
   resolvedAtMs: number | null;
 }
 
-export interface PhraseMeta {
-  index: number;
-  songIndex: number;
-  bpm: number;
-  startMs: number;
+export interface RunDefinition {
+  song: SongDefinition;
+  difficulty: DifficultyId;
+  chart: ChartDefinition;
+  durationMs: number;
   endMs: number;
-  accent: string;
 }
 
 export interface GameEvent {
-  kind: "hit" | "miss" | "phrase" | "gameover";
+  kind: "hit" | "miss" | "gameover" | "clear";
   judgement?: Judgement;
   combo?: number;
-  phraseIndex?: number;
 }
 
 export interface PreviewCluster {
   lanes: number[];
   kind: NoteKind;
+}
+
+export interface ChartSummary {
+  songId: SongId;
+  songLabel: string;
+  difficulty: DifficultyId;
+  noteCount: number;
+  holdCount: number;
+  distinctLaneCount: number;
+  longestLaneStreak: number;
+  firstNoteMs: number;
+  durationMs: number;
 }
 
 export interface GameState {
@@ -67,18 +88,17 @@ export interface GameState {
   lives: number;
   notes: NoteEvent[];
   nextNoteId: number;
-  generatedThroughPhrase: number;
-  phrases: PhraseMeta[];
-  lastPhraseSignal: number;
-  seed: number;
-  songIndex: number;
+  selectedSongId: SongId;
+  selectedDifficulty: DifficultyId;
   currentSongLabel: string;
-  currentAccent: string;
+  currentDifficultyLabel: string;
   lastEvent: GameEvent | null;
+  run: RunDefinition | null;
 }
 
-export function createInitialState(seed = 1, persisted?: { bestScore?: number; bestCombo?: number }): GameState {
-  const firstSong = getSongByIndex(0);
+export function createInitialState(persisted?: { bestScore?: number; bestCombo?: number }): GameState {
+  const songId = getDefaultSongId();
+  const difficulty = getDefaultDifficulty();
   return {
     screen: "start",
     elapsedMs: 0,
@@ -89,34 +109,89 @@ export function createInitialState(seed = 1, persisted?: { bestScore?: number; b
     lives: INITIAL_LIVES,
     notes: [],
     nextNoteId: 1,
-    generatedThroughPhrase: 0,
-    phrases: [],
-    lastPhraseSignal: -1,
-    seed,
-    songIndex: 0,
-    currentSongLabel: firstSong.label,
-    currentAccent: firstSong.accent,
+    selectedSongId: songId,
+    selectedDifficulty: difficulty,
+    currentSongLabel: getSongDefinition(songId).label,
+    currentDifficultyLabel: difficulty.toUpperCase(),
     lastEvent: null,
+    run: null,
   };
 }
 
+export function setSelectedSong(state: GameState, songId: SongId): GameState {
+  const next = cloneState(state);
+  next.selectedSongId = songId;
+  next.currentSongLabel = getSongDefinition(songId).label;
+  if (next.screen !== "playing") {
+    next.run = null;
+  }
+  return next;
+}
+
+export function setSelectedDifficulty(state: GameState, difficulty: DifficultyId): GameState {
+  const next = cloneState(state);
+  next.selectedDifficulty = difficulty;
+  next.currentDifficultyLabel = difficulty.toUpperCase();
+  if (next.screen !== "playing") {
+    next.run = null;
+  }
+  return next;
+}
+
 export function startRun(state: GameState): GameState {
-  const reset = createInitialState(state.seed, { bestScore: state.bestScore, bestCombo: state.bestCombo });
+  const selectionSongId = state.selectedSongId;
+  const selectionDifficulty = state.selectedDifficulty;
+  const reset = createInitialState({ bestScore: state.bestScore, bestCombo: state.bestCombo });
+  const song = getSongDefinition(selectionSongId);
+  const chart = song.charts[selectionDifficulty];
+  const notes = chart.notes.map((note) => ({
+    id: reset.nextNoteId++,
+    kind: (note.durationMs > 0 ? "hold" : "tap") as NoteKind,
+    lanes: [note.lane],
+    timeMs: note.timeMs,
+    beatMs: note.beatMs,
+    durationMs: note.durationMs,
+    sourceRole: note.sourceRole,
+    confidence: note.confidence,
+    phraseId: note.phraseId,
+    motifId: note.motifId,
+    hits: [false],
+    hitQuality: null,
+    resolved: false,
+    success: false,
+    startedAtMs: null,
+    releasedEarly: false,
+    resolvedAtMs: null,
+  }));
+
+  const endMs = Math.max(chart.durationMs, ...notes.map((note) => note.timeMs + note.durationMs)) + 220;
+
   reset.screen = "playing";
-  ensureLookahead(reset, 0);
+  reset.selectedSongId = selectionSongId;
+  reset.selectedDifficulty = selectionDifficulty;
+  reset.currentSongLabel = song.label;
+  reset.currentDifficultyLabel = selectionDifficulty.toUpperCase();
+  reset.elapsedMs = -chart.leadInMs;
+  reset.notes = notes;
+  reset.run = {
+    song,
+    difficulty: selectionDifficulty,
+    chart,
+    durationMs: chart.durationMs,
+    endMs,
+  };
+
   return reset;
 }
 
 export function updateGame(state: GameState, elapsedMs: number, pressedLanes: Set<number>): { state: GameState; events: GameEvent[] } {
-  if (state.screen !== "playing") {
+  if (state.screen !== "playing" || !state.run) {
     return { state, events: [] };
   }
 
   const next = cloneState(state);
   next.elapsedMs += elapsedMs;
-  ensureLookahead(next, next.elapsedMs);
-  const phraseEvents = syncCurrentPhrase(next);
-  const events: GameEvent[] = [...phraseEvents];
+  const events: GameEvent[] = [];
 
   for (const note of next.notes) {
     if (note.resolved) continue;
@@ -157,6 +232,16 @@ export function updateGame(state: GameState, elapsedMs: number, pressedLanes: Se
     next.bestScore = Math.max(next.bestScore, next.score);
     next.bestCombo = Math.max(next.bestCombo, next.combo);
     events.push({ kind: "gameover" });
+  } else if (
+    next.screen === "playing" &&
+    next.run !== null &&
+    next.elapsedMs >= next.run.endMs &&
+    next.notes.every((note) => note.resolved || note.timeMs < next.elapsedMs - HIT_WINDOWS.good)
+  ) {
+    next.screen = "clear";
+    next.bestScore = Math.max(next.bestScore, next.score);
+    next.bestCombo = Math.max(next.bestCombo, next.combo);
+    events.push({ kind: "clear" });
   }
 
   next.lastEvent = events.length > 0 ? events[events.length - 1]! : next.lastEvent;
@@ -198,24 +283,12 @@ export function applyLanePress(state: GameState, lane: number, pressTimeMs = sta
   return { state: next, events };
 }
 
-export function getSong(state: GameState): SongConfig {
-  return getSongByIndex(state.songIndex);
+export function getSong(state: GameState): SongDefinition {
+  return state.run?.song ?? getSongDefinition(state.selectedSongId);
 }
 
-export function getCurrentPhrase(state: GameState): PhraseMeta {
-  const phrase = state.phrases.find((entry) => state.elapsedMs >= entry.startMs && state.elapsedMs < entry.endMs);
-  if (phrase) return phrase;
-  const fallback = state.phrases[state.phrases.length - 1];
-  if (fallback) return fallback;
-  const song = getSong(state);
-  return {
-    index: 0,
-    songIndex: state.songIndex,
-    bpm: song.bpm,
-    startMs: 0,
-    endMs: (60000 / song.bpm) * PHRASE_BEATS,
-    accent: song.accent,
-  };
+export function getRun(state: GameState): RunDefinition | null {
+  return state.run;
 }
 
 export function getUpcomingClusters(state: GameState, count = 3): PreviewCluster[] {
@@ -237,170 +310,50 @@ export function getVisibleNotes(state: GameState): NoteEvent[] {
 }
 
 export function getBalanceSnapshot(state: GameState) {
-  const phrase = getCurrentPhrase(state);
   return {
     screen: state.screen,
+    elapsedMs: state.elapsedMs,
     score: state.score,
     combo: state.combo,
     bestScore: state.bestScore,
     lives: state.lives,
     song: state.currentSongLabel,
-    phrase: phrase.index,
+    difficulty: state.currentDifficultyLabel,
+    selectionSongId: state.selectedSongId,
+    selectionDifficulty: state.selectedDifficulty,
     preview: getUpcomingClusters(state, 3),
+    visible: getVisibleNotes(state).slice(0, 6).map((note) => ({
+      lanes: note.lanes.slice(),
+      kind: note.kind,
+      role: note.sourceRole,
+      inMs: Math.round(note.timeMs - state.elapsedMs),
+      holdMs: Math.round(note.durationMs),
+      confidence: Number(note.confidence.toFixed(3)),
+      phraseId: note.phraseId,
+      motifId: note.motifId,
+    })),
   };
+}
+
+export function buildChartReport(): ChartSummary[] {
+  return SONG_IDS.flatMap((songId) =>
+    DIFFICULTIES.map((difficulty) => {
+      const summary = summarizeChart(songId, difficulty);
+      return {
+        songId,
+        songLabel: getSongDefinition(songId).label,
+        difficulty,
+        ...summary,
+      };
+    }),
+  );
 }
 
 function cloneState(state: GameState): GameState {
   return {
     ...state,
     notes: state.notes.map((note) => ({ ...note, hits: note.hits.slice(), lanes: note.lanes.slice() })),
-    phrases: state.phrases.map((phrase) => ({ ...phrase })),
   };
-}
-
-function ensureLookahead(state: GameState, nowMs: number): void {
-  const currentPhraseIndex = state.phrases.find((phrase) => nowMs >= phrase.startMs && nowMs < phrase.endMs)?.index ?? 0;
-  while (state.generatedThroughPhrase < currentPhraseIndex + LOOKAHEAD_PHRASES) {
-    const phraseIndex = state.generatedThroughPhrase;
-    const songIndex = Math.floor(phraseIndex / PHRASES_PER_SONG) % SONGS.length;
-    const song = getSongByIndex(songIndex);
-    const beatMs = 60000 / song.bpm;
-    const previousPhrase = state.phrases[state.phrases.length - 1];
-    const startMs = previousPhrase ? previousPhrase.endMs : 0;
-    const endMs = startMs + beatMs * PHRASE_BEATS;
-    state.phrases.push({
-      index: phraseIndex,
-      songIndex,
-      bpm: song.bpm,
-      startMs,
-      endMs,
-      accent: song.accent,
-    });
-    state.notes.push(...generatePhrase(state, phraseIndex, startMs, songIndex));
-    state.generatedThroughPhrase += 1;
-  }
-}
-
-function syncCurrentPhrase(state: GameState): GameEvent[] {
-  const phrase = getCurrentPhrase(state);
-  const song = getSongByIndex(phrase.songIndex);
-  state.songIndex = phrase.songIndex;
-  state.currentSongLabel = song.label;
-  state.currentAccent = song.accent;
-  if (phrase.index > state.lastPhraseSignal) {
-    state.lastPhraseSignal = phrase.index;
-    return [{ kind: "phrase", phraseIndex: phrase.index }];
-  }
-  return [];
-}
-
-function generatePhrase(state: GameState, phraseIndex: number, startMs: number, songIndex: number): NoteEvent[] {
-  const song = getSongByIndex(songIndex);
-  const beatMs = 60000 / song.bpm;
-  const rng = mulberry32(hashSeed(state.seed, phraseIndex * 17 + songIndex * 101));
-  const difficultyTier = Math.min(8, Math.floor(phraseIndex / 2));
-  const offbeatChance = 0.12 + difficultyTier * 0.03;
-  const chordChance = difficultyTier < 2 ? 0.08 : 0.12 + difficultyTier * 0.02;
-  const holdChance = 0.06 + difficultyTier * 0.018;
-  const laneBusyUntil = Array<number>(LANE_COUNT).fill(-1);
-  const events: NoteEvent[] = [];
-  let lastLane = Math.floor(rng() * LANE_COUNT);
-
-  for (let slot = 0; slot < 32; slot += 1) {
-    const onBeat = slot % 2 === 0;
-    if (!onBeat && rng() > offbeatChance) continue;
-    const freeLanes = Array.from({ length: LANE_COUNT }, (_, lane) => lane).filter((lane) => (laneBusyUntil[lane] ?? -1) <= slot);
-    if (freeLanes.length === 0) continue;
-
-    const baseTimeMs = startMs + slot * 0.5 * beatMs;
-    const useHold = onBeat && rng() < holdChance && slot < 28;
-    const useChord = onBeat && freeLanes.length > 2 && rng() < chordChance;
-
-    if (useHold) {
-      const lane = pickLane(freeLanes, lastLane, rng);
-      const durationSlots = rng() > 0.58 ? 4 : 3;
-      laneBusyUntil[lane] = slot + durationSlots;
-      lastLane = lane;
-      events.push({
-        id: state.nextNoteId++,
-        kind: "hold",
-        lanes: [lane],
-        timeMs: baseTimeMs,
-        beatMs,
-        durationMs: durationSlots * 0.5 * beatMs,
-        phraseIndex,
-        songIndex,
-        hits: [false],
-        hitQuality: null,
-        resolved: false,
-        success: false,
-        startedAtMs: null,
-        releasedEarly: false,
-        resolvedAtMs: null,
-      });
-      continue;
-    }
-
-    if (useChord) {
-      const chordLanes = freeLanes.filter(
-        (candidate) => candidate < LANE_COUNT - 1 && (laneBusyUntil[candidate + 1] ?? -1) <= slot,
-      );
-      const lane = pickLane(chordLanes, lastLane, rng);
-      if (lane !== -1) {
-        lastLane = lane + 1;
-        events.push({
-          id: state.nextNoteId++,
-          kind: "tap",
-          lanes: [lane, lane + 1],
-          timeMs: baseTimeMs,
-          beatMs,
-          durationMs: 0,
-          phraseIndex,
-          songIndex,
-          hits: [false, false],
-          hitQuality: null,
-          resolved: false,
-          success: false,
-          startedAtMs: null,
-          releasedEarly: false,
-          resolvedAtMs: null,
-        });
-        continue;
-      }
-    }
-
-    const lane = pickLane(freeLanes, lastLane, rng);
-    if (lane === -1) continue;
-    lastLane = lane;
-    events.push({
-      id: state.nextNoteId++,
-      kind: "tap",
-      lanes: [lane],
-      timeMs: baseTimeMs,
-      beatMs,
-      durationMs: 0,
-      phraseIndex,
-      songIndex,
-      hits: [false],
-      hitQuality: null,
-      resolved: false,
-      success: false,
-      startedAtMs: null,
-      releasedEarly: false,
-      resolvedAtMs: null,
-    });
-  }
-
-  return events;
-}
-
-function pickLane(available: number[], lastLane: number, rng: () => number): number {
-  if (available.length === 0) return -1;
-  const sorted = available.slice().sort((a, b) => Math.abs(a - lastLane) - Math.abs(b - lastLane));
-  const nearest = sorted[0];
-  if (nearest === undefined) return -1;
-  if (rng() < 0.55) return nearest;
-  return sorted[Math.floor(rng() * sorted.length)] ?? nearest;
 }
 
 function findTargetNote(state: GameState, lane: number, timeMs: number): NoteEvent | undefined {
@@ -429,30 +382,4 @@ function pickBestJudgement(previous: Judgement | null, next: Judgement): Judgeme
   if (previous === "perfect" || next === "perfect") return "perfect";
   if (previous === "good" || next === "good") return "good";
   return next;
-}
-
-function hashSeed(seed: number, salt: number): number {
-  let value = seed ^ salt;
-  value = Math.imul(value ^ (value >>> 16), 0x7feb352d);
-  value = Math.imul(value ^ (value >>> 15), 0x846ca68b);
-  return value ^ (value >>> 16);
-}
-
-function mulberry32(seed: number): () => number {
-  let value = seed >>> 0;
-  return () => {
-    value += 0x6d2b79f5;
-    let t = value;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-function getSongByIndex(index: number): SongConfig {
-  const song = SONGS[index];
-  if (!song) {
-    throw new Error(`Missing song config at index ${index}`);
-  }
-  return song;
 }
