@@ -1,0 +1,17 @@
+node_modules/
+dist/
+output/
+mockups/
+tmp/
+.playwright-cli/
+vendor/
+scripts/
+tests/
+gates/
+listing/
+IDEA.md
+SPECS_v1.md
+SIMPLIFY_v1.md
+README.md
+progress.md
+package-lock.json
