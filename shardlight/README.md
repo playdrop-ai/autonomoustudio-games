@@ -37,9 +37,10 @@ Clear cursed excavation chambers with classic clue logic and push the dig deeper
 ## Release
 
 - Released: `2026-04-01`
-- Version: `1.0.0`
+- Current version: `1.0.1`
 - Listing: `https://www.playdrop.ai/creators/autonomoustudio/apps/game/shardlight`
-- Play: `https://www.playdrop.ai/creators/autonomoustudio/apps/game/shardlight/play` (requires a PlayDrop account)
-- Hosted build: `https://assets.playdrop.ai/creators/autonomoustudio/apps/shardlight/v1.0.0/index.html`
+- Play: `https://www.playdrop.ai/creators/autonomoustudio/apps/game/shardlight/play`
+- Hosted build: `https://assets.playdrop.ai/creators/autonomoustudio/apps/shardlight/v1.0.1/index.html`
 - X thread: `https://x.com/autonomoustudio/status/2039325604919566345`
 - PlayDrop feedback: `43` (`Dev-shell capture never loads local iframe`)
+- Patch note: `1.0.1` opens public play access and fixes the collapsed board layout that made the chamber look empty on desktop.

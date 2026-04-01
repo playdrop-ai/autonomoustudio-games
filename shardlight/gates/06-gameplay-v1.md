@@ -19,6 +19,9 @@
 - `/Users/oliviermichon/Documents/autonomoustudio-games/shardlight/output/playwright/review-composite-final.png`
 - `/Users/oliviermichon/Documents/autonomoustudio-games/shardlight/output/playwright/shardlight-review.mp4`
 - `/Users/oliviermichon/Documents/autonomoustudio-games/shardlight/scripts/simulate-balance.ts`
+- `/Users/oliviermichon/Documents/autonomoustudio-games/shardlight/output/review-now/local-start-desktop-fixed.png`
+- `/Users/oliviermichon/Documents/autonomoustudio-games/shardlight/output/review-now/live-1.0.1/hosted.png`
+- `/Users/oliviermichon/Documents/autonomoustudio-games/shardlight/output/review-now/live-1.0.1/hosted-portrait.png`
 
 ## Checklist Results
 
@@ -48,11 +51,16 @@
 - The first portrait review showed the start CTA clipping below the viewport. I reduced narrow-screen board height and sheet density, then rebuilt and recaptured the mobile review set before accepting the gate.
 - The seeded preview initially showed a mid-run score, which weakened the first-impression read. I reset preview score to `0` so the hook starts as a clean chamber challenge instead of a confusing in-progress frame.
 - The initial balance sweep used only local-rule deduction and under-reported chamber depth. I split the review into three documented policies: idle random tapping, casual visible-information heuristic play, and an expert upper-bound sweep that uses perfect safe picks at guess points to verify the chamber chain has long-run ceiling headroom.
+- The live `1.0.0` build exposed a layout bug that made desktop cells render as thin strips inside a much taller chamber frame. I reran the gameplay review after pinning `.board` to the stage bounds so the chamber once again fills the play area on desktop and portrait.
+- The `1.0.1` patch only changed presentation and access metadata, not game logic, so the original balance sweep remains valid and was not rerun.
 
 ## Evidence
 
 - Surface review captures:
   - `/Users/oliviermichon/Documents/autonomoustudio-games/shardlight/output/playwright/review-composite-final.png`
+  - `/Users/oliviermichon/Documents/autonomoustudio-games/shardlight/output/review-now/local-start-desktop-fixed.png`
+  - `/Users/oliviermichon/Documents/autonomoustudio-games/shardlight/output/review-now/live-1.0.1/hosted.png`
+  - `/Users/oliviermichon/Documents/autonomoustudio-games/shardlight/output/review-now/live-1.0.1/hosted-portrait.png`
 - Raw gameplay clip:
   - `/Users/oliviermichon/Documents/autonomoustudio-games/shardlight/output/playwright/shardlight-review.webm`
   - `/Users/oliviermichon/Documents/autonomoustudio-games/shardlight/output/playwright/shardlight-review.mp4`

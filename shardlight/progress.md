@@ -110,3 +110,29 @@
   - sent PlayDrop feedback id `43`: `Dev-shell capture never loads local iframe`
 - Remaining follow-up:
   - none
+
+## 2026-04-01 Live Patch 1.0.1
+
+- Trigger:
+  - post-launch review flagged that the public play route was blocked behind account creation and the live board layout looked like a mostly empty brown panel
+- Root causes:
+  - public access was unintentionally disabled because `catalogue.json` omitted `authMode: "OPTIONAL"` and `previewable: true`
+  - the desktop chamber grid was collapsing because `.board` relied on `height: 100%` inside a flex-sized stage, so the rows resolved to content height instead of filling the chamber
+- Fixes shipped in `1.0.1`:
+  - added `authMode: "OPTIONAL"` and `previewable: true` to `catalogue.json`
+  - anchored `.board` to the stage with absolute insets and added `min-height: 0` on `.board-stage` so the 8x10 grid fills the chamber again
+  - refreshed the canonical landscape screenshot, portrait screenshots, and landscape gameplay MP4 from the fixed build before republishing
+- Validation:
+  - `npm run validate`
+  - `playdrop project validate .`
+  - `playdrop project publish .`
+- Live verification:
+  - `playdrop detail autonomoustudio/app/shardlight --json` now reports `currentVersion: 1.0.1`, `authMode: OPTIONAL`, and `previewable: true`
+  - public listing proof: `/Users/oliviermichon/Documents/autonomoustudio-games/shardlight/output/review-now/live-1.0.1/listing.png`
+  - public play proof desktop: `/Users/oliviermichon/Documents/autonomoustudio-games/shardlight/output/review-now/live-1.0.1/play-shell.png`
+  - public play proof portrait: `/Users/oliviermichon/Documents/autonomoustudio-games/shardlight/output/review-now/live-1.0.1/play-shell-portrait.png`
+  - hosted proof desktop: `/Users/oliviermichon/Documents/autonomoustudio-games/shardlight/output/review-now/live-1.0.1/hosted.png`
+  - hosted proof portrait: `/Users/oliviermichon/Documents/autonomoustudio-games/shardlight/output/review-now/live-1.0.1/hosted-portrait.png`
+  - the public shell still logs one unrelated `401` from PlayDrop chrome, but the game now loads publicly on both supported surfaces
+- Marketing + release policy:
+  - no fresh X thread was posted because this was a routine accessibility/layout patch, not a marketed major update

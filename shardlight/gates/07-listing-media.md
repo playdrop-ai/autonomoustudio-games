@@ -97,6 +97,7 @@
 - The second portrait sibling introduced an off-model top glyph and oversized centerpiece gem. I tightened the prompt again to forbid extra headers, letters, and secondary structures before accepting the third pass.
 - The first icon introduced fake lettering and badge-like framing. I reran the icon step with a stricter single-shard, no-letters, no-frame prompt.
 - Final family won because it keeps the real board language, stays within the shipped palette, puts the title in the center band on both heroes, and gives the icon a clean single-shard silhouette.
+- The live `1.0.0` screenshot and video captures preserved the broken compressed board layout, so I reran the canonical screenshot/video capture after the `1.0.1` layout fix while keeping the approved hero, portrait sibling, icon, and store copy unchanged.
 
 ## Evidence
 
@@ -111,6 +112,10 @@
   - `/Users/oliviermichon/Documents/autonomoustudio-games/shardlight/listing/shardlight_720x1280-screenshot-1.png`
   - `/Users/oliviermichon/Documents/autonomoustudio-games/shardlight/listing/shardlight_720x1280-screenshot-2.png`
   - `/Users/oliviermichon/Documents/autonomoustudio-games/shardlight/listing/shardlight_1280x720-recording.mp4`
+- Refreshed local capture sources for `1.0.1`:
+  - `/Users/oliviermichon/Documents/autonomoustudio-games/shardlight/output/review-now/candidate-landscape-gameplay-fixed-v2.png`
+  - `/Users/oliviermichon/Documents/autonomoustudio-games/shardlight/output/review-now/candidate-portrait-start-fixed.png`
+  - `/Users/oliviermichon/Documents/autonomoustudio-games/shardlight/output/review-now/candidate-portrait-gameover-fixed.png`
 - Family review:
   - `/Users/oliviermichon/Documents/autonomoustudio-games/shardlight/output/listing/family-review.jpg`
 - Metadata sync:

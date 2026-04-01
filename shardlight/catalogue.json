@@ -2,9 +2,11 @@
   "apps": [
     {
       "name": "shardlight",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "displayName": "Shardlight",
       "description": "Tap to uncover safe tiles. Each number tells you exactly how many cursed shard tiles touch that tile across all 8 neighbors. Long-press or right-click to mark a suspected curse. Clear every safe tile in the chamber to descend deeper, and one cursed reveal ends the run.",
+      "authMode": "OPTIONAL",
+      "previewable": true,
       "emoji": "💎",
       "color": "#E3A850",
       "type": "GAME",

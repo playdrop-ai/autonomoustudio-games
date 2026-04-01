@@ -158,6 +158,7 @@ export const styles = `
   .board-stage {
     position: relative;
     flex: 1;
+    min-height: 0;
     margin: 0 0.65rem 0.75rem;
     padding: 0.7rem;
     border-radius: 1.35rem;
@@ -168,10 +169,9 @@ export const styles = `
   }
 
   .board {
-    position: relative;
+    position: absolute;
+    inset: 0.7rem;
     z-index: 2;
-    width: 100%;
-    height: 100%;
     display: grid;
     grid-template-columns: repeat(8, minmax(0, 1fr));
     grid-template-rows: repeat(10, minmax(0, 1fr));
