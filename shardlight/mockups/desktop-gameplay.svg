@@ -1,0 +1,687 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" fill="none">
+  <defs>
+    <linearGradient id="bgFill" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#16171c"/>
+      <stop offset="52%" stop-color="#241f1b"/>
+      <stop offset="100%" stop-color="#4f3a28"/>
+    </linearGradient>
+    <linearGradient id="boardShell" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#5a4736"/>
+      <stop offset="100%" stop-color="#251a12"/>
+    </linearGradient>
+    <linearGradient id="boardFace" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c49a62"/>
+      <stop offset="100%" stop-color="#6f4a2b"/>
+    </linearGradient>
+    <linearGradient id="coveredTile" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#d6b27f"/>
+      <stop offset="100%" stop-color="#8c623b"/>
+    </linearGradient>
+    <linearGradient id="revealedTile" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#e8d7b7"/>
+      <stop offset="100%" stop-color="#b48a59"/>
+    </linearGradient>
+    <linearGradient id="buttonFill" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffd88a"/>
+      <stop offset="100%" stop-color="#ffad43"/>
+    </linearGradient>
+    <filter id="amberGlow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <style>
+      text { font-family: "Avenir Next", "Nunito Sans", "Trebuchet MS", sans-serif; }
+      .title { font-size: 52px; font-weight: 700; fill: #fff2d5; }
+      .subtitle { font-size: 20px; fill: rgba(255, 242, 213, 0.8); }
+      .hudLabel { font-size: 11px; letter-spacing: 0.24em; fill: rgba(255, 235, 199, 0.62); }
+      .hudValue { font-size: 27px; font-weight: 700; fill: #fff2d5; }
+      .panelTitle { font-size: 36px; font-weight: 700; fill: #fff2d5; }
+      .panelCopy { font-size: 18px; fill: rgba(255, 242, 213, 0.82); }
+      .panelLabel { font-size: 12px; letter-spacing: 0.2em; fill: rgba(255, 235, 199, 0.58); }
+      .panelValue { font-size: 42px; font-weight: 700; fill: #fff2d5; }
+      .buttonLabel { font-size: 24px; font-weight: 700; fill: #492b14; }
+      .digit { font-size: 26px; font-weight: 700; dominant-baseline: middle; text-anchor: middle; }
+      .tiny { font-size: 12px; font-weight: 700; letter-spacing: 0.2em; fill: rgba(255, 237, 206, 0.72); }
+    </style>
+  </defs>
+  
+  <rect width="1600" height="900" fill="url(#bgFill)"/>
+  <circle cx="288" cy="162" r="352" fill="#f7b45a" opacity="0.12"/>
+  <circle cx="1312" cy="216" r="304" fill="#ab6b3c" opacity="0.14"/>
+  <circle cx="992" cy="756" r="544" fill="#3d2414" opacity="0.38"/>
+  <path d="M 0 738 C 288 684, 608 792, 927.9999999999999 720 C 1184 666, 1408 810, 1600 756 L 1600 900 L 0 900 Z" fill="#140f0c" opacity="0.72"/>
+  
+    <circle cx="176" cy="144" r="2.4" fill="#ffefc9" opacity="0.7"/>
+    <circle cx="176" cy="144" r="8" fill="#ffefc9" opacity="0.06"/>
+    <circle cx="352" cy="243.00000000000003" r="2.4" fill="#ffefc9" opacity="0.7"/>
+    <circle cx="352" cy="243.00000000000003" r="8" fill="#ffefc9" opacity="0.06"/>
+    <circle cx="544" cy="126.00000000000001" r="2.4" fill="#ffefc9" opacity="0.7"/>
+    <circle cx="544" cy="126.00000000000001" r="8" fill="#ffefc9" opacity="0.06"/>
+    <circle cx="1104" cy="162" r="2.4" fill="#ffefc9" opacity="0.7"/>
+    <circle cx="1104" cy="162" r="8" fill="#ffefc9" opacity="0.06"/>
+    <circle cx="1312" cy="297" r="2.4" fill="#ffefc9" opacity="0.7"/>
+    <circle cx="1312" cy="297" r="8" fill="#ffefc9" opacity="0.06"/>
+    <circle cx="927.9999999999999" cy="432" r="2.4" fill="#ffefc9" opacity="0.7"/>
+    <circle cx="927.9999999999999" cy="432" r="8" fill="#ffefc9" opacity="0.06"/>
+    <circle cx="240" cy="639" r="2.4" fill="#ffefc9" opacity="0.7"/>
+    <circle cx="240" cy="639" r="8" fill="#ffefc9" opacity="0.06"/>
+    <circle cx="1392" cy="702" r="2.4" fill="#ffefc9" opacity="0.7"/>
+    <circle cx="1392" cy="702" r="8" fill="#ffefc9" opacity="0.06"/>
+  
+  
+  
+  <g>
+    <rect x="488" y="56" width="624" height="788" rx="34" fill="url(#boardShell)"/>
+    <rect x="500" y="70" width="600" height="760" rx="28" fill="url(#boardFace)"/>
+    <rect x="518" y="168" width="564" height="632" rx="24" fill="#6d4a2e" opacity="0.64"/>
+    <rect x="522" y="172" width="556" height="624" rx="20" fill="#8a6036" opacity="0.62"/>
+  </g>
+  
+  
+  <g>
+    <text x="530" y="104" class="hudLabel">SCORE</text>
+    <text x="530" y="140" class="hudValue">3840</text>
+    <text x="1070" y="104" class="hudLabel" text-anchor="end">CHAMBER</text>
+    <text x="1070" y="140" class="hudValue" text-anchor="end">7</text>
+  </g>
+  
+  
+  <g filter="url(#amberGlow)" opacity="0.42">
+    <circle cx="654.4" cy="365.52" r="67.60000000000001" fill="#ffb347" opacity="0.24"/>
+    <circle cx="883.2" cy="540.72" r="93.6" fill="#ffd67c" opacity="0.22"/>
+    <path d="M 602.4 575.76 C 664.8 458.96, 758.4 435.6, 810.4000000000001 342.15999999999997 C 862.4 248.72, 976.8 260.4, 1008 365.52" stroke="#ffdd87" stroke-width="18" stroke-linecap="round" opacity="0.26"/>
+    <path d="M 644 704.24 C 716.8 634.16, 789.6 622.48, 862.4 680.88" stroke="#ffb347" stroke-width="14" stroke-linecap="round" opacity="0.24"/>
+    <polygon points="935.2,400.56 956,458.96 914.4,505.68 883.2,447.28" fill="#ffe49c" opacity="0.4"/>
+  </g>
+  
+  <g>
+    <g>
+      <rect x="536" y="186" width="60.75" height="55" rx="14" fill="url(#revealedTile)" opacity="0.5"/>
+      <rect x="537.5" y="187.5" width="57.75" height="52" rx="12" fill="#e8d8b6" opacity="0.16"/>
+      
+    </g>
+  
+    <g>
+      <rect x="602.75" y="186" width="60.75" height="55" rx="14" fill="url(#revealedTile)" opacity="0.5"/>
+      <rect x="604.25" y="187.5" width="57.75" height="52" rx="12" fill="#e8d8b6" opacity="0.16"/>
+      
+    </g>
+  
+    <g>
+      <rect x="669.5" y="186" width="60.75" height="55" rx="14" fill="url(#revealedTile)" opacity="0.5"/>
+      <rect x="671" y="187.5" width="57.75" height="52" rx="12" fill="#e8d8b6" opacity="0.16"/>
+      <text x="699.875" y="214.5" class="digit" fill="#5ec8ff">1</text>
+    </g>
+  
+    <g>
+      <rect x="736.25" y="186" width="60.75" height="55" rx="14" fill="url(#revealedTile)" opacity="0.5"/>
+      <rect x="737.75" y="187.5" width="57.75" height="52" rx="12" fill="#e8d8b6" opacity="0.16"/>
+      <text x="766.625" y="214.5" class="digit" fill="#6be18c">2</text>
+    </g>
+  
+    <g>
+      <rect x="803" y="186" width="60.75" height="55" rx="14" fill="url(#coveredTile)"/>
+      <rect x="805" y="188" width="56.75" height="51" rx="12" fill="#d9b98b" opacity="0.16"/>
+      <path d="M 813.935 201.4 C 828.515 192.6, 844.31 192.6, 854.03 201.4" stroke="#fff1c9" stroke-width="4" opacity="0.24" stroke-linecap="round"/>
+      
+      <polygon points="833.375,195.9 844.31,209.1 833.375,224.5 822.44,209.1" fill="#151110"/>
+      <polygon points="832.7675,200.3 839.45,209.1 832.7675,217.9 826.085,209.1" fill="#ffb347"/>
+      
+      
+    </g>
+  
+    <g>
+      <rect x="869.75" y="186" width="60.75" height="55" rx="14" fill="url(#coveredTile)"/>
+      <rect x="871.75" y="188" width="56.75" height="51" rx="12" fill="#d9b98b" opacity="0.16"/>
+      <path d="M 880.685 201.4 C 895.265 192.6, 911.06 192.6, 920.78 201.4" stroke="#fff1c9" stroke-width="4" opacity="0.24" stroke-linecap="round"/>
+      
+      
+    </g>
+  
+    <g>
+      <rect x="936.5" y="186" width="60.75" height="55" rx="14" fill="url(#coveredTile)"/>
+      <rect x="938.5" y="188" width="56.75" height="51" rx="12" fill="#d9b98b" opacity="0.16"/>
+      <path d="M 947.435 201.4 C 962.015 192.6, 977.81 192.6, 987.53 201.4" stroke="#fff1c9" stroke-width="4" opacity="0.24" stroke-linecap="round"/>
+      
+      
+    </g>
+  
+    <g>
+      <rect x="1003.25" y="186" width="60.75" height="55" rx="14" fill="url(#coveredTile)"/>
+      <rect x="1005.25" y="188" width="56.75" height="51" rx="12" fill="#d9b98b" opacity="0.16"/>
+      <path d="M 1014.185 201.4 C 1028.765 192.6, 1044.56 192.6, 1054.28 201.4" stroke="#fff1c9" stroke-width="4" opacity="0.24" stroke-linecap="round"/>
+      
+      
+    </g>
+  
+    <g>
+      <rect x="536" y="247" width="60.75" height="55" rx="14" fill="url(#revealedTile)" opacity="0.5"/>
+      <rect x="537.5" y="248.5" width="57.75" height="52" rx="12" fill="#e8d8b6" opacity="0.16"/>
+      
+    </g>
+  
+    <g>
+      <rect x="602.75" y="247" width="60.75" height="55" rx="14" fill="url(#revealedTile)" opacity="0.5"/>
+      <rect x="604.25" y="248.5" width="57.75" height="52" rx="12" fill="#e8d8b6" opacity="0.16"/>
+      
+    </g>
+  
+    <g>
+      <rect x="669.5" y="247" width="60.75" height="55" rx="14" fill="url(#revealedTile)" opacity="0.5"/>
+      <rect x="671" y="248.5" width="57.75" height="52" rx="12" fill="#e8d8b6" opacity="0.16"/>
+      <text x="699.875" y="275.5" class="digit" fill="#5ec8ff">1</text>
+    </g>
+  
+    <g>
+      <rect x="736.25" y="247" width="60.75" height="55" rx="14" fill="url(#revealedTile)" opacity="0.5"/>
+      <rect x="737.75" y="248.5" width="57.75" height="52" rx="12" fill="#e8d8b6" opacity="0.16"/>
+      <text x="766.625" y="275.5" class="digit" fill="#6be18c">2</text>
+    </g>
+  
+    <g>
+      <rect x="803" y="247" width="60.75" height="55" rx="14" fill="url(#revealedTile)" opacity="0.5"/>
+      <rect x="804.5" y="248.5" width="57.75" height="52" rx="12" fill="#e8d8b6" opacity="0.16"/>
+      <text x="833.375" y="275.5" class="digit" fill="#6be18c">2</text>
+    </g>
+  
+    <g>
+      <rect x="869.75" y="247" width="60.75" height="55" rx="14" fill="url(#coveredTile)"/>
+      <rect x="871.75" y="249" width="56.75" height="51" rx="12" fill="#d9b98b" opacity="0.16"/>
+      <path d="M 880.685 262.4 C 895.265 253.6, 911.06 253.6, 920.78 262.4" stroke="#fff1c9" stroke-width="4" opacity="0.24" stroke-linecap="round"/>
+      
+      
+    </g>
+  
+    <g>
+      <rect x="936.5" y="247" width="60.75" height="55" rx="14" fill="url(#coveredTile)"/>
+      <rect x="938.5" y="249" width="56.75" height="51" rx="12" fill="#d9b98b" opacity="0.16"/>
+      <path d="M 947.435 262.4 C 962.015 253.6, 977.81 253.6, 987.53 262.4" stroke="#fff1c9" stroke-width="4" opacity="0.24" stroke-linecap="round"/>
+      
+      
+    </g>
+  
+    <g>
+      <rect x="1003.25" y="247" width="60.75" height="55" rx="14" fill="url(#coveredTile)"/>
+      <rect x="1005.25" y="249" width="56.75" height="51" rx="12" fill="#d9b98b" opacity="0.16"/>
+      <path d="M 1014.185 262.4 C 1028.765 253.6, 1044.56 253.6, 1054.28 262.4" stroke="#fff1c9" stroke-width="4" opacity="0.24" stroke-linecap="round"/>
+      
+      
+    </g>
+  
+    <g>
+      <rect x="536" y="308" width="60.75" height="55" rx="14" fill="url(#revealedTile)" opacity="0.5"/>
+      <rect x="537.5" y="309.5" width="57.75" height="52" rx="12" fill="#e8d8b6" opacity="0.16"/>
+      
+    </g>
+  
+    <g>
+      <rect x="602.75" y="308" width="60.75" height="55" rx="14" fill="url(#revealedTile)" opacity="0.5"/>
+      <rect x="604.25" y="309.5" width="57.75" height="52" rx="12" fill="#e8d8b6" opacity="0.16"/>
+      <text x="633.125" y="336.5" class="digit" fill="#5ec8ff">1</text>
+    </g>
+  
+    <g>
+      <rect x="669.5" y="308" width="60.75" height="55" rx="14" fill="url(#revealedTile)" opacity="0.5"/>
+      <rect x="671" y="309.5" width="57.75" height="52" rx="12" fill="#e8d8b6" opacity="0.16"/>
+      <text x="699.875" y="336.5" class="digit" fill="#5ec8ff">1</text>
+    </g>
+  
+    <g>
+      <rect x="736.25" y="308" width="60.75" height="55" rx="14" fill="url(#revealedTile)" opacity="0.5"/>
+      <rect x="737.75" y="309.5" width="57.75" height="52" rx="12" fill="#e8d8b6" opacity="0.16"/>
+      <text x="766.625" y="336.5" class="digit" fill="#6be18c">2</text>
+    </g>
+  
+    <g>
+      <rect x="803" y="308" width="60.75" height="55" rx="14" fill="url(#revealedTile)" opacity="0.5"/>
+      <rect x="804.5" y="309.5" width="57.75" height="52" rx="12" fill="#e8d8b6" opacity="0.16"/>
+      <text x="833.375" y="336.5" class="digit" fill="#6be18c">2</text>
+    </g>
+  
+    <g>
+      <rect x="869.75" y="308" width="60.75" height="55" rx="14" fill="url(#coveredTile)"/>
+      <rect x="871.75" y="310" width="56.75" height="51" rx="12" fill="#d9b98b" opacity="0.16"/>
+      <path d="M 880.685 323.4 C 895.265 314.6, 911.06 314.6, 920.78 323.4" stroke="#fff1c9" stroke-width="4" opacity="0.24" stroke-linecap="round"/>
+      
+      
+    </g>
+  
+    <g>
+      <rect x="936.5" y="308" width="60.75" height="55" rx="14" fill="url(#coveredTile)"/>
+      <rect x="938.5" y="310" width="56.75" height="51" rx="12" fill="#d9b98b" opacity="0.16"/>
+      <path d="M 947.435 323.4 C 962.015 314.6, 977.81 314.6, 987.53 323.4" stroke="#fff1c9" stroke-width="4" opacity="0.24" stroke-linecap="round"/>
+      
+      
+    </g>
+  
+    <g>
+      <rect x="1003.25" y="308" width="60.75" height="55" rx="14" fill="url(#coveredTile)"/>
+      <rect x="1005.25" y="310" width="56.75" height="51" rx="12" fill="#d9b98b" opacity="0.16"/>
+      <path d="M 1014.185 323.4 C 1028.765 314.6, 1044.56 314.6, 1054.28 323.4" stroke="#fff1c9" stroke-width="4" opacity="0.24" stroke-linecap="round"/>
+      
+      
+    </g>
+  
+    <g>
+      <rect x="536" y="369" width="60.75" height="55" rx="14" fill="url(#revealedTile)" opacity="0.5"/>
+      <rect x="537.5" y="370.5" width="57.75" height="52" rx="12" fill="#e8d8b6" opacity="0.16"/>
+      <text x="566.375" y="397.5" class="digit" fill="#5ec8ff">1</text>
+    </g>
+  
+    <g>
+      <rect x="602.75" y="369" width="60.75" height="55" rx="14" fill="url(#revealedTile)" opacity="0.5"/>
+      <rect x="604.25" y="370.5" width="57.75" height="52" rx="12" fill="#e8d8b6" opacity="0.16"/>
+      <text x="633.125" y="397.5" class="digit" fill="#6be18c">2</text>
+    </g>
+  
+    <g>
+      <rect x="669.5" y="369" width="60.75" height="55" rx="14" fill="url(#coveredTile)"/>
+      <rect x="671.5" y="371" width="56.75" height="51" rx="12" fill="#d9b98b" opacity="0.16"/>
+      <path d="M 680.435 384.4 C 695.015 375.6, 710.81 375.6, 720.53 384.4" stroke="#fff1c9" stroke-width="4" opacity="0.24" stroke-linecap="round"/>
+      
+      <polygon points="699.875,378.9 710.81,392.1 699.875,407.5 688.94,392.1" fill="#151110"/>
+      <polygon points="699.2675,383.3 705.95,392.1 699.2675,400.9 692.585,392.1" fill="#ffb347"/>
+      
+      
+    </g>
+  
+    <g>
+      <rect x="736.25" y="369" width="60.75" height="55" rx="14" fill="url(#revealedTile)" opacity="0.5"/>
+      <rect x="737.75" y="370.5" width="57.75" height="52" rx="12" fill="#e8d8b6" opacity="0.16"/>
+      <text x="766.625" y="397.5" class="digit" fill="#5ec8ff">1</text>
+    </g>
+  
+    <g>
+      <rect x="803" y="369" width="60.75" height="55" rx="14" fill="url(#revealedTile)" opacity="0.5"/>
+      <rect x="804.5" y="370.5" width="57.75" height="52" rx="12" fill="#e8d8b6" opacity="0.16"/>
+      <text x="833.375" y="397.5" class="digit" fill="#5ec8ff">1</text>
+    </g>
+  
+    <g>
+      <rect x="869.75" y="369" width="60.75" height="55" rx="14" fill="url(#coveredTile)"/>
+      <rect x="871.75" y="371" width="56.75" height="51" rx="12" fill="#d9b98b" opacity="0.16"/>
+      <path d="M 880.685 384.4 C 895.265 375.6, 911.06 375.6, 920.78 384.4" stroke="#fff1c9" stroke-width="4" opacity="0.24" stroke-linecap="round"/>
+      
+      
+    </g>
+  
+    <g>
+      <rect x="936.5" y="369" width="60.75" height="55" rx="14" fill="url(#coveredTile)"/>
+      <rect x="938.5" y="371" width="56.75" height="51" rx="12" fill="#d9b98b" opacity="0.16"/>
+      <path d="M 947.435 384.4 C 962.015 375.6, 977.81 375.6, 987.53 384.4" stroke="#fff1c9" stroke-width="4" opacity="0.24" stroke-linecap="round"/>
+      
+      
+    </g>
+  
+    <g>
+      <rect x="1003.25" y="369" width="60.75" height="55" rx="14" fill="url(#coveredTile)"/>
+      <rect x="1005.25" y="371" width="56.75" height="51" rx="12" fill="#d9b98b" opacity="0.16"/>
+      <path d="M 1014.185 384.4 C 1028.765 375.6, 1044.56 375.6, 1054.28 384.4" stroke="#fff1c9" stroke-width="4" opacity="0.24" stroke-linecap="round"/>
+      
+      
+    </g>
+  
+    <g>
+      <rect x="536" y="430" width="60.75" height="55" rx="14" fill="url(#coveredTile)"/>
+      <rect x="538" y="432" width="56.75" height="51" rx="12" fill="#d9b98b" opacity="0.16"/>
+      <path d="M 546.935 445.4 C 561.515 436.6, 577.31 436.6, 587.03 445.4" stroke="#fff1c9" stroke-width="4" opacity="0.24" stroke-linecap="round"/>
+      
+      
+    </g>
+  
+    <g>
+      <rect x="602.75" y="430" width="60.75" height="55" rx="14" fill="url(#revealedTile)" opacity="0.5"/>
+      <rect x="604.25" y="431.5" width="57.75" height="52" rx="12" fill="#e8d8b6" opacity="0.16"/>
+      <text x="633.125" y="458.5" class="digit" fill="#6be18c">2</text>
+    </g>
+  
+    <g>
+      <rect x="669.5" y="430" width="60.75" height="55" rx="14" fill="url(#revealedTile)" opacity="0.5"/>
+      <rect x="671" y="431.5" width="57.75" height="52" rx="12" fill="#e8d8b6" opacity="0.16"/>
+      <text x="699.875" y="458.5" class="digit" fill="#6be18c">2</text>
+    </g>
+  
+    <g>
+      <rect x="736.25" y="430" width="60.75" height="55" rx="14" fill="url(#revealedTile)" opacity="0.5"/>
+      <rect x="737.75" y="431.5" width="57.75" height="52" rx="12" fill="#e8d8b6" opacity="0.16"/>
+      <text x="766.625" y="458.5" class="digit" fill="#5ec8ff">1</text>
+    </g>
+  
+    <g>
+      <rect x="803" y="430" width="60.75" height="55" rx="14" fill="url(#revealedTile)" opacity="0.5"/>
+      <rect x="804.5" y="431.5" width="57.75" height="52" rx="12" fill="#e8d8b6" opacity="0.16"/>
+      <text x="833.375" y="458.5" class="digit" fill="#5ec8ff">1</text>
+    </g>
+  
+    <g>
+      <rect x="869.75" y="430" width="60.75" height="55" rx="14" fill="url(#coveredTile)"/>
+      <rect x="871.75" y="432" width="56.75" height="51" rx="12" fill="#d9b98b" opacity="0.16"/>
+      <path d="M 880.685 445.4 C 895.265 436.6, 911.06 436.6, 920.78 445.4" stroke="#fff1c9" stroke-width="4" opacity="0.24" stroke-linecap="round"/>
+      
+      
+    </g>
+  
+    <g>
+      <rect x="936.5" y="430" width="60.75" height="55" rx="14" fill="url(#coveredTile)"/>
+      <rect x="938.5" y="432" width="56.75" height="51" rx="12" fill="#d9b98b" opacity="0.16"/>
+      <path d="M 947.435 445.4 C 962.015 436.6, 977.81 436.6, 987.53 445.4" stroke="#fff1c9" stroke-width="4" opacity="0.24" stroke-linecap="round"/>
+      
+      
+    </g>
+  
+    <g>
+      <rect x="1003.25" y="430" width="60.75" height="55" rx="14" fill="url(#coveredTile)"/>
+      <rect x="1005.25" y="432" width="56.75" height="51" rx="12" fill="#d9b98b" opacity="0.16"/>
+      <path d="M 1014.185 445.4 C 1028.765 436.6, 1044.56 436.6, 1054.28 445.4" stroke="#fff1c9" stroke-width="4" opacity="0.24" stroke-linecap="round"/>
+      
+      
+    </g>
+  
+    <g>
+      <rect x="536" y="491" width="60.75" height="55" rx="14" fill="url(#coveredTile)"/>
+      <rect x="538" y="493" width="56.75" height="51" rx="12" fill="#d9b98b" opacity="0.16"/>
+      <path d="M 546.935 506.4 C 561.515 497.6, 577.31 497.6, 587.03 506.4" stroke="#fff1c9" stroke-width="4" opacity="0.24" stroke-linecap="round"/>
+      
+      
+    </g>
+  
+    <g>
+      <rect x="602.75" y="491" width="60.75" height="55" rx="14" fill="url(#coveredTile)"/>
+      <rect x="604.75" y="493" width="56.75" height="51" rx="12" fill="#d9b98b" opacity="0.16"/>
+      <path d="M 613.685 506.4 C 628.265 497.6, 644.06 497.6, 653.78 506.4" stroke="#fff1c9" stroke-width="4" opacity="0.24" stroke-linecap="round"/>
+      
+      
+    </g>
+  
+    <g>
+      <rect x="669.5" y="491" width="60.75" height="55" rx="14" fill="url(#revealedTile)" opacity="0.5"/>
+      <rect x="671" y="492.5" width="57.75" height="52" rx="12" fill="#e8d8b6" opacity="0.16"/>
+      <text x="699.875" y="519.5" class="digit" fill="#5ec8ff">1</text>
+    </g>
+  
+    <g>
+      <rect x="736.25" y="491" width="60.75" height="55" rx="14" fill="url(#coveredTile)"/>
+      <rect x="738.25" y="493" width="56.75" height="51" rx="12" fill="#d9b98b" opacity="0.16"/>
+      <path d="M 747.185 506.4 C 761.765 497.6, 777.56 497.6, 787.28 506.4" stroke="#fff1c9" stroke-width="4" opacity="0.24" stroke-linecap="round"/>
+      
+      <polygon points="766.625,500.9 777.56,514.1 766.625,529.5 755.69,514.1" fill="#151110"/>
+      <polygon points="766.0175,505.3 772.7,514.1 766.0175,522.9 759.335,514.1" fill="#ffb347"/>
+      
+      
+    </g>
+  
+    <g>
+      <rect x="803" y="491" width="60.75" height="55" rx="14" fill="url(#revealedTile)" opacity="0.5"/>
+      <rect x="804.5" y="492.5" width="57.75" height="52" rx="12" fill="#e8d8b6" opacity="0.16"/>
+      <text x="833.375" y="519.5" class="digit" fill="#5ec8ff">1</text>
+    </g>
+  
+    <g>
+      <rect x="869.75" y="491" width="60.75" height="55" rx="14" fill="url(#revealedTile)" opacity="0.5"/>
+      <rect x="871.25" y="492.5" width="57.75" height="52" rx="12" fill="#e8d8b6" opacity="0.16"/>
+      <text x="900.125" y="519.5" class="digit" fill="#5ec8ff">1</text>
+    </g>
+  
+    <g>
+      <rect x="936.5" y="491" width="60.75" height="55" rx="14" fill="url(#revealedTile)" opacity="0.5"/>
+      <rect x="938" y="492.5" width="57.75" height="52" rx="12" fill="#e8d8b6" opacity="0.16"/>
+      <text x="966.875" y="519.5" class="digit" fill="#5ec8ff">1</text>
+    </g>
+  
+    <g>
+      <rect x="1003.25" y="491" width="60.75" height="55" rx="14" fill="url(#coveredTile)"/>
+      <rect x="1005.25" y="493" width="56.75" height="51" rx="12" fill="#d9b98b" opacity="0.16"/>
+      <path d="M 1014.185 506.4 C 1028.765 497.6, 1044.56 497.6, 1054.28 506.4" stroke="#fff1c9" stroke-width="4" opacity="0.24" stroke-linecap="round"/>
+      
+      
+    </g>
+  
+    <g>
+      <rect x="536" y="552" width="60.75" height="55" rx="14" fill="url(#coveredTile)"/>
+      <rect x="538" y="554" width="56.75" height="51" rx="12" fill="#d9b98b" opacity="0.16"/>
+      <path d="M 546.935 567.4 C 561.515 558.6, 577.31 558.6, 587.03 567.4" stroke="#fff1c9" stroke-width="4" opacity="0.24" stroke-linecap="round"/>
+      
+      
+    </g>
+  
+    <g>
+      <rect x="602.75" y="552" width="60.75" height="55" rx="14" fill="url(#coveredTile)"/>
+      <rect x="604.75" y="554" width="56.75" height="51" rx="12" fill="#d9b98b" opacity="0.16"/>
+      <path d="M 613.685 567.4 C 628.265 558.6, 644.06 558.6, 653.78 567.4" stroke="#fff1c9" stroke-width="4" opacity="0.24" stroke-linecap="round"/>
+      
+      
+    </g>
+  
+    <g>
+      <rect x="669.5" y="552" width="60.75" height="55" rx="14" fill="url(#revealedTile)" opacity="0.5"/>
+      <rect x="671" y="553.5" width="57.75" height="52" rx="12" fill="#e8d8b6" opacity="0.16"/>
+      <text x="699.875" y="580.5" class="digit" fill="#5ec8ff">1</text>
+    </g>
+  
+    <g>
+      <rect x="736.25" y="552" width="60.75" height="55" rx="14" fill="url(#revealedTile)" opacity="0.5"/>
+      <rect x="737.75" y="553.5" width="57.75" height="52" rx="12" fill="#e8d8b6" opacity="0.16"/>
+      <text x="766.625" y="580.5" class="digit" fill="#5ec8ff">1</text>
+    </g>
+  
+    <g>
+      <rect x="803" y="552" width="60.75" height="55" rx="14" fill="url(#revealedTile)" opacity="0.5"/>
+      <rect x="804.5" y="553.5" width="57.75" height="52" rx="12" fill="#e8d8b6" opacity="0.16"/>
+      <text x="833.375" y="580.5" class="digit" fill="#5ec8ff">1</text>
+    </g>
+  
+    <g>
+      <rect x="869.75" y="552" width="60.75" height="55" rx="14" fill="url(#revealedTile)" opacity="0.5"/>
+      <rect x="871.25" y="553.5" width="57.75" height="52" rx="12" fill="#e8d8b6" opacity="0.16"/>
+      
+    </g>
+  
+    <g>
+      <rect x="936.5" y="552" width="60.75" height="55" rx="14" fill="url(#revealedTile)" opacity="0.5"/>
+      <rect x="938" y="553.5" width="57.75" height="52" rx="12" fill="#e8d8b6" opacity="0.16"/>
+      
+    </g>
+  
+    <g>
+      <rect x="1003.25" y="552" width="60.75" height="55" rx="14" fill="url(#coveredTile)"/>
+      <rect x="1005.25" y="554" width="56.75" height="51" rx="12" fill="#d9b98b" opacity="0.16"/>
+      <path d="M 1014.185 567.4 C 1028.765 558.6, 1044.56 558.6, 1054.28 567.4" stroke="#fff1c9" stroke-width="4" opacity="0.24" stroke-linecap="round"/>
+      
+      
+    </g>
+  
+    <g>
+      <rect x="536" y="613" width="60.75" height="55" rx="14" fill="url(#coveredTile)"/>
+      <rect x="538" y="615" width="56.75" height="51" rx="12" fill="#d9b98b" opacity="0.16"/>
+      <path d="M 546.935 628.4 C 561.515 619.6, 577.31 619.6, 587.03 628.4" stroke="#fff1c9" stroke-width="4" opacity="0.24" stroke-linecap="round"/>
+      
+      
+    </g>
+  
+    <g>
+      <rect x="602.75" y="613" width="60.75" height="55" rx="14" fill="url(#coveredTile)"/>
+      <rect x="604.75" y="615" width="56.75" height="51" rx="12" fill="#d9b98b" opacity="0.16"/>
+      <path d="M 613.685 628.4 C 628.265 619.6, 644.06 619.6, 653.78 628.4" stroke="#fff1c9" stroke-width="4" opacity="0.24" stroke-linecap="round"/>
+      
+      
+    </g>
+  
+    <g>
+      <rect x="669.5" y="613" width="60.75" height="55" rx="14" fill="url(#coveredTile)"/>
+      <rect x="671.5" y="615" width="56.75" height="51" rx="12" fill="#d9b98b" opacity="0.16"/>
+      <path d="M 680.435 628.4 C 695.015 619.6, 710.81 619.6, 720.53 628.4" stroke="#fff1c9" stroke-width="4" opacity="0.24" stroke-linecap="round"/>
+      
+      
+    </g>
+  
+    <g>
+      <rect x="736.25" y="613" width="60.75" height="55" rx="14" fill="url(#revealedTile)" opacity="0.5"/>
+      <rect x="737.75" y="614.5" width="57.75" height="52" rx="12" fill="#e8d8b6" opacity="0.16"/>
+      <text x="766.625" y="641.5" class="digit" fill="#5ec8ff">1</text>
+    </g>
+  
+    <g>
+      <rect x="803" y="613" width="60.75" height="55" rx="14" fill="url(#revealedTile)" opacity="0.5"/>
+      <rect x="804.5" y="614.5" width="57.75" height="52" rx="12" fill="#e8d8b6" opacity="0.16"/>
+      <text x="833.375" y="641.5" class="digit" fill="#5ec8ff">1</text>
+    </g>
+  
+    <g>
+      <rect x="869.75" y="613" width="60.75" height="55" rx="14" fill="url(#revealedTile)" opacity="0.5"/>
+      <rect x="871.25" y="614.5" width="57.75" height="52" rx="12" fill="#e8d8b6" opacity="0.16"/>
+      
+    </g>
+  
+    <g>
+      <rect x="936.5" y="613" width="60.75" height="55" rx="14" fill="url(#revealedTile)" opacity="0.5"/>
+      <rect x="938" y="614.5" width="57.75" height="52" rx="12" fill="#e8d8b6" opacity="0.16"/>
+      
+    </g>
+  
+    <g>
+      <rect x="1003.25" y="613" width="60.75" height="55" rx="14" fill="url(#coveredTile)"/>
+      <rect x="1005.25" y="615" width="56.75" height="51" rx="12" fill="#d9b98b" opacity="0.16"/>
+      <path d="M 1014.185 628.4 C 1028.765 619.6, 1044.56 619.6, 1054.28 628.4" stroke="#fff1c9" stroke-width="4" opacity="0.24" stroke-linecap="round"/>
+      
+      
+    </g>
+  
+    <g>
+      <rect x="536" y="674" width="60.75" height="55" rx="14" fill="url(#coveredTile)"/>
+      <rect x="538" y="676" width="56.75" height="51" rx="12" fill="#d9b98b" opacity="0.16"/>
+      <path d="M 546.935 689.4 C 561.515 680.6, 577.31 680.6, 587.03 689.4" stroke="#fff1c9" stroke-width="4" opacity="0.24" stroke-linecap="round"/>
+      
+      
+    </g>
+  
+    <g>
+      <rect x="602.75" y="674" width="60.75" height="55" rx="14" fill="url(#coveredTile)"/>
+      <rect x="604.75" y="676" width="56.75" height="51" rx="12" fill="#d9b98b" opacity="0.16"/>
+      <path d="M 613.685 689.4 C 628.265 680.6, 644.06 680.6, 653.78 689.4" stroke="#fff1c9" stroke-width="4" opacity="0.24" stroke-linecap="round"/>
+      
+      
+    </g>
+  
+    <g>
+      <rect x="669.5" y="674" width="60.75" height="55" rx="14" fill="url(#coveredTile)"/>
+      <rect x="671.5" y="676" width="56.75" height="51" rx="12" fill="#d9b98b" opacity="0.16"/>
+      <path d="M 680.435 689.4 C 695.015 680.6, 710.81 680.6, 720.53 689.4" stroke="#fff1c9" stroke-width="4" opacity="0.24" stroke-linecap="round"/>
+      
+      
+    </g>
+  
+    <g>
+      <rect x="736.25" y="674" width="60.75" height="55" rx="14" fill="url(#coveredTile)"/>
+      <rect x="738.25" y="676" width="56.75" height="51" rx="12" fill="#d9b98b" opacity="0.16"/>
+      <path d="M 747.185 689.4 C 761.765 680.6, 777.56 680.6, 787.28 689.4" stroke="#fff1c9" stroke-width="4" opacity="0.24" stroke-linecap="round"/>
+      
+      
+    </g>
+  
+    <g>
+      <rect x="803" y="674" width="60.75" height="55" rx="14" fill="url(#revealedTile)" opacity="0.5"/>
+      <rect x="804.5" y="675.5" width="57.75" height="52" rx="12" fill="#e8d8b6" opacity="0.16"/>
+      <text x="833.375" y="702.5" class="digit" fill="#5ec8ff">1</text>
+    </g>
+  
+    <g>
+      <rect x="869.75" y="674" width="60.75" height="55" rx="14" fill="url(#revealedTile)" opacity="0.5"/>
+      <rect x="871.25" y="675.5" width="57.75" height="52" rx="12" fill="#e8d8b6" opacity="0.16"/>
+      <text x="900.125" y="702.5" class="digit" fill="#5ec8ff">1</text>
+    </g>
+  
+    <g>
+      <rect x="936.5" y="674" width="60.75" height="55" rx="14" fill="url(#revealedTile)" opacity="0.5"/>
+      <rect x="938" y="675.5" width="57.75" height="52" rx="12" fill="#e8d8b6" opacity="0.16"/>
+      <text x="966.875" y="702.5" class="digit" fill="#5ec8ff">1</text>
+    </g>
+  
+    <g>
+      <rect x="1003.25" y="674" width="60.75" height="55" rx="14" fill="url(#coveredTile)"/>
+      <rect x="1005.25" y="676" width="56.75" height="51" rx="12" fill="#d9b98b" opacity="0.16"/>
+      <path d="M 1014.185 689.4 C 1028.765 680.6, 1044.56 680.6, 1054.28 689.4" stroke="#fff1c9" stroke-width="4" opacity="0.24" stroke-linecap="round"/>
+      
+      
+    </g>
+  
+    <g>
+      <rect x="536" y="735" width="60.75" height="55" rx="14" fill="url(#coveredTile)"/>
+      <rect x="538" y="737" width="56.75" height="51" rx="12" fill="#d9b98b" opacity="0.16"/>
+      <path d="M 546.935 750.4 C 561.515 741.6, 577.31 741.6, 587.03 750.4" stroke="#fff1c9" stroke-width="4" opacity="0.24" stroke-linecap="round"/>
+      
+      
+    </g>
+  
+    <g>
+      <rect x="602.75" y="735" width="60.75" height="55" rx="14" fill="url(#coveredTile)"/>
+      <rect x="604.75" y="737" width="56.75" height="51" rx="12" fill="#d9b98b" opacity="0.16"/>
+      <path d="M 613.685 750.4 C 628.265 741.6, 644.06 741.6, 653.78 750.4" stroke="#fff1c9" stroke-width="4" opacity="0.24" stroke-linecap="round"/>
+      
+      
+    </g>
+  
+    <g>
+      <rect x="669.5" y="735" width="60.75" height="55" rx="14" fill="url(#coveredTile)"/>
+      <rect x="671.5" y="737" width="56.75" height="51" rx="12" fill="#d9b98b" opacity="0.16"/>
+      <path d="M 680.435 750.4 C 695.015 741.6, 710.81 741.6, 720.53 750.4" stroke="#fff1c9" stroke-width="4" opacity="0.24" stroke-linecap="round"/>
+      
+      
+    </g>
+  
+    <g>
+      <rect x="736.25" y="735" width="60.75" height="55" rx="14" fill="url(#coveredTile)"/>
+      <rect x="738.25" y="737" width="56.75" height="51" rx="12" fill="#d9b98b" opacity="0.16"/>
+      <path d="M 747.185 750.4 C 761.765 741.6, 777.56 741.6, 787.28 750.4" stroke="#fff1c9" stroke-width="4" opacity="0.24" stroke-linecap="round"/>
+      
+      
+    </g>
+  
+    <g>
+      <rect x="803" y="735" width="60.75" height="55" rx="14" fill="url(#coveredTile)"/>
+      <rect x="805" y="737" width="56.75" height="51" rx="12" fill="#d9b98b" opacity="0.16"/>
+      <path d="M 813.935 750.4 C 828.515 741.6, 844.31 741.6, 854.03 750.4" stroke="#fff1c9" stroke-width="4" opacity="0.24" stroke-linecap="round"/>
+      
+      
+    </g>
+  
+    <g>
+      <rect x="869.75" y="735" width="60.75" height="55" rx="14" fill="url(#coveredTile)"/>
+      <rect x="871.75" y="737" width="56.75" height="51" rx="12" fill="#d9b98b" opacity="0.16"/>
+      <path d="M 880.685 750.4 C 895.265 741.6, 911.06 741.6, 920.78 750.4" stroke="#fff1c9" stroke-width="4" opacity="0.24" stroke-linecap="round"/>
+      
+      <polygon points="900.125,744.9 911.06,758.1 900.125,773.5 889.19,758.1" fill="#151110"/>
+      <polygon points="899.5175,749.3 906.2,758.1 899.5175,766.9 892.835,758.1" fill="#ffb347"/>
+      
+      
+    </g>
+  
+    <g>
+      <rect x="936.5" y="735" width="60.75" height="55" rx="14" fill="url(#revealedTile)" opacity="0.5"/>
+      <rect x="938" y="736.5" width="57.75" height="52" rx="12" fill="#e8d8b6" opacity="0.16"/>
+      <text x="966.875" y="763.5" class="digit" fill="#5ec8ff">1</text>
+    </g>
+  
+    <g>
+      <rect x="1003.25" y="735" width="60.75" height="55" rx="14" fill="url(#coveredTile)"/>
+      <rect x="1005.25" y="737" width="56.75" height="51" rx="12" fill="#d9b98b" opacity="0.16"/>
+      <path d="M 1014.185 750.4 C 1028.765 741.6, 1044.56 741.6, 1054.28 750.4" stroke="#fff1c9" stroke-width="4" opacity="0.24" stroke-linecap="round"/>
+      
+      
+    </g>
+  </g>
+  
+      <circle cx="662.72" cy="385.32000000000005" r="8" fill="#ffd67c" opacity="0.9"/>
+      <circle cx="662.72" cy="385.32000000000005" r="20" fill="#ffd67c" opacity="0.16"/>
+      
+      <circle cx="905.5999999999999" cy="469.88" r="8" fill="#ffd67c" opacity="0.9"/>
+      <circle cx="905.5999999999999" cy="469.88" r="20" fill="#ffd67c" opacity="0.16"/>
+      
+      <circle cx="842.24" cy="645.04" r="8" fill="#ffd67c" opacity="0.9"/>
+      <circle cx="842.24" cy="645.04" r="20" fill="#ffd67c" opacity="0.16"/>
+      
+  
+</svg>
