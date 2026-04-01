@@ -1,0 +1,258 @@
+Original prompt: Create and publish a new game using the canonical gated workflow in `/Users/oliviermichon/Documents/autonomoustudio-internal/guidelines/NEW_GAME_WORKFLOW.md`, ending with a live PlayDrop release, final PASS gates `00` through `08`, repo sync, and the required X release thread.
+
+2026-03-31
+- Created the registered PlayDrop project folder `/Users/oliviermichon/Documents/autonomoustudio-games/glowknot` from `playdrop/template/typescript_template`.
+- Confirmed the games repo root `catalogue.json` still stays `{}` and that `Glowknot` will live as a self-contained game folder.
+- Checked local auth sources in `/Users/oliviermichon/Documents/autonomoustudio-internal/.env` for `PLAYDROP_API_KEY`, `X_HANDLE`, and `X_PASSWORD`.
+- Confirmed PlayDrop auth with `playdrop auth whoami` and verified local tool availability for Playwright, FFmpeg, Node, and npm.
+- Fetched both local repos with `git fetch --prune` and verified there is no existing local drift blocking the run.
+- Installed project dependencies for `Glowknot` and set the initial per-game metadata, README, and `.playdropignore`.
+- Locked the concept lane at a portrait-first festival-canopy bubble shooter built on the proven `Puzzle Bobble` / bubble-shooter interaction grammar, with visible anchor-knot collapses as the differentiator.
+- Wrote and passed `IDEA.md`, `SPECS_v1.md`, and `SIMPLIFY_v1.md`, keeping the v1 focused on anchor-cut canopy drops, current-plus-reserve shot planning, and a minimal HUD.
+- Generated browser-rendered portrait and desktop mockups for start, gameplay, and game-over, then iterated once to clear the top-cluster start overlap and the hidden game-over `best` stat.
+- Implemented the playable build in `src/`, including canopy generation and resolution logic, a canvas renderer, reserve-shot swapping, best-score persistence, deterministic debug helpers, and autoplay hooks for review captures.
+- Fixed the first implementation-pass failures: the shot animation color bug, the broken glow-color conversion, the overlapping mobile HUD/start layout, the cramped danger chip, and the game-over stat collision.
+- Resolved the fresh-app registration problem by registering `autonomoustudio/app/glowknot` from a clean temporary directory, then restoring the real repo folder so later capture and publish steps can target the correct PlayDrop app id.
+- Tightened gameplay pressure after the first balance sweep failed: normal clears no longer refund sink time, the sink schedule now ramps at `5 / 4 / 3`, and the scripted casual policy now behaves like a casual player instead of an expert search bot.
+- Passed local validation with `playdrop project validate .`, captured local portrait/desktop review screenshots from the real build, and produced a full 120-sample balance report with casual median `72.6s` and expert median `360.3s`.
+
+TODO
+- Complete the required 3-post X release thread once X accepts either the saved browser profile or the `.env` login flow.
+- After the X thread succeeds, commit and push the release-sync repo state and rewrite `gates/08-release.md` from `FAIL` to `PASS`.
+
+Release update
+- Locked the final listing pack with a PlayDrop AI-generated hero family and icon, updated `catalogue.json` to the shipped rules, and passed `gates/07-listing-media.md`.
+- The first publish attempt failed with `HTTP 413` because duplicated listing media and large store assets still counted toward the uploaded source bundle. I removed the duplicate screenshot/video copies, excluded `.playwright-cli/`, optimized the icon/hero assets to schema-compliant PNGs, and republished successfully.
+- Published `autonomoustudio/app/glowknot` version `1.0.0`.
+- Live URLs:
+  - Listing: `https://www.playdrop.ai/creators/autonomoustudio/apps/game/glowknot`
+  - Play: `https://www.playdrop.ai/creators/autonomoustudio/apps/game/glowknot/play`
+  - Hosted build: `https://assets.playdrop.ai/creators/autonomoustudio/apps/glowknot/v1.0.0/index.html`
+- Verification commands used:
+  - `playdrop detail autonomoustudio/app/glowknot --json`
+  - Playwright live check against the listing, play page, and hosted bundle with evidence written to `output/playwright/release-check/live-check.json`
+  - `playdrop feedback send --title "Glowknot release: listing upload and public-play friction" ...`
+- Verification results:
+  - The public listing page resolved and showed the shipped description and live media family.
+  - The public creator play URL still presented an account-creation wall to an anonymous browser.
+  - The direct hosted bundle rendered the live game on both desktop and portrait surfaces.
+- Sent PlayDrop feedback `id 40` covering the publish-size friction, PNG-only listing schema friction, and the public-play account wall.
+- X thread attempts:
+  - The saved browser profile loaded blank X pages and never exposed a usable compose editor.
+  - A fresh login attempt from `/Users/oliviermichon/Documents/autonomoustudio-internal/.env` failed before password entry with `Could not log you in now. Please try again later.`
+  - Because the required gameplay post, link reply, and autonomous note reply are still missing, `gates/08-release.md` remains `FAIL` and no repo commit/push has been made yet.
+- Hotfix update
+  - User-reported issue: the PlayDrop detail page booted the preview with an auth popup because the published bundle called `await sdk.me.login()` immediately after `playdrop.init()`.
+  - Fix shipped in `1.0.1`: removed the startup login call from `src/main.ts` while keeping the host loading-state bridge.
+  - Live URLs:
+    - Listing: `https://www.playdrop.ai/creators/autonomoustudio/apps/game/glowknot`
+    - Play: `https://www.playdrop.ai/creators/autonomoustudio/apps/game/glowknot/play`
+    - Hosted build: `https://assets.playdrop.ai/creators/autonomoustudio/apps/glowknot/v1.0.1/index.html`
+  - Verification results:
+    - `playdrop detail autonomoustudio/app/glowknot --json` now reports version `1.0.1`, `authMode: OPTIONAL`, and `previewable: true`.
+    - A headed Playwright check of the public detail page stayed on a single tab after load and after a `5s` idle, with no login/sign-in/auth text in the captured DOM logs and no console errors.
+  - `gates/08-release.md` still remains `FAIL` because the X release thread is still blocked and the repo has not been committed/pushed.
+- Fruit Salad retheme work
+  - Swapped the in-game theme from lanterns to fruit without changing the underlying support-cut gameplay rules: the board now renders with PlayDrop-generated fruit sprites over a square orchard background.
+  - Added generated gameplay audio sourced from PlayDrop AI: one looping background track plus dedicated fire, swap, drop, apple, orange, lime, grape, and blueberry one-shots.
+  - Updated the local build pipeline to inline `.png`, `.jpg`, and `.mp3` assets into the single-file HTML output and changed the local metadata/display copy to `Fruit Salad` `1.1.0`.
+  - `README.md` now explicitly separates the local retheme work from the still-live `Glowknot 1.0.1` release so the public state is not overstated.
+  - Validation and smoke-test results:
+    - `npm run validate`
+    - `playdrop project validate .`
+    - Browser gameplay capture via `/Users/oliviermichon/.codex/skills/develop-web-game/scripts/web_game_playwright_client.js` against `http://127.0.0.1:4177/dist/index.html?autostart=1&seed=5`
+    - Additional portrait Playwright screenshots at `output/playwright/fruit-salad-portrait.png` and `output/playwright/fruit-salad-portrait-stable.png`
+  - Current QA read:
+    - No console errors surfaced in the desktop or portrait browser checks.
+    - The fruit board, reserve slot, launcher, and danger line all remained readable in both desktop and portrait layouts.
+    - Audio wiring is in the runtime and the build carries the generated files, but I did not do a human audible listen-back pass inside this turn.
+
+TODO
+- Do a human listen-back pass and rebalance music/SFX levels if the mix feels too hot or the fruit pops are not distinct enough in practice.
+- Decide whether to regenerate listing media and publish the retheme as a new live version, or keep it as a local art/audio exploration for now.
+
+Rename and republish update
+- Registered `autonomoustudio/app/fruit-salad`, copied the verified fruit retheme into the new folder, and rewired the local metadata, package names, template title, debug globals, media scripts, and listing filenames from `Glowknot` to `Fruit Salad`.
+- Reused the captured real-game screenshots and gameplay video, then rebuilt the listing pack with a new AI-generated landscape hero, a new AI-generated icon, and a portrait hero fallback composed from the orchard background plus the real fruit sprites.
+- The first `Fruit Salad` publish attempt hit `HTTP 413` again. I fixed it by tightening `.playdropignore`, deleting redundant local JPG/reference files, and aggressively optimizing the shipped PNG assets and theme sprites so the upload bundle dropped under the limit.
+- Published `autonomoustudio/app/fruit-salad` version `1.1.0`.
+- Live URLs:
+  - Listing: `https://www.playdrop.ai/creators/autonomoustudio/apps/game/fruit-salad`
+  - Play: `https://www.playdrop.ai/creators/autonomoustudio/apps/game/fruit-salad/play`
+  - Hosted build: `https://assets.playdrop.ai/creators/autonomoustudio/apps/fruit-salad/v1.1.0/index.html`
+- Verification commands used:
+  - `playdrop detail autonomoustudio/app/fruit-salad --json`
+  - Headless Playwright checks with evidence written to `output/playwright/release-check/live-check.json`
+  - Additional hosted-build autostart gameplay checks written to `output/playwright/release-check/live-autostart-check.json`
+- Verification results:
+  - The public overview page resolved with the new `Fruit Salad` title, copy, and listing art.
+  - The public play page resolved and embedded the live app shell; one `401` console error appeared from the PlayDrop page context, but the game frame still loaded.
+  - The direct hosted bundle rendered correctly on desktop and portrait, including autostarted gameplay with no console errors.
+- Deleted `autonomoustudio/app/glowknot` from the PlayDrop account after the new title was verified live.
+- Wall readability and fruit-render polish hotfix
+  - User feedback: the live build hid the bounce walls and the fruit-wide glow circles made the board look worse.
+  - Changed `src/game/render.ts` and `src/main.ts` so the bounce bounds now share one layout source of truth, the board fruit glow rings are gone, and the side walls render as subtle vine rails with mobile-safe edge cues.
+  - Local verification:
+    - `npm run validate`
+    - `playdrop project validate .`
+    - develop-web-game Playwright capture at `output/playwright/wall-polish-v3/shot-0.png`
+    - additional local portrait check at `output/playwright/wall-polish-v3/portrait-local.png`
+  - Published `autonomoustudio/app/fruit-salad` version `1.1.1`.
+  - Live verification:
+    - `playdrop detail autonomoustudio/app/fruit-salad --json` now reports `currentVersion: 1.1.1`
+    - Hosted-build checks at `output/playwright/wall-hotfix-live/desktop-live.png` and `output/playwright/wall-hotfix-live/portrait-live.png`
+    - No console errors in the hosted desktop or portrait checks.
+- Reserve removal and HUD cleanup
+  - User feedback: remove the reserve feature teaser, remove the dotted orange sink line, regroup the HUD at the top on portrait, and move the desktop HUD next to the left side of the board instead of the screen edge.
+  - Changed `src/game/render.ts` and `src/main.ts` so the player-facing reserve widget and swap input are gone, the sink line is removed, the portrait HUD is now a compact top row, and the desktop HUD is stacked just left of the board.
+  - Local verification:
+    - `npm run validate`
+    - `playdrop project validate .`
+    - desktop and portrait captures at `output/playwright/ui-cleanup-local/`
+  - Published `autonomoustudio/app/fruit-salad` version `1.1.2`.
+  - Live verification:
+    - `playdrop detail autonomoustudio/app/fruit-salad --json` reported `currentVersion: 1.1.2`
+    - hosted-build captures at `output/playwright/ui-cleanup-live/desktop.png` and `output/playwright/ui-cleanup-live/portrait.png`
+    - No console errors in the hosted desktop or portrait checks.
+- Listing copy sync follow-up
+  - The `1.1.2` listing description still mentioned swapping with the reserve fruit, so I removed that copy from `catalogue.json`, updated `README.md`, and dropped the unused `reserveLabel` from `src/game/theme.ts`.
+  - Published `autonomoustudio/app/fruit-salad` version `1.1.3`.
+  - `playdrop detail autonomoustudio/app/fruit-salad --json` now reports `currentVersion: 1.1.3` and the public description no longer mentions reserve or swapping.
+- Clarity hotfix in progress
+  - User feedback: the sink motion looked buggy on the staggered grid and the support-cut rule was too hidden, so big drops felt random instead of readable.
+  - Changed `src/game/logic.ts`, `src/main.ts`, `src/game/render.ts`, and `src/game/theme.ts` so the runtime now exposes a proper shot preview path, returns sink-step metadata for UI, draws visible vine links and top tethers between connected fruits, previews predicted pops and hanging drops while aiming, labels the sink counter as `NEXT DROP`, and animates sink movement as a visible row-slide instead of an instant board snap.
+  - Added preview-specific logic coverage in `tests/logic.test.ts`.
+  - Local verification:
+    - `npm test`
+    - `npx tsc --noEmit`
+    - `npm run build`
+    - local Playwright captures in `output/playwright/clarity-pass-v2/`
+  - Published `autonomoustudio/app/fruit-salad` version `1.1.4`.
+  - Live verification:
+    - `playdrop detail autonomoustudio/app/fruit-salad --json` now reports `currentVersion: 1.1.4`, hosted asset URL `https://assets.playdrop.ai/creators/autonomoustudio/apps/fruit-salad/v1.1.4`, `previewable: true`, and `authMode: OPTIONAL`
+    - hosted portrait captures in `output/playwright/clarity-live-1.1.4/`
+    - hosted console log at `output/playwright/clarity-live-1.1.4/console.json` is empty
+- Refill timing hotfix in progress
+  - User feedback: the immediate top-wave refill after a large clear made the outcome unreadable because new fruit appeared in the same beat as the pop/drop resolution.
+  - Changed `src/game/logic.ts` to expose `boardBeforeRefill`, and changed `src/main.ts` to stage refill waves with a short reveal delay so the emptied board is visible before the refill row appears. Input and autoplay are paused during that reveal beat.
+  - Added coverage in `tests/logic.test.ts` to verify the pre-refill board snapshot is exposed when an injected wave occurs.
+  - Local verification:
+    - `npm test`
+    - `npx tsc --noEmit`
+    - `npm run build`
+    - local Playwright proof in `output/playwright/refill-gap-local/` with `refill-gap-state.json` showing `occupied: 0` and `refillQueued: true` before the refill is applied
+  - Published `autonomoustudio/app/fruit-salad` version `1.1.5`.
+  - Live verification:
+    - `playdrop detail autonomoustudio/app/fruit-salad --json` now reports `currentVersion: 1.1.5` and asset URL `https://assets.playdrop.ai/creators/autonomoustudio/apps/fruit-salad/v1.1.5`
+    - hosted Playwright proof in `output/playwright/refill-gap-live-1.1.5/`
+    - hosted `refill-gap-state-live.json` shows `occupied: 0` and `refillQueued: true` before the refill is applied
+    - hosted console log at `output/playwright/refill-gap-live-1.1.5/console.json` is empty
+- Support-rule and sink-model hotfix in progress
+  - User feedback: fruits should be allowed to stay alive if they remain connected to the top frame, either side bar, or one of the three hanging branches; the old logic was still too close to a top-row-only rule. The sink also needed to move by two rows so it reads as a vertical drop instead of a parity shuffle.
+  - Changed `src/game/logic.ts` so support now flood-fills from three seed types:
+    - occupied fruits in the top row
+    - fruits physically touching the left or right frame bars
+    - fruits directly reached by the three hanging branch attachments
+  - Changed `src/game/render.ts` to reuse the same branch-target helper as the logic, so the drawn branches and the support solver stay aligned.
+  - Changed sink resolution to move by `2` rows per drop event.
+  - Added and updated tests in `tests/logic.test.ts` for branch/side support origins and the two-row sink.
+  - Local verification:
+    - `npm test`
+    - `npx tsc --noEmit`
+    - `npm run build`
+    - deterministic repro confirmed `sinkSteps: 2` and the expected support set seeds
+  - Published `autonomoustudio/app/fruit-salad` version `1.1.6`.
+  - Live verification:
+    - `playdrop detail autonomoustudio/app/fruit-salad --json` now reports `currentVersion: 1.1.6` and asset URL `https://assets.playdrop.ai/creators/autonomoustudio/apps/fruit-salad/v1.1.6`
+    - hosted Playwright proof in `output/playwright/support-live-1.1.6/`
+    - hosted `sink-slide-state-live.json` shows `sinkSlides: 19` during the live two-row sink animation
+    - hosted console log at `output/playwright/support-live-1.1.6/console.json` is empty
+- Impact-time support, staged refill, and host-audio hotfix in progress
+  - User feedback: fruit destruction should use fruit-specific sounds on removal, refill waves should reveal fruit one by one, host audio policy must be respected, sink movement needs its own sound, and branch supports must not jump to a lower fruit during the same elimination step.
+  - Changed `src/game/logic.ts` so branch attachment support is frozen from the impact board before matched fruit are removed. A branch target that gets popped no longer retargets mid-resolution to save a lower fruit in the same lane.
+  - Changed `src/main.ts` so refill waves are staged as a sequence of per-fruit reveals instead of a single board swap, and so runtime audio now subscribes to `playdrop.host.audioEnabled`, `onAudioPolicyChange`, `onPause`, and `onResume`.
+  - Changed `src/game/audio.ts` so music and gameplay SFX obey host audio policy, fruit removals play per-fruit burst timing, refill entries play fruit-specific arrival cues, and sink movement gets its own sound.
+  - Changed `src/game/render.ts` so staged refill entries animate in visibly instead of silently appearing at full size.
+  - Added regression coverage in `tests/logic.test.ts` for impact-time branch freezing and updated stale expectations that depended on the old branch-retarget behavior.
+  - Local verification:
+    - `npm test`
+    - `npx tsc --noEmit`
+    - `npm run build`
+    - `playdrop project validate .`
+    - local fake-host audio probe confirmed `playCalls: 0` and `sfxStarts: 0` while `audioEnabled=false`, then `playCalls: 1` and `sfxStarts: 1` after re-enabling audio
+    - local browser refill probe at `output/playwright/refill-sequence-local/seed-2-refill.png` showed staged refill entry, and debug counts advanced `3 -> 5 -> 7 -> 9 -> 11 -> 13` while `refillQueued` stayed true
+  - Published `autonomoustudio/app/fruit-salad` version `1.1.7`.
+  - Live verification:
+    - `playdrop detail autonomoustudio/app/fruit-salad --json` now reports `currentVersion: 1.1.7` and asset URL `https://assets.playdrop.ai/creators/autonomoustudio/apps/fruit-salad/v1.1.7`
+    - hosted direct proof in `output/playwright/live-1.1.7/hosted-direct.png`
+    - hosted direct console log `output/playwright/live-1.1.7/hosted-direct-console.json` is empty
+    - public play shell proof in `output/playwright/live-1.1.7/public-play-shell.png`
+    - public play shell state `output/playwright/live-1.1.7/public-play-state.json` confirms the embedded runtime exposes `audioEnabled`, `onAudioPolicyChange`, `onPause`, and `onResume`
+    - public play shell console log `output/playwright/live-1.1.7/public-play-console.json` still contains one unrelated `401` page-shell error
+  - Sent PlayDrop feedback `#41` about the runtime audio lifecycle APIs being present in the live host but missing from `playdrop-sdk-types`.
+- Audio-policy parsing and sink-stability follow-up in progress
+  - User feedback: music still played when the platform should have been silent, add/remove cues still sounded too similar, the fire SFX was still bad, and sink-followed-by-refill could still strand fruit with no visible support.
+  - Changed `src/main.ts` so host audio-policy callbacks are parsed as structured payloads instead of assumed booleans. Music and SFX now follow separate policy flags when present.
+  - Changed `src/game/audio.ts` so the fire sound is gone, fruit entry uses a short synth note family, fruit removal uses the existing fruit pops plus a separate per-fruit tonal layer, and music/SFX are gated independently.
+  - Changed `src/game/logic.ts` so sink stabilization prunes unsupported fruit, stages the refill from a stable board intersection, and ensures the final post-refill board cannot end with unsupported fruit still occupied.
+  - Added and updated tests in `tests/logic.test.ts`, including a sink-support regression and a sink game-over regression that uses a structurally supported danger fruit.
+  - Local verification:
+    - `npm test`
+    - `npx tsc --noEmit`
+    - `npm run build`
+    - `playdrop project validate .`
+    - object-shaped host audio probe confirmed `playCalls: 0` and `sfxStarts: 0` with `{ musicEnabled: false, sfxEnabled: false }`, then `playCalls: 1` and `sfxStarts: 0` with `{ musicEnabled: true, sfxEnabled: false }`
+    - multi-seed logic simulation across seeds `1..24` and `40` turns each reported no cases where `collectSupportedCells(board).size !== countOccupied(board)`
+  - Published `autonomoustudio/app/fruit-salad` version `1.1.8`.
+  - Live verification:
+    - `playdrop detail autonomoustudio/app/fruit-salad --json` now reports `currentVersion: 1.1.8` and asset URL `https://assets.playdrop.ai/creators/autonomoustudio/apps/fruit-salad/v1.1.8`
+    - hosted direct proof in `output/playwright/live-1.1.8/hosted-direct.png`
+    - hosted direct console log `output/playwright/live-1.1.8/hosted-direct-console.json` is empty
+    - public play shell proof in `output/playwright/live-1.1.8/public-play-shell.png`
+    - public play shell state `output/playwright/live-1.1.8/public-play-state.json` confirms the iframe is on `v1.1.8` and the embedded runtime still exposes the host audio lifecycle surface
+    - public play shell console log `output/playwright/live-1.1.8/public-play-console.json` still contains one unrelated `401` page-shell error and the existing `sdk.host.setLoadingState(...) is deprecated` warning
+- PlayDrop host-audio audit and strict host-bridge follow-up
+  - User feedback: stop guessing about the SDK audio lifecycle and use the latest public PlayDrop skill, CLI, docs, types, and known-good game patterns.
+  - Audited the current public PlayDrop surfaces:
+    - `playdrop --version` reports `0.5.2 (build 1)`
+    - `playdrop documentation read runtime` still shows pause/resume on `sdk.app`
+    - the live Fruit Salad public shell actually exposes audio lifecycle on `sdk.host`, and `sdk.app.onPause` is `undefined`
+    - the current public `vendor/playdrop-sdk-types.tgz` type bundle still does not type the live host audio hooks
+  - Changed `src/main.ts`:
+    - removed the mixed `playdrop.host` / `sdk.host` audio bridge
+    - in hosted PlayDrop shells, audio policy now binds directly to the initialized `sdk.host`
+    - hosted audio now fails closed when the host policy is unavailable or malformed instead of defaulting to enabled audio
+    - removed deprecated `sdk.host.setLoadingState(...)` boot usage and now rely on `sdk.host.ready()`
+  - Local verification:
+    - `npm run validate`
+    - `playdrop project validate .`
+  - Published `autonomoustudio/app/fruit-salad` version `1.1.9` first, then `1.1.10` as the final clean follow-up after removing deprecated loading-state calls.
+  - Live-ops housekeeping:
+    - hit the PlayDrop 10-version cap while publishing `1.1.10`
+    - deleted old version `1.1.0` with `playdrop creations apps versions delete fruit-salad 1.1.0`
+  - Live verification for `1.1.10`:
+    - `playdrop detail autonomoustudio/app/fruit-salad --json` now reports `currentVersion: 1.1.10` and asset URL `https://assets.playdrop.ai/creators/autonomoustudio/apps/fruit-salad/v1.1.10`
+    - public-shell proof in `output/playwright/live-1.1.10-audio/`
+    - `public-play-state.json` confirms the live iframe is `v1.1.10`, `sdk.host` exposes `audioEnabled`, `onAudioPolicyChange`, `onPause`, and `onResume`, and `sdk.app.onPause` remains `undefined`
+    - `public-play-console.json` no longer contains the deprecated `sdk.host.setLoadingState(...)` warning; the remaining console noise is the unrelated page-shell `401`
+  - Sent PlayDrop feedback `#42` about the runtime docs/types mismatch for host audio lifecycle.
+- Portrait overlay cleanup and listing hero refresh
+  - User feedback: capture every real game screen on desktop and mobile portrait, fix portrait overflows, and refresh the store hero art with the game title integrated in the image.
+  - Changed `src/game/render.ts`:
+    - bounded the portrait primary button width and moved portrait overlays onto responsive cards
+    - wrapped portrait start and game-over copy instead of assuming one-line text
+    - rebuilt the portrait game-over layout so title, subtitle, stats, and replay button fit cleanly on phone screens
+  - Added repeatable UI audit helpers:
+    - `scripts/capture-ui-states.mjs`
+    - `scripts/build-ui-audit-sheet.py`
+  - Local UI verification:
+    - `npm run validate`
+    - pre-fix composite in `output/playwright/ui-audit-before/composite-before.jpg`
+    - post-fix composite in `output/playwright/ui-audit-after/composite-after.jpg`
+    - portrait overflows visible in `output/playwright/ui-audit-before/start-portrait.png` and `output/playwright/ui-audit-before/gameover-portrait.png` are resolved in the matching files under `ui-audit-after/`
+  - Refreshed local listing hero art with PlayDrop AI:
+    - new landscape source asset `asset:autonomoustudio/fruit-salad-hero-landscape-v2@r1`
+    - new portrait source asset `asset:autonomoustudio/fruit-salad-hero-portrait-v2@r1`
+    - local review composite in `tmp/hero-refresh/hero-v2-composite.jpg`
+    - replaced `listing/hero-landscape.png` and `listing/hero-portrait.png` with the new generated pair
+  - Release target: publish `1.1.11` with the portrait overlay fixes and refreshed hero pack.

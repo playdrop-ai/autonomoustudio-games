@@ -1,0 +1,13 @@
+node_modules/
+dist/
+output/
+mockups/
+tmp/
+.playwright-cli/
+vendor/
+scripts/
+tests/
+README.md
+progress.md
+package-lock.json
+tmp-hero-*.jpg
