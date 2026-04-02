@@ -1,0 +1,36 @@
+{
+  "apps": [
+    {
+      "name": "glowknot",
+      "version": "1.1.0",
+      "displayName": "Fruit Salad",
+      "description": "Aim the current fruit into the bunch, make groups of 3 or more touching fruits of the same kind to pop them, and cut the vine supports so whole hanging bunches drop for bonus points. Swap once with the reserve fruit to line up a better shot. The danger line sinks every few shots, and the run ends when any fruit touches it.",
+      "type": "GAME",
+      "authMode": "OPTIONAL",
+      "previewable": true,
+      "emoji": "🍊",
+      "color": "#F39C2D",
+      "file": "dist/index.html",
+      "listing": {
+        "icon": "listing/icon.png",
+        "heroLandscape": "listing/hero-landscape.png",
+        "heroPortrait": "listing/hero-portrait.png",
+        "screenshotsLandscape": [
+          "listing/glowknot_1280x720-screenshot-1.png"
+        ],
+        "screenshotsPortrait": [
+          "listing/glowknot_720x1280-screenshot-1.png"
+        ],
+        "videosLandscape": [
+          "listing/glowknot_1280x720-recording.mp4"
+        ]
+      },
+      "surfaceTargets": {
+        "desktop": true,
+        "mobileLandscape": false,
+        "mobilePortrait": true
+      },
+      "templateSource": "playdrop/template/typescript_template"
+    }
+  ]
+}
