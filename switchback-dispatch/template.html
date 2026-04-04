@@ -1,0 +1,581 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Switchback Dispatch</title>
+    <style>
+      :root {
+        color-scheme: only dark;
+        font-family: "Avenir Next", "Futura", "Trebuchet MS", sans-serif;
+        background: #0a1017;
+        --cream: #f4efe5;
+        --muted: rgba(244, 239, 229, 0.74);
+        --panel: rgba(10, 16, 23, 0.8);
+        --panel-strong: rgba(10, 16, 23, 0.88);
+        --gold: #f7bf43;
+        --gold-deep: #d8941f;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: linear-gradient(180deg, #16253d 0%, #335577 42%, #f1b15d 100%);
+      }
+
+      body {
+        color: var(--cream);
+      }
+
+      [hidden] {
+        display: none !important;
+      }
+
+      #app {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+      }
+
+      #game-canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      .overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: stretch;
+        justify-content: flex-start;
+        pointer-events: none;
+      }
+
+      .overlay > * {
+        pointer-events: auto;
+      }
+
+      .top-gradient {
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(circle at 66% 22%, rgba(249, 221, 148, 0.18), transparent 14%),
+          linear-gradient(180deg, rgba(5, 8, 13, 0.06), rgba(5, 8, 13, 0.02) 36%, rgba(5, 8, 13, 0.2) 100%);
+        pointer-events: none;
+      }
+
+      .start-shell {
+        position: relative;
+        display: grid;
+        grid-template-columns: minmax(320px, 420px);
+        gap: 14px;
+        align-content: start;
+        min-height: 100vh;
+        padding: 28px 0 24px 44px;
+        max-width: 468px;
+      }
+
+      .kicker {
+        margin: 0;
+        font-size: 12px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: rgba(244, 239, 229, 0.72);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(42px, 6vw, 58px);
+        line-height: 0.92;
+      }
+
+      .subtitle {
+        margin: 0;
+        max-width: 20rem;
+        font-size: 16px;
+        line-height: 1.35;
+        color: rgba(244, 239, 229, 0.86);
+      }
+
+      .contracts {
+        display: grid;
+        gap: 12px;
+      }
+
+      .contract-card {
+        width: 392px;
+        padding: 16px 18px;
+        border-radius: 20px;
+        border: 1px solid rgba(244, 239, 229, 0.12);
+        background: var(--panel);
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
+        color: inherit;
+        text-align: left;
+      }
+
+      .contract-card.compact {
+        padding-top: 14px;
+        padding-bottom: 14px;
+      }
+
+      .contract-card.is-active {
+        border-color: rgba(247, 191, 67, 0.74);
+        box-shadow:
+          0 18px 40px rgba(0, 0, 0, 0.24),
+          0 0 0 1px rgba(247, 191, 67, 0.22) inset,
+          0 0 28px rgba(247, 191, 67, 0.1);
+      }
+
+      .contract-header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 8px;
+      }
+
+      .contract-name {
+        font-size: 22px;
+        font-weight: 800;
+      }
+
+      .contract-count {
+        font-size: 13px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: rgba(244, 239, 229, 0.66);
+      }
+
+      .contract-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 6px;
+        font-size: 14px;
+        color: rgba(244, 239, 229, 0.84);
+      }
+
+      .contract-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 8px;
+      }
+
+      .button {
+        appearance: none;
+        border: 0;
+        border-radius: 999px;
+        padding: 13px 18px;
+        font: inherit;
+        font-size: 14px;
+        font-weight: 800;
+        color: var(--cream);
+        background: rgba(244, 239, 229, 0.1);
+        border: 1px solid rgba(244, 239, 229, 0.12);
+      }
+
+      .button.primary {
+        color: #151006;
+        background: linear-gradient(180deg, #ffd369, var(--gold));
+        border: 0;
+        box-shadow: 0 10px 24px rgba(247, 191, 67, 0.22);
+      }
+
+      .controls-chip,
+      .medal-notes {
+        width: fit-content;
+        max-width: min(420px, calc(100vw - 72px));
+        padding: 12px 18px;
+        border-radius: 999px;
+        background: rgba(8, 13, 18, 0.68);
+        border: 1px solid rgba(244, 239, 229, 0.12);
+        font-size: 13px;
+        color: rgba(244, 239, 229, 0.84);
+        backdrop-filter: blur(12px);
+      }
+
+      .medal-notes {
+        border-radius: 18px;
+        line-height: 1.45;
+      }
+
+      .controls-chip {
+        position: fixed;
+        right: 28px;
+        bottom: 22px;
+        z-index: 2;
+      }
+
+      #hud-root {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 18px;
+        padding: 24px 30px 0;
+      }
+
+      .hud-card {
+        min-width: 186px;
+        padding: 14px 18px;
+        border-radius: 20px;
+        background: rgba(9, 14, 21, 0.72);
+        border: 1px solid rgba(244, 239, 229, 0.14);
+        backdrop-filter: blur(12px);
+      }
+
+      .hud-label {
+        font-size: 12px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: rgba(244, 239, 229, 0.62);
+      }
+
+      .hud-value {
+        margin-top: 8px;
+        font-size: 18px;
+        color: rgba(244, 239, 229, 0.92);
+      }
+
+      .hud-value.strong {
+        font-size: 34px;
+        line-height: 1;
+        font-weight: 900;
+      }
+
+      .hud-subvalue {
+        margin-top: 6px;
+        font-size: 16px;
+        color: rgba(244, 239, 229, 0.84);
+      }
+
+      #countdown-overlay {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        pointer-events: none;
+      }
+
+      #event-toast {
+        position: absolute;
+        left: 50%;
+        bottom: 30px;
+        transform: translateX(-50%);
+        min-width: 240px;
+        max-width: min(420px, calc(100vw - 56px));
+        padding: 12px 18px;
+        border-radius: 999px;
+        background: rgba(8, 13, 18, 0.82);
+        border: 1px solid rgba(244, 239, 229, 0.12);
+        font-size: 14px;
+        font-weight: 700;
+        text-align: center;
+        color: var(--cream);
+        backdrop-filter: blur(12px);
+        pointer-events: none;
+      }
+
+      #countdown-value {
+        padding: 18px 28px;
+        border-radius: 24px;
+        background: rgba(10, 16, 23, 0.72);
+        border: 1px solid rgba(244, 239, 229, 0.14);
+        font-size: 72px;
+        font-weight: 900;
+        line-height: 1;
+        backdrop-filter: blur(12px);
+      }
+
+      #result-overlay {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+      }
+
+      .result-card {
+        width: min(420px, calc(100vw - 48px));
+        padding: 28px;
+        border-radius: 28px;
+        background: var(--panel-strong);
+        border: 1px solid rgba(244, 239, 229, 0.14);
+        box-shadow: 0 28px 60px rgba(0, 0, 0, 0.32);
+      }
+
+      .medal-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 16px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: rgba(247, 191, 67, 0.16);
+        color: #ffd56e;
+        font-size: 14px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .result-card h2 {
+        margin: 0 0 10px;
+        font-size: 36px;
+        line-height: 1;
+      }
+
+      .result-summary {
+        margin: 0 0 20px;
+        font-size: 18px;
+        line-height: 1.45;
+        color: rgba(244, 239, 229, 0.82);
+      }
+
+      .result-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      .result-stat {
+        padding: 14px;
+        border-radius: 18px;
+        background: rgba(244, 239, 229, 0.06);
+      }
+
+      .result-stat-label {
+        font-size: 12px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: rgba(244, 239, 229, 0.58);
+      }
+
+      .result-stat-value {
+        margin-top: 6px;
+        font-size: 22px;
+        font-weight: 900;
+      }
+
+      .result-actions {
+        display: flex;
+        gap: 12px;
+      }
+
+      #unsupported-overlay {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        background: rgba(3, 6, 10, 0.5);
+      }
+
+      .unsupported-card {
+        max-width: 440px;
+        padding: 28px;
+        border-radius: 24px;
+        background: rgba(11, 17, 24, 0.92);
+        border: 1px solid rgba(244, 239, 229, 0.14);
+      }
+
+      @media (max-width: 960px) {
+        .start-shell {
+          max-width: calc(100vw - 40px);
+          padding: 28px 20px 24px;
+          min-height: auto;
+        }
+
+        .contract-card {
+          width: min(100%, 392px);
+        }
+
+        .controls-chip {
+          position: static;
+          right: auto;
+          bottom: auto;
+        }
+
+        #hud-root {
+          flex-wrap: wrap;
+          padding-left: 18px;
+          padding-right: 18px;
+        }
+
+        .hud-card {
+          min-width: 0;
+          width: calc(50% - 9px);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game-canvas"></canvas>
+
+      <div class="overlay" id="start-overlay">
+        <div class="top-gradient"></div>
+        <div class="start-shell">
+          <p class="kicker">Desktop Contract Racer</p>
+          <h1>Switchback Dispatch</h1>
+          <p class="subtitle">Pick a route, clear every beacon in order, and beat the shift clock.</p>
+
+          <div class="contracts">
+            <button class="contract-card is-active" type="button" data-contract-id="first-light">
+              <div class="contract-header">
+                <span class="contract-name">First Light</span>
+                <span class="contract-count">4 deliveries</span>
+              </div>
+              <div class="contract-row"><span>Bronze</span><strong>1:24</strong></div>
+              <div class="contract-row"><span>Silver</span><strong>1:12</strong></div>
+              <div class="contract-row"><span>Gold</span><strong>1:04</strong></div>
+              <div class="contract-row"><span>Best</span><strong data-contract-best>--</strong></div>
+            </button>
+
+            <button class="contract-card compact" type="button" data-contract-id="ridge-relay">
+              <div class="contract-header">
+                <span class="contract-name">Ridge Relay</span>
+                <span class="contract-count">5 deliveries</span>
+              </div>
+              <div class="contract-row"><span>Gold target</span><strong>1:14</strong></div>
+              <div class="contract-row"><span>Best</span><strong data-contract-best>--</strong></div>
+            </button>
+
+            <button class="contract-card compact" type="button" data-contract-id="last-run">
+              <div class="contract-header">
+                <span class="contract-name">Last Run</span>
+                <span class="contract-count">6 deliveries</span>
+              </div>
+              <div class="contract-row"><span>Gold target</span><strong>1:28</strong></div>
+              <div class="contract-row"><span>Best</span><strong data-contract-best>--</strong></div>
+            </button>
+          </div>
+
+          <div class="contract-actions">
+            <button class="button primary" id="start-contract-button" type="button">Start Contract</button>
+            <button class="button" id="view-medals-button" type="button">View Medals</button>
+          </div>
+
+          <div class="medal-notes" id="medal-notes" hidden>
+            Gold times are the honest release target. Bronze is only good enough to prove the route works, not that the line is clean.
+          </div>
+
+          <div class="controls-chip">
+            <strong>W / Up</strong> accelerate
+            &nbsp;&nbsp;
+            <strong>S / Down</strong> brake
+            &nbsp;&nbsp;
+            <strong>A D / Arrows</strong> steer
+          </div>
+        </div>
+      </div>
+
+      <div id="hud-root" hidden>
+        <div class="hud-card">
+          <div class="hud-label">Shift Clock</div>
+          <div class="hud-value strong" id="hud-clock-value">1:32.00</div>
+          <div class="hud-subvalue" id="hud-clock-subvalue">Gold pace +0.00</div>
+        </div>
+
+        <div class="hud-card">
+          <div class="hud-label">Contract</div>
+          <div class="hud-value strong" id="hud-contract-name">First Light</div>
+          <div class="hud-subvalue" id="hud-progress-value">1 / 4</div>
+        </div>
+
+        <div class="hud-card">
+          <div class="hud-label">Next Beacon</div>
+          <div class="hud-value strong" id="hud-next-name">Lower Pass</div>
+          <div class="hud-subvalue" id="hud-next-hint">Stay center, then brake hard.</div>
+        </div>
+      </div>
+
+      <div id="countdown-overlay" hidden>
+        <div id="countdown-value">3</div>
+      </div>
+
+      <div id="event-toast" hidden>Lower Pass locked</div>
+
+      <div id="result-overlay" hidden>
+        <div class="result-card">
+          <div class="medal-chip" id="result-medal">Gold Route</div>
+          <h2 id="result-title">First Light Complete</h2>
+          <p class="result-summary" id="result-summary">The line held. The clock did not.</p>
+
+          <div class="result-grid">
+            <div class="result-stat">
+              <div class="result-stat-label">Final Time</div>
+              <div class="result-stat-value" id="result-time">1:03.61</div>
+            </div>
+            <div class="result-stat">
+              <div class="result-stat-label">Best</div>
+              <div class="result-stat-value" id="result-best">1:03.61</div>
+            </div>
+            <div class="result-stat">
+              <div class="result-stat-label">Barrier Hits</div>
+              <div class="result-stat-value" id="result-hits">1</div>
+            </div>
+          </div>
+
+          <div class="result-actions">
+            <button class="button primary" id="retry-button" type="button">Retry Contract</button>
+            <button class="button" id="back-button" type="button">Back to Contracts</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="unsupported-overlay" hidden>
+        <div class="unsupported-card">
+          <p class="kicker">Unsupported Browser</p>
+          <h1>WebGL 2 is required</h1>
+          <p class="subtitle">Switchback Dispatch targets the latest desktop Chrome build with WebGL 2 enabled.</p>
+        </div>
+      </div>
+    </div>
+    <script src="https://assets.playdrop.ai/sdk/playdrop.js"></script>
+    <script type="module">
+      (async () => {
+        const host = window;
+        if (!host.playdrop) {
+          throw new Error('[switchback-dispatch] window.playdrop unavailable');
+        }
+        if (!host.__starterKitRacingSdkPromise__) {
+          if (typeof host.playdrop.init !== 'function') {
+            throw new Error('[switchback-dispatch] playdrop.init unavailable');
+          }
+          host.__starterKitRacingSdkPromise__ = host.playdrop.init();
+        }
+        const sdk = await host.__starterKitRacingSdkPromise__;
+        await sdk.libs.three.load({
+          addons: [
+            'loaders/GLTFLoader.js',
+            'postprocessing/EffectComposer.js',
+            'postprocessing/RenderPass.js',
+            'postprocessing/GTAOPass.js',
+            'postprocessing/UnrealBloomPass.js',
+            'postprocessing/OutputPass.js',
+          ],
+        });
+        const rapier = await sdk.libs.rapier.load();
+        host.__starterKitRacingVendorRuntime__ = {
+          RAPIER: rapier,
+        };
+        await import('./app.js');
+      })().catch((error) => {
+        console.error('[switchback-dispatch] bootstrap failed', error);
+        window.playdrop?.host?.error?.(
+          error && error.message ? error.message : 'Failed to load Switchback Dispatch',
+        );
+      });
+    </script>
+  </body>
+</html>

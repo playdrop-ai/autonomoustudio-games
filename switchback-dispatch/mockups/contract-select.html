@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1280, initial-scale=1.0" />
+    <title>Switchback Dispatch Mockup - Contract Select</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="frame">
+      <svg class="scene-svg" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <rect width="1280" height="720" fill="transparent" />
+        <circle cx="862" cy="124" r="60" fill="rgba(255,221,151,0.46)" />
+        <path d="M0 365L144 290L282 330L428 244L590 300L768 236L938 310L1120 248L1280 332V720H0Z" fill="#2c405b" />
+        <path d="M0 430L162 352L334 404L520 282L718 364L912 294L1122 392L1280 344V720H0Z" fill="#203145" />
+        <path d="M0 522L120 486L238 530L360 454L486 512L640 430L776 500L946 428L1100 516L1280 466V720H0Z" fill="#173225" />
+        <path d="M946 708C904 682 890 612 928 560C972 500 1074 500 1108 426C1142 354 1080 302 1010 302C920 302 886 388 844 434C790 492 730 478 674 536C624 590 626 658 656 708" fill="none" stroke="#505e69" stroke-width="114" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M946 708C904 682 890 612 928 560C972 500 1074 500 1108 426C1142 354 1080 302 1010 302C920 302 886 388 844 434C790 492 730 478 674 536C624 590 626 658 656 708" fill="none" stroke="#262e37" stroke-width="96" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M946 708C904 682 890 612 928 560C972 500 1074 500 1108 426C1142 354 1080 302 1010 302C920 302 886 388 844 434C790 492 730 478 674 536C624 590 626 658 656 708" fill="none" stroke="#f7d9a7" stroke-width="5" stroke-dasharray="24 18" stroke-linecap="round" />
+        <g fill="#234637">
+          <polygon points="1030,648 1064,582 1098,648" />
+          <polygon points="1110,612 1140,556 1170,612" />
+          <polygon points="1200,594 1226,544 1252,594" />
+          <polygon points="1000,450 1022,408 1044,450" />
+          <polygon points="1160,378 1186,326 1212,378" />
+          <polygon points="850,508 878,456 906,508" />
+          <polygon points="760,584 786,536 812,584" />
+        </g>
+        <g>
+          <rect x="1038" y="470" width="46" height="130" rx="18" fill="rgba(247,191,67,0.16)" />
+          <rect x="1048" y="488" width="26" height="94" rx="13" fill="#f7bf43" />
+          <circle cx="1061" cy="502" r="30" fill="rgba(247,191,67,0.18)" />
+          <circle cx="1061" cy="502" r="14" fill="#fff0c6" />
+        </g>
+        <g>
+          <rect x="728" y="600" width="104" height="52" rx="18" fill="#f5c74d" />
+          <rect x="742" y="584" width="72" height="22" rx="8" fill="#f4efe5" />
+          <rect x="758" y="574" width="40" height="18" rx="7" fill="#f5c74d" />
+          <rect x="832" y="630" width="26" height="12" rx="6" fill="#11151c" opacity="0.72" />
+          <rect x="710" y="630" width="26" height="12" rx="6" fill="#11151c" opacity="0.72" />
+        </g>
+      </svg>
+      <div class="top-gradient"></div>
+
+      <section class="brand">
+        <div class="brand-kicker">Desktop Contract Racer</div>
+        <h1>Switchback Dispatch</h1>
+        <p>Pick a route, clear every beacon in order, and beat the shift clock.</p>
+      </section>
+
+      <section class="contracts-panel">
+        <article class="contract-card active">
+          <div class="contract-header">
+            <div class="contract-name">First Light</div>
+            <div class="contract-route">4 deliveries</div>
+          </div>
+          <div class="contract-row"><span>Bronze</span><strong>1:24</strong></div>
+          <div class="contract-row"><span>Silver</span><strong>1:12</strong></div>
+          <div class="contract-row"><span>Gold</span><strong>1:04</strong></div>
+          <div class="contract-actions">
+            <button class="button primary">Start Contract</button>
+            <button class="button secondary">View Medals</button>
+          </div>
+        </article>
+
+        <article class="contract-card compact">
+          <div class="contract-header">
+            <div class="contract-name">Ridge Relay</div>
+            <div class="contract-route">5 deliveries</div>
+          </div>
+          <div class="contract-row"><span>Gold target</span><strong>1:14</strong></div>
+          <div class="contract-row"><span>Best</span><strong>--</strong></div>
+        </article>
+
+        <article class="contract-card compact">
+          <div class="contract-header">
+            <div class="contract-name">Last Run</div>
+            <div class="contract-route">6 deliveries</div>
+          </div>
+          <div class="contract-row"><span>Gold target</span><strong>1:28</strong></div>
+          <div class="contract-row"><span>Best</span><strong>--</strong></div>
+        </article>
+      </section>
+
+      <div class="controls-chip" style="left: auto; right: 40px;">
+        <span><strong>W / Up</strong> accelerate</span>
+        <span><strong>S / Down</strong> brake</span>
+        <span><strong>A D / Arrows</strong> steer</span>
+      </div>
+    </div>
+  </body>
+</html>
