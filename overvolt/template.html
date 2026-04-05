@@ -1,0 +1,571 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Overvolt</title>
+    <style>
+      :root {
+        color-scheme: only light;
+        --hud-edge: rgba(12, 20, 29, 0.74);
+        --panel: rgba(11, 18, 26, 0.74);
+        --panel-border: rgba(255, 255, 255, 0.14);
+        --text: #f7fbff;
+        --muted: rgba(235, 245, 255, 0.72);
+        --accent: #63d8ff;
+        --accent-strong: #2ebeff;
+        --danger: #ff7b5d;
+        --shadow: 0 18px 40px rgba(8, 15, 22, 0.32);
+        font-family:
+          "Avenir Next",
+          "Helvetica Neue",
+          Helvetica,
+          Arial,
+          sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background:
+          radial-gradient(circle at top, #ffe4b6 0%, #efb96f 48%, #b86633 100%);
+      }
+
+      body {
+        color: var(--text);
+      }
+
+      button {
+        font: inherit;
+      }
+
+      #app {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      #scene-root,
+      #scene-root canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      #app::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background:
+          radial-gradient(circle at center, transparent 46%, rgba(9, 14, 19, 0.14) 100%),
+          linear-gradient(180deg, rgba(7, 12, 18, 0.06), rgba(7, 12, 18, 0.24));
+        transition: opacity 160ms ease;
+      }
+
+      #app.low-battery::after {
+        background:
+          radial-gradient(circle at center, transparent 42%, rgba(91, 13, 11, 0.22) 100%),
+          linear-gradient(180deg, rgba(83, 9, 4, 0.05), rgba(96, 15, 9, 0.28));
+      }
+
+      .hud {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: stretch;
+        padding:
+          calc(env(safe-area-inset-top) + 14px)
+          calc(env(safe-area-inset-right) + 14px)
+          calc(env(safe-area-inset-bottom) + 14px)
+          calc(env(safe-area-inset-left) + 14px);
+        pointer-events: none;
+      }
+
+      .hud-left,
+      .hud-right {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .hud-chip,
+      .battery-card {
+        min-width: 188px;
+        padding: 12px 14px;
+        border-radius: 20px;
+        border: 1px solid var(--panel-border);
+        background: var(--hud-edge);
+        backdrop-filter: blur(16px);
+        box-shadow: var(--shadow);
+      }
+
+      .battery-card {
+        min-width: 260px;
+      }
+
+      .hud-label {
+        display: block;
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .hud-value {
+        display: block;
+        margin-top: 4px;
+        font-size: 30px;
+        line-height: 1;
+        font-weight: 800;
+      }
+
+      .battery-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .battery-bar {
+        position: relative;
+        margin-top: 10px;
+        width: 100%;
+        height: 14px;
+        border-radius: 999px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.12);
+      }
+
+      #battery-fill {
+        height: 100%;
+        width: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #6ce7ff 0%, #a5ffdb 100%);
+        transition: width 100ms linear;
+      }
+
+      #combo-chip {
+        align-self: flex-start;
+        margin-top: auto;
+        padding: 10px 14px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(6, 11, 17, 0.42);
+        color: var(--muted);
+        font-size: 13px;
+        backdrop-filter: blur(12px);
+      }
+
+      #combo-chip.active {
+        background: rgba(13, 55, 68, 0.78);
+        color: #f4fdff;
+        box-shadow: 0 0 26px rgba(76, 215, 255, 0.24);
+      }
+
+      .overlay {
+        position: absolute;
+        inset: 0;
+        padding:
+          calc(env(safe-area-inset-top) + 18px)
+          calc(env(safe-area-inset-right) + 18px)
+          calc(env(safe-area-inset-bottom) + 18px)
+          calc(env(safe-area-inset-left) + 18px);
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        pointer-events: none;
+      }
+
+      .overlay.hidden {
+        opacity: 0;
+        visibility: hidden;
+      }
+
+      .panel {
+        width: min(420px, 42vw);
+        padding: 22px 22px 20px;
+        border-radius: 26px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background:
+          linear-gradient(180deg, rgba(18, 29, 41, 0.86), rgba(10, 17, 24, 0.76));
+        box-shadow: 0 20px 48px rgba(8, 14, 22, 0.36);
+        backdrop-filter: blur(20px);
+        pointer-events: auto;
+      }
+
+      .panel h1,
+      .panel h2,
+      .panel p {
+        margin: 0;
+      }
+
+      .eyebrow {
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        font-size: 11px;
+      }
+
+      .title {
+        margin-top: 8px;
+        font-size: clamp(34px, 6vw, 58px);
+        line-height: 0.92;
+        letter-spacing: -0.04em;
+      }
+
+      .lede {
+        margin-top: 14px;
+        max-width: 32ch;
+        font-size: 15px;
+        line-height: 1.45;
+        color: rgba(245, 250, 255, 0.9);
+      }
+
+      .rule-list {
+        margin: 16px 0 0;
+        padding: 0;
+        list-style: none;
+        display: grid;
+        gap: 10px;
+      }
+
+      .rule-list li {
+        display: grid;
+        grid-template-columns: 28px 1fr;
+        gap: 10px;
+        align-items: start;
+        font-size: 14px;
+        color: rgba(244, 248, 255, 0.88);
+      }
+
+      .rule-index {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: rgba(99, 216, 255, 0.2);
+        color: #d9fbff;
+        font-weight: 800;
+      }
+
+      .cta-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 18px;
+      }
+
+      .cta-button {
+        border: 0;
+        padding: 12px 18px;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #77e4ff 0%, #39baff 100%);
+        color: #00131f;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        box-shadow: 0 16px 28px rgba(46, 190, 255, 0.3);
+        cursor: pointer;
+      }
+
+      .cta-button:active {
+        transform: translateY(1px);
+      }
+
+      .legend {
+        margin-top: 2px;
+        font-size: 12px;
+        color: rgba(235, 245, 255, 0.74);
+      }
+
+      .stats-grid {
+        margin-top: 16px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .stat-card {
+        padding: 12px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      .stat-card strong {
+        display: block;
+        margin-top: 4px;
+        font-size: 24px;
+      }
+
+      #touch-controls {
+        position: absolute;
+        inset: 0;
+        display: none;
+        pointer-events: none;
+      }
+
+      #app.show-touch-controls.running #touch-controls {
+        display: block;
+      }
+
+      .touch-cluster {
+        position: absolute;
+        bottom: calc(env(safe-area-inset-bottom) + 14px);
+        pointer-events: auto;
+      }
+
+      .touch-cluster.left {
+        left: calc(env(safe-area-inset-left) + 14px);
+      }
+
+      .touch-cluster.right {
+        right: calc(env(safe-area-inset-right) + 14px);
+      }
+
+      #joystick-zone {
+        position: relative;
+        width: 144px;
+        height: 144px;
+        border-radius: 50%;
+        background: rgba(10, 16, 22, 0.26);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+      }
+
+      #joystick-zone::after {
+        content: "Steer";
+        position: absolute;
+        left: 50%;
+        bottom: 10px;
+        transform: translateX(-50%);
+        font-size: 12px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: rgba(235, 245, 255, 0.72);
+      }
+
+      #joystick-knob {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(180deg, rgba(118, 231, 255, 0.92), rgba(50, 165, 220, 0.94));
+        box-shadow: 0 10px 24px rgba(16, 131, 171, 0.28);
+        transform: translate(-50%, -50%);
+      }
+
+      #dash-button {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        background:
+          radial-gradient(circle at top, rgba(255, 255, 255, 0.16), rgba(18, 31, 45, 0.8)),
+          linear-gradient(180deg, rgba(12, 18, 25, 0.94), rgba(9, 14, 20, 0.9));
+        color: var(--text);
+        box-shadow: 0 20px 34px rgba(7, 12, 18, 0.24);
+        pointer-events: auto;
+      }
+
+      #dash-button span {
+        display: block;
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      #rotation-overlay {
+        position: absolute;
+        inset: 0;
+        display: none;
+        place-items: center;
+        padding: 24px;
+        text-align: center;
+        background: rgba(7, 12, 18, 0.82);
+        z-index: 20;
+      }
+
+      #rotation-overlay.visible {
+        display: grid;
+      }
+
+      @media (max-width: 900px) {
+        .hud {
+          padding-top: calc(env(safe-area-inset-top) + 10px);
+          padding-bottom: calc(env(safe-area-inset-bottom) + 10px);
+        }
+
+        .battery-card {
+          min-width: 224px;
+        }
+
+        .hud-chip {
+          min-width: 142px;
+        }
+
+        .panel {
+          width: min(386px, 52vw);
+          padding: 18px 18px 16px;
+        }
+
+        .stats-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 760px) {
+        .hud {
+          gap: 8px;
+        }
+
+        .battery-card {
+          min-width: min(220px, 58vw);
+        }
+
+        .hud-chip {
+          min-width: min(140px, 42vw);
+          padding: 10px 12px;
+        }
+
+        .hud-value {
+          font-size: 24px;
+        }
+
+        .panel {
+          width: min(340px, 58vw);
+        }
+
+        .stats-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div id="scene-root"></div>
+
+      <div class="hud" aria-hidden="true">
+        <div class="hud-left">
+          <div class="battery-card">
+            <div class="battery-row">
+              <span class="hud-label">Battery</span>
+              <span id="battery-value">76%</span>
+            </div>
+            <div class="battery-bar"><div id="battery-fill"></div></div>
+          </div>
+          <div id="combo-chip">Line up clean rams</div>
+        </div>
+
+        <div class="hud-right">
+          <div class="hud-chip">
+            <span class="hud-label">Score</span>
+            <span class="hud-value" id="score-value">0</span>
+          </div>
+          <div class="hud-chip">
+            <span class="hud-label">Time</span>
+            <span class="hud-value" id="time-value">00:00</span>
+          </div>
+          <div class="hud-chip">
+            <span class="hud-label">Next Threat</span>
+            <span class="hud-value" id="threat-value">Rival · 5.2s</span>
+          </div>
+          <div class="hud-chip">
+            <span class="hud-label">Dash</span>
+            <span class="hud-value" id="dash-value">Ready</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="overlay" id="start-overlay">
+        <div class="panel">
+          <p class="eyebrow">Tabletop battle-car survival</p>
+          <h1 class="title">Overvolt</h1>
+          <p class="lede">Skid an RC battle car around the tabletop, slam rivals into the rails, and stay alive by stealing their blue battery drops.</p>
+          <ul class="rule-list">
+            <li><span class="rule-index">1</span><span>Steer hard into a rival’s side or rear. Clean angles hit harder.</span></li>
+            <li><span class="rule-index">2</span><span>Dash converts a near miss into a knockout and buys escape space.</span></li>
+            <li><span class="rule-index">3</span><span>Battery drains constantly. Blue drops are your health and your timer.</span></li>
+          </ul>
+          <div class="cta-row">
+            <button class="cta-button" id="play-button">Play</button>
+          </div>
+          <p class="legend" id="desktop-legend">Keyboard: steer with `WASD` or arrows, dash with `Space`.</p>
+          <p class="legend" id="touch-legend" hidden>Touch: steer with the left stick, dash with the right button.</p>
+        </div>
+      </div>
+
+      <div class="overlay hidden" id="gameover-overlay">
+        <div class="panel">
+          <p class="eyebrow">Battery depleted</p>
+          <h2 class="title" style="font-size: clamp(28px, 5vw, 46px)">Run Over</h2>
+          <p class="lede" id="summary-tag">Best runs come from dash hits that spill charge right into your lane.</p>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <span class="hud-label">Score</span>
+              <strong id="final-score-value">0</strong>
+            </div>
+            <div class="stat-card">
+              <span class="hud-label">Time</span>
+              <strong id="final-time-value">00:00</strong>
+            </div>
+            <div class="stat-card">
+              <span class="hud-label">Best</span>
+              <strong id="final-best-value">0</strong>
+            </div>
+            <div class="stat-card">
+              <span class="hud-label">Rivals</span>
+              <strong id="final-destroyed-value">0</strong>
+            </div>
+            <div class="stat-card">
+              <span class="hud-label">Charge</span>
+              <strong id="final-collected-value">0</strong>
+            </div>
+            <div class="stat-card">
+              <span class="hud-label">Best Chain</span>
+              <strong id="final-combo-value">x0</strong>
+            </div>
+          </div>
+          <div class="cta-row">
+            <button class="cta-button" id="retry-button">Play Again</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="touch-controls" aria-hidden="true">
+        <div class="touch-cluster left">
+          <div id="joystick-zone">
+            <div id="joystick-knob"></div>
+          </div>
+        </div>
+        <div class="touch-cluster right">
+          <button id="dash-button">Dash<span>Boost impact</span></button>
+        </div>
+      </div>
+
+      <div id="rotation-overlay">
+        <div class="panel" style="width:min(320px, 90vw); text-align:center;">
+          <p class="eyebrow">Best platform</p>
+          <h2 class="title" style="font-size: clamp(26px, 6vw, 40px)">Rotate to landscape</h2>
+          <p class="lede" style="max-width:none;">Overvolt is built for a wide tabletop lane so your controls and collision angles stay readable.</p>
+        </div>
+      </div>
+    </div>
+    <script src="https://assets.playdrop.ai/sdk/playdrop.js"></script>
+    <!-- APP_SCRIPT -->
+  </body>
+</html>

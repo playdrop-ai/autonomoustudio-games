@@ -1,0 +1,704 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Overvolt Mockup</title>
+    <style>
+      :root {
+        --bg-top: #f4d7a5;
+        --bg-bottom: #d8a568;
+        --desk-line: rgba(126, 77, 25, 0.11);
+        --arena-top: #f5e7cf;
+        --arena-bottom: #eed8b5;
+        --arena-edge: #fef8ed;
+        --rail-main: #fff8f0;
+        --rail-shadow: rgba(125, 75, 21, 0.22);
+        --player: #59f2ff;
+        --enemy: #ff6d5a;
+        --danger: #ff533d;
+        --pickup: #8ef7ff;
+        --ink: #172033;
+        --muted: rgba(20, 27, 45, 0.64);
+        --panel: rgba(255, 251, 243, 0.92);
+        --panel-shadow: 0 20px 60px rgba(79, 45, 10, 0.18);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        font-family:
+          "Avenir Next",
+          "Trebuchet MS",
+          "Segoe UI",
+          sans-serif;
+        color: var(--ink);
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent 35%),
+          repeating-linear-gradient(
+            90deg,
+            transparent 0 50px,
+            var(--desk-line) 50px 52px
+          ),
+          linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
+      }
+
+      body {
+        position: relative;
+      }
+
+      .scene {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      .scene::before,
+      .scene::after {
+        content: "";
+        position: absolute;
+        inset: auto;
+        border-radius: 999px;
+        pointer-events: none;
+      }
+
+      .scene::before {
+        width: 46vw;
+        height: 46vw;
+        right: -10vw;
+        top: -12vw;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.22), transparent 70%);
+      }
+
+      .scene::after {
+        width: 52vw;
+        height: 52vw;
+        left: -18vw;
+        bottom: -22vw;
+        background: radial-gradient(circle, rgba(255, 247, 222, 0.3), transparent 72%);
+      }
+
+      .arena-wrap {
+        position: absolute;
+        inset: 7.5% 4.5% 8.5%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .arena {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        border-radius: 42px;
+        overflow: hidden;
+        background:
+          radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.28), transparent 24%),
+          linear-gradient(180deg, var(--arena-top), var(--arena-bottom));
+        box-shadow:
+          inset 0 2px 0 rgba(255, 255, 255, 0.8),
+          inset 0 -16px 40px rgba(164, 111, 33, 0.08),
+          0 30px 80px rgba(109, 59, 16, 0.22);
+      }
+
+      .rail {
+        position: absolute;
+        inset: 6% 5.2%;
+        border-radius: 34px;
+        border: 16px solid var(--rail-main);
+        box-shadow:
+          inset 0 0 0 4px rgba(255, 195, 113, 0.34),
+          0 10px 18px rgba(92, 51, 13, 0.12);
+      }
+
+      .rail::before,
+      .rail::after {
+        content: "";
+        position: absolute;
+        border-radius: 999px;
+        background: rgba(255, 188, 102, 0.18);
+      }
+
+      .rail::before {
+        inset: 9% 12%;
+      }
+
+      .rail::after {
+        inset: 24% 24%;
+        border: 2px dashed rgba(255, 185, 109, 0.32);
+        background: transparent;
+      }
+
+      .arena-shadow {
+        position: absolute;
+        inset: auto 8% 2% 8%;
+        height: 12%;
+        border-radius: 999px;
+        background: radial-gradient(circle, rgba(96, 52, 13, 0.2), transparent 72%);
+        filter: blur(14px);
+      }
+
+      .battery-chip,
+      .score-chip,
+      .dash-chip,
+      .controls-chip {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-radius: 999px;
+        background: rgba(255, 252, 244, 0.92);
+        box-shadow: var(--panel-shadow);
+        backdrop-filter: blur(12px);
+      }
+
+      .battery-chip {
+        left: 28px;
+        top: 24px;
+        padding: 12px 18px 12px 14px;
+      }
+
+      .battery-label {
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .battery-bar {
+        width: 148px;
+        height: 16px;
+        padding: 2px;
+        border-radius: 999px;
+        background: rgba(22, 32, 51, 0.12);
+      }
+
+      .battery-fill {
+        width: 72%;
+        height: 100%;
+        border-radius: 999px;
+        background:
+          linear-gradient(90deg, #4ae4ff, #88f6ff 58%, #d9ffff 100%);
+        box-shadow: 0 0 20px rgba(89, 242, 255, 0.35);
+      }
+
+      .score-chip {
+        right: 28px;
+        top: 24px;
+        padding: 12px 18px;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 2px;
+      }
+
+      .score-label {
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .score-value {
+        font-size: 30px;
+        line-height: 1;
+        font-weight: 900;
+      }
+
+      .dash-chip {
+        right: 28px;
+        bottom: 24px;
+        padding: 10px 16px;
+      }
+
+      .dash-pill {
+        min-width: 84px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: linear-gradient(180deg, #53ecff, #13cde9);
+        color: #04202a;
+        text-align: center;
+        font-size: 13px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .dash-state {
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .controls-chip {
+        left: 28px;
+        bottom: 24px;
+        padding: 10px 14px;
+        gap: 10px;
+      }
+
+      .controls-chip strong {
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .controls-chip span {
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .joystick,
+      .dash-button {
+        position: absolute;
+        bottom: 24px;
+        width: 140px;
+        height: 140px;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.22), transparent 34%),
+          rgba(255, 251, 243, 0.22);
+        border: 2px solid rgba(255, 251, 243, 0.58);
+        box-shadow:
+          inset 0 8px 22px rgba(255, 255, 255, 0.12),
+          0 14px 40px rgba(84, 47, 14, 0.18);
+        backdrop-filter: blur(12px);
+      }
+
+      .joystick {
+        left: 24px;
+      }
+
+      .joystick::before {
+        content: "";
+        position: absolute;
+        inset: 42px;
+        border-radius: 50%;
+        background: rgba(255, 251, 243, 0.62);
+        box-shadow: 0 6px 18px rgba(84, 47, 14, 0.16);
+        transform: translate(-12px, 8px);
+      }
+
+      .dash-button {
+        right: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .dash-button span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 88px;
+        height: 88px;
+        border-radius: 50%;
+        background: linear-gradient(180deg, #53ecff, #13cde9);
+        box-shadow: 0 12px 24px rgba(19, 205, 233, 0.3);
+        color: #04202a;
+        font-size: 17px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .pickup,
+      .spark,
+      .skid {
+        position: absolute;
+      }
+
+      .pickup {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle at 34% 34%, #faffff, #8ef7ff 52%, #24d1e3 100%);
+        box-shadow:
+          0 0 18px rgba(142, 247, 255, 0.48),
+          inset 0 0 0 3px rgba(255, 255, 255, 0.74);
+      }
+
+      .pickup::before {
+        content: "+";
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        font-size: 18px;
+        font-weight: 900;
+        color: #0d4252;
+      }
+
+      .spark {
+        width: 110px;
+        height: 110px;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle, rgba(255, 241, 175, 0.95) 0 10%, rgba(255, 155, 77, 0.78) 18%, rgba(255, 91, 47, 0.28) 44%, transparent 70%);
+        filter: blur(1px);
+      }
+
+      .skid {
+        width: 120px;
+        height: 18px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, rgba(50, 59, 84, 0.32), transparent);
+        filter: blur(5px);
+      }
+
+      .prop {
+        position: absolute;
+        width: 66px;
+        height: 66px;
+        object-fit: contain;
+        filter: drop-shadow(0 8px 10px rgba(53, 30, 6, 0.18));
+      }
+
+      .car {
+        position: absolute;
+        width: 122px;
+        height: 122px;
+        object-fit: contain;
+        filter: drop-shadow(0 16px 20px rgba(49, 28, 8, 0.16));
+      }
+
+      .car.player {
+        filter:
+          hue-rotate(10deg) saturate(1.25) brightness(1.12)
+          drop-shadow(0 18px 28px rgba(43, 189, 214, 0.22));
+      }
+
+      .car.enemy {
+        filter:
+          hue-rotate(165deg) saturate(1.6) brightness(1.08)
+          drop-shadow(0 14px 24px rgba(235, 80, 64, 0.22));
+      }
+
+      .car.heavy {
+        width: 146px;
+        height: 146px;
+        filter:
+          hue-rotate(150deg) saturate(1.7) brightness(1.02)
+          drop-shadow(0 14px 24px rgba(235, 80, 64, 0.24));
+      }
+
+      .overlay {
+        position: absolute;
+        max-width: 420px;
+        padding: 22px 24px 24px;
+        border-radius: 28px;
+        background: var(--panel);
+        box-shadow: var(--panel-shadow);
+        backdrop-filter: blur(16px);
+      }
+
+      .overlay h1,
+      .overlay h2 {
+        margin: 0 0 10px;
+        line-height: 0.94;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: -0.04em;
+      }
+
+      .overlay h1 {
+        font-size: 66px;
+      }
+
+      .overlay h2 {
+        font-size: 42px;
+      }
+
+      .overlay p {
+        margin: 0;
+        font-size: 17px;
+        line-height: 1.4;
+        color: var(--muted);
+      }
+
+      .overlay ul {
+        margin: 14px 0 0;
+        padding: 0;
+        list-style: none;
+        display: grid;
+        gap: 8px;
+      }
+
+      .overlay li {
+        font-size: 15px;
+        color: var(--ink);
+      }
+
+      .overlay li strong {
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 11px;
+        color: var(--muted);
+        margin-right: 8px;
+      }
+
+      .start-card {
+        left: 28px;
+        bottom: 24px;
+      }
+
+      .start-cta,
+      .retry-cta {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 18px;
+        min-width: 136px;
+        padding: 14px 18px;
+        border-radius: 999px;
+        background: linear-gradient(180deg, #53ecff, #13cde9);
+        color: #04202a;
+        font-size: 15px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .gameover-card {
+        right: 28px;
+        bottom: 24px;
+        max-width: 360px;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .stat {
+        padding: 14px 12px;
+        border-radius: 20px;
+        background: rgba(18, 31, 53, 0.06);
+      }
+
+      .stat span {
+        display: block;
+      }
+
+      .stat .k {
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .stat .v {
+        margin-top: 6px;
+        font-size: 27px;
+        font-weight: 900;
+      }
+
+      .desktop-only {
+        display: none;
+      }
+
+      .mobile-only {
+        display: block;
+      }
+
+      body.desktop .desktop-only {
+        display: flex;
+      }
+
+      body.desktop .mobile-only {
+        display: none;
+      }
+
+      body.desktop .arena-wrap {
+        inset: 8% 5.5% 10%;
+      }
+
+      body.desktop .rail {
+        inset: 7% 6%;
+      }
+
+      body.desktop .battery-chip {
+        left: 32px;
+      }
+
+      body.desktop .score-chip {
+        right: 32px;
+      }
+
+      body.desktop .dash-chip {
+        right: 32px;
+      }
+
+      body.desktop .controls-chip {
+        left: 32px;
+      }
+
+      body.start .gameover-card,
+      body.start .dash-chip {
+        display: none;
+      }
+
+      body.mobile .dash-chip {
+        display: none;
+      }
+
+      body.play .start-card,
+      body.play .gameover-card {
+        display: none;
+      }
+
+      body.gameover .start-card {
+        display: none;
+      }
+
+      body.gameover .battery-fill {
+        width: 8%;
+        background: linear-gradient(90deg, #ff9b8f, #ff5f4b);
+      }
+
+      body.gameover .dash-chip .dash-pill {
+        background: linear-gradient(180deg, #ffb0a4, #ff6d5a);
+      }
+
+      body.gameover .dash-state {
+        color: rgba(255, 95, 75, 0.78);
+      }
+
+      body.start .mobile-only,
+      body.start .desktop-only,
+      body.gameover .mobile-only,
+      body.gameover .desktop-only {
+        display: none;
+      }
+    </style>
+  </head>
+  <body class="mobile play">
+    <div class="scene">
+      <div class="arena-wrap">
+        <div class="arena">
+          <div class="arena-shadow"></div>
+          <div class="rail"></div>
+
+          <div class="skid" style="left: 28%; top: 57%; transform: rotate(14deg)"></div>
+          <div class="skid" style="left: 58%; top: 31%; transform: rotate(-26deg); width: 100px"></div>
+          <div class="spark" style="left: 53%; top: 41%"></div>
+
+          <img class="prop" src="./source/cone.png" alt="" style="left: 22%; top: 20%; transform: rotate(-14deg)" />
+          <img class="prop" src="./source/cone.png" alt="" style="left: 74%; top: 58%; transform: rotate(12deg) scale(0.88)" />
+          <img class="prop" src="./source/box.png" alt="" style="left: 63%; top: 17%; transform: rotate(4deg) scale(0.9)" />
+          <img class="prop" src="./source/box.png" alt="" style="left: 16%; top: 63%; transform: rotate(-18deg) scale(0.82)" />
+
+          <div class="pickup" style="left: 47%; top: 48%"></div>
+          <div class="pickup" style="left: 57%; top: 50%"></div>
+          <div class="pickup" style="left: 63%; top: 46%"></div>
+          <div class="pickup" style="left: 70%; top: 31%"></div>
+
+          <img class="car player" src="./source/player-racer.png" alt="" style="left: 31%; top: 48%; transform: rotate(18deg) scale(1.06)" />
+          <img class="car enemy" src="./source/enemy-racer.png" alt="" style="left: 55%; top: 38%; transform: rotate(-114deg) scale(1.02)" />
+          <img class="car enemy" src="./source/enemy-racer.png" alt="" style="left: 66%; top: 24%; transform: rotate(156deg) scale(0.96)" />
+          <img class="car heavy" src="./source/heavy-truck.png" alt="" style="left: 71%; top: 56%; transform: rotate(208deg)" />
+        </div>
+      </div>
+
+      <div class="battery-chip">
+        <div>
+          <div class="battery-label">Battery</div>
+        </div>
+        <div class="battery-bar"><div class="battery-fill"></div></div>
+      </div>
+
+      <div class="score-chip">
+        <div class="score-label">Score</div>
+        <div class="score-value" id="scoreValue">18,240</div>
+      </div>
+
+      <div class="dash-chip">
+        <div class="dash-pill" id="dashPill">Dash</div>
+        <div class="dash-state" id="dashState">Ready</div>
+      </div>
+
+      <div class="controls-chip desktop-only">
+        <strong>Drive</strong>
+        <span>WASD / Arrows</span>
+      </div>
+
+      <div class="joystick mobile-only"></div>
+      <div class="dash-button mobile-only"><span>Dash</span></div>
+
+      <div class="overlay start-card">
+        <h1>Overvolt</h1>
+        <p>Skid wide, burst through the hit, and steal the charge before the whole table closes in.</p>
+        <ul>
+          <li><strong>Steer</strong> Line up the rail-side ram.</li>
+          <li><strong>Dash</strong> Burst through a hit for extra knockback.</li>
+          <li><strong>Charge</strong> Grab the blue shards to stay alive.</li>
+        </ul>
+        <div class="start-cta">Play</div>
+      </div>
+
+      <div class="overlay gameover-card">
+        <h2>Power Down</h2>
+        <p>The rail pinched the last of your charge. One more clean hit and this run lives.</p>
+        <div class="stats">
+          <div class="stat">
+            <span class="k">Score</span>
+            <span class="v">24.8k</span>
+          </div>
+          <div class="stat">
+            <span class="k">Time</span>
+            <span class="v">2:14</span>
+          </div>
+          <div class="stat">
+            <span class="k">Best</span>
+            <span class="v">4:02</span>
+          </div>
+        </div>
+        <div class="retry-cta">Play Again</div>
+      </div>
+    </div>
+
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const surface = params.get("surface") || "mobile";
+      const screen = params.get("screen") || "play";
+
+      document.body.classList.remove("mobile", "desktop", "start", "play", "gameover");
+      document.body.classList.add(surface === "desktop" ? "desktop" : "mobile");
+      document.body.classList.add(screen === "start" || screen === "gameover" ? screen : "play");
+
+      const scoreValue = document.getElementById("scoreValue");
+      const dashPill = document.getElementById("dashPill");
+      const dashState = document.getElementById("dashState");
+
+      if (screen === "start") {
+        scoreValue.textContent = "0";
+        dashPill.textContent = surface === "desktop" ? "Space" : "Dash";
+        dashState.textContent = "Burst";
+      } else if (screen === "gameover") {
+        scoreValue.textContent = "24,820";
+        dashPill.textContent = "Spent";
+        dashState.textContent = "Offline";
+      } else {
+        scoreValue.textContent = surface === "desktop" ? "21,980" : "18,240";
+        dashPill.textContent = surface === "desktop" ? "Space" : "Dash";
+        dashState.textContent = surface === "desktop" ? "Ready" : "Ready";
+      }
+    </script>
+  </body>
+</html>
