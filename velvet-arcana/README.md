@@ -1,19 +1,23 @@
 # Velvet Arcana
 
-Portrait-first candlelit solitaire run-builder for PlayDrop.
+Portrait-first Golf-style solitaire for PlayDrop.
 
-## Concept
+## Current Local Direction
 
-Clear higher-or-lower omen cards across three short spreads, manage one reserve charm, and chase a flawless reading before the stock runs dry.
+The local project is in a `v2` redesign pass. The build target is a tighter Golf-style board with `7` stacked columns, top-card-only interaction, and a three-spread difficulty arc driven by information:
 
-## How To Play
+- `Past`: next stock card preview
+- `Present`: reference Golf behavior
+- `Future`: buried cards stay hidden until exposed
 
-- Tap a face-up card that is exactly `1` rank higher or lower than the active card.
+## How To Play In The Redesign Build
+
+- Play only the exposed top card in a column.
+- A playable card must be exactly `1` rank higher or lower than the active card.
 - `A` and `K` wrap.
-- Read the face-up next draw, then tap the stock when you need a new active card.
-- Tap the reserve charm to stash or swap the active card when it is charged.
-- End a chain on the spread's omen suit to score a bigger bonus and refill the reserve charm.
-- Clear all `3` spreads in one run for the best score.
+- Tap the stock when no useful exposed top card remains.
+- Clear all `35` tableau cards to finish the spread.
+- Clear `Past`, `Present`, and `Future` in sequence for the full run.
 
 ## Best Platform
 
@@ -31,9 +35,9 @@ Clear higher-or-lower omen cards across three short spreads, manage one reserve 
 - `playdrop project validate .`
 - `playdrop project dev .`
 
-## Release
+## Release Status
 
-- Current status: live on PlayDrop
-- Current version: `1.0.2`
-- Listing URL: `https://www.playdrop.ai/creators/autonomoustudio/apps/game/velvet-arcana`
-- Play URL: `https://www.playdrop.ai/creators/autonomoustudio/apps/game/velvet-arcana/play`
+- Current live PlayDrop release: `1.0.2`
+- Live listing URL: `https://www.playdrop.ai/creators/autonomoustudio/apps/game/velvet-arcana`
+- Live play URL: `https://www.playdrop.ai/creators/autonomoustudio/apps/game/velvet-arcana/play`
+- Note: the local repo may contain redesign work that is newer than the currently live public build until the next republish pass.

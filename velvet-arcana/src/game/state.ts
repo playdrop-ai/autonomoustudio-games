@@ -7,54 +7,55 @@ export type Card = {
   suit: SuitKey;
 };
 
-export type SpreadState = {
-  label: SpreadLabel;
-  omenSuit: SuitKey;
-  tableau: Array<Card | null>;
-  active: Card;
-  stock: Card[];
-  reserveCard: Card | null;
-  reserveCharged: boolean;
-  chainLength: number;
-  lastClearedSuit: SuitKey | null;
+export type ColumnCard = {
+  card: Card;
+  faceUp: boolean;
 };
 
-export type ChainSettlement = {
+export type ColumnState = ColumnCard[];
+
+export type SpreadState = {
+  label: SpreadLabel;
+  showNextStockPreview: boolean;
+  showBuriedFaces: boolean;
+  columns: ColumnState[];
+  active: Card | null;
+  activeTrail: Card[];
+  stock: Card[];
+};
+
+export type PlayResult = {
   spread: SpreadState;
   points: number;
-  omenTriggered: boolean;
+  revealedCardId: string | null;
 };
 
 export const SUITS: SuitKey[] = ["moon", "rose", "sun", "blade"];
 export const SPREAD_LABELS: SpreadLabel[] = ["Past", "Present", "Future"];
-export const TABLEAU_CARD_COUNT = 21;
-export const STOCK_CARD_COUNT = 14;
-export const BASE_CARD_POINTS = 100;
-export const CHAIN_STEP_POINTS = 40;
-export const OMEN_BONUS_POINTS = 300;
+export const COLUMN_COUNT = 7;
+export const COLUMN_DEPTH = 5;
+export const TABLEAU_CARD_COUNT = COLUMN_COUNT * COLUMN_DEPTH;
+export const STOCK_CARD_COUNT = 17;
+export const CARD_PLAY_POINTS = 100;
 export const SPREAD_CLEAR_POINTS = 1000;
-export const FLAWLESS_READING_POINTS = 2000;
+export const RUN_CLEAR_POINTS = 2000;
 
 export function createSpread(seed: number, label: SpreadLabel): SpreadState {
-  for (let attempt = 0; attempt < 48; attempt += 1) {
+  for (let attempt = 0; attempt < 64; attempt += 1) {
     const deck = createDeck(seed + attempt * 101);
-    const active = deck[0]!;
-    const tableau = deck.slice(1, 1 + TABLEAU_CARD_COUNT);
-    const stockStart = 1 + TABLEAU_CARD_COUNT;
-    const stock = deck.slice(stockStart, stockStart + STOCK_CARD_COUNT);
-    const omenSuit = deck[stockStart + STOCK_CARD_COUNT]?.suit ?? SUITS[(seed + attempt) % SUITS.length]!;
+    const tableau = deck.slice(0, TABLEAU_CARD_COUNT);
+    const stock = deck.slice(TABLEAU_CARD_COUNT, TABLEAU_CARD_COUNT + STOCK_CARD_COUNT);
+    const options = spreadOptionsFor(label);
     const spread: SpreadState = {
       label,
-      omenSuit,
-      tableau,
-      active,
+      ...options,
+      columns: dealColumns(tableau, options.showBuriedFaces),
+      active: null,
+      activeTrail: [],
       stock,
-      reserveCard: null,
-      reserveCharged: true,
-      chainLength: 0,
-      lastClearedSuit: null,
     };
-    if (getPlayableIndices(spread).length > 0) return spread;
+
+    if (getPlayableIndices(drawFromStock(spread)).length > 0) return spread;
   }
 
   throw new Error("[velvet-arcana] failed to create a playable spread");
@@ -73,92 +74,85 @@ export function createDeck(seed: number): Card[] {
   return shuffle(deck, seed);
 }
 
-export function isPlayable(active: Card, candidate: Card): boolean {
+export function spreadOptionsFor(label: SpreadLabel) {
+  if (label === "Past") {
+    return { showNextStockPreview: true, showBuriedFaces: true };
+  }
+
+  if (label === "Present") {
+    return { showNextStockPreview: false, showBuriedFaces: true };
+  }
+
+  return { showNextStockPreview: false, showBuriedFaces: false };
+}
+
+export function isPlayable(active: Card | null, candidate: Card): boolean {
+  if (!active) return false;
   const diff = Math.abs(active.rank - candidate.rank);
   return diff === 1 || diff === 12;
 }
 
 export function getPlayableIndices(spread: SpreadState): number[] {
-  return spread.tableau.flatMap((card, index) =>
-    card && isPlayable(spread.active, card) ? [index] : [],
-  );
+  return spread.columns.flatMap((column, index) => {
+    const top = getTopColumnCard(column);
+    return top && top.faceUp && isPlayable(spread.active, top.card) ? [index] : [];
+  });
 }
 
-export function playCard(spread: SpreadState, index: number): { spread: SpreadState; points: number } {
-  const card = spread.tableau[index];
-  if (!card) throw new Error("[velvet-arcana] tried to play an empty tableau slot");
-  if (!isPlayable(spread.active, card)) throw new Error("[velvet-arcana] tried to play an illegal card");
+export function getTopColumnCard(column: ColumnState): ColumnCard | null {
+  return column[column.length - 1] ?? null;
+}
 
+export function getTopCard(column: ColumnState): Card | null {
+  return getTopColumnCard(column)?.card ?? null;
+}
+
+export function playCard(spread: SpreadState, index: number): PlayResult {
   const next = cloneSpread(spread);
-  next.tableau[index] = null;
-  next.active = card;
-  next.chainLength += 1;
-  next.lastClearedSuit = card.suit;
+  const column = next.columns[index];
+  if (!column) throw new Error(`[velvet-arcana] tried to play missing column ${index}`);
 
-  const points = BASE_CARD_POINTS + Math.max(0, next.chainLength - 1) * CHAIN_STEP_POINTS;
-  return { spread: next, points };
-}
+  const top = column[column.length - 1];
+  if (!top) throw new Error("[velvet-arcana] tried to play an empty column");
+  if (!top.faceUp) throw new Error("[velvet-arcana] tried to play a hidden card");
+  if (!next.active) throw new Error("[velvet-arcana] tried to play without an active reading");
+  if (!isPlayable(next.active, top.card)) throw new Error("[velvet-arcana] tried to play an illegal card");
 
-export function drawFromStock(spread: SpreadState): ChainSettlement {
-  if (spread.stock.length === 0) throw new Error("[velvet-arcana] tried to draw with an empty stock");
+  const played = column.pop()!;
+  next.activeTrail.push({ ...next.active });
+  next.active = played.card;
 
-  const settled = settleChain(spread);
-  settled.spread.active = settled.spread.stock.shift()!;
-  return settled;
-}
-
-export function canUseReserve(spread: SpreadState): boolean {
-  if (!spread.reserveCharged) return false;
-  return Boolean(spread.reserveCard) || spread.stock.length > 0;
-}
-
-export function useReserve(spread: SpreadState): SpreadState {
-  if (!canUseReserve(spread)) throw new Error("[velvet-arcana] tried to use reserve without a charge");
-
-  const next = cloneSpread(spread);
-
-  if (next.reserveCard) {
-    const current = next.active;
-    next.active = next.reserveCard;
-    next.reserveCard = current;
-    next.reserveCharged = false;
-    return next;
+  const nextTop = column[column.length - 1] ?? null;
+  let revealedCardId: string | null = null;
+  if (nextTop && !nextTop.faceUp) {
+    nextTop.faceUp = true;
+    revealedCardId = nextTop.card.id;
   }
 
-  next.reserveCard = next.active;
+  return {
+    spread: next,
+    points: CARD_PLAY_POINTS,
+    revealedCardId,
+  };
+}
+
+export function drawFromStock(spread: SpreadState): SpreadState {
+  if (spread.stock.length === 0) throw new Error("[velvet-arcana] tried to draw with an empty stock");
+
+  const next = cloneSpread(spread);
+  if (next.active) {
+    next.activeTrail.push({ ...next.active });
+  }
   next.active = next.stock.shift()!;
-  next.reserveCharged = false;
   return next;
 }
 
-export function settleChain(spread: SpreadState): ChainSettlement {
-  const next = cloneSpread(spread);
-  let points = 0;
-  let omenTriggered = false;
-
-  if (next.chainLength >= 3 && next.lastClearedSuit === next.omenSuit) {
-    points += OMEN_BONUS_POINTS;
-    next.reserveCharged = true;
-    omenTriggered = true;
-  }
-
-  next.chainLength = 0;
-  next.lastClearedSuit = null;
-
-  return { spread: next, points, omenTriggered };
-}
-
 export function isSpreadCleared(spread: SpreadState): boolean {
-  return spread.tableau.every((card) => card === null);
+  return spread.columns.every((column) => column.length === 0);
 }
 
 export function isHardStuck(spread: SpreadState): boolean {
-  if (getPlayableIndices(spread).length > 0) return false;
-  if (spread.stock.length > 0) return false;
-  if (!spread.reserveCharged || !spread.reserveCard) return true;
-
-  return !isPlayable(spread.reserveCard, spread.active) &&
-    spread.tableau.every((card) => !card || !isPlayable(spread.reserveCard!, card));
+  return getPlayableIndices(spread).length === 0 && spread.stock.length === 0;
 }
 
 export function formatCard(card: Card | null): string {
@@ -177,11 +171,26 @@ export function rankLabel(rank: number): string {
 export function cloneSpread(spread: SpreadState): SpreadState {
   return {
     ...spread,
-    tableau: spread.tableau.map((card) => (card ? { ...card } : null)),
-    active: { ...spread.active },
+    columns: spread.columns.map((column) =>
+      column.map((entry) => ({
+        faceUp: entry.faceUp,
+        card: { ...entry.card },
+      })),
+    ),
+    active: spread.active ? { ...spread.active } : null,
+    activeTrail: spread.activeTrail.map((card) => ({ ...card })),
     stock: spread.stock.map((card) => ({ ...card })),
-    reserveCard: spread.reserveCard ? { ...spread.reserveCard } : null,
   };
+}
+
+function dealColumns(cards: Card[], showBuriedFaces: boolean): ColumnState[] {
+  return Array.from({ length: COLUMN_COUNT }, (_, columnIndex) => {
+    const start = columnIndex * COLUMN_DEPTH;
+    return cards.slice(start, start + COLUMN_DEPTH).map((card, depthIndex) => ({
+      card,
+      faceUp: showBuriedFaces || depthIndex === COLUMN_DEPTH - 1,
+    }));
+  });
 }
 
 function shuffle<T>(items: T[], seed: number): T[] {

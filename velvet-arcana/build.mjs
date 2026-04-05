@@ -1,9 +1,13 @@
 import * as esbuild from 'esbuild';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 
 const HTML_TEMPLATE = 'template.html';
 const HTML_TARGET = 'dist/index.html';
+const ASSETS_SOURCE = 'assets';
+const ASSETS_TARGET = 'dist/assets';
+const DECK_SOURCE = 'art/cards/purple-deck-png';
+const DECK_TARGET = 'dist/assets/purple-deck-png';
 
 const buildOptions = {
   entryPoints: ['src/main.ts'],
@@ -35,8 +39,18 @@ function inlineHtml(result) {
 
   mkdirSync(dirname(HTML_TARGET), { recursive: true });
   writeFileSync(HTML_TARGET, finalHtml, 'utf8');
+  copyAssets();
 
   console.log(`[template-typescript] Wrote ${HTML_TARGET}`);
+}
+
+function copyAssets() {
+  if (!existsSync(ASSETS_SOURCE)) return;
+  cpSync(ASSETS_SOURCE, ASSETS_TARGET, { recursive: true });
+  if (existsSync(DECK_SOURCE)) {
+    mkdirSync(dirname(DECK_TARGET), { recursive: true });
+    cpSync(DECK_SOURCE, DECK_TARGET, { recursive: true });
+  }
 }
 
 buildOptions.plugins.push({

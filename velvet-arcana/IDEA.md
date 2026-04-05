@@ -6,7 +6,7 @@ Velvet Arcana
 
 ## One-line Player-facing Value Proposition
 
-Chain higher-or-lower omen cards through three candlelit spreads, bank one reserve charm, and chase a flawless reading before the candle burns out.
+Clear three short Golf-style readings where `Past` previews the next draw, `Present` plays it straight, and `Future` hides the buried cards until you uncover them.
 
 ## Best Platform
 
@@ -18,30 +18,31 @@ Chain higher-or-lower omen cards through three candlelit spreads, bank one reser
 
 ## Gameplay Family
 
-Single-screen portrait card-clearing solitaire run-builder.
+Single-screen portrait solitaire card clearer.
 
 ## Proven Reference Loop And Why Players Will Understand It Immediately
 
-The core loop is the proven `Golf Solitaire` / `TriPeaks` higher-or-lower rule set: the player taps a visible card that is exactly one rank above or below the current active card, or draws from stock when no good move is available. That rule is already familiar to mobile solitaire players, reads instantly in one sentence, and works cleanly with one-hand tapping on a phone.
+The core loop is directly legible from `Golf Solitaire`: `7` columns of stacked cards, only the exposed top card in each column is playable, and a card can be cleared only if it is exactly one rank above or below the active pile. That rule is already proven, already familiar, and already reads in one sentence.
 
 ## Allowed Novelty Beyond The Reference Loop
 
-The novelty stays outside the primary grammar:
+The novelty stays outside the primary input grammar:
 
-- one visible reserve charm slot that lets the player stash or swap the active card when charged
-- one visible omen suit per spread that rewards ending chains on the correct suit
-- a three-spread run arc instead of one disposable deal
+- three named spreads that change information difficulty, not the core rule
+- `Past` shows the next stock card before the player draws
+- `Future` hides buried cards until they are exposed
+- four bespoke omen suits for visual identity only, not extra rules
 
-The player still learns only one main action language: tap a playable higher-or-lower card, or draw when stuck.
+The player still learns one main action language: play the exposed top card if it is `+1` or `-1`, or draw from stock when the line dies.
 
 ## Game Meta
 
-Three short spreads per run, cumulative score, best-score persistence, perfect-spread bonuses, and a flawless three-spread bonus.
+Three spreads per run, cumulative score, and local best-score persistence.
 
 ## Input
 
-- Mobile portrait: tap a playable card, the stock pile, or the reserve charm.
-- Desktop: click a playable card, the stock pile, or the reserve charm.
+- Mobile portrait: tap an exposed top card or tap the stock pile.
+- Desktop: click an exposed top card or click the stock pile.
 
 ## Game Category And Subcategory
 
@@ -50,64 +51,64 @@ Three short spreads per run, cumulative score, best-score persistence, perfect-s
 
 ## Reference Games
 
-- `Golf Solitaire` for the higher-or-lower card-clearing loop.
-- `TriPeaks` for fast chain-building feel and visible-tableau satisfaction.
-- `playdrop/app/infinite-trivia` for portrait-first PlayDrop packaging expectations only, not for mechanics.
+- `Golf Solitaire` for the exact stacked-column interaction model.
+- `TriPeaks` for the quick higher-or-lower pacing and one-more-run appeal.
+- The attached Golf reference screenshot for the intended board shape and low-UI presentation.
 
 ## Art Direction
 
-Candlelit velvet tabletop, warm brass trim, ivory tarot-like cards with oversized rank numerals, four crisp omen suits, ember glows on long chains, and restrained gothic flourishes around the reserve charm and spread banners.
+For this redesign pass, the art goal is functional clarity first: one clean reading-table backdrop, crisp custom `moon`, `rose`, `sun`, and `blade` suit symbols, readable card fronts, a real card back, and restrained table dressing. Bespoke AI-generated table art, card illustrations, music, and SFX are explicitly deferred until the new rules and layout are validated.
 
 ## Why The Art Direction Is Achievable
 
-The game can ship with bespoke 2D card faces, CSS gradients, simple SVG ornament, and lightweight particles. It does not need animation-heavy characters, 3D, or a large asset pipeline. The same art language can also produce strong icon and hero art from real gameplay screenshots.
+The redesign does not need a new engine or a heavy asset pipeline. A clean DOM/CSS card table with custom suit marks and one reliable card-back treatment is enough to validate the gameplay and UX before any richer art pass.
 
 ## Target Player And Why They Already Like The Proven Loop
 
-The target player is a casual mobile card or puzzle player who already likes fast solitaire, clean one-hand sessions, and low-friction score chasing. They already understand quick chain decisions, stock management, and the urge to squeeze one more good run out of a familiar deck.
+The target player is a casual solitaire or card-puzzle player who already likes quick higher-or-lower decisions, visible stack pressure, and short repeatable runs on phone.
 
 ## Why The Fiction, Story Wrapper, And Marketing Promise Intensify The Same Player's Desire
 
-The reading-table wrapper intensifies the same desire the card loop already creates: spotting patterns, extending a run, and pulling order out of uncertainty. It does not target a different audience from the one that already enjoys quick solitaire; it makes the same chain-building fantasy feel more dramatic and collectible.
+The reading-table wrapper gives the same solitaire tension a stronger identity without changing who the game is for. The player is still chasing clear decisions and clean runs; the fiction only sharpens the mood around those choices.
 
 ## What The Player Is Trying To Uncover, Protect, Collect, Or Avoid
 
-The player is trying to clear three omen spreads, build long scoring chains, collect perfect-spread bonuses, and avoid stalling out before a spread is cleared. The fail state makes intuitive sense inside the fantasy: the stock is the remaining candle time, and once it is spent the reading is over.
+The player is trying to clear three spreads in sequence, protect the stock from running dry too early, and avoid ending a spread with no legal top-card move left.
 
 ## Why The Player's Main Verb Feels Desirable Inside The Fantasy
 
-Tapping through a clean run of matching ranks feels like uncovering the right omen at the right moment. The fantasy is not mean or self-defeating; it is about reading, arranging, and extending a lucky flow under light pressure.
+Removing the exposed top card from a reading column feels like turning the next layer of the omen over. The action reads as uncovering and resolving the spread, not as abstract card deletion.
 
 ## Why A Player Would Want This Instead Of The Best-known Game In The Same Lane
 
-The best-known games in this lane usually sell broad generic solitaire volume. `Velvet Arcana` instead promises a sharper short-session arc: portrait-first play, a visible reserve decision, a readable omen-suit bonus, and a coherent boutique table aesthetic instead of a noisy all-purpose card app.
+The strongest reason is not “Golf Solitaire but prettier.” It is a short curated run where the same proven rule becomes progressively harsher across `Past`, `Present`, and `Future`, while the custom suits and reading-table framing give the board a distinct identity.
 
 ## The Brutally Honest One-line Description And Why It Does Not Collapse Into "Famous Game X With A Skin"
 
-Brutally honest description: `a portrait-first higher-or-lower solitaire run-builder with a reserve slot, an omen-suit bonus, and a three-spread run`.
+Brutally honest description: `a three-spread Golf Solitaire variant where the information gets stricter from Past to Future`.
 
-That does not collapse into `TriPeaks with a tarot skin` because the three-spread run structure and the reserve plus omen decision layer materially change pacing and card-choice pressure, not just the table art.
+That is still not just `Golf Solitaire with a skin` because the spread structure deliberately changes what the player knows from one board to the next while keeping the same underlying rule set.
 
 ## Why The Pitch Creates Immediate Desire Instead Of Merely Sounding Coherent
 
-The pitch promises three things players want right away: long satisfying card runs, one meaningful backup tool when a chain is about to die, and a clean fantasy of finishing a perfect reading. It sounds like something to chase, not just something to understand.
+The pitch promises something players already want: a familiar solitaire rule set, a clear difficulty arc, and a short run they can finish or fail in a few minutes without learning extra subsystems.
 
 ## What Promise The Title, Icon, Hero, And First 15 Seconds Will Imply
 
-They will imply a rich candlelit tarot table, sharp card readability, long glowing chains, and a quick one-hand flow. The shipped build can honestly fulfill that promise because the live gameplay itself will be the source of the card table, combo glow, reserve charm, and omen-suit moments used in marketing.
+They should imply a clean occult card table, readable custom suits, stacked columns, and one exposed active pile at the bottom. The first `15` seconds should honestly show the actual build: one quick opening play in `Past`, one stock draw, and one exposed card reveal.
 
 ## Why The Concept Supports A Real Player Session Instead Of A One-clear Toy
 
-A run is not one short deal. The player has to survive and optimize across three spreads, which gives the session a beginning, middle, and end instead of a one-minute novelty.
+The three-spread run gives the session a real arc: onboarding in `Past`, reference tension in `Present`, and hardest information pressure in `Future`.
 
 ## What Keeps Players Engaged After The First Clear
 
-Shuffled spreads, cumulative scoring, perfect-spread bonuses, the flawless-run chase, and the reserve or omen decision layer all create a concrete reason to keep replaying after the player understands the rule.
+Shuffled decks, cumulative score, the three-spread difficulty ramp, and local best-score chasing give the player enough variation to run it again after they understand the rule.
 
 ## Why The Game Is Distinct From The Studio's Existing Catalog
 
-The current studio catalog already covers route-switching (`Latchbloom`), chain-reaction board puzzle (`Starfold`), bubble-style cluster popping (`Fruit Salad`), rhythm (`Keyfall`), fishing arcade (`Drifthook`), and tower defense (`Pocket Bastion`). `Velvet Arcana` would be the first portrait-first card and solitaire release in the portfolio.
+The studio catalog already covers route-switching, chain reactions, bubble clustering, rhythm, fishing, and tower defense. `Velvet Arcana` remains the studio's dedicated solitaire lane, now anchored more tightly to a proven Golf-style board instead of a custom open-information puzzle layer.
 
 ## Why This Concept Deserves To Exist
 
-This is not a generic `our solitaire app` pitch. It fills a clear catalog gap with a proven loop, an original name, a coherent player fantasy, and a crisp differentiator that can still ship quickly in the current PlayDrop workflow.
+This redesign fixes the strongest weakness in the shipped v1: it restores real stack pressure and meaningful hidden information instead of trying to create interest with helper systems. That makes the concept stronger, clearer, and easier to judge honestly.

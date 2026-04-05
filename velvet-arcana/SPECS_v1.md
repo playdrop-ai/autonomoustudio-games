@@ -1,4 +1,4 @@
-# Velvet Arcana - SPECS v1
+# Velvet Arcana - SPECS v2 Redesign
 
 ## Original Game Name
 
@@ -6,34 +6,38 @@ Velvet Arcana
 
 ## One-line Player-facing Value Proposition
 
-Chain higher-or-lower omen cards through three candlelit spreads, bank one reserve charm, and chase a flawless reading before the candle burns out.
+Clear three short Golf-style readings where each spread changes how much future information you get before the stock runs out.
 
 ## Clear Differentiator
 
-The player is not just clearing one disposable solitaire deal. Each run is a three-spread reading with one explicit backup tool, one visible omen-suit bonus per spread, and a cumulative score arc that rewards cleaner card-choice decisions than generic one-board solitaire.
+The differentiator is not extra mechanics anymore. It is the same proven higher-or-lower solitaire rule presented across three spreads with a clear information curve:
+
+- `Past`: easier than Golf because the next stock card is shown
+- `Present`: matches the reference structure
+- `Future`: buried cards stay face-down until exposed
 
 ## Best Platform And Why It Is Best
 
 `mobile portrait`
 
-Portrait makes the table feel like a held reading board instead of a shrunk desktop layout. It keeps the cards large, the reserve charm within thumb reach, and the HUD narrow enough to preserve the playfield.
+Portrait keeps the columns large, keeps the stock and waste piles in thumb reach, and makes the full-frame table feel like a held card layout instead of a desktop board shrunk into a card-shaped shell.
 
 ## Additional Supported Platforms And Why They Still Survive
 
-- `desktop`: click input maps directly to the same card-tap flow, and the portrait-first board can scale upward cleanly inside a centered full-viewport layout.
+- `desktop`: click input maps directly to the same top-card interaction, and the portrait board can scale upward inside a full-viewport table without introducing extra HUD clutter.
 
 ## Gameplay Family
 
-Portrait card-clearing solitaire run-builder.
+Portrait Golf-style solitaire card clearer.
 
 ## Game Meta
 
-Three spreads per run, cumulative score, per-spread clear bonus, flawless-run bonus, and local best-score persistence.
+Three spreads per run, cumulative score, local best score, and no extra metagame systems in this pass.
 
 ## Input Per Supported Platform
 
-- Mobile portrait: tap a playable card, the stock pile, or the reserve charm.
-- Desktop: click a playable card, the stock pile, or the reserve charm.
+- Mobile portrait: tap an exposed top card or tap the stock pile.
+- Desktop: click an exposed top card or click the stock pile.
 
 ## Game Category And Subcategory
 
@@ -42,124 +46,120 @@ Three spreads per run, cumulative score, per-spread clear bonus, flawless-run bo
 
 ## Reference Games We Are Intentionally Close To
 
-- `Golf Solitaire` for the higher-or-lower active-card rule.
-- `TriPeaks` for fast chain-building feel and visible-tableau rhythm.
-- `playdrop/app/infinite-trivia` for portrait-first PlayDrop packaging expectations only.
+- `Golf Solitaire` for the exact `7` stacked columns and top-card-only interaction model.
+- `TriPeaks` for the quick one-more-run higher-or-lower cadence.
+- The supplied Golf reference screenshot for layout, scale, and low-UI table composition.
 
 ## Core Loop
 
-1. Read the active card rank and the current spread's omen suit.
-2. Tap visible tableau cards that are exactly `+1` or `-1` from the active card rank.
-3. Build a longer chain for higher score and to try to finish on the omen suit.
-4. Use the reserve charm when charged to save or recover a run.
-5. Read the face-up next draw and tap the stock when no better card line is available.
-6. Clear the spread, move to the next spread, and carry the total score forward.
+1. Read the active card at the bottom of the board.
+2. Scan the `7` exposed top cards.
+3. Play one exposed top card that is exactly `+1` or `-1` from the active card.
+4. Reveal the next buried card in that column when the top card is removed.
+5. Draw from the stock when no useful exposed top card remains.
+6. Clear the spread, then repeat on the next spread with stricter information.
 
-## Final Rules For The Planned v1
+## Final Rules For The Planned v2
 
 - Run structure: `3` spreads named `Past`, `Present`, and `Future`
-- Tableau per spread: `21` face-up cards arranged in `3` rows of `7`
-- Active card: `1` face-up card in the center well
-- Stock per spread: `14` cards after the opening active card
-- Stock preview: the next stock draw stays face up in the bottom rail
-- Rank rule: a tableau card is playable only if it is exactly `1` rank above or below the active card
+- Deck model: standard `52` cards with ranks `A` through `K` and the studio's `moon`, `rose`, `sun`, and `blade` suit identities
+- Tableau per spread: `7` columns of `5` stacked cards each
+- Active pile: `1` face-up starting card
+- Stock per spread: `16` cards after the opening active card
+- Play rule: only the exposed top card in a column can be played
+- Rank rule: a playable top card must be exactly `1` rank above or below the active card
 - Wrap rule: `A` and `K` wrap
-- Reserve charm: starts each spread charged, can hold one active card, and supports one stash or swap until refilled
-- Omen suit: each spread highlights one of the `4` suits
-- Omen refill rule: ending a chain of `3+` cards on the omen suit awards an omen bonus and refills the reserve charm
-- Spread clear: clearing all `21` tableau cards advances to the next spread
-- End of spread with cards left: the run continues only if stock and reserve still allow legal continuation; otherwise the run ends
+- `Past`: all `5` cards in every column are visible, and the next stock card is shown
+- `Present`: all `5` cards in every column are visible, and the next stock card is hidden
+- `Future`: each column shows only the exposed top card; buried cards remain face-down until uncovered
+- Reveal rule: when the exposed top card is removed, the next buried card in that column flips face-up
+- Spread clear: clearing all `35` tableau cards advances to the next spread
+- Run fail state: the run ends when there is no legal exposed top-card move and the stock is empty
 - Score:
-  - `100` per cleared card
-  - `+40` per extra card in the same chain after the first
-  - `+300` omen-finish bonus
-  - `+1000` spread-clear bonus
-  - `+2000` flawless three-spread bonus
+  - `+100` per cleared tableau card
+  - `+1000` per cleared spread
+  - `+2000` for clearing all three spreads
 
 ## Hazard, Reward, And Fail-state Signifiers
 
-- Reward state: playable cards glow softly, chain count increments near the center well, and omen-suit cards receive a gold edge when they would finish a scoring chain
-- Danger state: a nearly empty face-up stock preview and an uncharged reserve charm are the live pressure states; both must read immediately at the bottom rail
-- Fail state: the run ends only when no legal move remains and the backup tools are exhausted
-- The player should never mistake the reward signal for the fail state because reward lives on bright gold chain feedback, while danger is shown through dimming candle time and an empty reserve socket
+- Reward state: the reward is the reveal itself and the column collapsing cleanly, not a separate bonus UI system
+- Danger state: stock depletion and dead exposed tops are the only real pressure states
+- Fail state: no legal exposed top-card move remains and the stock is empty
+- `Past` should feel gentler because the player can read one step ahead
+- `Future` should feel harsher because every buried card must be earned before it is known
 
 ## Main Screens
 
-- Start overlay: title, one-sentence hook, `Play` button, and a tiny two-line control explanation
-- Gameplay view: full-viewport card table with score, spread index, omen suit chip, reserve charm, active card well, and a face-up next draw
+- Start overlay: title, one short instruction block, and `Play`
+- Gameplay view: full-frame table, score, spread label, columns, stock, active pile, and the `Past`-only preview card
+- Spread transition overlay: short phase title between boards
 - Run-end overlay: final score, best score, spreads cleared, and `Play Again`
 
 ## Core Interaction Quality Bar
 
-- Card taps must feel instant and confident, with card removal beginning in under `60ms`
-- The active card, stock, reserve, and omen suit must be readable without scanning the whole screen
-- The face-up next draw must make loss proximity and next-step planning glanceable
-- Card spacing must avoid accidental taps while still showing enough of each card face to read rank and suit at phone size
-- Chains should feel like forward motion, not like cards merely disappearing
-- Omen-suit finishes need a short, bright payoff that is readable but does not freeze play
-- The reserve action must look deliberate and reversible, not like a hidden trick
+- Only the exposed top card in each column may react to input
+- Card aspect ratio must stay stable on mobile and desktop
+- The board must fit cleanly in mobile portrait without the playfield living inside a smaller framed container
+- Buried-card reveal in `Future` must read as a real card flip, not a card swap glitch
+- The `Past` tutorial may indicate one valid opening click, but the game must not keep showing all valid moves after that
+- The player should feel that choosing a card commits them, not that the board is solving itself
 
 ## Strongest First-minute Feeling
 
-The player should feel like they are riding a lucky reading: seeing a card they need, extending the chain one more beat, then cashing that tension out with a bright omen finish.
+The first minute should feel like a clean familiar solitaire lane: one obvious opening play in `Past`, a few deliberate reveals, and then a clear sense that `Present` and `Future` will demand tighter reading.
 
 ## HUD And Screen Plan
 
-- Persistent HUD stays to one compact top cluster and one compact bottom cluster
-- Top cluster: score, spread label, omen suit
-- Bottom cluster: reserve charm, active card well, face-up next draw plus remaining stock count
-- No large instructional panel during active play
-- No card-table framing inside a webpage card; the table fills the viewport
+- Active-play HUD is reduced to exactly two live readouts: score and spread label
+- No omen chip
+- No reserve charm
+- No chain counter
+- No stock-count text
+- No always-on move highlights
+- `Past` may show one temporary tutorial pointer for the first move only
 
 ## Art Direction And Asset Plan
 
-- Deep wine-red velvet backdrop with warm brass trim
-- Ivory cards with oversized numerals and four original omen suits: `moon`, `rose`, `sun`, `blade`
-- One card back, one reserve-charm emblem, one omen-suit chip style, and one candle or ember feedback layer
-- Motion polish through card lift, slide-to-well motion, chain glows, and restrained ember bursts
-- Listing art built from real gameplay screenshots of the live table state
+- Current pass: clean temporary table art, readable custom suits, consistent front/back card system, and restrained motion only
+- Deferred pass after validation: AI-generated background, bespoke card faces and backs, plus AI-generated music and SFX
 
 ## Tech Approach And Code Structure
 
 - TypeScript single-page app built from the PlayDrop TypeScript template
-- `src/main.ts` boots the app and wires the UI shell
-- `src/game/state.ts` owns deck generation, move legality, scoring, reserve state, and spread progression
-- `src/game/view.ts` renders the table, cards, overlays, and responsive layout in DOM plus CSS
-- `src/game/storage.ts` persists best score locally
-- `tests/logic.test.ts` covers move legality, rank wrap, reserve behavior, omen refill, spread-clear flow, and scoring
+- [src/main.ts](/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/src/main.ts) owns UI rendering, spread transitions, tutorial cue, overlays, and debug hooks
+- [src/game/state.ts](/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/src/game/state.ts) owns deck generation, stacked-column deal logic, move legality, reveal rules, spread options, and scoring
+- [template.html](/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/template.html) owns the responsive full-frame table, scalable cards, and flip animation styling
+- [tests/logic.test.ts](/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/tests/logic.test.ts) covers stacked-column rules, reveal flow, spread modes, and fail conditions
 
 ## Testing Plan
 
-- Deterministic logic tests for move legality, reserve use, omen refills, spread progression, and end-of-run conditions
+- Deterministic logic tests for exact `35 + 16 + 1` dealing, top-card-only playability, buried-card reveal, spread-specific visibility, spread clear, and hard-stuck flow
 - `npm test`
 - `npm run validate`
 - `playdrop project validate .`
-- Browser checks on mobile portrait and desktop before publish
-- Hosted verification on the same surfaces after publish
+- Browser QA on mobile portrait and desktop after the UI refactor
+- Balance sweeps using at least `3` autoplay policies after the rules are stable
 
 ## Target Session Length, Target Skilled Clear Or Run Length, And Replayability Plan
 
-- Fresh-player target run: `4-6` minutes
-- Skilled successful clear of all `3` spreads: `3-4` minutes
-- Replayability comes from shuffled spreads, perfect-spread chase, flawless-run chase, and best-score persistence
+- Fresh-player target run: `3-5` minutes
+- Skilled full clear of all `3` spreads: `2-4` minutes
+- Replayability comes from shuffled decks, scoring, and the spread information curve rather than helper systems or unlocks
 
 ## Strongest Raw Screenshot, Clip, Or First-15-second Beat
 
-The strongest raw moment is a mid-run portrait screenshot where the active card well is glowing, three playable cards are visible, the reserve charm is charged, and the player has a live chance to finish a chain on the omen suit. The first `15` seconds should show a fast first chain, one reserve save, and an omen-finish bonus, not a slow tutorial.
+The strongest raw screenshot is a clean portrait board with seven stacked columns, a readable active pile, and no extra HUD noise. The first `15` seconds should show one guided opening click in `Past`, one clean reveal, and a stock draw without any marketing-only embellishment.
 
 ## The Failure Condition That Sends The Project Back To 01-idea
 
-If the raw build still reads as `generic tarot solitaire` and the reserve plus three-spread arc do not create visible desire in the first `15` seconds, the concept goes back to `01-idea` instead of being rescued by prettier art or bigger listing treatment.
+If the redesigned build still feels soft or over-guided even after returning to top-card-only columns and hiding the stock preview outside `Past`, the concept should be reconsidered instead of rescued with cosmetic art.
 
 ## Concrete Media Plan
 
-- Icon: one luminous central card and reserve charm on velvet
-- Hero: a real spread in motion with the title centered over the live table language
-- Screenshots: one strong active-chain portrait state and one late-run pressure state
-- Gameplay video: start inside an active chain immediately, show one reserve save, one omen finish, one spread clear, and the final score overlay
+- Defer all new listing/icon/hero/audio generation until the gameplay and UX pass is accepted
+- Use temporary clean screenshots only for QA during this redesign phase
 
 ## Complexity Likely To Be Challenged In Simplify
 
-- Whether `3` spreads per run are necessary or whether `2` would still produce a real session
-- Whether omen-suit bonus plus reserve refill is the right amount of secondary rule
-- Whether all four custom suits need decorative face treatment or just large rank plus symbol readability
+- Whether the `Past` first-move tutorial should be a pointer, pulse, or static nudge
+- Whether the current background and temporary card art are clean enough to validate gameplay before the dedicated art pass
