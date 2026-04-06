@@ -77,6 +77,15 @@ type HostBridge = {
   onAudioPolicyChange(handler: (policy: unknown) => void): () => void;
 };
 
+type RuntimeSdk = {
+  host?: RuntimeHost;
+};
+
+type RuntimePlaydrop = {
+  init?(): Promise<RuntimeSdk>;
+  host?: RuntimeHost;
+};
+
 const STORAGE_KEY = "velvet-arcana-best-score";
 const TRANSITION_MS = 600;
 const REVEAL_MS = 280;
@@ -84,6 +93,7 @@ const WELCOME_TO_REVEAL_MS = 1100;
 const PLAY_CARD_MOTION_MS = 320;
 const DRAW_CARD_MOTION_MS = 380;
 const CARD_ARRIVAL_MS = 220;
+const PLAYDROP_INIT_TIMEOUT_MS = 8_000;
 const HOW_TO_PLAY_LINES = [
   "Turn a new reading from the deck when the target is empty.",
   "Only the top card in each column can be played.",
@@ -1173,21 +1183,27 @@ function bridgeFromRuntimeHost(runtimeHost: RuntimeHost | undefined, fallbackAud
 }
 
 async function createHostBridge(): Promise<HostBridge> {
-  const playdrop = window.playdrop;
-  if (!playdrop) {
-    return bridgeFromRuntimeHost(undefined, true);
+  if (HAS_PLAYDROP_HOST) {
+    const playdrop = await waitForHostedPlaydrop(PLAYDROP_INIT_TIMEOUT_MS);
+    const sdk = await playdrop.init!();
+    return bridgeFromRuntimeHost(sdk.host as RuntimeHost | undefined, false);
   }
 
-  if (playdrop.init && HAS_PLAYDROP_HOST) {
-    try {
-      const sdk = await playdrop.init();
-      return bridgeFromRuntimeHost(sdk.host as RuntimeHost | undefined, false);
-    } catch (error) {
-      console.warn("[velvet-arcana] failed to initialize playdrop host bridge; muting until host policy is known", error);
+  const playdrop = window.playdrop as RuntimePlaydrop | undefined;
+  return bridgeFromRuntimeHost(playdrop?.host as RuntimeHost | undefined, true);
+}
+
+async function waitForHostedPlaydrop(timeoutMs: number): Promise<RuntimePlaydrop> {
+  const deadline = performance.now() + timeoutMs;
+  while (performance.now() < deadline) {
+    const playdrop = window.playdrop as RuntimePlaydrop | undefined;
+    if (playdrop?.init) {
+      return playdrop;
     }
+    await new Promise((resolve) => window.setTimeout(resolve, 50));
   }
 
-  return bridgeFromRuntimeHost(playdrop.host as RuntimeHost | undefined, HAS_PLAYDROP_HOST ? false : true);
+  throw new Error("[velvet-arcana] PlayDrop SDK loader did not expose playdrop.init() before hosted startup timeout");
 }
 
 function resolveAudioEnabled(policy: unknown): boolean {
