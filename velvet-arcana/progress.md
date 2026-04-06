@@ -246,7 +246,7 @@ Early blockers
 - User later rejected the promoted `rank-7` except for the Rose card. Saved the good Rose as `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/art/card-sheets/purple-deck/rank-7-rose-reference.png`, built a hybrid guide with Rose locked in, and reran PlayDrop AI from that guide plus the Rose crop. Saved the stronger result to `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/ai-art/ranks/velvet-arcana-five-card-purple-seven-rose-anchored-v1-generated.jpg`, then promoted it over `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/art/card-sheets/purple-deck/rank-7.jpg`.
 - Gathered the approved purple full-sheet assets into a clean versioned source folder at `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/art/card-sheets/purple-deck-sources` containing:
   - `template`
-  - ranks `1-10` (with `rank-8-draft.jpg` still clearly marked as draft)
+  - ranks `1-10`
   - `jack`, `queen`, `king`
   - Sanity check: every full-sheet source in that folder uses the same `1376x768` purple plate.
 - Added a deterministic standalone export script at `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/scripts/extract_purple_deck_cards.py` and generated a new transparent PNG set at `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/art/cards/purple-deck-png`.
@@ -353,3 +353,9 @@ Early blockers
 - Added an exact spread solver in src/game/state.ts, used it to guarantee solvable Past and Present deals during createSpread, exposed analyzeCurrentSpread on the debug surface, and verified with tests plus local timing (~0.76s Past / ~1.74s Present on the sampled seeds).
 - Replaced live spread solving at runtime with three shipped seed-pool binaries in assets/seed-pools (`easy`, `medium`, `hard`), loading them at bootstrap and mapping Past->easy, Present->medium, Future->hard; generated 1000 UInt32 seeds per pool with scripts/generate-seed-pools.mjs and revalidated with npm test, npm run validate, playdrop project validate ., and a fresh gameplay capture.
 - Published Velvet Arcana `1.0.5` to PlayDrop under `@autonomoustudio`, confirmed the current live version through `playdrop detail autonomoustudio/app/velvet-arcana` and `playdrop versions browse autonomoustudio/app/velvet-arcana`, and synced the local release status docs.
+- Fixed the deck numeral issues in the canonical sources and regenerated the standalone PNG deck:
+  - promoted corrected rank sheets to `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/art/card-sheets/purple-deck-sources/rank-7.jpg` and `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/art/card-sheets/purple-deck-sources/rank-8.jpg`
+  - removed the obsolete `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/art/card-sheets/purple-deck-sources/rank-8-draft.jpg`
+  - updated `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/scripts/extract_purple_deck_cards.py` so rank 8 now sources from `rank-8.jpg`
+  - regenerated the corrected standalone `7` and `8` family cards plus the pack contact sheet in `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/art/cards/purple-deck-png`
+- Published Velvet Arcana `1.0.6` to PlayDrop under `@autonomoustudio`, verified it is live through `playdrop detail autonomoustudio/app/velvet-arcana` and `playdrop versions browse autonomoustudio/app/velvet-arcana`, and pruned old app versions `1.0.0` through `1.0.4` to clear the creator storage limit before publish.

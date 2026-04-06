@@ -46,7 +46,7 @@ RANK_FILES = [
     ("5", "rank-5.jpg"),
     ("6", "rank-6.jpg"),
     ("7", "rank-7.jpg"),
-    ("8", "rank-8-draft.jpg"),
+    ("8", "rank-8.jpg"),
     ("9", "rank-9.jpg"),
     ("10", "rank-10.jpg"),
     ("jack", "rank-jack.jpg"),

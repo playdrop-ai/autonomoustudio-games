@@ -37,7 +37,7 @@ The local project is in a `v2` redesign pass. The build target is a tighter Golf
 
 ## Release Status
 
-- Current live PlayDrop release: `1.0.5`
+- Current live PlayDrop release: `1.0.6`
 - Live listing URL: `https://www.playdrop.ai/creators/autonomoustudio/apps/game/velvet-arcana`
 - Live play URL: `https://www.playdrop.ai/creators/autonomoustudio/apps/game/velvet-arcana/play`
 - Note: the local repo may contain redesign work that is newer than the currently live public build until the next republish pass.
