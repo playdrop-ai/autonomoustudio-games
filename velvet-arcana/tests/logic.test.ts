@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  analyzeSpread,
   COLUMN_COUNT,
   COLUMN_DEPTH,
   STOCK_CARD_COUNT,
@@ -82,6 +83,46 @@ test("spread options change preview and buried-card visibility", () => {
     ),
     true,
   );
+});
+
+test("spread analysis recognizes a simple winning spread", () => {
+  const spread = makeSpread({
+    active: null,
+    activeTrail: [],
+    stock: [makeCard("stock-open", 6, "moon")],
+    columns: [
+      makeColumn([{ card: makeCard("playable", 7, "sun"), faceUp: true }]),
+      ...Array.from({ length: COLUMN_COUNT - 1 }, () => []),
+    ],
+  });
+
+  const analysis = analyzeSpread(spread);
+  assert.equal(analysis.winnable, true);
+  assert.equal(analysis.bestRemainingStockOnWin, 0);
+});
+
+test("spread analysis recognizes an impossible spread", () => {
+  const spread = makeSpread({
+    active: makeCard("active", 4, "moon"),
+    activeTrail: [],
+    stock: [],
+    columns: Array.from({ length: COLUMN_COUNT }, (_, index) =>
+      makeColumn([{ card: makeCard(`blocked-${index}`, 9, "sun"), faceUp: true }]),
+    ),
+  });
+
+  const analysis = analyzeSpread(spread);
+  assert.equal(analysis.winnable, false);
+  assert.equal(analysis.bestRemainingStockOnWin, null);
+  assert.equal(analysis.difficultyBand, "impossible");
+});
+
+test("past and present spread generation now guarantees solvable deals", () => {
+  const past = createSpread(555, "Past");
+  const present = createSpread(777, "Present");
+
+  assert.equal(analyzeSpread(past).winnable, true);
+  assert.equal(analyzeSpread(present).winnable, true);
 });
 
 test("only exposed top cards are playable and buried cards are ignored", () => {

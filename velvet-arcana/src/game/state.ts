@@ -30,6 +30,16 @@ export type PlayResult = {
   revealedCardId: string | null;
 };
 
+export type SpreadAnalysis = {
+  winnable: boolean;
+  statesExplored: number;
+  bestRemainingStockOnWin: number | null;
+  branchingFactor: number;
+  difficultyBand: "impossible" | "hard" | "medium" | "easy";
+};
+
+export type DifficultyBand = SpreadAnalysis["difficultyBand"];
+
 export const SUITS: SuitKey[] = ["moon", "rose", "sun", "blade"];
 export const SPREAD_LABELS: SpreadLabel[] = ["Past", "Present", "Future"];
 export const COLUMN_COUNT = 7;
@@ -39,26 +49,53 @@ export const STOCK_CARD_COUNT = 17;
 export const CARD_PLAY_POINTS = 100;
 export const SPREAD_CLEAR_POINTS = 1000;
 export const RUN_CLEAR_POINTS = 2000;
+const MAX_SPREAD_ATTEMPTS = 512;
+const HEIGHT_BASES = [1, 6, 36, 216, 1296, 7776, 46656] as const;
+const HEIGHT_CODE_SPACE = 279936;
 
 export function createSpread(seed: number, label: SpreadLabel): SpreadState {
-  for (let attempt = 0; attempt < 64; attempt += 1) {
-    const deck = createDeck(seed + attempt * 101);
-    const tableau = deck.slice(0, TABLEAU_CARD_COUNT);
-    const stock = deck.slice(TABLEAU_CARD_COUNT, TABLEAU_CARD_COUNT + STOCK_CARD_COUNT);
-    const options = spreadOptionsFor(label);
-    const spread: SpreadState = {
-      label,
-      ...options,
-      columns: dealColumns(tableau, options.showBuriedFaces),
-      active: null,
-      activeTrail: [],
-      stock,
-    };
+  return createSpreadFromAcceptedSeed(resolveAcceptedSpreadSeed(seed, label), label);
+}
 
-    if (getPlayableIndices(drawFromStock(spread)).length > 0) return spread;
+export function createSpreadFromAcceptedSeed(seed: number, label: SpreadLabel): SpreadState {
+  const deck = createDeck(seed >>> 0);
+  const tableau = deck.slice(0, TABLEAU_CARD_COUNT);
+  const stock = deck.slice(TABLEAU_CARD_COUNT, TABLEAU_CARD_COUNT + STOCK_CARD_COUNT);
+  const options = spreadOptionsFor(label);
+
+  return {
+    label,
+    ...options,
+    columns: dealColumns(tableau, options.showBuriedFaces),
+    active: null,
+    activeTrail: [],
+    stock,
+  };
+}
+
+export function resolveAcceptedSpreadSeed(
+  seed: number,
+  label: SpreadLabel,
+  targetDifficulty?: Exclude<DifficultyBand, "impossible">,
+): number {
+  const requireSolvable = label === "Past" || label === "Present";
+
+  for (let attempt = 0; attempt < MAX_SPREAD_ATTEMPTS; attempt += 1) {
+    const candidateSeed = (seed + attempt * 101) >>> 0;
+    const spread = createSpreadFromAcceptedSeed(candidateSeed, label);
+    if (!hasPlayableFirstReveal(spread)) continue;
+
+    if (targetDifficulty) {
+      if (analyzeSpread(spread).difficultyBand !== targetDifficulty) continue;
+      return candidateSeed;
+    }
+
+    if (requireSolvable && !analyzeSpread(spread).winnable) continue;
+    return candidateSeed;
   }
 
-  throw new Error("[velvet-arcana] failed to create a playable spread");
+  const requirementLabel = targetDifficulty ?? (requireSolvable ? "winnable" : "playable");
+  throw new Error(`[velvet-arcana] failed to create a ${requirementLabel} ${label} spread`);
 }
 
 export function createDeck(seed: number): Card[] {
@@ -183,6 +220,81 @@ export function cloneSpread(spread: SpreadState): SpreadState {
   };
 }
 
+export function analyzeSpread(spread: SpreadState): SpreadAnalysis {
+  const columnRanks = spread.columns.map((column) => column.map((entry) => entry.card.rank));
+  const stockRanks = spread.stock.map((card) => card.rank);
+  const initialHeightCode = spread.columns.reduce(
+    (code, column, index) => code + column.length * HEIGHT_BASES[index]!,
+    0,
+  );
+  const memo = new Map<number, number>();
+  let statesExplored = 0;
+  let totalChoices = 0;
+
+  const solve = (activeRank: number, stockIndex: number, heightCode: number): number => {
+    if (heightCode === 0) return stockRanks.length - stockIndex;
+
+    const key = ((stockIndex * 14 + activeRank) * HEIGHT_CODE_SPACE) + heightCode;
+    const cached = memo.get(key);
+    if (cached !== undefined) return cached;
+
+    statesExplored += 1;
+    let bestRemainingStock = -1;
+    let actions = 0;
+
+    if (activeRank === 0) {
+      if (stockIndex < stockRanks.length) {
+        actions = 1;
+        bestRemainingStock = solve(stockRanks[stockIndex]!, stockIndex + 1, heightCode);
+      }
+    } else {
+      for (let columnIndex = 0; columnIndex < columnRanks.length; columnIndex += 1) {
+        const height = Math.floor(heightCode / HEIGHT_BASES[columnIndex]!) % 6;
+        if (height <= 0) continue;
+
+        const topRank = columnRanks[columnIndex]?.[height - 1];
+        if (topRank === undefined || !areAdjacentRanks(activeRank, topRank)) continue;
+
+        actions += 1;
+        const solvedRemainingStock = solve(topRank, stockIndex, heightCode - HEIGHT_BASES[columnIndex]!);
+        if (solvedRemainingStock > bestRemainingStock) {
+          bestRemainingStock = solvedRemainingStock;
+        }
+      }
+
+      if (stockIndex < stockRanks.length) {
+        actions += 1;
+        const solvedRemainingStock = solve(stockRanks[stockIndex]!, stockIndex + 1, heightCode);
+        if (solvedRemainingStock > bestRemainingStock) {
+          bestRemainingStock = solvedRemainingStock;
+        }
+      }
+    }
+
+    totalChoices += actions;
+    memo.set(key, bestRemainingStock);
+    return bestRemainingStock;
+  };
+
+  const bestRemainingStockOnWin = solve(spread.active?.rank ?? 0, 0, initialHeightCode);
+  const branchingFactor = statesExplored === 0 ? 0 : totalChoices / statesExplored;
+
+  return {
+    winnable: bestRemainingStockOnWin >= 0,
+    statesExplored,
+    bestRemainingStockOnWin: bestRemainingStockOnWin >= 0 ? bestRemainingStockOnWin : null,
+    branchingFactor,
+    difficultyBand:
+      bestRemainingStockOnWin < 0
+        ? "impossible"
+        : bestRemainingStockOnWin >= 8
+          ? "easy"
+          : bestRemainingStockOnWin >= 4
+            ? "medium"
+            : "hard",
+  };
+}
+
 function dealColumns(cards: Card[], showBuriedFaces: boolean): ColumnState[] {
   return Array.from({ length: COLUMN_COUNT }, (_, columnIndex) => {
     const start = columnIndex * COLUMN_DEPTH;
@@ -203,6 +315,15 @@ function shuffle<T>(items: T[], seed: number): T[] {
     next[swapIndex] = current;
   }
   return next;
+}
+
+function areAdjacentRanks(activeRank: number, candidateRank: number): boolean {
+  const diff = Math.abs(activeRank - candidateRank);
+  return diff === 1 || diff === 12;
+}
+
+function hasPlayableFirstReveal(spread: SpreadState) {
+  return getPlayableIndices(drawFromStock(spread)).length > 0;
 }
 
 function mulberry32(seed: number): () => number {

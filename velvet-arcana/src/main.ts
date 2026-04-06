@@ -5,7 +5,8 @@ import {
   RUN_CLEAR_POINTS,
   SPREAD_CLEAR_POINTS,
   SPREAD_LABELS,
-  createSpread,
+  analyzeSpread,
+  createSpreadFromAcceptedSeed,
   drawFromStock,
   formatCard,
   getPlayableIndices,
@@ -86,6 +87,9 @@ type RuntimePlaydrop = {
   host?: RuntimeHost;
 };
 
+type SeedPoolDifficulty = "easy" | "medium" | "hard";
+type SeedPools = Record<SeedPoolDifficulty, Uint32Array>;
+
 const STORAGE_KEY = "velvet-arcana-best-score";
 const TRANSITION_MS = 600;
 const REVEAL_MS = 280;
@@ -103,6 +107,17 @@ const HOW_TO_PLAY_LINES = [
 ];
 const CARD_ASSET_DIR = "./assets/purple-deck-png";
 const CARD_BACK_ASSET = `${CARD_ASSET_DIR}/back.png`;
+const SEED_POOL_ASSET_DIR = "./assets/seed-pools";
+const SEED_POOL_ASSETS: Record<SeedPoolDifficulty, string> = {
+  easy: `${SEED_POOL_ASSET_DIR}/easy.uint32`,
+  medium: `${SEED_POOL_ASSET_DIR}/medium.uint32`,
+  hard: `${SEED_POOL_ASSET_DIR}/hard.uint32`,
+};
+const SPREAD_POOL_BY_LABEL: Record<SpreadLabel, SeedPoolDifficulty> = {
+  Past: "easy",
+  Present: "medium",
+  Future: "hard",
+};
 
 const rootElement = document.getElementById("app");
 if (!(rootElement instanceof HTMLElement)) throw new Error("[velvet-arcana] #app element missing");
@@ -110,7 +125,7 @@ const root = rootElement;
 const HAS_PLAYDROP_HOST = new URLSearchParams(window.location.search).has("playdrop_channel");
 const NOOP_UNSUBSCRIBE = () => undefined;
 
-let state = createInitialState();
+let state!: GameState;
 let transitionTimer: number | null = null;
 let revealTimer: number | null = null;
 let tutorialTimer: number | null = null;
@@ -119,6 +134,7 @@ let activeMotionTargetCardId: string | null = null;
 let cardMotionNonce = 0;
 let gameAudio: GameAudio | null = null;
 let removeHostAudioPolicyListener: (() => void) | null = null;
+let seedPools: SeedPools | null = null;
 
 void bootstrap().catch((error) => {
   const playdrop = window.playdrop;
@@ -133,6 +149,9 @@ void bootstrap().catch((error) => {
 
 async function bootstrap() {
   const host = await createHostBridge();
+  host.setLoadingState({ status: "loading", message: "Loading readings", progress: 0.2 });
+  seedPools = await loadSeedPools();
+  state = createInitialState();
 
   gameAudio = new GameAudio(resolveAudioEnabled(host.audioPolicy));
   gameAudio.preload();
@@ -164,7 +183,7 @@ function createRunState(seed: number): GameState {
     phase: "playing",
     runSeed: seed,
     spreadIndex: 0,
-    spread: createSpread(seedForSpread(seed, 0), spreadLabelAt(0)),
+    spread: createSpreadForRun(seed, 0),
     score: 0,
     bestScore: readBestScore(),
     spreadsCleared: 0,
@@ -189,7 +208,7 @@ function startRunAtSpread(seed: number, spreadIndex: number) {
   state = createRunState(seed);
   if (spreadIndex !== 0) {
     state.spreadIndex = spreadIndex;
-    state.spread = createSpread(seedForSpread(seed, spreadIndex), spreadLabelAt(spreadIndex));
+    state.spread = createSpreadForRun(seed, spreadIndex);
     state.tutorialStep = null;
     state.dismissedTutorialStep = null;
     state.helpOpen = false;
@@ -315,7 +334,7 @@ function startNextSpread() {
   const nextIndex = state.spreadIndex + 1;
   state.phase = "playing";
   state.spreadIndex = nextIndex;
-  state.spread = createSpread(seedForSpread(state.runSeed, nextIndex), spreadLabelAt(nextIndex));
+  state.spread = createSpreadForRun(state.runSeed, nextIndex);
   state.summaryMessage = "";
   state.recentRevealCardId = null;
   state.tutorialStep = null;
@@ -1020,7 +1039,7 @@ function simulateRuns(policy: AutoPolicy, runs = 100, seedStart = 10_000) {
   for (let run = 0; run < runs; run += 1) {
     const runSeed = seedStart + run;
     let spreadIndex = 0;
-    let spread = createSpread(seedForSpread(runSeed, 0), spreadLabelAt(0));
+    let spread = createSpreadForRun(runSeed, 0);
     let score = 0;
     let cleared = 0;
 
@@ -1034,7 +1053,7 @@ function simulateRuns(policy: AutoPolicy, runs = 100, seedStart = 10_000) {
           break;
         }
         spreadIndex += 1;
-        spread = createSpread(seedForSpread(runSeed, spreadIndex), spreadLabelAt(spreadIndex));
+        spread = createSpreadForRun(runSeed, spreadIndex);
         continue;
       }
 
@@ -1148,6 +1167,7 @@ function installDebugSurface() {
     },
     simulateRuns: (policy: AutoPolicy = "planner", runs = 100, seedStart = 10_000) =>
       simulateRuns(policy, runs, seedStart),
+    analyzeCurrentSpread: () => analyzeSpread(state.spread),
     audioState: () => gameAudio?.debugState() ?? null,
     setHostAudioEnabled: (enabled: boolean) => {
       gameAudio?.setAudioAllowed(enabled);
@@ -1242,6 +1262,53 @@ function readBestScore() {
 
 function writeBestScore(score: number) {
   window.localStorage.setItem(STORAGE_KEY, String(score));
+}
+
+async function loadSeedPools(): Promise<SeedPools> {
+  const entries = await Promise.all(
+    (Object.entries(SEED_POOL_ASSETS) as Array<[SeedPoolDifficulty, string]>).map(async ([difficulty, url]) => {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`[velvet-arcana] failed to load ${difficulty} seed pool from ${url}`);
+      }
+
+      const buffer = await response.arrayBuffer();
+      if (buffer.byteLength === 0 || buffer.byteLength % 4 !== 0) {
+        throw new Error(`[velvet-arcana] invalid ${difficulty} seed pool payload`);
+      }
+
+      const view = new DataView(buffer);
+      const values = new Uint32Array(buffer.byteLength / 4);
+      for (let index = 0; index < values.length; index += 1) {
+        values[index] = view.getUint32(index * 4, true);
+      }
+      if (values.length === 0) {
+        throw new Error(`[velvet-arcana] empty ${difficulty} seed pool`);
+      }
+
+      return [difficulty, values] as const;
+    }),
+  );
+
+  return Object.fromEntries(entries) as SeedPools;
+}
+
+function createSpreadForRun(runSeed: number, spreadIndex: number): SpreadState {
+  const label = spreadLabelAt(spreadIndex);
+  const acceptedSeed = acceptedSeedForRun(runSeed, spreadIndex, label);
+  return createSpreadFromAcceptedSeed(acceptedSeed, label);
+}
+
+function acceptedSeedForRun(runSeed: number, spreadIndex: number, label: SpreadLabel) {
+  if (!seedPools) throw new Error("[velvet-arcana] tried to use seed pools before initialization");
+
+  const difficulty = SPREAD_POOL_BY_LABEL[label];
+  const pool = seedPools[difficulty];
+  if (!pool || pool.length === 0) {
+    throw new Error(`[velvet-arcana] missing ${difficulty} seed pool for ${label}`);
+  }
+
+  return pool[seededIndex(seedForSpread(runSeed, spreadIndex), pool.length)]!;
 }
 
 function seedForSpread(runSeed: number, index: number) {
