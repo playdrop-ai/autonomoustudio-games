@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Powder Post Marketing Art</title>
+    <style>
+      :root {
+        --sky-top: #dceaf7;
+        --sky-mid: #6b8db5;
+        --sky-deep: #163864;
+        --ink: #132236;
+        --frost: rgba(235, 245, 255, 0.82);
+        --band: rgba(17, 31, 48, 0.78);
+        --band-border: rgba(255, 255, 255, 0.14);
+        --warm: #f6bf58;
+        --ember: #f38d64;
+        --ice: #8ce3dc;
+        --shadow: rgba(5, 15, 28, 0.42);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        padding: 32px;
+        display: grid;
+        place-items: center;
+        background:
+          radial-gradient(circle at top, rgba(255, 255, 255, 0.25), transparent 28%),
+          linear-gradient(180deg, #0c1930, #132846 52%, #20446c);
+        font-family: "Avenir Next", "Futura", "Trebuchet MS", sans-serif;
+        color: white;
+      }
+
+      .sheet {
+        display: grid;
+        gap: 24px;
+      }
+
+      .row {
+        display: flex;
+        gap: 24px;
+        align-items: flex-start;
+      }
+
+      .artboard {
+        position: relative;
+        overflow: hidden;
+        border-radius: 36px;
+        background:
+          radial-gradient(circle at 80% 16%, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.06) 18%, transparent 31%),
+          linear-gradient(180deg, var(--sky-top), var(--sky-mid) 44%, var(--sky-deep));
+        box-shadow:
+          0 36px 100px rgba(0, 0, 0, 0.36),
+          inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+      }
+
+      .hero-landscape {
+        width: 1600px;
+        height: 900px;
+      }
+
+      .hero-portrait {
+        width: 1080px;
+        height: 1920px;
+      }
+
+      .icon {
+        width: 1024px;
+        height: 1024px;
+      }
+
+      .aurora,
+      .moon,
+      .snow-haze,
+      .slope,
+      .title-band,
+      .title-lockup,
+      .chip {
+        position: absolute;
+      }
+
+      .aurora {
+        inset: -6% -8% auto;
+        height: 42%;
+        background:
+          radial-gradient(circle at 22% 12%, rgba(255, 255, 255, 0.48), transparent 28%),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0));
+        opacity: 0.9;
+      }
+
+      .moon {
+        right: 7%;
+        top: 6%;
+        width: 22%;
+        aspect-ratio: 1;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.14) 44%, transparent 72%);
+        filter: blur(1px);
+      }
+
+      .snow-haze {
+        inset: auto -8% -10%;
+        height: 38%;
+        background: linear-gradient(180deg, rgba(213, 229, 244, 0), rgba(227, 237, 248, 0.8));
+      }
+
+      .slope {
+        left: 16%;
+        right: 12%;
+        top: 11%;
+        bottom: -2%;
+        clip-path: polygon(26% 0, 76% 0, 100% 100%, 0 100%);
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0)),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0.08) 65%, rgba(255, 255, 255, 0.2)),
+          url("./powder-post_1280x720-screenshot-1.png");
+        background-size: cover;
+        background-position: center 28%;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+      }
+
+      .slope::before,
+      .slope::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+      }
+
+      .slope::before {
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent 24%, transparent 76%, rgba(227, 239, 250, 0.4)),
+          radial-gradient(circle at 50% 18%, rgba(255, 255, 255, 0.16), transparent 34%);
+        mix-blend-mode: screen;
+      }
+
+      .slope::after {
+        background:
+          linear-gradient(90deg, rgba(18, 39, 65, 0.18), transparent 22%, transparent 76%, rgba(18, 39, 65, 0.24)),
+          linear-gradient(180deg, rgba(20, 44, 73, 0.05), rgba(20, 44, 73, 0.18));
+      }
+
+      .hero-landscape .title-band {
+        left: 13%;
+        right: 13%;
+        top: 34%;
+        height: 25%;
+      }
+
+      .hero-portrait .title-band {
+        left: 8%;
+        right: 8%;
+        top: 34%;
+        height: 19%;
+      }
+
+      .title-band {
+        border-radius: 32px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0)),
+          var(--band);
+        border: 1px solid var(--band-border);
+        box-shadow:
+          0 26px 64px var(--shadow),
+          inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+        backdrop-filter: blur(18px);
+      }
+
+      .title-lockup {
+        inset: 0;
+        display: grid;
+        place-items: center;
+        text-align: center;
+      }
+
+      .title-lockup span {
+        display: block;
+        line-height: 0.88;
+        letter-spacing: 0.08em;
+        font-weight: 800;
+        text-transform: uppercase;
+        color: white;
+        text-shadow:
+          0 18px 40px rgba(0, 0, 0, 0.35),
+          0 3px 0 rgba(255, 255, 255, 0.1);
+      }
+
+      .hero-landscape .title-lockup span {
+        font-size: 138px;
+      }
+
+      .hero-portrait .title-lockup span {
+        font-size: 124px;
+      }
+
+      .chip {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px 22px;
+        border-radius: 999px;
+        background: rgba(17, 31, 48, 0.78);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow: 0 18px 42px rgba(0, 0, 0, 0.28);
+        font-size: 24px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--frost);
+      }
+
+      .chip::before,
+      .chip::after {
+        content: "";
+        width: 22px;
+        height: 22px;
+        border-radius: 8px;
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.28);
+      }
+
+      .chip::before {
+        background: linear-gradient(180deg, #ffb595, #ef8560);
+        clip-path: polygon(50% 12%, 90% 88%, 10% 88%);
+      }
+
+      .chip::after {
+        background: linear-gradient(180deg, #9df0e7, #54cec6);
+        clip-path: circle(42% at 50% 50%);
+      }
+
+      .hero-landscape .chip {
+        bottom: 7%;
+        left: 8%;
+      }
+
+      .hero-portrait .chip {
+        bottom: 10%;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+
+      .hero-portrait .slope {
+        left: 8%;
+        right: 8%;
+        top: 12%;
+        bottom: 13%;
+        clip-path: polygon(20% 0, 82% 0, 100% 100%, 0 100%);
+        background-position: center 34%;
+      }
+
+      .hero-portrait .snow-haze {
+        inset: auto -12% -6%;
+        height: 34%;
+      }
+
+      .hero-portrait .moon {
+        width: 36%;
+        right: 10%;
+        top: 9%;
+      }
+
+      .hero-portrait .aurora {
+        height: 33%;
+      }
+
+      .icon .aurora {
+        height: 46%;
+      }
+
+      .icon .moon {
+        width: 34%;
+        right: 9%;
+        top: 7%;
+      }
+
+      .icon .snow-haze {
+        inset: auto -10% -8%;
+        height: 42%;
+      }
+
+      .icon .focus {
+        position: absolute;
+        inset: 7% 7% 7%;
+        border-radius: 26%;
+        overflow: hidden;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0)),
+          url("./powder-post_1280x720-screenshot-2.png");
+        background-size: 220%;
+        background-position: 61% 68%;
+        box-shadow:
+          inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+          0 28px 80px rgba(0, 0, 0, 0.34);
+      }
+
+      .icon .focus::before,
+      .icon .focus::after {
+        content: "";
+        position: absolute;
+        border-radius: 999px;
+        background: rgba(17, 31, 48, 0.72);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .icon .focus::before {
+        top: 10%;
+        left: 10%;
+        width: 38%;
+        height: 14%;
+        box-shadow: 0 0 28px rgba(246, 191, 88, 0.32);
+      }
+
+      .icon .focus::after {
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 24%;
+        border-radius: 0;
+        background: linear-gradient(180deg, rgba(214, 229, 242, 0), rgba(214, 229, 242, 0.34));
+        border: 0;
+        box-shadow: none;
+      }
+
+      .icon .glyph {
+        position: absolute;
+        top: 14%;
+        left: 18%;
+        width: 22%;
+        height: 9%;
+        border-radius: 999px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.04)),
+          rgba(17, 31, 48, 0.76);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.32);
+      }
+
+      .icon .glyph::before,
+      .icon .glyph::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+      }
+
+      .icon .glyph::before {
+        left: 16%;
+        width: 26%;
+        aspect-ratio: 1;
+        clip-path: polygon(50% 10%, 90% 88%, 10% 88%);
+        background: linear-gradient(180deg, #ffb595, #ef8560);
+      }
+
+      .icon .glyph::after {
+        right: 14%;
+        width: 24%;
+        aspect-ratio: 1;
+        border-radius: 50%;
+        background: linear-gradient(180deg, #9df0e7, #54cec6);
+      }
+    </style>
+  </head>
+  <body>
+    <main class="sheet">
+      <section class="artboard hero-landscape" id="hero-landscape">
+        <div class="aurora"></div>
+        <div class="moon"></div>
+        <div class="slope"></div>
+        <div class="title-band">
+          <div class="title-lockup">
+            <div>
+              <span>Powder</span>
+              <span>Post</span>
+            </div>
+          </div>
+        </div>
+        <div class="chip">Midnight Delivery Run</div>
+        <div class="snow-haze"></div>
+      </section>
+
+      <div class="row">
+        <section class="artboard hero-portrait" id="hero-portrait">
+          <div class="aurora"></div>
+          <div class="moon"></div>
+          <div class="slope"></div>
+          <div class="title-band">
+            <div class="title-lockup">
+              <div>
+                <span>Powder</span>
+                <span>Post</span>
+              </div>
+            </div>
+          </div>
+          <div class="chip">Gate. Deliver. Survive.</div>
+          <div class="snow-haze"></div>
+        </section>
+
+        <section class="artboard icon" id="icon-art">
+          <div class="aurora"></div>
+          <div class="moon"></div>
+          <div class="focus"></div>
+          <div class="glyph"></div>
+          <div class="snow-haze"></div>
+        </section>
+      </div>
+    </main>
+  </body>
+</html>

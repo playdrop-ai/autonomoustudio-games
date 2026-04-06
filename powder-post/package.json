@@ -1,0 +1,38 @@
+{
+  "name": "powder-post",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "node build.mjs",
+    "dev": "node build.mjs --watch",
+    "validate": "tsc --noEmit && npm run build",
+    "test": "tsx --test tests/**/*.test.ts",
+    "balance:report": "tsx scripts/balance-report.ts",
+    "capture:media": "node scripts/capture-media.mjs",
+    "export:listing-art": "node scripts/export-listing-art.mjs",
+    "post:x-thread": "node scripts/post-x-thread.mjs",
+    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json}\""
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0",
+    "playdrop-sdk-types": "file:vendor/playdrop-sdk-types.tgz",
+    "prettier": "^3.2.5",
+    "typescript": "^5.9.2",
+    "@playdrop/ai-client": "file:vendor/playdrop/ai-client.tgz",
+    "@playdrop/api-client": "file:vendor/playdrop/api-client.tgz",
+    "@playdrop/boxel-core": "file:vendor/playdrop/boxel-core.tgz",
+    "@playdrop/boxel-three": "file:vendor/playdrop/boxel-three.tgz",
+    "@playdrop/realtime-client": "file:vendor/playdrop/realtime-client.tgz",
+    "@playdrop/types": "file:vendor/playdrop/types.tgz",
+    "@playdrop/web-bridge": "file:vendor/playdrop/web-bridge.tgz",
+    "@playdrop/assets-client": "file:vendor/playdrop/assets-client.tgz",
+    "playwright": "^1.58.1",
+    "tsx": "^4.20.3"
+  },
+  "dependencies": {},
+  "playdrop": {
+    "platformVersion": "0.4.0",
+    "sdkTypesVersion": "0.4.0"
+  }
+}
