@@ -1,5 +1,6 @@
 /// <reference types="playdrop-sdk-types" />
 
+import { GameAudio } from "./audio";
 import {
   RUN_CLEAR_POINTS,
   SPREAD_CLEAR_POINTS,
@@ -41,10 +42,48 @@ type GameState = {
   helpOpen: boolean;
 };
 
+type CardMotionRect = {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+};
+
+type PendingCardMotion = {
+  kind: "draw" | "play";
+  card: Card;
+  sourceRect: CardMotionRect | null;
+  sourceFaceUp: boolean;
+  targetCardId: string | null;
+};
+
+type HostLoadingState =
+  | { status: "loading"; message?: string; progress?: number }
+  | { status: "ready" }
+  | { status: "error"; message?: string };
+
+type RuntimeHost = {
+  setLoadingState?(state: HostLoadingState): void;
+  ready?(): void;
+  error?(message: string): void;
+  audioEnabled?: unknown;
+  onAudioPolicyChange?(handler: (policy: unknown) => void): void | (() => void);
+};
+
+type HostBridge = {
+  setLoadingState(state: HostLoadingState): void;
+  ready(): void;
+  audioPolicy: unknown;
+  onAudioPolicyChange(handler: (policy: unknown) => void): () => void;
+};
+
 const STORAGE_KEY = "velvet-arcana-best-score";
 const TRANSITION_MS = 600;
 const REVEAL_MS = 280;
 const WELCOME_TO_REVEAL_MS = 1100;
+const PLAY_CARD_MOTION_MS = 320;
+const DRAW_CARD_MOTION_MS = 380;
+const CARD_ARRIVAL_MS = 220;
 const HOW_TO_PLAY_LINES = [
   "Turn a new reading from the deck when the target is empty.",
   "Only the top card in each column can be played.",
@@ -59,39 +98,51 @@ const rootElement = document.getElementById("app");
 if (!(rootElement instanceof HTMLElement)) throw new Error("[velvet-arcana] #app element missing");
 const root = rootElement;
 const HAS_PLAYDROP_HOST = new URLSearchParams(window.location.search).has("playdrop_channel");
+const NOOP_UNSUBSCRIBE = () => undefined;
 
 let state = createInitialState();
 let transitionTimer: number | null = null;
 let revealTimer: number | null = null;
 let tutorialTimer: number | null = null;
+let pendingCardMotion: PendingCardMotion | null = null;
+let activeMotionTargetCardId: string | null = null;
+let cardMotionNonce = 0;
+let gameAudio: GameAudio | null = null;
+let removeHostAudioPolicyListener: (() => void) | null = null;
 
 void bootstrap().catch((error) => {
   const playdrop = window.playdrop;
-  if (playdrop) {
-    playdrop.host.setLoadingState({ status: "error", message: String(error) });
+  const host = playdrop?.host as RuntimeHost | undefined;
+  if (host?.error) {
+    host.error(String(error));
+  } else {
+    host?.setLoadingState?.({ status: "error", message: String(error) });
   }
   throw error;
 });
 
 async function bootstrap() {
-  let host: { setLoadingState(state: { status: string; message?: string; progress?: number }): void } | null = null;
-  if (HAS_PLAYDROP_HOST) {
-    const playdrop = window.playdrop;
-    if (!playdrop) throw new Error("[velvet-arcana] window.playdrop unavailable");
+  const host = await createHostBridge();
 
-    const sdk = await playdrop.init();
-    host = sdk.host;
-    host.setLoadingState({
-      status: "loading",
-      message: "resetting the reading table",
-      progress: 0.4,
-    });
-  }
+  gameAudio = new GameAudio(resolveAudioEnabled(host.audioPolicy));
+  gameAudio.preload();
+  removeHostAudioPolicyListener = host.onAudioPolicyChange((policy) => {
+    gameAudio?.setAudioAllowed(resolveAudioEnabled(policy));
+  });
+  window.addEventListener(
+    "beforeunload",
+    () => {
+      removeHostAudioPolicyListener?.();
+      removeHostAudioPolicyListener = null;
+      gameAudio?.destroy();
+    },
+    { once: true },
+  );
 
   render();
   installDebugSurface();
 
-  host?.setLoadingState({ status: "ready" });
+  host.ready();
 }
 
 function createInitialState(seed = readSeedFromUrl() ?? randomSeed()): GameState {
@@ -117,19 +168,46 @@ function createRunState(seed: number): GameState {
 }
 
 function startRun(seed = readSeedFromUrl() ?? randomSeed()) {
+  startRunAtSpread(seed, 0);
+}
+
+function startRunAtSpread(seed: number, spreadIndex: number) {
+  clearCardMotion();
   clearTransition();
   clearRevealTimer();
   clearTutorialTimer();
   state = createRunState(seed);
+  if (spreadIndex !== 0) {
+    state.spreadIndex = spreadIndex;
+    state.spread = createSpread(seedForSpread(seed, spreadIndex), spreadLabelAt(spreadIndex));
+    state.tutorialStep = null;
+    state.dismissedTutorialStep = null;
+    state.helpOpen = false;
+  }
   render();
 }
 
-function handleCard(columnIndex: number) {
-  if (state.phase !== "playing" || state.helpOpen) return;
+function handleCard(columnIndex: number, sourceButton?: HTMLElement | null) {
+  if (state.phase !== "playing" || state.helpOpen || activeMotionTargetCardId) return;
   const playable = getPlayableIndices(state.spread);
   if (!playable.includes(columnIndex)) return;
 
+  const sourceColumn = state.spread.columns[columnIndex];
+  const sourceEntry = sourceColumn ? sourceColumn[sourceColumn.length - 1] : undefined;
+  const sourceRect = snapshotRect(
+    sourceButton?.querySelector(".playing-card") ?? queryTopColumnCardElement(columnIndex),
+  );
   const result = playCard(state.spread, columnIndex);
+  pendingCardMotion =
+    sourceEntry && result.spread.active
+      ? {
+          kind: "play",
+          card: sourceEntry.card,
+          sourceRect,
+          sourceFaceUp: true,
+          targetCardId: result.spread.active.id,
+        }
+      : null;
   state.spread = result.spread;
   state.score += result.points;
   state.helpOpen = false;
@@ -137,14 +215,33 @@ function handleCard(columnIndex: number) {
     state.tutorialStep = "await-draw";
     state.dismissedTutorialStep = null;
   }
+  gameAudio?.playCue("play");
+  if (result.revealedCardId) {
+    gameAudio?.playCueAfter("reveal", 120);
+  }
   setRecentReveal(result.revealedCardId);
   resolveAfterAction();
   render();
 }
 
-function handleDraw() {
-  if (state.phase !== "playing" || state.helpOpen || state.spread.stock.length === 0) return;
+function handleDraw(sourceButton?: HTMLElement | null) {
+  if (state.phase !== "playing" || state.helpOpen || state.spread.stock.length === 0 || activeMotionTargetCardId) return;
+  const drawnCard = state.spread.stock[0] ?? null;
+  const sourceFaceUp = state.spread.showNextStockPreview;
+  const sourceRect = snapshotRect(
+    sourceButton?.querySelector(".playing-card") ?? queryTopStockCardElement(),
+  );
   state.spread = drawFromStock(state.spread);
+  pendingCardMotion =
+    drawnCard && state.spread.active
+      ? {
+          kind: "draw",
+          card: drawnCard,
+          sourceRect,
+          sourceFaceUp,
+          targetCardId: state.spread.active.id,
+        }
+      : null;
   state.helpOpen = false;
   if (state.tutorialStep === "welcome" || state.tutorialStep === "reveal") {
     state.tutorialStep = "match";
@@ -154,6 +251,7 @@ function handleDraw() {
     state.dismissedTutorialStep = null;
   }
   state.recentRevealCardId = null;
+  gameAudio?.playCue("draw");
   resolveAfterAction();
   render();
 }
@@ -162,6 +260,7 @@ function resolveAfterAction() {
   if (isSpreadCleared(state.spread)) {
     state.spreadsCleared = state.spreadIndex + 1;
     state.score += SPREAD_CLEAR_POINTS;
+    gameAudio?.playCue("spread-clear");
 
     if (state.spreadIndex === SPREAD_LABELS.length - 1) {
       state.score += RUN_CLEAR_POINTS;
@@ -200,6 +299,7 @@ function queueTransition() {
 }
 
 function startNextSpread() {
+  clearCardMotion();
   clearTransition();
   clearTutorialTimer();
   const nextIndex = state.spreadIndex + 1;
@@ -215,6 +315,7 @@ function startNextSpread() {
 }
 
 function finishRun(victory: boolean, summaryMessage: string) {
+  clearCardMotion();
   clearTransition();
   clearRevealTimer();
   clearTutorialTimer();
@@ -262,6 +363,15 @@ function clearTutorialTimer() {
     window.clearTimeout(tutorialTimer);
     tutorialTimer = null;
   }
+}
+
+function clearCardMotion() {
+  cardMotionNonce += 1;
+  pendingCardMotion = null;
+  activeMotionTargetCardId = null;
+  document.querySelectorAll(".js-card-motion-overlay").forEach((node) => node.remove());
+  root.querySelectorAll(".playing-card.is-motion-hidden").forEach((node) => node.classList.remove("is-motion-hidden"));
+  root.querySelectorAll(".playing-card.is-arriving").forEach((node) => node.classList.remove("is-arriving"));
 }
 
 function getVisibleSpeechStep(): Exclude<TutorialStep, "await-draw"> | null {
@@ -396,22 +506,25 @@ function render() {
   root.querySelectorAll<HTMLButtonElement>(".js-column-card").forEach((button) => {
     button.addEventListener("click", () => {
       const columnIndex = Number(button.dataset.column);
-      handleCard(columnIndex);
+      handleCard(columnIndex, button);
     });
   });
-  root.querySelector<HTMLButtonElement>(".js-draw")?.addEventListener("click", handleDraw);
+  root.querySelector<HTMLButtonElement>(".js-draw")?.addEventListener("click", (event) => {
+    handleDraw(event.currentTarget instanceof HTMLElement ? event.currentTarget : null);
+  });
   root.querySelector<HTMLButtonElement>(".js-guide")?.addEventListener("click", handleGuide);
   root.querySelector<HTMLElement>(".js-help-dismiss")?.addEventListener("click", dismissHelp);
   root.querySelector<HTMLButtonElement>(".js-restart")?.addEventListener("click", () => startRun(randomSeed()));
   syncTutorialTimer();
+  gameAudio?.syncState(state.phase, state.spread.label);
+  void playPendingCardMotion();
 }
 
 function renderHud(spreadDisplayLabel: string, speechStep: Exclude<TutorialStep, "await-draw"> | null) {
   const guideButton = `
-    <button class="guide-button js-guide" type="button" aria-label="${speechStep ? "Dismiss speech" : "How to play"}">
-      <span class="guide-avatar" aria-hidden="true">
-        <span class="guide-avatar__head"></span>
-        <span class="guide-avatar__body"></span>
+    <button class="guide-button ${speechStep || state.helpOpen ? "guide-button--active" : ""} js-guide" type="button" aria-label="${speechStep ? "Dismiss speech" : "How to play"}">
+      <span class="guide-button__frame" aria-hidden="true">
+        <img class="guide-button__image" src="./assets/guide-profile-circle.png" alt="" />
       </span>
     </button>
   `;
@@ -420,7 +533,9 @@ function renderHud(spreadDisplayLabel: string, speechStep: Exclude<TutorialStep,
     return `
       <header class="hud hud--speaking">
         <div class="hud-speech">
-          <div class="speech-bubble">${escapeHtml(tutorialMessage(speechStep))}</div>
+          <div class="speech-bubble">
+            <span class="speech-bubble__text">${escapeHtml(tutorialMessage(speechStep))}</span>
+          </div>
           ${guideButton}
         </div>
       </header>
@@ -429,9 +544,13 @@ function renderHud(spreadDisplayLabel: string, speechStep: Exclude<TutorialStep,
 
   return `
     <header class="hud">
-      <div class="score-readout">${formatNumber(state.score)}</div>
+      <div class="score-readout">
+        <span class="score-readout__value">${formatNumber(state.score)}</span>
+      </div>
       <div class="hud-right">
-        <div class="phase-pill">${escapeHtml(spreadDisplayLabel)}</div>
+        <div class="phase-pill">
+          <span class="phase-pill__value">${escapeHtml(spreadDisplayLabel)}</span>
+        </div>
         ${guideButton}
       </div>
     </header>
@@ -502,19 +621,26 @@ function renderStackCard({
 
 function renderPlayingCard(
   card: Card,
-  options: { faceUp: boolean; playable?: boolean; revealed?: boolean; compact?: boolean },
+  options: {
+    faceUp: boolean;
+    playable?: boolean;
+    revealed?: boolean;
+    compact?: boolean;
+    hiddenForMotion?: boolean | undefined;
+  },
 ) {
   const classes = [
     "playing-card",
     options.faceUp ? "is-face-up" : "is-face-down",
     options.revealed ? "is-revealed" : "",
     options.compact ? "playing-card--compact" : "",
+    options.hiddenForMotion ? "is-motion-hidden" : "",
   ]
     .filter(Boolean)
     .join(" ");
 
   return `
-    <div class="${classes}" data-suit="${card.suit}">
+    <div class="${classes}" data-suit="${card.suit}" data-card-id="${card.id}">
       <div class="playing-card__inner">
         <div class="playing-card__side playing-card__side--face">
           <img class="playing-card__art" src="${faceAssetForCard(card)}" alt="" draggable="false" />
@@ -600,6 +726,7 @@ function renderActivePile(spread: SpreadState) {
       layerIndex: 0,
       faceUp: true,
       extraClass: "pile-layer--current",
+      hiddenForMotion: shouldHideCardForMotion(spread.active.id),
     }),
   ].join("");
 
@@ -625,18 +752,150 @@ function renderPileLayer({
   layerIndex,
   faceUp,
   extraClass,
+  hiddenForMotion,
 }: {
   card: Card;
   pileClass: string;
   layerIndex: number;
   faceUp: boolean;
   extraClass?: string;
+  hiddenForMotion?: boolean;
 }) {
   return `
     <div class="pile-layer ${pileClass} ${extraClass ?? ""}" style="--pile-layer-index: ${layerIndex};">
-      ${renderPlayingCard(card, { faceUp, compact: true })}
+      ${renderPlayingCard(card, hiddenForMotion ? { faceUp, compact: true, hiddenForMotion: true } : { faceUp, compact: true })}
     </div>
   `;
+}
+
+function shouldHideCardForMotion(cardId: string) {
+  return pendingCardMotion?.targetCardId === cardId || activeMotionTargetCardId === cardId;
+}
+
+async function playPendingCardMotion() {
+  if (!pendingCardMotion) return;
+
+  const motion = pendingCardMotion;
+  pendingCardMotion = null;
+
+  if (!motion.targetCardId || !motion.sourceRect) {
+    activeMotionTargetCardId = null;
+    return;
+  }
+
+  const targetCard = queryCardElementById(motion.targetCardId);
+  const targetRect = snapshotRect(targetCard);
+  if (!targetCard || !targetRect) {
+    activeMotionTargetCardId = null;
+    targetCard?.classList.remove("is-motion-hidden");
+    return;
+  }
+
+  const overlay = document.createElement("div");
+  overlay.className = "card-motion-overlay js-card-motion-overlay";
+  overlay.style.left = `${motion.sourceRect.left}px`;
+  overlay.style.top = `${motion.sourceRect.top}px`;
+  overlay.style.width = `${motion.sourceRect.width}px`;
+  overlay.style.height = `${motion.sourceRect.height}px`;
+  overlay.innerHTML = renderPlayingCard(motion.card, { faceUp: motion.sourceFaceUp });
+  document.body.appendChild(overlay);
+
+  const overlayInner = overlay.querySelector<HTMLElement>(".playing-card__inner");
+  if (!overlayInner) {
+    overlay.remove();
+    activeMotionTargetCardId = null;
+    targetCard.classList.remove("is-motion-hidden");
+    return;
+  }
+
+  activeMotionTargetCardId = motion.targetCardId;
+  const motionNonce = ++cardMotionNonce;
+  const dx = targetRect.left - motion.sourceRect.left;
+  const dy = targetRect.top - motion.sourceRect.top;
+  const scaleX = targetRect.width / motion.sourceRect.width;
+  const scaleY = targetRect.height / motion.sourceRect.height;
+  const duration = motion.kind === "draw" ? DRAW_CARD_MOTION_MS : PLAY_CARD_MOTION_MS;
+  const lift = motion.kind === "draw" ? -22 : -12;
+
+  try {
+    await Promise.all([
+      overlay.animate(
+        [
+          { transform: "translate3d(0px, 0px, 0) scale(1, 1)" },
+          {
+            transform: `translate3d(${(dx * 0.64).toFixed(1)}px, ${(dy * 0.64 + lift).toFixed(1)}px, 0) scale(${(
+              1 +
+              (scaleX - 1) * 0.58
+            ).toFixed(4)}, ${(1 + (scaleY - 1) * 0.58).toFixed(4)})`,
+            offset: 0.66,
+          },
+          {
+            transform: `translate3d(${dx.toFixed(1)}px, ${dy.toFixed(1)}px, 0) scale(${scaleX.toFixed(4)}, ${scaleY.toFixed(4)})`,
+          },
+        ],
+        {
+          duration,
+          easing: "cubic-bezier(0.22, 0.82, 0.24, 1)",
+          fill: "forwards",
+        },
+      ).finished,
+      motion.sourceFaceUp
+        ? Promise.resolve()
+        : overlayInner
+            .animate(
+              [
+                { transform: "rotateY(180deg)" },
+                { transform: "rotateY(180deg)", offset: 0.46 },
+                { transform: "rotateY(0deg)" },
+              ],
+              {
+                duration,
+                easing: "cubic-bezier(0.25, 0.82, 0.25, 1)",
+                fill: "forwards",
+              },
+            )
+            .finished,
+    ]);
+  } catch {}
+
+  if (motionNonce !== cardMotionNonce) return;
+
+  overlay.remove();
+  activeMotionTargetCardId = null;
+
+  const currentTarget = queryCardElementById(motion.targetCardId);
+  if (currentTarget) {
+    currentTarget.classList.remove("is-motion-hidden");
+    currentTarget.classList.add("is-arriving");
+    window.setTimeout(() => {
+      currentTarget.classList.remove("is-arriving");
+    }, CARD_ARRIVAL_MS);
+  }
+}
+
+function snapshotRect(element: Element | null): CardMotionRect | null {
+  if (!(element instanceof HTMLElement)) return null;
+  const rect = element.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) return null;
+  return {
+    left: rect.left,
+    top: rect.top,
+    width: rect.width,
+    height: rect.height,
+  };
+}
+
+function queryTopColumnCardElement(columnIndex: number) {
+  return root.querySelector<HTMLElement>(`.js-column-card[data-column="${columnIndex}"] .playing-card`);
+}
+
+function queryTopStockCardElement() {
+  const cards = root.querySelectorAll<HTMLElement>(".js-draw .pile-layer--stock .playing-card");
+  return cards[cards.length - 1] ?? null;
+}
+
+function queryCardElementById(cardId: string) {
+  return Array.from(root.querySelectorAll<HTMLElement>(".playing-card")).find((node) => node.dataset.cardId === cardId) ?? null;
 }
 
 function faceAssetForCard(card: Card) {
@@ -831,6 +1090,7 @@ function installDebugSurface() {
       victory: state.victory,
     }),
     startRun: (seed?: number) => startRun(seed ?? randomSeed()),
+    startSpread: (spreadIndex: number, seed?: number) => startRunAtSpread(seed ?? randomSeed(), spreadIndex),
     playColumn: (columnIndex: number) => handleCard(columnIndex),
     draw: () => handleDraw(),
     setTutorialStep: (step: TutorialStep | null) => {
@@ -878,6 +1138,11 @@ function installDebugSurface() {
     },
     simulateRuns: (policy: AutoPolicy = "planner", runs = 100, seedStart = 10_000) =>
       simulateRuns(policy, runs, seedStart),
+    audioState: () => gameAudio?.debugState() ?? null,
+    setHostAudioEnabled: (enabled: boolean) => {
+      gameAudio?.setAudioAllowed(enabled);
+      return gameAudio?.debugState() ?? null;
+    },
   };
 
   Object.assign(window as Window & typeof globalThis, {
@@ -885,6 +1150,71 @@ function installDebugSurface() {
     advanceTime: debug.advanceTime,
     velvetArcanaDebug: debug,
   });
+}
+
+function bridgeFromRuntimeHost(runtimeHost: RuntimeHost | undefined, fallbackAudioPolicy: unknown): HostBridge {
+  return {
+    setLoadingState: (state) => runtimeHost?.setLoadingState?.(state),
+    ready: () => {
+      if (runtimeHost?.ready) {
+        runtimeHost.ready();
+        return;
+      }
+      runtimeHost?.setLoadingState?.({ status: "ready" });
+    },
+    audioPolicy: runtimeHost?.audioEnabled ?? fallbackAudioPolicy,
+    onAudioPolicyChange: runtimeHost?.onAudioPolicyChange
+      ? (handler) => {
+          const unsubscribe = runtimeHost.onAudioPolicyChange!(handler);
+          return typeof unsubscribe === "function" ? unsubscribe : NOOP_UNSUBSCRIBE;
+        }
+      : () => NOOP_UNSUBSCRIBE,
+  };
+}
+
+async function createHostBridge(): Promise<HostBridge> {
+  const playdrop = window.playdrop;
+  if (!playdrop) {
+    return bridgeFromRuntimeHost(undefined, true);
+  }
+
+  if (playdrop.init && HAS_PLAYDROP_HOST) {
+    try {
+      const sdk = await playdrop.init();
+      return bridgeFromRuntimeHost(sdk.host as RuntimeHost | undefined, false);
+    } catch (error) {
+      console.warn("[velvet-arcana] failed to initialize playdrop host bridge; muting until host policy is known", error);
+    }
+  }
+
+  return bridgeFromRuntimeHost(playdrop.host as RuntimeHost | undefined, HAS_PLAYDROP_HOST ? false : true);
+}
+
+function resolveAudioEnabled(policy: unknown): boolean {
+  if (typeof policy === "boolean") {
+    return policy;
+  }
+
+  if (!policy || typeof policy !== "object") {
+    return false;
+  }
+
+  const record = policy as Record<string, unknown>;
+  const hasExplicitPolicy = [record.audioEnabled, record.soundEnabled, record.enabled].some(
+    (value) => typeof value === "boolean",
+  );
+  if (!hasExplicitPolicy) {
+    return false;
+  }
+
+  return firstBoolean(record.audioEnabled, record.soundEnabled, record.enabled, false);
+}
+
+function firstBoolean(...values: unknown[]): boolean {
+  for (const value of values) {
+    if (typeof value === "boolean") return value;
+  }
+  return true;
 }
 
 function readBestScore() {

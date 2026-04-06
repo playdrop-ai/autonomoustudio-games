@@ -258,6 +258,19 @@ Early blockers
     - export each card as an individual transparent PNG
   - Output:
     - `53` cards total (`back` + `52` face cards)
+
+2026-04-05 HUD polish pass
+- Replaced the placeholder guide icon in `src/main.ts` with the approved circular portrait asset at `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/assets/guide-profile-circle.png`.
+- Restyled the top HUD in `template.html` to use a darker enamel-and-gold panel treatment that matches the deck and candlelit table better:
+  - score and phase now have explicit small-cap labels with stronger hierarchy
+  - the guide portrait sits inside a proper circular character button instead of the old generic silhouette
+  - the speech bubble uses the same material treatment and was checked in a live speaking-state screenshot
+  - help/gameover/phase-transition panels were nudged toward the same material language
+- Validation after the HUD pass:
+  - `npm test` passed
+  - `npm run validate` passed
+  - refreshed gameplay captures in `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/card-art-full-deck/`
+  - extra speaking-state check captured at `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/card-art-full-deck/mobile-portrait-speech-check.png`
     - transparent PNGs at `422x710`
     - full contact sheet at `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/art/cards/purple-deck-png/purple-deck-contact-sheet.png`
 - Integrated the standalone PNG deck into gameplay:
@@ -270,3 +283,68 @@ Early blockers
   - `npm run validate` passed
 - Added `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/scripts/capture-gameplay-full-deck.mjs` to capture a deterministic mid-game full-deck preview on desktop, mobile portrait, and mobile landscape from the built app.
 - Captured the updated gameplay set in `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/card-art-full-deck/` and assembled `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/card-art-full-deck/velvet-arcana-card-art-full-deck-composite.png`.
+
+- Follow-up HUD tweak: removed the visible `score` and `phase` labels from the top pills, kept only the values, revalidated with `npm run validate`, and refreshed the gameplay composite in `output/playwright/card-art-full-deck/`.
+
+- Added card motion polish:
+  - draw-from-stock now flies into the reading pile with an in-flight flip when the stock preview is hidden
+  - tableau plays now travel into the active pile instead of teleporting
+  - newly revealed cards keep the existing flip but now land with a subtle settle/pop
+  - the destination active card is temporarily hidden during motion so the handoff reads as a single moving card
+- Validation after the motion pass:
+  - `npm test` passed
+  - `npm run validate` passed
+  - refreshed the gameplay composite in `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/card-art-full-deck/`
+  - `playdrop project capture . --surface desktop --screenshot output/playdrop-capture-motion-check.png` still reproduced the existing hosted-wrapper `404` console error but saved the proof screenshot
+  - hidden `playdrop project capture listing` video capture is available in this CLI, but it is blocked on this machine by macOS Screen Recording permission
+  - generated a review video anyway at `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/listing/velvet-arcana_1280x720-recording.mp4` using the existing deterministic local capture script with slower steps so the new motion reads clearly
+
+- Added a dedicated Future-phase motion capture:
+  - exposed a debug-only `startSpread(spreadIndex, seed)` hook in `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/src/main.ts` so captures can jump straight to `Future`
+  - added `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/scripts/capture-future-motion.mjs`
+  - exported `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/future-motion/velvet-arcana-future-motion.mp4` plus poster `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/future-motion/velvet-arcana-future-motion-poster.png`
+
+- Smoothed the active-pile landing handoff:
+  - root cause was the destination card being measured while `.playing-card.is-motion-hidden` scaled it down to `0.965`, so the flying overlay landed on a smaller rect and then snapped again when the real card reappeared
+  - removed the hidden-state scale from `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/template.html`
+  - added `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/scripts/measure-card-landing.mjs` to sample the active-card rect across frames during a real landing
+  - first stable measurement showed `handoffDeltaPx ≈ 2.997` and `postHandoffTravelPx ≈ 3.000`, confirming a real 3px jump after the overlay disappeared
+  - a parallel-run probe initially misread the build state; after rerunning the probe against the rebuilt dist, the actual remaining cause was the transform-based arrival animation
+  - removed transform from the arrival animation so the landing uses opacity only
+  - final measurement in `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/motion-debug/landing-measurement.json` now reports `handoffDeltaPx ≈ 0.0065` and `postHandoffTravelPx = 0`
+  - revalidated with `npm run validate` and refreshed `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/future-motion/velvet-arcana-future-motion.mp4`
+
+- Fixed the second active-pile position:
+  - root cause was the active reading pile intentionally using two geometries in `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/template.html`: `.pile-layer--current` used `--current-card-lift` while `.pile-layer--active` used `--pile-layer-step` offsets, so the previous reading card visibly dropped into a separate trail slot whenever a new card appeared on top
+  - collapsed the reading pile to one shared position by overriding active-pile layer offsets in `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/template.html`
+  - added `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/scripts/measure-reading-stack-shift.mjs` to track the previous reading card across a new reveal
+  - final measurement in `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/motion-debug/reading-stack-shift.json` now reports `firstVisibleShiftPx = 0` and `maxShiftPx = 0`
+  - regenerated `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/future-motion/velvet-arcana-future-motion.mp4`
+
+- Added PlayDrop AI music and gameplay SFX:
+  - generated three private 120-second loops with `playdrop ai create music` for `Past`, `Present`, and `Future`, each keeping the same occult ambient palette while increasing intensity across the three spreads
+  - generated four private gameplay SFX with `playdrop ai create sfx` for draw, play, reveal, and spread clear
+  - downloaded the approved assets into `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/assets/audio/`
+  - added `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/src/audio.ts` with host-policy-aware audio handling: Web Audio for one-shot SFX, HTML audio for phase music, unlock on first gesture, and phase crossfades
+  - wired draw, play, reveal, and spread-clear cues into `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/src/main.ts` and synced music to the current spread label
+  - added a debug audio probe via `window.velvetArcanaDebug.audioState()` to verify unlock and phase switching in-browser
+  - validated with `npm test`, `npm run validate`, and a browser smoke run confirming `Past -> Present -> Future` music switching with no console or runtime audio errors
+  - regenerated `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/future-motion/velvet-arcana-future-motion.mp4` and created `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/future-motion/velvet-arcana-future-motion-with-audio.mp4` by muxing the scripted Future capture with the generated music and matching cue timings
+
+- Refreshed the store listing asset set:
+  - added `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/scripts/capture-listing-refresh.mjs` to capture stronger Present-phase listing media from a curated seed and scripted action path
+  - regenerated `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/listing/velvet-arcana_1280x720-recording.mp4`
+  - regenerated `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/listing/velvet-arcana_1280x720-screenshot-1.png`
+  - regenerated `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/listing/velvet-arcana_720x1280-screenshot-1.png`
+  - regenerated `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/listing/velvet-arcana_720x1280-screenshot-2.png`
+  - saved review artifacts in `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/listing-refresh/`, including the audio-muxed gameplay video and screenshot/art composites
+  - generated a stricter landscape hero from gameplay plus the approved seer reference and promoted it to `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/listing/hero-landscape.png`
+  - generated a matching portrait hero and promoted it to `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/listing/hero-portrait.png`
+  - generated a new square store icon from the approved seer direction and promoted it to `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/listing/icon.png`
+
+- Corrected mobile active-card visual centering on the altar glow:
+  - initial DOM-geometry check showed the active card centered on the altar box, but screenshot review still looked wrong because the visible glow was not evenly exposed around the card
+  - added `--active-reading-offset-x` in `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/template.html` so the active reading stack can be tuned independently from the altar asset
+  - ran a screenshot-based sweep at `0px`, `4px`, `5px`, `6px`, and `8px` using Playwright captures in `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/active-offset-sweep/` and `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/active-offset-fine/`
+  - locked `--active-reading-offset-x: 8px` for both mobile portrait and mobile landscape because it is the first value that visually centers the card on the visible glow in close-up review
+  - revalidated with `npm run validate` and refreshed `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/card-art-full-deck/velvet-arcana-card-art-full-deck-composite.png`

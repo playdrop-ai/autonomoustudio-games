@@ -2,13 +2,16 @@
   "apps": [
     {
       "name": "velvet-arcana",
-      "version": "1.0.2",
+      "version": "1.0.3",
       "displayName": "Velvet Arcana",
       "description": "Chain higher-or-lower omen cards through three candlelit spreads, bank one reserve charm, and chase a flawless reading before the candle burns out.",
       "emoji": "🃏",
       "color": "#B04F3B",
       "type": "GAME",
       "file": "dist/index.html",
+      "authMode": "OPTIONAL",
+      "controllerMode": "UNSUPPORTED",
+      "previewable": true,
       "listing": {
         "icon": "listing/icon.png",
         "heroLandscape": "listing/hero-landscape.png",
@@ -26,7 +29,7 @@
       },
       "surfaceTargets": {
         "desktop": true,
-        "mobileLandscape": false,
+        "mobileLandscape": true,
         "mobilePortrait": true
       }
     }
