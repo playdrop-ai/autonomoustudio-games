@@ -1,0 +1,786 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Lunchline Mockup</title>
+    <style>
+      :root {
+        --bg-cream: #fff6ea;
+        --counter-wood: #603722;
+        --counter-wood-dark: #3f2415;
+        --board-bg: #fff4df;
+        --board-shadow: rgba(64, 28, 13, 0.22);
+        --panel: rgba(255, 248, 235, 0.94);
+        --panel-strong: rgba(255, 245, 230, 0.98);
+        --ink: #3b2418;
+        --ink-soft: #7b5945;
+        --accent-coral: #ef7d58;
+        --accent-avocado: #7ab96d;
+        --accent-egg: #f3c863;
+        --accent-cucumber: #55a98d;
+        --danger: #df4f53;
+        --danger-soft: #ffb3b1;
+        --good: #f7efe0;
+        --shadow-strong: 0 24px 60px rgba(63, 36, 21, 0.28);
+        --shadow-soft: 0 14px 34px rgba(63, 36, 21, 0.18);
+        --radius-xl: 34px;
+        --radius-lg: 24px;
+        --radius-md: 18px;
+        --font-display: "Avenir Next Condensed", "Trebuchet MS", "Gill Sans", sans-serif;
+        --font-body: "Avenir Next", "Segoe UI", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background:
+          radial-gradient(circle at top, rgba(255, 255, 255, 0.42), transparent 24%),
+          linear-gradient(180deg, #f7c992 0%, #f1a46c 22%, #7b4022 22.2%, #542d1d 100%);
+        color: var(--ink);
+        font-family: var(--font-body);
+      }
+
+      body {
+        overflow: hidden;
+      }
+
+      body::before,
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+      }
+
+      body::before {
+        background:
+          radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.5), transparent 36%),
+          linear-gradient(180deg, transparent 0%, rgba(35, 20, 12, 0.22) 100%);
+      }
+
+      body::after {
+        background:
+          repeating-linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.03) 0 16px,
+            rgba(76, 38, 21, 0.05) 16px 32px
+          );
+        opacity: 0.5;
+      }
+
+      .mockup-shell {
+        position: relative;
+        display: flex;
+        align-items: stretch;
+        justify-content: center;
+        width: 100vw;
+        height: 100vh;
+        padding: max(22px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right))
+          max(18px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+      }
+
+      .counter-stage {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        width: min(100%, 560px);
+        min-height: 100%;
+        border-radius: 40px;
+        padding: 16px;
+        background:
+          linear-gradient(180deg, rgba(255, 247, 231, 0.96), rgba(250, 234, 210, 0.93)),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.3), transparent 20%);
+        box-shadow: var(--shadow-strong);
+        overflow: hidden;
+      }
+
+      .counter-stage::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(circle at top right, rgba(255, 255, 255, 0.4), transparent 28%),
+          linear-gradient(180deg, rgba(122, 185, 109, 0.06), transparent 24%),
+          linear-gradient(180deg, transparent 72%, rgba(96, 55, 34, 0.08) 100%);
+        pointer-events: none;
+      }
+
+      .hud-strip {
+        position: relative;
+        z-index: 2;
+        display: grid;
+        grid-template-columns: minmax(0, 112px) minmax(0, 1fr) minmax(0, 112px);
+        gap: 10px;
+        align-items: start;
+        margin-bottom: 14px;
+      }
+
+      .chip {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+        padding: 12px 14px;
+        border-radius: 20px;
+        background: rgba(255, 251, 245, 0.86);
+        box-shadow: var(--shadow-soft);
+        backdrop-filter: blur(8px);
+      }
+
+      .chip--complaints {
+        align-items: flex-end;
+      }
+
+      .chip-label {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+      }
+
+      .chip-value {
+        font-family: var(--font-display);
+        font-size: 24px;
+        font-weight: 800;
+        letter-spacing: 0.03em;
+      }
+
+      .complaint-hearts {
+        display: flex;
+        gap: 5px;
+      }
+
+      .complaint-dot {
+        width: 18px;
+        height: 18px;
+        border-radius: 999px;
+        background: rgba(223, 79, 83, 0.18);
+        box-shadow: inset 0 0 0 1px rgba(223, 79, 83, 0.16);
+      }
+
+      .complaint-dot.is-on {
+        background: radial-gradient(circle at 35% 35%, #ffcfcf, var(--danger) 62%);
+        box-shadow:
+          inset 0 -1px 0 rgba(124, 17, 25, 0.26),
+          0 6px 12px rgba(223, 79, 83, 0.28);
+      }
+
+      .order-card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 14px 16px 16px;
+        border-radius: 24px;
+        background: var(--panel-strong);
+        box-shadow: var(--shadow-soft);
+        overflow: hidden;
+      }
+
+      .order-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.54), transparent 42%),
+          linear-gradient(180deg, rgba(96, 55, 34, 0.04), transparent 44%);
+        pointer-events: none;
+      }
+
+      .order-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .order-title {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        min-width: 0;
+      }
+
+      .brand {
+        font-family: var(--font-display);
+        font-size: 28px;
+        font-weight: 900;
+        letter-spacing: 0.03em;
+      }
+
+      .order-subtitle {
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+      }
+
+      .patience {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .patience-label {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+      }
+
+      .patience-meter {
+        position: relative;
+        width: 110px;
+        height: 12px;
+        border-radius: 999px;
+        background: rgba(223, 79, 83, 0.14);
+        overflow: hidden;
+      }
+
+      .patience-fill {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 68%;
+        border-radius: inherit;
+        background:
+          linear-gradient(90deg, var(--danger) 0%, #f08a6a 55%, #ffd3a5 100%);
+      }
+
+      .bento-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .order-slot {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+        padding: 12px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.74);
+        box-shadow: inset 0 0 0 1px rgba(96, 55, 34, 0.08);
+      }
+
+      .order-slot-count {
+        margin-left: auto;
+        font-family: var(--font-display);
+        font-size: 24px;
+        font-weight: 900;
+      }
+
+      .order-slot-count span {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--ink-soft);
+      }
+
+      .playfield {
+        position: relative;
+        z-index: 1;
+        flex: 1;
+        display: flex;
+        align-items: stretch;
+      }
+
+      .board-frame {
+        position: relative;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        border-radius: 30px;
+        padding: 16px;
+        background:
+          linear-gradient(180deg, rgba(255, 248, 235, 0.94), rgba(246, 229, 203, 0.95)),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.24), transparent 26%);
+        box-shadow:
+          inset 0 0 0 2px rgba(255, 255, 255, 0.18),
+          inset 0 -3px 0 rgba(96, 55, 34, 0.08),
+          var(--shadow-soft);
+      }
+
+      .board-frame::before {
+        content: "";
+        position: absolute;
+        inset: 12px;
+        border-radius: 24px;
+        background:
+          radial-gradient(circle at top, rgba(255, 255, 255, 0.45), transparent 18%),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.25), transparent 20%),
+          linear-gradient(180deg, #fef3df 0%, #f6e4c8 100%);
+        box-shadow: inset 0 0 0 1px rgba(123, 89, 69, 0.12);
+      }
+
+      .board-grid {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        flex: 1;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 7px;
+      }
+
+      .cell {
+        position: relative;
+        border-radius: 18px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.62), rgba(238, 219, 190, 0.95));
+        box-shadow:
+          inset 0 0 0 1px rgba(123, 89, 69, 0.08),
+          inset 0 -2px 0 rgba(96, 55, 34, 0.06);
+        overflow: hidden;
+      }
+
+      .cell::before {
+        content: "";
+        display: block;
+        padding-top: 100%;
+      }
+
+      .ingredient {
+        position: absolute;
+        inset: 8px;
+        border-radius: 18px;
+        box-shadow:
+          inset 0 -3px 0 rgba(60, 31, 18, 0.14),
+          0 8px 14px rgba(96, 55, 34, 0.09);
+      }
+
+      .ingredient::before,
+      .ingredient::after {
+        content: "";
+        position: absolute;
+      }
+
+      .ingredient--salmon {
+        background:
+          radial-gradient(circle at top, rgba(255, 255, 255, 0.4), transparent 44%),
+          linear-gradient(180deg, #ff9c7d 0%, var(--accent-coral) 100%);
+      }
+
+      .ingredient--salmon::before {
+        inset: 28% 16%;
+        border-top: 4px solid rgba(255, 250, 244, 0.86);
+        border-bottom: 4px solid rgba(255, 250, 244, 0.72);
+        border-radius: 999px;
+      }
+
+      .ingredient--salmon::after {
+        inset: 16% auto auto 18%;
+        width: 58%;
+        height: 14%;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.45);
+      }
+
+      .ingredient--avocado {
+        background:
+          radial-gradient(circle at top, rgba(255, 255, 255, 0.38), transparent 42%),
+          linear-gradient(180deg, #a6db8b 0%, var(--accent-avocado) 100%);
+      }
+
+      .ingredient--avocado::before {
+        inset: 18%;
+        border-radius: 999px 999px 64% 64%;
+        background: linear-gradient(180deg, #d7f3bf 0%, #94cf78 100%);
+      }
+
+      .ingredient--avocado::after {
+        inset: 39% 36%;
+        border-radius: 999px;
+        background: #75502e;
+      }
+
+      .ingredient--egg {
+        background:
+          radial-gradient(circle at top, rgba(255, 255, 255, 0.38), transparent 42%),
+          linear-gradient(180deg, #fff6d5 0%, #fff1be 100%);
+      }
+
+      .ingredient--egg::before {
+        inset: 23% 18%;
+        border-radius: 14px;
+        background: linear-gradient(180deg, #ffe28f 0%, var(--accent-egg) 100%);
+      }
+
+      .ingredient--egg::after {
+        inset: 17% 16%;
+        border-radius: 18px;
+        box-shadow: inset 0 0 0 4px rgba(255, 255, 255, 0.9);
+      }
+
+      .ingredient--cucumber {
+        background:
+          radial-gradient(circle at top, rgba(255, 255, 255, 0.38), transparent 42%),
+          linear-gradient(180deg, #85dbc0 0%, var(--accent-cucumber) 100%);
+      }
+
+      .ingredient--cucumber::before,
+      .ingredient--cucumber::after {
+        border-radius: 999px;
+        border: 4px solid rgba(225, 255, 243, 0.78);
+      }
+
+      .ingredient--cucumber::before {
+        inset: 20% 18% 20% 18%;
+      }
+
+      .ingredient--cucumber::after {
+        inset: 33% 31% 33% 31%;
+      }
+
+      .cell.is-focus {
+        transform: translateY(-2px);
+        box-shadow:
+          inset 0 0 0 2px rgba(255, 255, 255, 0.24),
+          0 0 0 3px rgba(239, 125, 88, 0.26),
+          0 20px 26px rgba(239, 125, 88, 0.18);
+      }
+
+      .cell.is-focus .ingredient {
+        animation: focusPulse 1.4s ease-in-out infinite;
+      }
+
+      .cell.is-focus::after {
+        content: "";
+        position: absolute;
+        inset: 6px;
+        border-radius: 16px;
+        border: 2px dashed rgba(255, 255, 255, 0.72);
+      }
+
+      @keyframes focusPulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+
+        50% {
+          transform: scale(1.06);
+        }
+      }
+
+      .board-footer {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 12px;
+      }
+
+      .footer-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: rgba(255, 251, 245, 0.86);
+        box-shadow: var(--shadow-soft);
+      }
+
+      .footer-pill strong {
+        font-family: var(--font-display);
+        font-size: 20px;
+      }
+
+      .surface-note {
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+      }
+
+      .overlay {
+        position: absolute;
+        inset: 16px;
+        z-index: 4;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 28px;
+        background: rgba(53, 28, 17, 0.14);
+        backdrop-filter: blur(9px);
+      }
+
+      .overlay-card {
+        width: min(100%, 420px);
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 26px 24px;
+        border-radius: 28px;
+        background:
+          linear-gradient(180deg, rgba(255, 249, 238, 0.98), rgba(247, 231, 207, 0.96));
+        box-shadow: var(--shadow-strong);
+      }
+
+      .overlay-card h1,
+      .overlay-card h2 {
+        margin: 0;
+        font-family: var(--font-display);
+        font-size: clamp(38px, 6vw, 54px);
+        line-height: 0.92;
+      }
+
+      .overlay-card p {
+        margin: 0;
+        font-size: 16px;
+        line-height: 1.45;
+        color: var(--ink-soft);
+      }
+
+      .cta-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 8px;
+      }
+
+      .play-button,
+      .restart-button {
+        border: 0;
+        border-radius: 999px;
+        padding: 14px 18px;
+        font-family: var(--font-display);
+        font-size: 22px;
+        font-weight: 900;
+        color: white;
+        background:
+          linear-gradient(180deg, #ff936f 0%, var(--accent-coral) 100%);
+        box-shadow: 0 14px 24px rgba(239, 125, 88, 0.28);
+      }
+
+      .mini-note {
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+      }
+
+      .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .stat-card {
+        padding: 12px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.72);
+        box-shadow: inset 0 0 0 1px rgba(96, 55, 34, 0.08);
+      }
+
+      .stat-card span {
+        display: block;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+      }
+
+      .stat-card strong {
+        display: block;
+        margin-top: 4px;
+        font-family: var(--font-display);
+        font-size: 25px;
+      }
+
+      body[data-screen="start"] .overlay--start,
+      body[data-screen="gameover"] .overlay--gameover {
+        display: flex;
+      }
+
+      body[data-screen="gameover"] .patience-fill {
+        width: 14%;
+      }
+
+      body[data-screen="gameover"] .complaint-dot:nth-child(1),
+      body[data-screen="gameover"] .complaint-dot:nth-child(2),
+      body[data-screen="gameover"] .complaint-dot:nth-child(3) {
+        background: radial-gradient(circle at 35% 35%, #ffcfcf, var(--danger) 62%);
+      }
+
+      body[data-screen="start"] .patience-fill {
+        width: 82%;
+      }
+
+      body[data-screen="start"] .cell.is-focus .ingredient {
+        animation-duration: 2s;
+      }
+
+      @media (min-aspect-ratio: 1 / 1) {
+        .mockup-shell {
+          padding: 18px;
+        }
+
+        .counter-stage {
+          width: min(100%, 500px);
+          padding: 18px;
+        }
+
+        .hud-strip {
+          grid-template-columns: 116px minmax(0, 1fr) 116px;
+        }
+
+        .board-frame {
+          padding: 18px;
+        }
+      }
+    </style>
+  </head>
+  <body data-screen="play">
+    <div class="mockup-shell">
+      <section class="counter-stage">
+        <header class="hud-strip">
+          <section class="chip">
+            <span class="chip-label">Score</span>
+            <span class="chip-value">12,480</span>
+          </section>
+
+          <section class="order-card" aria-label="Active lunchbox order">
+            <div class="order-header">
+              <div class="order-title">
+                <strong class="brand">Lunchline</strong>
+                <span class="order-subtitle">Order 12</span>
+              </div>
+              <div class="patience">
+                <span class="patience-label">Rush</span>
+                <div class="patience-meter" aria-hidden="true">
+                  <div class="patience-fill"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="bento-grid">
+              <div class="order-slot">
+                <div class="ingredient ingredient--salmon" aria-hidden="true"></div>
+                <div class="order-slot-count">5<span> / 6</span></div>
+              </div>
+              <div class="order-slot">
+                <div class="ingredient ingredient--egg" aria-hidden="true"></div>
+                <div class="order-slot-count">3<span> / 4</span></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="chip chip--complaints">
+            <span class="chip-label">Complaints</span>
+            <div class="complaint-hearts" aria-label="Complaint lives">
+              <span class="complaint-dot is-on"></span>
+              <span class="complaint-dot"></span>
+              <span class="complaint-dot"></span>
+            </div>
+          </section>
+        </header>
+
+        <main class="playfield">
+          <section class="board-frame">
+            <div class="board-grid" id="board"></div>
+            <div class="board-footer">
+              <div class="footer-pill">
+                <span class="surface-note">Orders Served</span>
+                <strong>9</strong>
+              </div>
+              <div class="footer-pill">
+                <span class="surface-note">Best Lunchbox</span>
+                <strong>18</strong>
+              </div>
+            </div>
+          </section>
+
+          <div class="overlay overlay--start">
+            <section class="overlay-card">
+              <h1>Lunchline</h1>
+              <p>
+                Tap matching ingredient groups to fill the order card before the shift racks up three
+                complaints.
+              </p>
+              <div class="cta-row">
+                <button class="play-button" type="button">Start Shift</button>
+                <span class="mini-note">Portrait-first puzzle run</span>
+              </div>
+            </section>
+          </div>
+
+          <div class="overlay overlay--gameover">
+            <section class="overlay-card">
+              <h2>Shift Over</h2>
+              <p>
+                The lunch rush got away from you. Tighten the next board clear and finish the order
+                before complaints stack up.
+              </p>
+              <div class="stat-grid">
+                <div class="stat-card">
+                  <span>Score</span>
+                  <strong>18,320</strong>
+                </div>
+                <div class="stat-card">
+                  <span>Best</span>
+                  <strong>23,110</strong>
+                </div>
+                <div class="stat-card">
+                  <span>Orders</span>
+                  <strong>14</strong>
+                </div>
+              </div>
+              <div class="cta-row">
+                <button class="restart-button" type="button">Run It Back</button>
+                <span class="mini-note">Three complaints ends the shift</span>
+              </div>
+            </section>
+          </div>
+        </main>
+      </section>
+    </div>
+
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const screen = params.get("screen") || "play";
+      document.body.dataset.screen = screen;
+
+      const board = [
+        ["avocado", "salmon", "salmon", "egg", "cucumber", "salmon", "egg"],
+        ["egg", "salmon", "salmon", "egg", "cucumber", "salmon", "egg"],
+        ["egg", "cucumber", "salmon", "salmon", "salmon", "egg", "cucumber"],
+        ["avocado", "cucumber", "egg", "egg", "cucumber", "egg", "salmon"],
+        ["salmon", "avocado", "egg", "cucumber", "cucumber", "salmon", "salmon"],
+        ["salmon", "avocado", "avocado", "egg", "salmon", "salmon", "egg"],
+        ["egg", "cucumber", "avocado", "egg", "egg", "cucumber", "egg"],
+        ["cucumber", "cucumber", "salmon", "salmon", "avocado", "cucumber", "egg"],
+        ["cucumber", "egg", "egg", "salmon", "avocado", "avocado", "salmon"],
+        ["salmon", "egg", "cucumber", "egg", "cucumber", "avocado", "salmon"],
+      ];
+
+      const focus = new Set(["1:1", "1:2", "2:2", "2:3", "2:4"]);
+      const boardNode = document.getElementById("board");
+
+      for (let y = 0; y < board.length; y += 1) {
+        for (let x = 0; x < board[y].length; x += 1) {
+          const cell = document.createElement("div");
+          cell.className = "cell";
+          if (focus.has(`${x}:${y}`)) cell.classList.add("is-focus");
+
+          const ingredient = document.createElement("div");
+          ingredient.className = `ingredient ingredient--${board[y][x]}`;
+          cell.appendChild(ingredient);
+          boardNode.appendChild(cell);
+        }
+      }
+    </script>
+  </body>
+</html>
