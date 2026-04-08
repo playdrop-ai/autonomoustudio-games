@@ -1,0 +1,37 @@
+{
+  "apps": [
+    {
+      "name": "relayline",
+      "version": "1.0.2",
+      "displayName": "Relayline",
+      "description": "Read the overload counts, reveal safe cells, and complete a glowing circuit from source to relay before three surges end the run.",
+      "type": "GAME",
+      "authMode": "OPTIONAL",
+      "previewable": true,
+      "emoji": "⚡",
+      "color": "#0E8A97",
+      "file": "dist/index.html",
+      "listing": {
+        "icon": "listing/icon.png",
+        "heroLandscape": "listing/hero-landscape.png",
+        "heroPortrait": "listing/hero-portrait.png",
+        "screenshotsLandscape": [
+          "listing/relayline_1280x720-screenshot-1.png"
+        ],
+        "screenshotsPortrait": [
+          "listing/relayline_720x1280-screenshot-1.png",
+          "listing/relayline_720x1280-screenshot-2.png"
+        ],
+        "videosLandscape": [
+          "listing/relayline_1280x720-recording.mp4"
+        ]
+      },
+      "surfaceTargets": {
+        "desktop": true,
+        "mobileLandscape": false,
+        "mobilePortrait": true
+      },
+      "templateSource": "playdrop/template/typescript_template"
+    }
+  ]
+}
