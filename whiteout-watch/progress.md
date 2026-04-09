@@ -1,0 +1,101 @@
+Original prompt: Automation: New game. Create and publish a new game using the `@playdrop` plugin, follow `/Users/oliviermichon/Documents/autonomoustudio-internal/guidelines/NEW_GAME_WORKFLOW.md` exactly, and do not advance a gate until the current step has a final PASS file in `gates/`.
+
+Workspace paths:
+- Internal workflow repo: `/Users/oliviermichon/Documents/autonomoustudio-internal`
+- Games repo: `/Users/oliviermichon/Documents/autonomoustudio-games`
+- Game folder: `/Users/oliviermichon/Documents/autonomoustudio-games/whiteout-watch`
+
+Current concept: `Whiteout Watch`
+
+Early blockers:
+- None for planning. The local `.env`, PlayDrop auth, X auth sources, Playwright, and FFmpeg are all present.
+- `playdrop project create app whiteout-watch --template playdrop/app/typescript_template` returned non-zero because the games repo root `catalogue.json` intentionally stays `{}`. The actual per-game scaffold was still created correctly and is usable.
+- `@game-studio` skills are not available in this session, so browser-game UI, mockup, and playtest depth work will be handled directly while keeping to the `SKILL_ROUTING.md` intent and the simple PlayDrop TypeScript path.
+
+2026-04-09
+- Reviewed the gated workflow, skill-routing map, concept kill criteria, idea/spec/simplify guidelines, and the `00` through `03` checklists in the internal workflow repo.
+- Checked the local `.env` keys first and confirmed `PLAYDROP_API_KEY`, `X_HANDLE`, and `X_PASSWORD` are present before any release-blocker claim.
+- Logged the local CLI into `autonomoustudio (prod)` using the workspace API key after `playdrop whoami` initially failed because the pinned workspace account was not authenticated.
+- Confirmed the target repos: `/Users/oliviermichon/Documents/autonomoustudio-internal` and `/Users/oliviermichon/Documents/autonomoustudio-games`.
+- Confirmed verification and capture tooling with `playwright --version` and `ffmpeg -version`.
+- Reviewed the optional taste notes in `/Users/oliviermichon/Documents/autonomoustudio-internal/freeform/GAME_IDEAS.md`.
+- Reviewed the studio catalog on the live PlayDrop account to avoid repeating existing lanes such as route deduction, flower routing, lunch-order clustering, fishing timing, tower defense, card laddering, skiing, row shifting, bubble clearing, and portrait rhythm.
+- Reviewed public PlayDrop references and gaps through `@playdrop game-planning` and `@playdrop asset-discovery`, including `Relayline`, `Pocket Bastion`, `Watair`, `Case Files`, and the current public search surface for puzzle, management, and mystery lanes.
+- Rejected weaker directions before locking the folder:
+  - plain `Sudoku` because the differentiator still depended too much on polish alone
+  - another tower-defense concept because `Pocket Bastion` already occupies that studio lane
+  - AI detective content because it depended too heavily on authored/generated case volume for v1
+- Locked `Whiteout Watch` as a portrait-first crisis triage game where the player keeps heat, power, and comms alive through escalating whiteouts by spending limited battery pulses on the right system at the right time.
+- Created the scaffolded PlayDrop TypeScript app folder and the per-game workflow folders (`gates/`, `mockups/`, `listing/`, `output/`, `tmp/`, `tests/`, `scripts/`).
+- Passed `00-preflight`.
+- Wrote and passed `01-idea`, `02-spec`, and `03-simplify` around a one-mode endless v1 with three interdependent systems, one-thumb taps, and no extra progression, story, or feature rescue scope.
+- Built `/Users/oliviermichon/Documents/autonomoustudio-games/whiteout-watch/mockups/whiteout-watch-mockup.html` as a literal browser-rendered implementation target for start, gameplay, and fail states.
+- Exported final gameplay mockups for portrait `720x1280` and desktop `1280x720`:
+  - `whiteout-watch-start-portrait.png`
+  - `whiteout-watch-play-portrait.png`
+  - `whiteout-watch-end-portrait.png`
+  - `whiteout-watch-start-desktop.png`
+  - `whiteout-watch-play-desktop.png`
+  - `whiteout-watch-end-desktop.png`
+- The first desktop mockup pass failed because the three system cards floated in the upper half of the frame and left too much dead space below. Tightened the desktop grid so the cards fill the gameplay frame, then re-exported all six final mockups.
+- Added an inline favicon to the mockup page so browser-rendered review stayed clean with `0` console errors or warnings.
+- Passed `04-mockup`.
+- Replaced the template runtime with the shipped `Whiteout Watch` game shell:
+  - local/hosted PlayDrop host bridge based on the proven Relayline pattern
+  - deterministic storm event logic in `src/game/`
+  - full-screen DOM dashboard matching the approved mockups
+  - local best-time persistence
+  - debug hooks for seeded QA and later capture work
+- Added unit coverage in `/Users/oliviermichon/Documents/autonomoustudio-games/whiteout-watch/tests/logic.test.ts` for restore pulses, recharge thresholds, heat penalty scaling, forecast degradation, storm-loss handling, and recharge advancement.
+- Added `.playdropignore` to exclude `output/`, `mockups/`, and `tmp/` from PlayDrop source uploads.
+- Updated `catalogue.json`, `template.html`, `build.mjs`, and `package.json` so the project no longer presents as the starter template in metadata, titles, icons, or build logs.
+- Ran:
+  - `npm install`
+  - `npm run validate`
+  - `playdrop project validate .`
+- Local browser QA on the built app at `dist/index.html` showed `0` console errors and `0` warnings on both portrait and desktop.
+- Captured local implementation evidence from the real build:
+  - `/Users/oliviermichon/Documents/autonomoustudio-games/whiteout-watch/output/playwright/local-start-portrait.png`
+  - `/Users/oliviermichon/Documents/autonomoustudio-games/whiteout-watch/output/playwright/local-play-portrait.png`
+  - `/Users/oliviermichon/Documents/autonomoustudio-games/whiteout-watch/output/playwright/local-end-portrait.png`
+  - `/Users/oliviermichon/Documents/autonomoustudio-games/whiteout-watch/output/playwright/local-start-desktop.png`
+  - `/Users/oliviermichon/Documents/autonomoustudio-games/whiteout-watch/output/playwright/local-play-desktop.png`
+- `playdrop project validate .` returned one non-blocking metadata warning: `catalogue.json (no emoji or color provided)`. This can be cleaned during listing polish.
+- Passed `05-implementation`.
+- Added `scripts/sweep-balance.ts` and tuned the endless balance until the final sweeps landed inside the gated target band:
+  - idle median: `31.2s`
+  - casual median: `116.2s`
+  - expert median: `319.1s`
+  - expert p25: `315.0s`
+- Captured live gameplay-gate evidence from the built app and passed `06-gameplay-v1`.
+- Generated deterministic listing screenshots plus a `12s` landscape gameplay video with `scripts/capture-media.mjs`.
+- Generated the final icon and hero art through PlayDrop AI, converted the approved outputs into `listing/icon.png`, `listing/hero-landscape.png`, and `listing/hero-portrait.png`, updated `catalogue.json`, and passed `07-listing-media`.
+- Published `autonomoustudio/app/whiteout-watch` version `1.0.0`.
+- Live detail now resolves:
+  - listing: `https://www.playdrop.ai/creators/autonomoustudio/apps/game/whiteout-watch`
+  - play: `https://www.playdrop.ai/creators/autonomoustudio/apps/game/whiteout-watch/play`
+  - hosted build: `https://assets.playdrop.ai/creators/autonomoustudio/apps/whiteout-watch/v1.0.0/index.html`
+- Release verification commands:
+  - `npm run validate`
+  - `playdrop project validate .`
+  - `playdrop detail autonomoustudio/app/whiteout-watch --json`
+  - `playdrop project capture remote https://www.playdrop.ai/creators/autonomoustudio/apps/game/whiteout-watch/play --surface mobile-portrait --screenshot output/playwright/release-check/remote-portrait.png`
+- `playdrop project capture remote` ignored the requested `mobile-portrait` surface and saved both `remote-portrait.png` and `remote-desktop.png` at `1280x720`. I switched to direct hosted-bundle Playwright verification and sent PlayDrop feedback `#49`: `remote capture ignores requested mobile surface`.
+- Final hosted verification evidence:
+  - portrait start: `/Users/oliviermichon/Documents/autonomoustudio-games/whiteout-watch/output/playwright/release-check/hosted-portrait-start.png`
+  - portrait active: `/Users/oliviermichon/Documents/autonomoustudio-games/whiteout-watch/output/playwright/release-check/hosted-portrait-active.png`
+  - desktop start: `/Users/oliviermichon/Documents/autonomoustudio-games/whiteout-watch/output/playwright/release-check/hosted-desktop-start.png`
+  - desktop active: `/Users/oliviermichon/Documents/autonomoustudio-games/whiteout-watch/output/playwright/release-check/hosted-desktop-active.png`
+- The hosted bundle at `assets.playdrop.ai` stayed at `0` app-origin console errors and `0` warnings on both portrait `430x932` and desktop `1400x900` verification runs.
+- Public listing verification evidence:
+  - listing page screenshot: `/Users/oliviermichon/Documents/autonomoustudio-games/whiteout-watch/output/playwright/release-check/listing-page.png`
+  - listing media in `catalogue.json` matches the published icon, hero art, screenshots, and gameplay video for `v1.0.0`
+- X release thread record: `/Users/oliviermichon/Documents/autonomoustudio-games/whiteout-watch/output/playwright/release-check/x-thread.json`
+- X release thread URLs:
+  - gameplay post: `https://x.com/autonomoustudio/status/2042210294244446711`
+  - game link reply: `https://x.com/autonomoustudio/status/2042211054898278737`
+  - autonomous note reply: `https://x.com/autonomoustudio/status/2042214617078710307`
+- X automation note:
+  - the first generic thread script missed the link reply because X rendered the PlayDrop URL as a card title instead of raw URL text
+  - after updating the detection snippet to `Whiteout Watch by autonomoustudio` and shortening the note reply under the X character limit, the final release thread completed successfully
+- Remaining follow-up: none. The game is live; `playdrop detail` still reports `reviewState: QUEUED`, but the public listing and hosted build are already reachable.
