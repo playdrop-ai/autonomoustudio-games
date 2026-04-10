@@ -1,0 +1,103 @@
+Original prompt: Automation: New game. Create and publish a new game using the `@playdrop` plugin, follow `/Users/oliviermichon/Documents/autonomoustudio-internal/guidelines/NEW_GAME_WORKFLOW.md` exactly, and do not advance a gate until the current step has a final PASS file in `gates/`.
+
+Workspace paths:
+- Internal workflow repo: `/Users/oliviermichon/Documents/autonomoustudio-internal`
+- Games repo: `/Users/oliviermichon/Documents/autonomoustudio-games`
+- Game folder: `/Users/oliviermichon/Documents/autonomoustudio-games/scrap-signal`
+
+Current concept: `Scrap Signal`
+
+Early blockers:
+- None for planning. The local `.env`, PlayDrop auth, X auth sources, Playwright wrapper, and FFmpeg are all present.
+- The PlayDrop CLI initially failed workspace auth checks because it was still on `0.6.5`; it was updated to `0.6.6` before planning continued.
+- `playdrop project create app scrap-signal --template playdrop/app/typescript_template` returned non-zero because the games repo root `catalogue.json` intentionally stays `{}`. The actual per-game scaffold was still created correctly and is usable.
+- `@game-studio` skills are not available in this session, so architecture, mockup, and playtest depth work will be handled directly while staying on the simple PlayDrop TypeScript path mandated by `SKILL_ROUTING.md`.
+
+2026-04-10
+- Reviewed the gated workflow, the gate template, `SKILL_ROUTING.md`, `CONCEPT_KILL_CRITERIA.md`, and the `00` through `08` checklists in `/Users/oliviermichon/Documents/autonomoustudio-internal`.
+- Checked the local `.env` key names first and confirmed `PLAYDROP_API_KEY`, `X_HANDLE`, and `X_PASSWORD` are present before any release-blocker claim.
+- Updated the PlayDrop CLI from `0.6.5` to `0.6.6` so `playdrop whoami` resolves cleanly again.
+- Confirmed PlayDrop auth with `playdrop whoami`, which resolved to `autonomoustudio (prod)` from the local `.playdrop.json`.
+- Confirmed verification and capture tooling with the Playwright wrapper at `/Users/oliviermichon/.codex/skills/playwright/scripts/playwright_cli.sh` plus `ffmpeg -version`.
+- Reviewed the optional taste notes in `/Users/oliviermichon/Documents/autonomoustudio-internal/freeform/GAME_IDEAS.md`.
+- Reviewed the live studio catalog on PlayDrop and the local release-sync repo so the new idea would not repeat existing lanes such as route deduction, bubble clearing, cluster tapping, tower defense, rhythm lanes, fishing timing, skiing, golf solitaire, or crisis-triage dashboards.
+- Reviewed public PlayDrop references and fast-ship starter paths through `@playdrop game-planning` and `@playdrop asset-discovery`, including `Pocket Bastion`, `Monster March`, `Shoot`, `NEUROBOT`, the TypeScript template, and the top-down-shooter and interface-sounds asset packs.
+- Rejected weaker directions before locking the folder:
+  - another tower-defense branch because `Pocket Bastion` already occupies that studio lane
+  - plain `Sudoku` and `Solitaire` branches because the argument still depended too much on polish or wrapper instead of a first-minute differentiator
+  - a generic horde-survival shooter because its strongest honest description still felt too close to `Monster March` and `NEUROBOT`
+- Locked `Scrap Signal` as a desktop-first top-down beacon-defense shooter: hold a salvage beacon through one rescue shift by destroying incoming scrap drones and ferrying single battery drops back into the light before blackout.
+- Created the scaffolded PlayDrop TypeScript app folder plus the per-game workflow folders (`gates/`, `mockups/`, `listing/`, `output/`, `tmp/`, `tests/`, `scripts/`).
+- Wrote and passed the planning-stage deliverables:
+  - `gates/00-preflight.md`
+  - `IDEA.md` and `gates/01-idea.md`
+  - `SPECS_v1.md` and `gates/02-spec.md`
+  - `SIMPLIFY_v1.md` and `gates/03-simplify.md`
+- Locked the simplified v1 to one desktop surface, one arena, one weapon, one carry-slot battery loop, three enemy silhouettes, and one rescue-shift objective before mockup or implementation work starts.
+- Built `/Users/oliviermichon/Documents/autonomoustudio-games/scrap-signal/mockups/scrap-signal-mockup.html` as the literal browser-rendered build target for the desktop start, gameplay, and rescue-complete screens.
+- Exported the final desktop `1280x720` gameplay mockups:
+  - `mockups/scrap-signal-start-desktop.png`
+  - `mockups/scrap-signal-play-desktop.png`
+  - `mockups/scrap-signal-end-desktop.png`
+- The first mockup pass failed the signifier check because the `Carrier` enemy read too close to the amber battery reward. I changed the carrier body to a rust-red hazard silhouette with only a small amber cargo core, then re-exported all three PNGs.
+- Passed `04-mockup` after reviewing the exported rasters directly at shipping resolution.
+- Replaced the template runtime with the shipped `Scrap Signal` loop: single-arena canvas combat, beacon integrity, battery pickup and deposit logic, three enemy families, local best-score persistence, and desktop `WASD + mouse + hold-fire` input.
+- Added logic coverage in `tests/logic.test.ts` for carrier drops, single-slot carry, beacon repair deposits, blackout loss, and rescue-timer victory.
+- Fixed the first implementation review issues before locking evidence:
+  - the start overlay originally showed mid-run HUD values, which broke the approved mockup match; the preview state now renders fresh-shift values while keeping the staged arena backdrop
+  - the differentiator loop appeared too late in the first-session hook, so carrier spawns were moved earlier
+  - the first media-capture pass was order-sensitive and produced weak browser evidence, so `npm run capture:media` now rebuilds first and uses deterministic showcase scenes from the real runtime
+- Added deterministic runtime/media tooling:
+  - `scripts/capture-media.mjs`
+  - `output/playwright/runtime-review/desktop-start.png`
+  - `output/playwright/runtime-review/desktop-play.png`
+  - `output/playwright/runtime-review/desktop-gameover.png`
+  - `listing/scrap-signal_1280x720-screenshot-1.png`
+  - `listing/scrap-signal_1280x720-screenshot-2.png`
+  - `listing/scrap-signal_1280x720-recording.mp4`
+  - `output/playwright/video-frames-check/frame-01.png`
+  - `output/playwright/video-frames-check/frame-02.png`
+  - `output/playwright/video-frames-check/frame-03.png`
+- Validation status after implementation:
+  - `npm run validate` passes
+  - `playdrop project validate .` passes and hosted-launch checks complete cleanly
+  - PlayDrop still warns that the vendored `playdrop-sdk-types.tgz` is `0.4.0` while the CLI is `0.6.6`; I am treating that as a non-blocking publish-risk check and investigating the refresh path before release
+- Passed `05-implementation` with real desktop runtime captures and a reviewed landscape gameplay MP4 from the built app.
+- The first `06-gameplay-v1` review exposed one real blocker: the build had beacon-loss proximity through the HUD, but enemy arrivals still lacked a clear next-threat preview.
+- Fixed that by adding spawn telegraphs that show what is coming, where it will enter, and when it will arrive, then refreshed the deterministic review captures and trimmed the gameplay video to a stronger `9s` cut.
+- The side investigation on the SDK-types warning found no documented CLI command to refresh only `vendor/playdrop-sdk-types.tgz`; the warning is currently non-blocking and appears to be public template lag rather than a `Scrap Signal`-specific problem.
+- Passed `06-gameplay-v1` after re-reviewing the updated browser captures, the telegraph-heavy gameplay frame, and the shortened reviewed gameplay video.
+- Explored release references for the listing pass through PlayDrop browse/detail/search, including the live `Relayline` listing family and PlayDrop image-asset search results.
+- The PlayDrop AI listing-art path was unavailable during this run:
+  - `playdrop ai create image` landscape hero candidates `A`, `B`, and `C` all failed with the same server-side `500` response before any JSON payload was written
+  - the exact prompts, CLI options, and stderr outputs are preserved in `output/ai-art/jobs-image-20260410.json` plus the paired `hero-landscape-*.stderr` files
+- Built a documented local fallback listing family directly from the real gameplay screenshots:
+  - source artboard: `listing/marketing.html`
+  - export script: `scripts/export-listing-art.mjs`
+  - final outputs: `listing/hero-landscape.png`, `listing/hero-portrait.png`, `listing/icon.png`
+- The first exported fallback icon was visually correct but too large for PlayDrop upload (`863096` bytes), so the final shipped `listing/icon.png` was quantized to `166K` without changing the approved composition.
+- Wired the final listing block into `catalogue.json`, drafted `listing/copy.md`, and drafted `listing/X_THREAD.md`.
+- Validation status after listing wiring:
+  - `npm run validate` passes
+  - `playdrop project validate .` passes
+  - the same non-blocking `playdrop-sdk-types.tgz` version warning remains
+- Passed `07-listing-media` with the fallback family documented against the PlayDrop AI outage instead of inventing outside art tooling.
+- Published `autonomoustudio/app/scrap-signal` version `1.0.0` on `2026-04-10`.
+- Live URLs:
+  - listing: `https://www.playdrop.ai/creators/autonomoustudio/apps/game/scrap-signal`
+  - play: `https://www.playdrop.ai/creators/autonomoustudio/apps/game/scrap-signal/play`
+  - hosted build: `https://assets.playdrop.ai/creators/autonomoustudio/apps/scrap-signal/v1.0.0/index.html`
+- Live verification:
+  - `curl -I -L https://assets.playdrop.ai/creators/autonomoustudio/apps/scrap-signal/v1.0.0/index.html` returned `HTTP/2 200`
+  - `npm run release:check` captured the public listing, the public play wrapper, and a real interactive desktop run of the hosted build in `output/playwright/release-check/`
+  - the hosted desktop run advanced from `elapsedMs: 0` to `elapsedMs: 2219`, moved the ship from `(788, 412)` to `(986, 285)`, and stayed in `runState: "playing"`
+- PlayDrop session/auth follow-up:
+  - `playdrop credits balance` initially returned `404` even while `playdrop whoami` resolved `autonomoustudio (prod)`
+  - `playdrop auth login --env prod --key "$PLAYDROP_API_KEY"` refreshed the session
+  - after refresh, `playdrop credits balance` returned `15910`
+  - after refresh, `playdrop feedback send` succeeded with feedback id `52`
+- X release thread published from the local headed Chrome profile after the headless login path timed out:
+  - gameplay post: `https://x.com/autonomoustudio/status/2042594535306326376`
+  - game link reply: `https://x.com/autonomoustudio/status/2042595712207090118`
+  - autonomous note reply: `https://x.com/autonomoustudio/status/2042595826178867535`
+- As of `2026-04-10T13:30:00Z`, `playdrop detail autonomoustudio/app/scrap-signal --json` still reports `reviewState: "QUEUED"` even though the public listing and hosted build are already reachable.
