@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <link rel="icon" href="data:," />
+    <title>Pocket Bastion</title>
+    <style>
+      :root {
+        --bg: #13201b;
+        --panel: rgba(15, 22, 19, 0.88);
+        --panel-strong: rgba(12, 17, 15, 0.94);
+        --edge: rgba(216, 227, 195, 0.2);
+        --ink: #f3f5e8;
+        --muted: #b5c3ad;
+        --mint: #5fd1a3;
+        --mint-deep: #2b8c6f;
+        --sand: #f2dfac;
+        --ember: #f26b4f;
+        --shadow: 0 24px 48px rgba(0, 0, 0, 0.35);
+        --grass-fill: #41d96a;
+        --grass-low: rgba(31, 171, 88, 0.2);
+        --grass-mid: rgba(24, 142, 74, 0.18);
+        --grass-dot: rgba(17, 119, 61, 0.14);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background-color: var(--grass-fill);
+        background-image:
+          radial-gradient(circle at 8px 8px, var(--grass-dot) 0 1.5px, transparent 1.7px),
+          linear-gradient(135deg, transparent 0 42%, var(--grass-low) 42% 58%, transparent 58% 100%),
+          linear-gradient(225deg, transparent 0 42%, var(--grass-mid) 42% 58%, transparent 58% 100%);
+        background-size: 16px 16px, 32px 32px, 32px 32px;
+        background-position: 0 0, 0 0, 16px 16px;
+        color: var(--ink);
+        font-family: "Avenir Next Condensed", "Trebuchet MS", sans-serif;
+      }
+
+      body {
+        min-height: 100vh;
+        overflow: hidden;
+      }
+
+      #app-shell {
+        position: fixed;
+        inset: 0;
+      }
+
+      #game-frame {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        background: inherit;
+      }
+
+      #game-canvas {
+        position: absolute;
+        inset: 0;
+      }
+
+      #game-canvas canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        image-rendering: pixelated;
+      }
+
+      #hud-root {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation: none !important;
+          transition: none !important;
+          scroll-behavior: auto !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app-shell">
+      <div id="game-frame">
+        <div id="game-canvas"></div>
+        <div id="hud-root"></div>
+      </div>
+    </div>
+    <script src="https://assets.playdrop.ai/sdk/playdrop.js"></script>
+    <!-- APP_SCRIPT -->
+  </body>
+</html>

@@ -1,0 +1,60 @@
+Original prompt: ok I think we are going to change a few things. first let's simplify for now
+- one map with fixed path and 4 tower slots
+- one enemy (the walking people)
+- one tower
+- enemy just keep coming with higher and higher frequency
+- UI during gamaply should only be curreny and score (each in their own capsule at the top, score is kill count)
+- Before game start you just show the level with a "Play" button in the center
+- Game over shows a popup with score and play again button
+
+2026-03-28
+- Replaced the wave-based simulation with a single endless lane loop.
+- Reduced the content set to one map, four pads, one tower, one enemy, and one projectile.
+- Rebuilt the HUD around a centered start button, top currency/score capsules, and a game-over modal.
+- Typecheck, unit tests, and build have passed once after the rewrite.
+- Browser QA completed against `tmp/local-preview.html` with Playwright and the bundled web-game client.
+- Verified states captured:
+  - start screen with centered Play button
+  - live gameplay with currency/score capsules and two placed towers
+  - game-over modal after an undefended run
+- Exported review assets to `output/review/`:
+  - `map.png`
+  - `enemy-facing-right.png`
+  - `tower-facing-right.png`
+  - `bullet-facing-right.png`
+- Replaced the decorative terrain board with a functional tile map:
+  - red = path
+  - blue = tower slot
+  - black = empty
+- Removed the enemy sprite's incorrect `+90deg` render offset so rightward travel keeps the sprite right-facing.
+- Replaced text labels in the gameplay HUD with emoji-style indicators.
+- Added slot selection UX:
+  - tap a slot to select it
+  - floating build button appears above the selected slot with cost
+  - tapping elsewhere cancels selection
+- Recorded updated gameplay clip with tower-building flow to `output/video/build-flow.mp4`.
+- Swapped empty tower slots from blue rectangles to baked grass-marker tiles:
+  - `43` for idle
+  - `44` for selected
+- Changed occupied tower pads to a metallic base tile from the atlas (`182`).
+- Split tower rendering so the base stays fixed while the separate turret-top sprite rotates toward targets.
+- Revalidated with `npm run typecheck`, `npm test`, and `npm run build`.
+- Recorded a fresh gameplay capture showing slot selection, tower builds, and combat to:
+  - `output/video/tower-build-and-combat.webm`
+  - `output/video/tower-build-and-combat.mp4`
+- Replaced the incorrect plane-like turret top with the original green blaster head (`250`) while keeping the fixed metallic base beneath it.
+- Tightened the spawn curve so a fully defended run now collapses at about `104s`, which keeps the run inside the requested 1–2 minute loss window.
+- Added a regression test to keep "full build still loses within two minutes" locked in.
+
+2026-03-29
+- Replaced the single-kind tower/enemy model with data-driven tower, enemy, projectile, and wave types so the later milestone work can stack cleanly.
+- Added authored wave plumbing, loop-wave generation, tower upgrades, splash projectiles, visual-event queues, and meta-event queues in the pure simulation layer.
+- Rebuilt the Phaser scene around split tower heads, damaged-only enemy health bars, event-driven VFX, and selection modes for build vs upgrade.
+- Rebuilt the DOM HUD for the three-capsule top bar, two-option build panel, upgrade panel, and end-of-run meta action.
+- Switched Playdrop boot to non-blocking init so the map can render before runtime auth or hosted services finish initializing.
+- 2026-03-29: Switched rocket towers to a stricter cadence: one live rocket per tower, level 3 capped at 1.0s refire, and added a visible loaded-rocket sprite that tracks the next armed barrel.
+- 2026-03-29: Validation after rocket cadence change: npm run typecheck, npm test, npm run build, web_game_playwright_client smoke pass, and local_tower_check visual capture.
+- 2026-03-29: Moved the top-right tower pad from grid x=16 to x=14 so it sits closer to the playfield turn.
+- 2026-03-29: Increased upgrade range progression for both blaster and rocket towers and added a regression test covering both the p4 pad position and monotonic range growth across levels.
+- 2026-03-29: Added auto-start for hosted /play surfaces based on the Playdrop wrapper referrer, while keeping direct local preview in the ready state with the center Play button.
+- 2026-03-29: Verified start-flow behavior locally: direct local-preview stays ready; a local /play wrapper referrer auto-starts into wave 1 playing state.

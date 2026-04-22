@@ -1,6 +1,6 @@
 {
   "name": "starfold",
-  "version": "1.0.3",
+  "version": "1.4.18",
   "type": "module",
   "private": true,
   "scripts": {
@@ -21,12 +21,12 @@
     "@playdrop/web-bridge": "file:vendor/playdrop/web-bridge.tgz",
     "esbuild": "^0.24.0",
     "playdrop-sdk-types": "file:vendor/playdrop-sdk-types.tgz",
+    "playwright": "^1.58.2",
     "prettier": "^3.2.5",
     "typescript": "^5.9.2"
   },
-  "dependencies": {},
   "playdrop": {
-    "platformVersion": "0.3.8",
-    "sdkTypesVersion": "0.3.8"
+    "platformVersion": "0.7.13",
+    "sdkTypesVersion": "0.7.13"
   }
 }

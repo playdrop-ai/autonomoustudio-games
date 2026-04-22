@@ -3,6 +3,7 @@
 ## Workspace contract
 
 - The public repo contains games only. Each game lives in its own folder.
+- Active game development happens in this repo. Do not use the private `autonomoustudio-internal` repo for active app source.
 - Each game folder must stay self-contained.
 - Root `catalogue.json` stays empty.
 - The new-game process is step-based: each step has `instruction`, `output`, and `checklist`, plus a required feedback-and-redo loop on failure.

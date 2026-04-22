@@ -1,20 +1,19 @@
-export const BOARD_ROWS = 6;
+export const BOARD_ROWS = 5;
 export const BOARD_COLS = 5;
-export const ASH_LIMIT = 10;
-export const ASH_INTERVAL = 4;
-export const MIDGAME_ASH_INTERVAL = 3;
-export const ENDGAME_ASH_INTERVAL = 2;
-export const MIDGAME_ASH_START = 24;
-export const ENDGAME_ASH_START = 48;
-export const DOUBLE_ASH_START = 80;
-export const SUDDEN_DEATH_ASH_INTERVAL = 1;
-export const SUDDEN_DEATH_ASH_START = 120;
-export const SUDDEN_DEATH_ASH_BURST = 3;
+export const ASH_GRACE_MOVES = 5;
+export const ASH_EVERY_TWO_END = 10;
+export const ASH_EVERY_MOVE_END = 20;
+export const DOUBLE_ASH_END = 30;
+export const TRIPLE_ASH_END = 40;
+export const QUAD_ASH_START = TRIPLE_ASH_END + 1;
 
 export type SigilKind = "sun" | "moon" | "wave" | "leaf" | "ember";
-export type TileKind = SigilKind | "ash";
+export type AshKind = "ash3" | "ash2" | "ash1";
+export type TileKind = SigilKind | AshKind;
 export type Axis = "row" | "col";
 export type Direction = -1 | 1;
+export type GameOverReason = "no_moves";
+export type ClearPulseKind = "none" | "shockwave" | "wipe";
 
 export interface Position {
   row: number;
@@ -43,6 +42,7 @@ export interface GameState {
   ashCount: number;
   rngState: number;
   gameOver: boolean;
+  gameOverReason: GameOverReason | null;
 }
 
 export interface ShiftStage {
@@ -50,15 +50,21 @@ export interface ShiftStage {
   before: Board;
   after: Board;
   move: Move;
+  startOffsetPx: number;
 }
 
 export interface ClearStage {
   kind: "clear";
   board: Board;
   matched: Position[];
+  damaged: Position[];
   cleansed: Position[];
+  pulseTargets: Position[];
+  majorMatchSize: number;
+  pulseKind: ClearPulseKind;
   scoreGain: number;
   combo: number;
+  comboPreviewBonus: number;
 }
 
 export interface CollapseStage {
@@ -80,15 +86,21 @@ export interface TurnResult {
   state: GameState;
   stages: TurnStage[];
   maxCombo: number;
+  comboMultiplier: number;
+  comboBonus: number;
   scoreGained: number;
 }
 
 const SIGIL_KINDS: SigilKind[] = ["sun", "moon", "wave", "leaf", "ember"];
+const ASH_KINDS: AshKind[] = ["ash3", "ash2", "ash1"];
+const MATCH_SCORE_PER_TILE = 90;
+const ASH_CLEANSE_SCORE = 60;
 
 export function createInitialState(seed = Date.now() >>> 0): GameState {
   let rngState = seed >>> 0;
   let nextId = 1;
   let board: Board = [];
+  let playable = false;
   for (let attempt = 0; attempt < 200; attempt += 1) {
     board = [];
     for (let row = 0; row < BOARD_ROWS; row += 1) {
@@ -107,8 +119,16 @@ export function createInitialState(seed = Date.now() >>> 0): GameState {
       }
       board.push(line);
     }
-    if (findGroups(board).length === 0) break;
+    if (findGroups(board).length === 0 && getPlayableMoves(board).length > 0) {
+      playable = true;
+      break;
+    }
   }
+
+  if (!playable) {
+    throw new Error("Failed to generate a playable starting board");
+  }
+
   return {
     board,
     nextId,
@@ -117,12 +137,16 @@ export function createInitialState(seed = Date.now() >>> 0): GameState {
     ashCount: 0,
     rngState,
     gameOver: false,
+    gameOverReason: null,
   };
 }
 
-export function applyMove(state: GameState, move: Move): TurnResult {
+export function applyMove(state: GameState, move: Move, options: { startOffsetPx?: number } = {}): TurnResult {
   if (state.gameOver) {
-    return { state, stages: [], maxCombo: 0, scoreGained: 0 };
+    return { state, stages: [], maxCombo: 0, comboMultiplier: 1, comboBonus: 0, scoreGained: 0 };
+  }
+  if (!isPlayableMove(state.board, move)) {
+    return { state, stages: [], maxCombo: 0, comboMultiplier: 1, comboBonus: 0, scoreGained: 0 };
   }
 
   let board = cloneBoard(state.board);
@@ -131,10 +155,11 @@ export function applyMove(state: GameState, move: Move): TurnResult {
   let rngState = state.rngState;
   let score = state.score;
   let totalGain = 0;
+  let baseGain = 0;
   let maxCombo = 0;
 
   const shifted = rotateBoard(board, move);
-  stages.push({ kind: "shift", before: board, after: shifted, move });
+  stages.push({ kind: "shift", before: board, after: shifted, move, startOffsetPx: options.startOffsetPx ?? 0 });
   board = shifted;
 
   let combo = 0;
@@ -145,18 +170,25 @@ export function applyMove(state: GameState, move: Move): TurnResult {
     }
     combo += 1;
     maxCombo = Math.max(maxCombo, combo);
-    const { matched, cleansed, sparseBoard } = clearGroups(board, groups);
-    const scoreGain = matched.length * 90 * combo + cleansed.length * 60 * combo;
+    const { matched, damaged, cleansed, sparseBoard, pulseTargets, majorMatchSize, pulseKind } = clearGroups(board, groups);
+    const scoreGain = matched.length * MATCH_SCORE_PER_TILE + cleansed.length * ASH_CLEANSE_SCORE;
+    const currentBaseGain = baseGain + scoreGain;
     stages.push({
       kind: "clear",
       board,
       matched,
+      damaged,
       cleansed,
+      pulseTargets,
+      majorMatchSize,
+      pulseKind,
       scoreGain,
       combo,
+      comboPreviewBonus: Math.round(currentBaseGain * (comboMultiplierForDepth(combo) - 1)),
     });
     score += scoreGain;
     totalGain += scoreGain;
+    baseGain += scoreGain;
 
     const collapsed = collapseSparseBoard(sparseBoard, nextId, rngState);
     stages.push({
@@ -170,7 +202,7 @@ export function applyMove(state: GameState, move: Move): TurnResult {
   }
 
   const moves = state.moves + 1;
-  const ashBursts = ashBurstCountForMove(moves);
+  const ashBursts = ashBurstCountForMove(moves, maxCombo);
   if (ashBursts > 0) {
     for (let burst = 0; burst < ashBursts; burst += 1) {
       const ashResult = addAsh(board, rngState);
@@ -186,7 +218,15 @@ export function applyMove(state: GameState, move: Move): TurnResult {
     }
   }
 
+  const comboMultiplier = comboMultiplierForDepth(maxCombo);
+  const comboBonus = Math.round(baseGain * (comboMultiplier - 1));
+  if (comboBonus > 0) {
+    score += comboBonus;
+    totalGain += comboBonus;
+  }
+
   const ashCount = countAsh(board);
+  const gameOverReason: GameOverReason | null = getPlayableMoves(board).length > 0 ? null : "no_moves";
   return {
     state: {
       board,
@@ -195,10 +235,13 @@ export function applyMove(state: GameState, move: Move): TurnResult {
       moves,
       ashCount,
       rngState,
-      gameOver: ashCount >= ASH_LIMIT,
+      gameOver: gameOverReason !== null,
+      gameOverReason,
     },
     stages,
     maxCombo,
+    comboMultiplier,
+    comboBonus,
     scoreGained: totalGain,
   };
 }
@@ -211,23 +254,42 @@ export function countAsh(board: Board): number {
   let count = 0;
   for (const row of board) {
     for (const tile of row) {
-      if (tile.kind === "ash") count += 1;
+      if (isAshKind(tile.kind)) count += 1;
     }
   }
   return count;
 }
 
 export function ashIntervalForMove(moves: number): number {
-  if (moves >= SUDDEN_DEATH_ASH_START) return SUDDEN_DEATH_ASH_INTERVAL;
-  if (moves >= ENDGAME_ASH_START) return ENDGAME_ASH_INTERVAL;
-  if (moves >= MIDGAME_ASH_START) return MIDGAME_ASH_INTERVAL;
-  return ASH_INTERVAL;
+  if (moves <= ASH_GRACE_MOVES) return 0;
+  if (moves <= ASH_EVERY_TWO_END) return 2;
+  return 1;
 }
 
-export function ashBurstCountForMove(moves: number): number {
-  if (moves % ashIntervalForMove(moves) !== 0) return 0;
-  if (moves >= SUDDEN_DEATH_ASH_START) return SUDDEN_DEATH_ASH_BURST;
-  return moves >= DOUBLE_ASH_START ? 2 : 1;
+export function ashBurstCountForMove(moves: number, comboDepth = 1): number {
+  let baseBursts = 0;
+  if (moves <= ASH_GRACE_MOVES) {
+    baseBursts = 0;
+  } else if (moves <= ASH_EVERY_TWO_END) {
+    baseBursts = moves % 2 === 0 ? 1 : 0;
+  } else if (moves <= ASH_EVERY_MOVE_END) {
+    baseBursts = 1;
+  } else if (moves <= DOUBLE_ASH_END) {
+    baseBursts = 2;
+  } else if (moves <= TRIPLE_ASH_END) {
+    baseBursts = 3;
+  } else {
+    baseBursts = 4;
+  }
+
+  return Math.max(0, baseBursts - comboAshReductionForDepth(comboDepth));
+}
+
+export function comboAshReductionForDepth(depth: number): number {
+  if (depth >= 4) return 3;
+  if (depth === 3) return 2;
+  if (depth === 2) return 1;
+  return 0;
 }
 
 export function findGroups(board: Board): Position[][] {
@@ -238,12 +300,44 @@ export function findGroups(board: Board): Position[][] {
       if (visited[row]![col]) continue;
       const tile = board[row]![col]!;
       visited[row]![col] = true;
-      if (tile.kind === "ash") continue;
+      if (isAshKind(tile.kind)) continue;
       const group = floodGroup(board, visited, row, col, tile.kind);
       if (group.length >= 3) groups.push(group);
     }
   }
   return groups;
+}
+
+export function getPlayableMoves(board: Board): Move[] {
+  const moves: Move[] = [];
+
+  for (let index = 0; index < BOARD_ROWS; index += 1) {
+    for (const direction of [1, -1] as const) {
+      const move: Move = { axis: "row", index, direction };
+      if (findGroups(rotateBoard(board, move)).length > 0) {
+        moves.push(move);
+      }
+    }
+  }
+
+  for (let index = 0; index < BOARD_COLS; index += 1) {
+    for (const direction of [1, -1] as const) {
+      const move: Move = { axis: "col", index, direction };
+      if (findGroups(rotateBoard(board, move)).length > 0) {
+        moves.push(move);
+      }
+    }
+  }
+
+  return moves;
+}
+
+export function hasPlayableMove(board: Board): boolean {
+  return getPlayableMoves(board).length > 0;
+}
+
+export function isAshKind(kind: TileKind): kind is AshKind {
+  return ASH_KINDS.includes(kind as AshKind);
 }
 
 export function boardKinds(board: Board): TileKind[][] {
@@ -259,6 +353,14 @@ export function createBoardFromKinds(kinds: TileKind[][], nextId = 1): { board: 
     }),
   );
   return { board, nextId };
+}
+
+export function comboMultiplierForDepth(depth: number): number {
+  if (depth <= 1) return 1;
+  if (depth === 2) return 1.25;
+  if (depth === 3) return 1.6;
+  if (depth === 4) return 2;
+  return 2.5;
 }
 
 function floodGroup(board: Board, visited: boolean[][], startRow: number, startCol: number, kind: SigilKind): Position[] {
@@ -278,30 +380,151 @@ function floodGroup(board: Board, visited: boolean[][], startRow: number, startC
   return group;
 }
 
-function clearGroups(board: Board, groups: Position[][]): { matched: Position[]; cleansed: Position[]; sparseBoard: SparseBoard } {
+function clearGroups(board: Board, groups: Position[][]): {
+  matched: Position[];
+  damaged: Position[];
+  cleansed: Position[];
+  pulseTargets: Position[];
+  majorMatchSize: number;
+  pulseKind: ClearPulseKind;
+  sparseBoard: SparseBoard;
+} {
   const matched = flattenPositions(groups);
   const sparseBoard: SparseBoard = board.map((row) => row.slice());
   const matchedSet = toPositionKeySet(matched);
+  const damagedSet = new Set<string>();
   const cleansedSet = new Set<string>();
+  const pulseTargetSet = new Set<string>();
+  let majorMatchSize = 0;
+  let pulseKind: ClearPulseKind = "none";
   for (const pos of matched) {
     sparseBoard[pos.row]![pos.col] = null;
   }
-  for (const pos of matched) {
-    for (const neighbor of neighbors(pos.row, pos.col)) {
-      const key = positionKey(neighbor);
-      if (matchedSet.has(key) || cleansedSet.has(key)) continue;
-      const tile = sparseBoard[neighbor.row]![neighbor.col];
-      if (tile?.kind === "ash") {
-        sparseBoard[neighbor.row]![neighbor.col] = null;
-        cleansedSet.add(key);
+
+  for (const group of groups) {
+    majorMatchSize = Math.max(majorMatchSize, group.length);
+    if (group.length >= 6) {
+      for (const key of collectAllAshPositions(sparseBoard)) {
+        pulseTargetSet.add(key);
+      }
+      purgeAllAsh(sparseBoard, damagedSet, cleansedSet);
+      pulseKind = "wipe";
+      continue;
+    }
+
+    const touchedAsh = collectTouchedAsh(group, sparseBoard, matchedSet);
+    if (group.length >= 4) {
+      purgeAshPositions(sparseBoard, touchedAsh, damagedSet, cleansedSet);
+    } else {
+      damageAshPositions(sparseBoard, touchedAsh, damagedSet, cleansedSet);
+    }
+
+    if (group.length >= 5) {
+      const remainingAsh = collectAllAshPositions(sparseBoard, new Set(touchedAsh));
+      for (const key of remainingAsh) {
+        pulseTargetSet.add(key);
+      }
+      damageAshPositions(sparseBoard, remainingAsh, damagedSet, cleansedSet);
+      if (pulseKind !== "wipe") {
+        pulseKind = "shockwave";
       }
     }
   }
+
   return {
     matched,
+    damaged: Array.from(damagedSet, decodePositionKey),
     cleansed: Array.from(cleansedSet, decodePositionKey),
+    pulseTargets: Array.from(pulseTargetSet, decodePositionKey),
+    majorMatchSize,
+    pulseKind,
     sparseBoard,
   };
+}
+
+function collectTouchedAsh(group: Position[], sparseBoard: SparseBoard, matchedSet: Set<string>): string[] {
+  const touched = new Set<string>();
+  for (const pos of group) {
+    for (const neighbor of neighbors(pos.row, pos.col)) {
+      const key = positionKey(neighbor);
+      if (matchedSet.has(key) || touched.has(key)) {
+        continue;
+      }
+      const tile = sparseBoard[neighbor.row]![neighbor.col];
+      if (tile && isAshKind(tile.kind)) {
+        touched.add(key);
+      }
+    }
+  }
+  return Array.from(touched);
+}
+
+function collectAllAshPositions(sparseBoard: SparseBoard, excluded = new Set<string>()): string[] {
+  const positions: string[] = [];
+  for (let row = 0; row < BOARD_ROWS; row += 1) {
+    for (let col = 0; col < BOARD_COLS; col += 1) {
+      const key = positionKey({ row, col });
+      if (excluded.has(key)) {
+        continue;
+      }
+      const tile = sparseBoard[row]![col];
+      if (tile && isAshKind(tile.kind)) {
+        positions.push(key);
+      }
+    }
+  }
+  return positions;
+}
+
+function purgeAllAsh(
+  sparseBoard: SparseBoard,
+  damagedSet: Set<string>,
+  cleansedSet: Set<string>,
+): void {
+  purgeAshPositions(sparseBoard, collectAllAshPositions(sparseBoard), damagedSet, cleansedSet);
+}
+
+function purgeAshPositions(
+  sparseBoard: SparseBoard,
+  positions: string[],
+  damagedSet: Set<string>,
+  cleansedSet: Set<string>,
+): void {
+  for (const key of positions) {
+    const position = decodePositionKey(key);
+    const tile = sparseBoard[position.row]![position.col];
+    if (!tile || !isAshKind(tile.kind)) {
+      continue;
+    }
+    damagedSet.add(key);
+    cleansedSet.add(key);
+    sparseBoard[position.row]![position.col] = null;
+  }
+}
+
+function damageAshPositions(
+  sparseBoard: SparseBoard,
+  positions: string[],
+  damagedSet: Set<string>,
+  cleansedSet: Set<string>,
+): void {
+  for (const key of positions) {
+    const position = decodePositionKey(key);
+    const tile = sparseBoard[position.row]![position.col];
+    if (!tile || !isAshKind(tile.kind)) {
+      continue;
+    }
+    damagedSet.add(key);
+    if (tile.kind === "ash1") {
+      cleansedSet.add(key);
+      sparseBoard[position.row]![position.col] = null;
+      continue;
+    }
+    sparseBoard[position.row]![position.col] = {
+      ...tile,
+      kind: damageAsh(tile.kind),
+    };
+  }
 }
 
 function collapseSparseBoard(sparseBoard: SparseBoard, nextId: number, rngState: number): { board: Board; nextId: number; rngState: number } {
@@ -332,7 +555,7 @@ function addAsh(board: Board, rngState: number): { board: Board; position: Posit
   const candidates: Array<{ pos: Position; weight: number }> = [];
   for (let row = 0; row < BOARD_ROWS; row += 1) {
     for (let col = 0; col < BOARD_COLS; col += 1) {
-      if (board[row]![col]!.kind === "ash") continue;
+      if (isAshKind(board[row]![col]!.kind)) continue;
       candidates.push({
         pos: { row, col },
         weight: (row + 1) * (row + 1),
@@ -355,8 +578,19 @@ function addAsh(board: Board, rngState: number): { board: Board; position: Posit
   }
   const nextBoard = cloneBoard(board);
   const tile = nextBoard[chosen.pos.row]![chosen.pos.col]!;
-  nextBoard[chosen.pos.row]![chosen.pos.col] = { ...tile, kind: "ash" };
+  nextBoard[chosen.pos.row]![chosen.pos.col] = { ...tile, kind: "ash3" };
   return { board: nextBoard, position: chosen.pos, rngState };
+}
+
+function isPlayableMove(board: Board, move: Move): boolean {
+  return getPlayableMoves(board).some(
+    (candidate) =>
+      candidate.axis === move.axis && candidate.index === move.index && candidate.direction === move.direction,
+  );
+}
+
+function damageAsh(kind: Exclude<AshKind, "ash1">): AshKind {
+  return kind === "ash3" ? "ash2" : "ash1";
 }
 
 function rotateBoard(board: Board, move: Move): Board {

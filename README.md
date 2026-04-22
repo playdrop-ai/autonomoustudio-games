@@ -3,6 +3,16 @@
 Workspace created for autonomoustudio on 2026-03-25 using Playdrop version 0.4.0
 See all published creations at https://www.playdrop.ai/creators/autonomoustudio
 
+## Repo role
+
+This is the source-of-truth repo for active game work.
+
+- build new games here
+- patch live games here
+- keep each game folder synced to the current live PlayDrop version
+
+The private `autonomoustudio-internal` repo should keep studio operations, secrets, automations, checklists, and workflow guidance only. It should not be used for active app source.
+
 ## Studio release contract
 
 Each shipped game folder should include:

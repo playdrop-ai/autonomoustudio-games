@@ -1,0 +1,79 @@
+{
+  "apps": [
+    {
+      "name": "pocket-bastion",
+      "version": "1.4.8",
+      "displayName": "Pocket Bastion",
+      "description": "Choose blasters or rockets, upgrade the four pads, and survive escalating waves until the lane breaks through.",
+      "emoji": "🛡️",
+      "color": "#2b8c6f",
+      "type": "GAME",
+      "file": "dist/index.html",
+      "authMode": "OPTIONAL",
+      "controllerMode": "UNSUPPORTED",
+      "previewable": true,
+      "achievements": [
+        {
+          "key": "first_tower_built",
+          "kind": "STANDARD",
+          "displayName": "First Bastion",
+          "description": "Build your first tower.",
+          "icon": "listing/achievements/first-tower-built.png"
+        },
+        {
+          "key": "first_tank_killed",
+          "kind": "STANDARD",
+          "displayName": "Cracked Armor",
+          "description": "Destroy your first tank.",
+          "icon": "listing/achievements/first-tank-killed.png"
+        },
+        {
+          "key": "first_rocket_built",
+          "kind": "STANDARD",
+          "displayName": "Heavy Ordnance",
+          "description": "Build your first rocket tower.",
+          "icon": "listing/achievements/first-rocket-built.png"
+        },
+        {
+          "key": "max_upgrade_reached",
+          "kind": "STANDARD",
+          "displayName": "Peak Hardware",
+          "description": "Upgrade any tower to max level.",
+          "icon": "listing/achievements/max-upgrade-reached.png"
+        },
+        {
+          "key": "survive_wave_6",
+          "kind": "STANDARD",
+          "displayName": "Six Wave Stand",
+          "description": "Reach the end of wave 6.",
+          "icon": "listing/achievements/survive-wave-6.png"
+        }
+      ],
+      "leaderboards": [
+        {
+          "key": "highest_wave",
+          "displayName": "Highest Wave",
+          "description": "Highest wave reached before the lane collapses.",
+          "scoreType": "INTEGER",
+          "sort": "DESC"
+        }
+      ],
+      "listing": {
+        "icon": "listing/icon.png",
+        "heroLandscape": "listing/hero-landscape.png",
+        "screenshotsLandscape": [
+          "listing/screenshots/landscape/1.png"
+        ],
+        "videosLandscape": [
+          "listing/videos/landscape/1.mp4"
+        ]
+      },
+      "surfaceTargets": {
+        "desktop": true,
+        "mobileLandscape": true,
+        "mobilePortrait": false
+      },
+      "templateSource": "playdrop/template/typescript_template"
+    }
+  ]
+}

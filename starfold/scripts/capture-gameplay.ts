@@ -3,7 +3,7 @@ import path from "node:path";
 
 import { chromium } from "playwright";
 
-import { applyMove, createInitialState, type Move } from "../src/game/logic.ts";
+import { applyMove, BOARD_COLS, BOARD_ROWS, createInitialState, type Move } from "../src/game/logic.ts";
 
 interface Options {
   url: string;
@@ -36,10 +36,10 @@ const DEFAULTS: Options = {
 };
 
 const ALL_MOVES: Move[] = [
-  ...Array.from({ length: 6 }, (_, index) => ({ axis: "row" as const, index, direction: -1 as const })),
-  ...Array.from({ length: 6 }, (_, index) => ({ axis: "row" as const, index, direction: 1 as const })),
-  ...Array.from({ length: 5 }, (_, index) => ({ axis: "col" as const, index, direction: -1 as const })),
-  ...Array.from({ length: 5 }, (_, index) => ({ axis: "col" as const, index, direction: 1 as const })),
+  ...Array.from({ length: BOARD_ROWS }, (_, index) => ({ axis: "row" as const, index, direction: -1 as const })),
+  ...Array.from({ length: BOARD_ROWS }, (_, index) => ({ axis: "row" as const, index, direction: 1 as const })),
+  ...Array.from({ length: BOARD_COLS }, (_, index) => ({ axis: "col" as const, index, direction: -1 as const })),
+  ...Array.from({ length: BOARD_COLS }, (_, index) => ({ axis: "col" as const, index, direction: 1 as const })),
 ];
 
 const options = parseArgs(process.argv.slice(2));

@@ -1,9 +1,11 @@
 import * as esbuild from 'esbuild';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 
 const HTML_TEMPLATE = 'template.html';
 const HTML_TARGET = 'dist/index.html';
+const ASSET_SOURCE = 'assets';
+const ASSET_TARGET = 'dist/assets';
 
 const buildOptions = {
   entryPoints: ['src/main.ts'],
@@ -35,6 +37,11 @@ function inlineHtml(result) {
 
   mkdirSync(dirname(HTML_TARGET), { recursive: true });
   writeFileSync(HTML_TARGET, finalHtml, 'utf8');
+  if (existsSync(ASSET_SOURCE)) {
+    rmSync(ASSET_TARGET, { recursive: true, force: true });
+    mkdirSync(ASSET_TARGET, { recursive: true });
+    cpSync(`${ASSET_SOURCE}/.`, ASSET_TARGET, { recursive: true, force: true });
+  }
 
   console.log(`[template-typescript] Wrote ${HTML_TARGET}`);
 }
