@@ -134,7 +134,7 @@ test("only exposed top cards are playable and buried cards are ignored", () => {
         { card: makeCard("buried-playable", 7, "sun"), faceUp: true },
         { card: makeCard("top-blocker", 2, "rose"), faceUp: true },
       ]),
-      makeColumn([{ card: makeCard("top-playable", 5, "blade"), faceUp: true }]),
+      makeColumn([{ card: makeCard("top-playable", 5, "tree"), faceUp: true }]),
       ...Array.from({ length: COLUMN_COUNT - 2 }, (_, index) =>
         makeColumn([{ card: makeCard(`filler-${index}`, 11, "sun"), faceUp: true }]),
       ),
@@ -154,7 +154,7 @@ test("playing a top card updates active and reveals the next buried card", () =>
         { card: makeCard("playable-top", 7, "sun"), faceUp: true },
       ]),
       ...Array.from({ length: COLUMN_COUNT - 1 }, (_, index) =>
-        makeColumn([{ card: makeCard(`filler-${index}`, 11, "blade"), faceUp: true }]),
+        makeColumn([{ card: makeCard(`filler-${index}`, 11, "tree"), faceUp: true }]),
       ),
     ],
   });
@@ -171,12 +171,12 @@ test("playing a top card updates active and reveals the next buried card", () =>
 test("drawing from stock replaces the active card", () => {
   const spread = makeSpread({
     active: null,
-    stock: [makeCard("drawn", 10, "blade"), makeCard("next", 4, "sun")],
+    stock: [makeCard("drawn", 10, "tree"), makeCard("next", 4, "sun")],
     activeTrail: [],
   });
 
   const result = drawFromStock(spread);
-  assert.equal(formatCard(result.active), "10-blade");
+  assert.equal(formatCard(result.active), "10-tree");
   assert.equal(result.stock.length, 1);
   assert.equal(formatCard(result.stock[0] ?? null), "4-sun");
   assert.deepEqual(result.activeTrail, []);
@@ -185,12 +185,12 @@ test("drawing from stock replaces the active card", () => {
 test("drawing from stock archives the previous reading after the first reveal", () => {
   const spread = makeSpread({
     active: makeCard("active", 6, "moon"),
-    stock: [makeCard("drawn", 10, "blade"), makeCard("next", 4, "sun")],
+    stock: [makeCard("drawn", 10, "tree"), makeCard("next", 4, "sun")],
     activeTrail: [makeCard("older", 2, "rose")],
   });
 
   const result = drawFromStock(spread);
-  assert.equal(formatCard(result.active), "10-blade");
+  assert.equal(formatCard(result.active), "10-tree");
   assert.deepEqual(result.activeTrail.map((card) => formatCard(card)), ["2-rose", "6-moon"]);
 });
 

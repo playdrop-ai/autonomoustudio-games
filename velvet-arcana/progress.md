@@ -218,6 +218,33 @@ Early blockers
     - `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/ai-art/ranks/velvet-arcana-five-card-purple-queen-from-template-v3-tiara-spec-generated.jpg`
     - `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/ai-art/ranks/velvet-arcana-five-card-purple-jack-from-template-v4-sun-fix-generated.jpg`
 - Tried rank `10` generation from the locked purple template plus the approved low-rank sheet with explicit pip-count instructions. Three passes were generated and kept for review only:
+2026-04-23 runtime and SDK pass
+- Fixed the follow-up review findings around hosted preview support, buried-card accessibility, and the browser smoke harness.
+- Replaced the ad hoc host bridge in `src/main.ts` with a minimal PlayDrop controller in `src/platform.ts` and updated the local vendored SDK packages to the same `0.7.13` line used by `starfold`.
+- Added real hosted phase handling:
+  - preview mode now hides the HUD
+  - preview autoplay advances the run and restarts automatically after game over
+  - switching from hosted `preview` to `play` resets back to a fresh interactive run
+- Added restart interstitial support with the same gating rules used in `starfold`: only on `Play Again`, only after a meaningful run, never in preview, and with cooldown tracking.
+- Restored accessible names for visible buried cards in `Past` and `Present`.
+- Closed the remaining hidden-card secrecy leak by removing face asset URLs from stationary face-down cards while preserving the draw flip animation.
+- Added `src/runtime-helpers.ts` plus `tests/runtime-helpers.test.ts` for restart-ad gating.
+- Rewrote `tests/browser.smoke.test.ts` to use the real animation path and added a hosted preview smoke with an intercepted SDK stub and a real host phase change.
+- Validation run after the SDK lift:
+  - `npm test`
+  - `npm run validate`
+- Browser proof artifacts from the final pass:
+  - gameplay screenshot: `/Users/olivier/Documents/autonomoustudio-games/velvet-arcana/output/web-game/sdk-preview-pass/shot-0.png`
+  - gameplay state: `/Users/olivier/Documents/autonomoustudio-games/velvet-arcana/output/web-game/sdk-preview-pass/state-0.json`
+- Portrait stack-overlap pass:
+  - replaced the old viewport-driven `--stack-step` expansion with a ratio-driven overlap cap in `template.html`
+  - default stack reveal is now capped by `--stack-visible-ratio`, and mobile portrait uses a tighter `0.2` visible ratio so buried cards show about the top `20%` instead of spreading apart as vertical space grows
+  - verification:
+    - `npm test`
+    - `npm run validate`
+  - fresh portrait gameplay proof:
+    - screenshot: `/Users/olivier/Documents/autonomoustudio-games/velvet-arcana/output/playwright/mobile-portrait-overlap-tightened.png`
+    - state: `/Users/olivier/Documents/autonomoustudio-games/velvet-arcana/output/playwright/mobile-portrait-overlap-tightened.json`
   - `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/ai-art/ranks/velvet-arcana-five-card-purple-ten-from-template-v1-generated.jpg`
   - `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/ai-art/ranks/velvet-arcana-five-card-purple-ten-from-template-v2-x-fix-generated.jpg`
   - `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/ai-art/ranks/velvet-arcana-five-card-purple-ten-from-template-v3-ten-rows-fix-generated.jpg`
@@ -238,6 +265,25 @@ Early blockers
     - Result: failed. The model collapsed the face cards back toward `5`.
   - second stricter slot-replacement pass: `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/ai-art/ranks/velvet-arcana-five-card-purple-seven-from-guide-with-five-ten-v2-generated.jpg`
     - Result: closer. Moon, Rose, and Tree read correctly, but Sun still under-counted.
+
+2026-04-23 correctness pass
+- Renamed the shipped fourth family from `blade` to `tree` across the actual game state and logic layer so runtime labels, debug state, and tests now match the live card art.
+- Stopped leaking hidden Future-card identity through runtime markup:
+  - buried face-down cards no longer expose `aria-label`
+  - buried face-down cards are marked `aria-hidden="true"`
+  - only face-up cards now emit `data-card-id`
+- Added a browser smoke test at `/Users/olivier/Documents/autonomoustudio-games/velvet-arcana/tests/browser.smoke.test.ts` that validates:
+  - first draw produces an active reading and playable columns
+  - first legal play updates the active reading
+  - hidden Future cards do not expose identifying DOM/a11y data
+  - a deterministic `Past` spread reaches the `transition` phase and advances into `Present`
+- Validation after the correctness pass:
+  - `npm test` passed
+  - `npm run validate` passed
+  - web-game client runtime smoke passed against a local static build:
+    - screenshot: `/Users/olivier/Documents/autonomoustudio-games/velvet-arcana/output/web-game/correctness-pass/shot-0.png`
+    - state: `/Users/olivier/Documents/autonomoustudio-games/velvet-arcana/output/web-game/correctness-pass/state-0.json`
+    - console errors: none
   - Sun-only fix from the better base: `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/ai-art/ranks/velvet-arcana-five-card-purple-seven-sun-fix-v1-generated.jpg`
     - Result: Sun corrected to `7`, but Moon drifted to `8`.
   - Moon-only fix from the Sun-corrected base: `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/ai-art/ranks/velvet-arcana-five-card-purple-seven-moon-fix-v1-generated.jpg`
@@ -359,3 +405,50 @@ Early blockers
   - updated `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/scripts/extract_purple_deck_cards.py` so rank 8 now sources from `rank-8.jpg`
   - regenerated the corrected standalone `7` and `8` family cards plus the pack contact sheet in `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/art/cards/purple-deck-png`
 - Published Velvet Arcana `1.0.6` to PlayDrop under `@autonomoustudio`, verified it is live through `playdrop detail autonomoustudio/app/velvet-arcana` and `playdrop versions browse autonomoustudio/app/velvet-arcana`, and pruned old app versions `1.0.0` through `1.0.4` to clear the creator storage limit before publish.
+
+2026-04-23 deck refresh pass
+- Replaced the live gameplay deck art with the approved solitaire-layout redesign:
+  - exported the full approved deck directly from `/Users/olivier/Documents/autonomoustudio-games/velvet-arcana/output/solitaire-code-match-v4/arcana-proof-v4.html`
+  - overwrote every runtime card asset in `/Users/olivier/Documents/autonomoustudio-games/velvet-arcana/art/cards/purple-deck-png/`
+  - kept the runtime filenames unchanged (`moon-1.png` through `tree-king.png` plus `back.png`) so no gameplay code changes were required
+  - the exported art now includes the approved `A` ace mark, padded corners, updated court sizing, detailed center family marks, and the new oxblood / burgundy back
+- Installed local package dependencies with `npm install` because the repo was missing toolchain binaries and `npm run validate` initially failed on `tsc: command not found`
+- Validation after the deck refresh:
+  - `npm test` passed
+  - `npm run validate` passed
+- Automated browser verification:
+  - ran the `develop-web-game` Playwright client against the rebuilt local build at `http://127.0.0.1:4173/?seed=1009`
+  - smoke artifacts saved in `/Users/olivier/Documents/autonomoustudio-games/velvet-arcana/output/web-game/new-deck-smoke/`
+  - the first scripted stock click hit a selector re-render timeout, but the artifact still confirmed the refreshed deck was live in gameplay
+ - Captured a clean deterministic gameplay screenshot using the in-game debug surface:
+  - local static server: `python3 -m http.server 4173 -d dist`
+  - capture path: `/Users/olivier/Documents/autonomoustudio-games/velvet-arcana/output/playwright/new-deck-gameplay/future-gameplay.png`
+  - state snapshot: `/Users/olivier/Documents/autonomoustudio-games/velvet-arcana/output/playwright/new-deck-gameplay/state.json`
+  - chosen state: `Future` spread after drawing and one planner autoplay step so the screenshot shows both the new face cards and the new red velvet back in live gameplay
+
+2026-04-23 portrait layout pass
+- Tightened portrait layout around centered bands instead of offset padding:
+  - kept the portrait stack overlap at `24%`
+  - replaced the portrait `.table` flex spacing with an explicit grid so the HUD, tableau, and bottom piles sit on fixed rows
+  - used equal flexible bands above and below the HUD and bottom pile row so each block centers within its available space around the tableau
+  - removed the extra portrait top and bottom page padding and removed the portrait-only bottom pile padding so the centering comes from layout rather than nudges
+- Verification after the portrait centering change:
+  - `npm test` passed
+  - `npm run validate` passed
+  - ran the `develop-web-game` Playwright client against `http://127.0.0.1:4173/index.html?seed=1009` with artifacts in `/Users/olivier/Documents/autonomoustudio-games/velvet-arcana/output/web-game/portrait-layout-pass/`
+- Fresh portrait proof artifacts:
+  - `/Users/olivier/Documents/autonomoustudio-games/velvet-arcana/output/playwright/mobile-portrait-centered-bands.png`
+  - `/Users/olivier/Documents/autonomoustudio-games/velvet-arcana/output/playwright/mobile-portrait-centered-bands.json`
+  - `/Users/olivier/Documents/autonomoustudio-games/velvet-arcana/output/playwright/mobile-portrait-centered-bands-draw.png`
+  - `/Users/olivier/Documents/autonomoustudio-games/velvet-arcana/output/playwright/mobile-portrait-centered-bands-draw.json`
+
+2026-04-23 scoreless HUD pass
+- Hid the score pill when the current score is `0` in `/Users/olivier/Documents/autonomoustudio-games/velvet-arcana/src/main.ts`
+- Added a dedicated `.hud--scoreless` alignment rule in `/Users/olivier/Documents/autonomoustudio-games/velvet-arcana/template.html` so the phase pill and guide stay right-aligned when the score pill is omitted
+- Verification after the scoreless HUD change:
+  - `npm test` passed
+  - `npm run validate` passed
+  - ran the `develop-web-game` Playwright client against `http://127.0.0.1:4173/index.html?seed=1009` with artifacts in `/Users/olivier/Documents/autonomoustudio-games/velvet-arcana/output/web-game/scoreless-hud-smoke/`
+- Proof artifacts:
+  - `/Users/olivier/Documents/autonomoustudio-games/velvet-arcana/output/playwright/scoreless-hud-proof.png`
+  - `/Users/olivier/Documents/autonomoustudio-games/velvet-arcana/output/playwright/scoreless-hud-proof.json`

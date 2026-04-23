@@ -21,6 +21,8 @@ import {
   type SpreadState,
   type SuitKey,
 } from "./game/state";
+import { PlaydropController, type HostPhase } from "./platform";
+import { shouldShowRestartInterstitial } from "./runtime-helpers";
 
 type Phase = "playing" | "transition" | "gameover";
 type TutorialStep = "welcome" | "reveal" | "match" | "await-draw" | "draw";
@@ -32,6 +34,7 @@ type GameState = {
   runSeed: number;
   spreadIndex: number;
   spread: SpreadState;
+  runMoves: number;
   score: number;
   bestScore: number;
   spreadsCleared: number;
@@ -58,35 +61,6 @@ type PendingCardMotion = {
   targetCardId: string | null;
 };
 
-type HostLoadingState =
-  | { status: "loading"; message?: string; progress?: number }
-  | { status: "ready" }
-  | { status: "error"; message?: string };
-
-type RuntimeHost = {
-  setLoadingState?(state: HostLoadingState): void;
-  ready?(): void;
-  error?(message: string): void;
-  audioEnabled?: unknown;
-  onAudioPolicyChange?(handler: (policy: unknown) => void): void | (() => void);
-};
-
-type HostBridge = {
-  setLoadingState(state: HostLoadingState): void;
-  ready(): void;
-  audioPolicy: unknown;
-  onAudioPolicyChange(handler: (policy: unknown) => void): () => void;
-};
-
-type RuntimeSdk = {
-  host?: RuntimeHost;
-};
-
-type RuntimePlaydrop = {
-  init?(): Promise<RuntimeSdk>;
-  host?: RuntimeHost;
-};
-
 type SeedPoolDifficulty = "easy" | "medium" | "hard";
 type SeedPools = Record<SeedPoolDifficulty, Uint32Array>;
 
@@ -98,6 +72,12 @@ const PLAY_CARD_MOTION_MS = 320;
 const DRAW_CARD_MOTION_MS = 380;
 const CARD_ARRIVAL_MS = 220;
 const PLAYDROP_INIT_TIMEOUT_MS = 8_000;
+const PREVIEW_START_DELAY_MS = 900;
+const PREVIEW_MOVE_DELAY_MS = 1000;
+const PREVIEW_RESTART_DELAY_MS = 1100;
+const RESTART_INTERSTITIAL_MIN_RUN_MS = 45_000;
+const RESTART_INTERSTITIAL_MIN_RUN_MOVES = 12;
+const RESTART_INTERSTITIAL_COOLDOWN_MS = 180_000;
 const HOW_TO_PLAY_LINES = [
   "Turn a new reading from the deck when the target is empty.",
   "Only the top card in each column can be played.",
@@ -123,46 +103,57 @@ const rootElement = document.getElementById("app");
 if (!(rootElement instanceof HTMLElement)) throw new Error("[velvet-arcana] #app element missing");
 const root = rootElement;
 const HAS_PLAYDROP_HOST = new URLSearchParams(window.location.search).has("playdrop_channel");
-const NOOP_UNSUBSCRIBE = () => undefined;
 
 let state!: GameState;
 let transitionTimer: number | null = null;
 let revealTimer: number | null = null;
 let tutorialTimer: number | null = null;
+let previewActionTimer: number | null = null;
+let previewRestartTimer: number | null = null;
 let pendingCardMotion: PendingCardMotion | null = null;
 let activeMotionTargetCardId: string | null = null;
 let cardMotionNonce = 0;
 let gameAudio: GameAudio | null = null;
-let removeHostAudioPolicyListener: (() => void) | null = null;
+let platform: PlaydropController | null = null;
+let removePlatformListener: (() => void) | null = null;
 let seedPools: SeedPools | null = null;
+let previewModeActive = false;
+let sessionStartedAt = performance.now();
+let currentRunStartedAt = performance.now();
+let lastInterstitialShownAt: number | null = null;
+let interstitialReady = false;
+let interstitialLoadInFlight = false;
+let interstitialBlocked = false;
+let interstitialRetryAfterAt: number | null = null;
+let restartInterstitialShownForRun = false;
+let restartInterstitialInFlight = false;
 
 void bootstrap().catch((error) => {
-  const playdrop = window.playdrop;
-  const host = playdrop?.host as RuntimeHost | undefined;
-  if (host?.error) {
-    host.error(String(error));
-  } else {
-    host?.setLoadingState?.({ status: "error", message: String(error) });
-  }
+  reportBootstrapError(error);
   throw error;
 });
 
 async function bootstrap() {
-  const host = await createHostBridge();
-  host.setLoadingState({ status: "loading", message: "Loading readings", progress: 0.2 });
+  platform = new PlaydropController(HAS_PLAYDROP_HOST);
+  await platform.init(PLAYDROP_INIT_TIMEOUT_MS);
+  platform.setLoadingState({ status: "loading", message: "Loading readings", progress: 0.2 });
   seedPools = await loadSeedPools();
+  previewModeActive = platform.getSnapshot().phase === "preview";
   state = createInitialState();
 
-  gameAudio = new GameAudio(resolveAudioEnabled(host.audioPolicy));
+  gameAudio = new GameAudio(platform.getSnapshot().audioEnabled);
   gameAudio.preload();
-  removeHostAudioPolicyListener = host.onAudioPolicyChange((policy) => {
-    gameAudio?.setAudioAllowed(resolveAudioEnabled(policy));
+  removePlatformListener = platform.onChange(() => {
+    const snapshot = platform?.getSnapshot();
+    if (!snapshot) return;
+    gameAudio?.setAudioAllowed(snapshot.audioEnabled);
+    syncPreviewMode(snapshot.phase);
   });
   window.addEventListener(
     "beforeunload",
     () => {
-      removeHostAudioPolicyListener?.();
-      removeHostAudioPolicyListener = null;
+      removePlatformListener?.();
+      removePlatformListener = null;
       gameAudio?.destroy();
     },
     { once: true },
@@ -171,19 +162,21 @@ async function bootstrap() {
   render();
   installDebugSurface();
 
-  host.ready();
+  platform.markReady();
+  void preloadRestartInterstitial(performance.now());
 }
 
-function createInitialState(seed = readSeedFromUrl() ?? randomSeed()): GameState {
+function createInitialState(seed = defaultRunSeed()): GameState {
   return createRunState(seed);
 }
 
 function createRunState(seed: number): GameState {
-  return {
+  const nextState: GameState = {
     phase: "playing",
     runSeed: seed,
     spreadIndex: 0,
     spread: createSpreadForRun(seed, 0),
+    runMoves: 0,
     score: 0,
     bestScore: readBestScore(),
     spreadsCleared: 0,
@@ -194,9 +187,17 @@ function createRunState(seed: number): GameState {
     dismissedTutorialStep: null,
     helpOpen: false,
   };
+
+  if (previewModeActive) {
+    nextState.tutorialStep = null;
+    nextState.dismissedTutorialStep = null;
+    nextState.helpOpen = false;
+  }
+
+  return nextState;
 }
 
-function startRun(seed = readSeedFromUrl() ?? randomSeed()) {
+function startRun(seed = defaultRunSeed()) {
   startRunAtSpread(seed, 0);
 }
 
@@ -205,7 +206,11 @@ function startRunAtSpread(seed: number, spreadIndex: number) {
   clearTransition();
   clearRevealTimer();
   clearTutorialTimer();
+  clearPreviewTimers();
   state = createRunState(seed);
+  currentRunStartedAt = performance.now();
+  restartInterstitialShownForRun = false;
+  restartInterstitialInFlight = false;
   if (spreadIndex !== 0) {
     state.spreadIndex = spreadIndex;
     state.spread = createSpreadForRun(seed, spreadIndex);
@@ -214,10 +219,11 @@ function startRunAtSpread(seed: number, spreadIndex: number) {
     state.helpOpen = false;
   }
   render();
+  void preloadRestartInterstitial(performance.now());
 }
 
-function handleCard(columnIndex: number, sourceButton?: HTMLElement | null) {
-  if (state.phase !== "playing" || state.helpOpen || activeMotionTargetCardId) return;
+function handleCard(columnIndex: number, sourceButton?: HTMLElement | null, options?: { allowPreview?: boolean }) {
+  if ((previewModeActive && !options?.allowPreview) || state.phase !== "playing" || state.helpOpen || activeMotionTargetCardId) return;
   const playable = getPlayableIndices(state.spread);
   if (!playable.includes(columnIndex)) return;
 
@@ -238,6 +244,7 @@ function handleCard(columnIndex: number, sourceButton?: HTMLElement | null) {
         }
       : null;
   state.spread = result.spread;
+  state.runMoves += 1;
   state.score += result.points;
   state.helpOpen = false;
   if (state.tutorialStep === "match") {
@@ -253,14 +260,23 @@ function handleCard(columnIndex: number, sourceButton?: HTMLElement | null) {
   render();
 }
 
-function handleDraw(sourceButton?: HTMLElement | null) {
-  if (state.phase !== "playing" || state.helpOpen || state.spread.stock.length === 0 || activeMotionTargetCardId) return;
+function handleDraw(sourceButton?: HTMLElement | null, options?: { allowPreview?: boolean }) {
+  if (
+    (previewModeActive && !options?.allowPreview) ||
+    state.phase !== "playing" ||
+    state.helpOpen ||
+    state.spread.stock.length === 0 ||
+    activeMotionTargetCardId
+  ) {
+    return;
+  }
   const drawnCard = state.spread.stock[0] ?? null;
   const sourceFaceUp = state.spread.showNextStockPreview;
   const sourceRect = snapshotRect(
     sourceButton?.querySelector(".playing-card") ?? queryTopStockCardElement(),
   );
   state.spread = drawFromStock(state.spread);
+  state.runMoves += 1;
   pendingCardMotion =
     drawnCard && state.spread.active
       ? {
@@ -348,6 +364,7 @@ function finishRun(victory: boolean, summaryMessage: string) {
   clearTransition();
   clearRevealTimer();
   clearTutorialTimer();
+  clearPreviewTimers();
   state.phase = "gameover";
   state.victory = victory;
   state.summaryMessage = summaryMessage;
@@ -404,7 +421,7 @@ function clearCardMotion() {
 }
 
 function getVisibleSpeechStep(): Exclude<TutorialStep, "await-draw"> | null {
-  if (state.phase !== "playing") return null;
+  if (previewModeActive || state.phase !== "playing") return null;
   if (!state.tutorialStep || state.tutorialStep === "await-draw") return null;
   return state.dismissedTutorialStep === state.tutorialStep ? null : state.tutorialStep;
 }
@@ -417,7 +434,7 @@ function tutorialMessage(step: Exclude<TutorialStep, "await-draw">) {
 }
 
 function tutorialPulseTarget(playableColumns: number[]): { kind: "stock" } | { kind: "column"; columnIndex: number } | null {
-  if (state.phase !== "playing" || state.helpOpen) return null;
+  if (previewModeActive || state.phase !== "playing" || state.helpOpen) return null;
 
   if (state.tutorialStep === "reveal" || state.tutorialStep === "draw") {
     return state.spread.stock.length > 0 ? { kind: "stock" } : null;
@@ -433,6 +450,7 @@ function tutorialPulseTarget(playableColumns: number[]): { kind: "stock" } | { k
 
 function syncTutorialTimer() {
   clearTutorialTimer();
+  if (previewModeActive) return;
   if (getVisibleSpeechStep() !== "welcome") return;
 
   tutorialTimer = window.setTimeout(() => {
@@ -444,6 +462,7 @@ function syncTutorialTimer() {
 }
 
 function handleGuide() {
+  if (previewModeActive) return;
   if (state.helpOpen) return;
 
   const speechStep = getVisibleSpeechStep();
@@ -465,9 +484,160 @@ function handleGuide() {
 }
 
 function dismissHelp() {
+  if (previewModeActive) return;
   if (!state.helpOpen) return;
   state.helpOpen = false;
   render();
+}
+
+function clearPreviewActionTimer() {
+  if (previewActionTimer !== null) {
+    window.clearTimeout(previewActionTimer);
+    previewActionTimer = null;
+  }
+}
+
+function clearPreviewRestartTimer() {
+  if (previewRestartTimer !== null) {
+    window.clearTimeout(previewRestartTimer);
+    previewRestartTimer = null;
+  }
+}
+
+function clearPreviewTimers() {
+  clearPreviewActionTimer();
+  clearPreviewRestartTimer();
+}
+
+function syncPreviewMode(phase: HostPhase) {
+  const nextPreviewMode = phase === "preview";
+  if (nextPreviewMode === previewModeActive) {
+    return;
+  }
+
+  previewModeActive = nextPreviewMode;
+  startRun(randomSeed());
+}
+
+function syncPreviewLoop() {
+  clearPreviewTimers();
+  if (!previewModeActive || restartInterstitialInFlight) {
+    return;
+  }
+  if (state.phase === "gameover") {
+    previewRestartTimer = window.setTimeout(() => {
+      previewRestartTimer = null;
+      if (!previewModeActive) return;
+      startRun(randomSeed());
+    }, PREVIEW_RESTART_DELAY_MS);
+    return;
+  }
+  if (state.phase !== "playing" || state.helpOpen || activeMotionTargetCardId) {
+    return;
+  }
+
+  previewActionTimer = window.setTimeout(() => {
+    previewActionTimer = null;
+    if (!previewModeActive) return;
+    const action = chooseAutoplayAction(
+      state.spread,
+      "planner",
+      state.runSeed + state.score + state.spread.stock.length + state.spreadIndex * 13,
+    );
+    if (!action) {
+      return;
+    }
+    if (action.kind === "play") {
+      handleCard(action.columnIndex, null, { allowPreview: true });
+      return;
+    }
+    handleDraw(null, { allowPreview: true });
+  }, state.runMoves === 0 ? PREVIEW_START_DELAY_MS : PREVIEW_MOVE_DELAY_MS);
+}
+
+async function preloadRestartInterstitial(now: number) {
+  const currentPlatform = platform;
+  if (
+    previewModeActive ||
+    interstitialReady ||
+    interstitialLoadInFlight ||
+    interstitialBlocked ||
+    (interstitialRetryAfterAt !== null && now < interstitialRetryAfterAt)
+  ) {
+    return;
+  }
+  if (!currentPlatform || !currentPlatform.canUseInterstitialAds()) {
+    return;
+  }
+
+  interstitialLoadInFlight = true;
+  try {
+    const result = await currentPlatform.preloadInterstitial();
+    interstitialReady = result.status === "ready";
+    interstitialBlocked = result.status === "blocked";
+    interstitialRetryAfterAt = result.status === "rate_limited" ? now + result.retryAfterSeconds * 1000 : null;
+  } catch (error) {
+    interstitialReady = false;
+    currentPlatform.reportError(error);
+  } finally {
+    interstitialLoadInFlight = false;
+  }
+}
+
+async function maybeShowRestartInterstitial() {
+  const now = performance.now();
+  const currentPlatform = platform;
+  if (
+    restartInterstitialInFlight ||
+    !shouldShowRestartInterstitial({
+      previewModeActive,
+      screen: state.phase === "gameover" ? "gameover" : "playing",
+      runMoves: state.runMoves,
+      runElapsedMs: Math.max(0, now - currentRunStartedAt),
+      shownThisRun: restartInterstitialShownForRun,
+      lastInterstitialShownAt,
+      sessionStartedAt,
+      now,
+      minRunMoves: RESTART_INTERSTITIAL_MIN_RUN_MOVES,
+      minRunMs: RESTART_INTERSTITIAL_MIN_RUN_MS,
+      cooldownMs: RESTART_INTERSTITIAL_COOLDOWN_MS,
+    })
+  ) {
+    void preloadRestartInterstitial(now);
+    return;
+  }
+  if (!interstitialReady || !currentPlatform || !currentPlatform.canUseInterstitialAds()) {
+    void preloadRestartInterstitial(now);
+    return;
+  }
+
+  restartInterstitialInFlight = true;
+  interstitialReady = false;
+  render();
+  try {
+    const status = await currentPlatform.showInterstitial();
+    if (status === "dismissed") {
+      lastInterstitialShownAt = performance.now();
+      restartInterstitialShownForRun = true;
+    }
+  } catch (error) {
+    currentPlatform.reportError(error);
+  } finally {
+    restartInterstitialInFlight = false;
+    void preloadRestartInterstitial(performance.now());
+    render();
+  }
+}
+
+async function handleRestartAction() {
+  if (previewModeActive || state.phase !== "gameover" || restartInterstitialInFlight) {
+    return;
+  }
+  await maybeShowRestartInterstitial();
+  if (previewModeActive || restartInterstitialInFlight) {
+    return;
+  }
+  startRun(randomSeed());
 }
 
 function render() {
@@ -479,9 +649,11 @@ function render() {
     state.phase === "transition" ? spreadLabelAt(state.spreadIndex + 1) : state.spread.label;
   const spreadDisplayLabel = `${state.spread.label.toLowerCase()} ${state.spreadIndex + 1}/${SPREAD_LABELS.length}`;
   const phaseClass = `page--phase-${state.spread.label.toLowerCase()}`;
+  const showHelpOverlay = state.helpOpen && !previewModeActive;
+  const showGameOverOverlay = state.phase === "gameover" && !previewModeActive;
 
   root.innerHTML = `
-    <div class="page ${phaseClass} ${HAS_PLAYDROP_HOST ? "page--hosted" : ""}">
+    <div class="page ${phaseClass} ${HAS_PLAYDROP_HOST ? "page--hosted" : ""} ${previewModeActive ? "page--preview" : ""}">
       <main class="table">
         ${renderHud(spreadDisplayLabel, speechStep)}
 
@@ -500,7 +672,7 @@ function render() {
           <div class="phase-transition">${escapeHtml(nextSpreadLabel)}</div>
         </section>
 
-        <section class="overlay overlay--help ${state.helpOpen ? "" : "hidden"} js-help-dismiss" aria-hidden="${state.helpOpen ? "false" : "true"}">
+        <section class="overlay overlay--help ${showHelpOverlay ? "" : "hidden"} js-help-dismiss" aria-hidden="${showHelpOverlay ? "false" : "true"}">
           <div class="overlay-panel overlay-panel--help">
             <h2>How To Play</h2>
             <ul class="help-list">
@@ -509,7 +681,7 @@ function render() {
           </div>
         </section>
 
-        <section class="overlay overlay--gameover ${state.phase === "gameover" ? "" : "hidden"}">
+        <section class="overlay overlay--gameover ${showGameOverOverlay ? "" : "hidden"}" aria-hidden="${showGameOverOverlay ? "false" : "true"}">
           <div class="overlay-panel">
             <h2>${state.victory ? "Reading Complete" : "Reading Closed"}</h2>
             <p>${escapeHtml(state.summaryMessage)}</p>
@@ -525,7 +697,7 @@ function render() {
               <div class="summary-value">${formatNumber(state.bestScore)}</div>
               <div class="summary-label">best</div>
             </div>
-            <button class="primary-button js-restart" type="button">Play Again</button>
+            <button class="primary-button js-restart" type="button" ${restartInterstitialInFlight ? `disabled aria-busy="true"` : ""}>Play Again</button>
           </div>
         </section>
       </main>
@@ -543,13 +715,21 @@ function render() {
   });
   root.querySelector<HTMLButtonElement>(".js-guide")?.addEventListener("click", handleGuide);
   root.querySelector<HTMLElement>(".js-help-dismiss")?.addEventListener("click", dismissHelp);
-  root.querySelector<HTMLButtonElement>(".js-restart")?.addEventListener("click", () => startRun(randomSeed()));
+  root.querySelector<HTMLButtonElement>(".js-restart")?.addEventListener("click", () => {
+    void handleRestartAction();
+  });
   syncTutorialTimer();
   gameAudio?.syncState(state.phase, state.spread.label);
+  syncPreviewLoop();
   void playPendingCardMotion();
 }
 
 function renderHud(spreadDisplayLabel: string, speechStep: Exclude<TutorialStep, "await-draw"> | null) {
+  if (previewModeActive) {
+    return "";
+  }
+
+  const showScore = state.score > 0;
   const guideButton = `
     <button class="guide-button ${speechStep || state.helpOpen ? "guide-button--active" : ""} js-guide" type="button" aria-label="${speechStep ? "Dismiss speech" : "How to play"}">
       <span class="guide-button__frame" aria-hidden="true">
@@ -572,10 +752,16 @@ function renderHud(spreadDisplayLabel: string, speechStep: Exclude<TutorialStep,
   }
 
   return `
-    <header class="hud">
+    <header class="hud ${showScore ? "" : "hud--scoreless"}">
+      ${
+        showScore
+          ? `
       <div class="score-readout">
         <span class="score-readout__value">${formatNumber(state.score)}</span>
       </div>
+      `
+          : ""
+      }
       <div class="hud-right">
         <div class="phase-pill">
           <span class="phase-pill__value">${escapeHtml(spreadDisplayLabel)}</span>
@@ -631,12 +817,17 @@ function renderStackCard({
   const tag = isTop && entry.faceUp ? "button" : "div";
   const interactiveClass = tag === "button" ? "js-column-card" : "";
   const revealed = state.recentRevealCardId === entry.card.id;
+  const accessibilityAttributes = tag === "button"
+    ? `aria-label="Play ${escapeHtml(formatCard(entry.card))}"`
+    : entry.faceUp
+      ? `role="img" aria-label="${escapeHtml(formatCard(entry.card))}"`
+      : `aria-hidden="true"`;
   return `
     <${tag}
       class="stack-card ${interactiveClass} ${isTop ? "stack-card--top" : ""}"
       style="--stack-index: ${depthIndex};"
       ${tag === "button" ? `type="button" data-column="${columnIndex}" data-playable="${playable ? "true" : "false"}"` : ""}
-      aria-label="${escapeHtml(formatCard(entry.card))}"
+      ${accessibilityAttributes}
     >
       ${renderPlayingCard(entry.card, {
         faceUp: entry.faceUp,
@@ -656,6 +847,7 @@ function renderPlayingCard(
     revealed?: boolean;
     compact?: boolean;
     hiddenForMotion?: boolean | undefined;
+    revealFaceDuringFlip?: boolean | undefined;
   },
 ) {
   const classes = [
@@ -667,12 +859,15 @@ function renderPlayingCard(
   ]
     .filter(Boolean)
     .join(" ");
+  const faceMarkup = options.faceUp || options.revealFaceDuringFlip
+    ? `<img class="playing-card__art" src="${faceAssetForCard(card)}" alt="" draggable="false" />`
+    : "";
 
   return `
-    <div class="${classes}" data-suit="${card.suit}" data-card-id="${card.id}">
+    <div class="${classes}"${options.faceUp ? ` data-card-id="${card.id}"` : ""}>
       <div class="playing-card__inner">
         <div class="playing-card__side playing-card__side--face">
-          <img class="playing-card__art" src="${faceAssetForCard(card)}" alt="" draggable="false" />
+          ${faceMarkup}
         </div>
         <div class="playing-card__side playing-card__side--reverse">
           <img class="playing-card__art" src="${CARD_BACK_ASSET}" alt="" draggable="false" />
@@ -826,7 +1021,10 @@ async function playPendingCardMotion() {
   overlay.style.top = `${motion.sourceRect.top}px`;
   overlay.style.width = `${motion.sourceRect.width}px`;
   overlay.style.height = `${motion.sourceRect.height}px`;
-  overlay.innerHTML = renderPlayingCard(motion.card, { faceUp: motion.sourceFaceUp });
+  overlay.innerHTML = renderPlayingCard(motion.card, {
+    faceUp: motion.sourceFaceUp,
+    revealFaceDuringFlip: !motion.sourceFaceUp,
+  });
   document.body.appendChild(overlay);
 
   const overlayInner = overlay.querySelector<HTMLElement>(".playing-card__inner");
@@ -932,7 +1130,7 @@ function faceAssetForCard(card: Card) {
 }
 
 function assetSuitKey(suit: SuitKey) {
-  return suit === "blade" ? "tree" : suit;
+  return suit;
 }
 
 function assetRankKey(rank: number) {
@@ -1093,12 +1291,14 @@ function installDebugSurface() {
   const debug = {
     getState: () => ({
       phase: state.phase,
+      previewMode: previewModeActive,
       spread: state.spread.label,
       spreadMode: state.spread.showBuriedFaces
         ? state.spread.showNextStockPreview
           ? "past"
           : "present"
         : "future",
+      runMoves: state.runMoves,
       score: state.score,
       bestScore: state.bestScore,
       active: formatCard(state.spread.active),
@@ -1165,6 +1365,29 @@ function installDebugSurface() {
         handleDraw();
       }
     },
+    findTransitionSeed: (policy: AutoPolicy = "planner", maxSeed = 200, maxSteps = 160) => {
+      for (let seed = 1; seed <= maxSeed; seed += 1) {
+        let spread = createSpreadForRun(seed, 0);
+        for (let step = 0; step < maxSteps; step += 1) {
+          if (isSpreadCleared(spread)) {
+            return seed;
+          }
+          if (isHardStuck(spread)) {
+            break;
+          }
+          const action = chooseAutoplayAction(spread, policy, seed + step * 13);
+          if (!action) {
+            break;
+          }
+          if (action.kind === "play") {
+            spread = playCard(spread, action.columnIndex).spread;
+            continue;
+          }
+          spread = drawFromStock(spread);
+        }
+      }
+      return null;
+    },
     simulateRuns: (policy: AutoPolicy = "planner", runs = 100, seedStart = 10_000) =>
       simulateRuns(policy, runs, seedStart),
     analyzeCurrentSpread: () => analyzeSpread(state.spread),
@@ -1182,75 +1405,25 @@ function installDebugSurface() {
   });
 }
 
-function bridgeFromRuntimeHost(runtimeHost: RuntimeHost | undefined, fallbackAudioPolicy: unknown): HostBridge {
-  return {
-    setLoadingState: (state) => runtimeHost?.setLoadingState?.(state),
-    ready: () => {
-      if (runtimeHost?.ready) {
-        runtimeHost.ready();
-        return;
-      }
-      runtimeHost?.setLoadingState?.({ status: "ready" });
-    },
-    audioPolicy: runtimeHost?.audioEnabled ?? fallbackAudioPolicy,
-    onAudioPolicyChange: runtimeHost?.onAudioPolicyChange
-      ? (handler) => {
-          const unsubscribe = runtimeHost.onAudioPolicyChange!(handler);
-          return typeof unsubscribe === "function" ? unsubscribe : NOOP_UNSUBSCRIBE;
-        }
-      : () => NOOP_UNSUBSCRIBE,
-  };
+function defaultRunSeed() {
+  if (previewModeActive) {
+    return randomSeed();
+  }
+  return readSeedFromUrl() ?? randomSeed();
 }
 
-async function createHostBridge(): Promise<HostBridge> {
-  if (HAS_PLAYDROP_HOST) {
-    const playdrop = await waitForHostedPlaydrop(PLAYDROP_INIT_TIMEOUT_MS);
-    const sdk = await playdrop.init!();
-    return bridgeFromRuntimeHost(sdk.host as RuntimeHost | undefined, false);
+function reportBootstrapError(error: unknown) {
+  platform?.reportError(error);
+  if (platform) {
+    return;
   }
-
-  const playdrop = window.playdrop as RuntimePlaydrop | undefined;
-  return bridgeFromRuntimeHost(playdrop?.host as RuntimeHost | undefined, true);
-}
-
-async function waitForHostedPlaydrop(timeoutMs: number): Promise<RuntimePlaydrop> {
-  const deadline = performance.now() + timeoutMs;
-  while (performance.now() < deadline) {
-    const playdrop = window.playdrop as RuntimePlaydrop | undefined;
-    if (playdrop?.init) {
-      return playdrop;
-    }
-    await new Promise((resolve) => window.setTimeout(resolve, 50));
+  const playdrop = window.playdrop as { host?: { error?(message: string): void; setLoadingState?(state: { status: "error"; message?: string }): void } } | undefined;
+  const message = String(error);
+  if (playdrop?.host?.error) {
+    playdrop.host.error(message);
+    return;
   }
-
-  throw new Error("[velvet-arcana] PlayDrop SDK loader did not expose playdrop.init() before hosted startup timeout");
-}
-
-function resolveAudioEnabled(policy: unknown): boolean {
-  if (typeof policy === "boolean") {
-    return policy;
-  }
-
-  if (!policy || typeof policy !== "object") {
-    return false;
-  }
-
-  const record = policy as Record<string, unknown>;
-  const hasExplicitPolicy = [record.audioEnabled, record.soundEnabled, record.enabled].some(
-    (value) => typeof value === "boolean",
-  );
-  if (!hasExplicitPolicy) {
-    return false;
-  }
-
-  return firstBoolean(record.audioEnabled, record.soundEnabled, record.enabled, false);
-}
-
-function firstBoolean(...values: unknown[]): boolean {
-  for (const value of values) {
-    if (typeof value === "boolean") return value;
-  }
-  return true;
+  playdrop?.host?.setLoadingState?.({ status: "error", message });
 }
 
 function readBestScore() {

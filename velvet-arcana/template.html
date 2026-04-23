@@ -29,7 +29,7 @@
         --moon: #4e6de3;
         --rose: #d65161;
         --sun: #df9627;
-        --blade: #374a53;
+        --tree: #374a53;
         --card-aspect-ratio: calc(422 / 710);
         --card-height-ratio: calc(710 / 422);
         --hud-height: 48px;
@@ -40,10 +40,13 @@
           96px
         );
         --card-height: calc(var(--card-width) * var(--card-height-ratio));
-        --stack-step: clamp(
+        --stack-visible-ratio: 0.24;
+        --stack-step: max(
           10px,
-          calc((100dvh - var(--safe-top) - var(--safe-bottom) - var(--hud-height) - (var(--card-height) * 2) - 56px) / 4),
-          calc(var(--card-height) * 0.28)
+          min(
+            calc(var(--card-height) * var(--stack-visible-ratio)),
+            calc((100dvh - var(--safe-top) - var(--safe-bottom) - var(--hud-height) - (var(--card-height) * 2) - 56px) / 4)
+          )
         );
         --board-width: calc((var(--card-width) * 7) + (var(--column-gap) * 6));
         --column-height: calc(var(--card-height) + (var(--stack-step) * 4));
@@ -166,6 +169,10 @@
       }
 
       .hud--speaking {
+        justify-content: flex-end;
+      }
+
+      .hud--scoreless {
         justify-content: flex-end;
       }
 
@@ -787,29 +794,49 @@
           --pile-gap: calc(var(--card-width) * 2.05);
           --active-reading-offset-x: 8px;
           --active-altar-size: calc(var(--card-width) * 2.048);
+          --stack-visible-ratio: 0.24;
           --card-width: min(
             calc((100vw - var(--safe-left) - var(--safe-right) - 10px - (6 * var(--column-gap))) / 7),
             102px
           );
-          --stack-step: clamp(
-            calc(var(--card-height) * 0.24),
-            calc((100dvh - var(--safe-top) - var(--safe-bottom) - var(--hud-height) - var(--card-height) - 228px) / 4),
-            calc(var(--card-height) * 0.72)
+          --stack-step: max(
+            10px,
+            min(
+              calc(var(--card-height) * var(--stack-visible-ratio)),
+              calc((100dvh - var(--safe-top) - var(--safe-bottom) - var(--hud-height) - var(--card-height) - 228px) / 4)
+            )
           );
         }
 
         .page {
-          padding-top: max(10px, env(safe-area-inset-top));
-          padding-bottom: max(12px, env(safe-area-inset-bottom));
+          padding-top: var(--safe-top);
+          padding-bottom: var(--safe-bottom);
           background-position: center 48%;
         }
 
         .table {
-          gap: 8px;
+          width: 100%;
+          display: grid;
+          grid-template-rows:
+            minmax(0, 1fr)
+            auto
+            minmax(12px, 1fr)
+            auto
+            minmax(12px, 1fr)
+            auto
+            minmax(0, 1fr);
+          justify-items: center;
+          align-items: center;
+          gap: 0;
         }
 
         .hud {
+          grid-row: 2;
           width: 100%;
+        }
+
+        .board {
+          display: contents;
         }
 
         .hud-right,
@@ -860,25 +887,20 @@
         }
 
         .board {
-          display: grid;
           width: 100%;
-          grid-template-rows: minmax(0, 1fr) auto minmax(18px, 1fr) auto;
-          justify-items: center;
-          align-content: stretch;
-          gap: 0;
           padding-top: 0;
           padding-bottom: 0;
         }
 
         .tableau {
+          grid-row: 4;
           width: min(100%, var(--board-width));
-          grid-row: 2;
         }
 
         .piles {
-          grid-row: 4;
+          grid-row: 6;
           margin-top: 0;
-          padding-bottom: clamp(24px, 6vh, 56px);
+          padding-bottom: 0;
         }
 
         .overlay-panel--help {

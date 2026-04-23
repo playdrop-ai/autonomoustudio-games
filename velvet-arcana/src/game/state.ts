@@ -1,4 +1,4 @@
-export type SuitKey = "moon" | "rose" | "sun" | "blade";
+export type SuitKey = "moon" | "rose" | "sun" | "tree";
 export type SpreadLabel = "Past" | "Present" | "Future";
 
 export type Card = {
@@ -40,7 +40,7 @@ export type SpreadAnalysis = {
 
 export type DifficultyBand = SpreadAnalysis["difficultyBand"];
 
-export const SUITS: SuitKey[] = ["moon", "rose", "sun", "blade"];
+export const SUITS: SuitKey[] = ["moon", "rose", "sun", "tree"];
 export const SPREAD_LABELS: SpreadLabel[] = ["Past", "Present", "Future"];
 export const COLUMN_COUNT = 7;
 export const COLUMN_DEPTH = 5;
