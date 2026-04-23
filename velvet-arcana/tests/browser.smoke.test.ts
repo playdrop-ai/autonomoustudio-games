@@ -96,6 +96,7 @@ async function installHostedPreviewStub(page: import("playwright").Page) {
         (() => {
           const phaseListeners = new Set();
           const audioListeners = new Set();
+          const authListeners = new Set();
           const host = {
             ready() {},
             firstFrameReady() {},
@@ -126,11 +127,41 @@ async function installHostedPreviewStub(page: import("playwright").Page) {
           };
           const sdk = {
             host,
+            app: {
+              authMode: "OPTIONAL",
+            },
+            me: {
+              isLoggedIn: false,
+              userId: null,
+              username: null,
+              selectedAvatarId: null,
+              selectedProfileAssetRef: null,
+              getSelectedProfileAssetRef: () => null,
+              appData: null,
+              updateAppData: async () => null,
+              login: async () => undefined,
+              promptLogin: async () => undefined,
+              joinRoom: async () => undefined,
+              onAuthChange(listener) {
+                authListeners.add(listener);
+                return () => authListeners.delete(listener);
+              },
+            },
             ads: {
               interstitial: {
                 load: async () => ({ status: "ready" }),
                 show: async () => ({ status: "dismissed" }),
               },
+            },
+            leaderboards: {
+              get: async () => ({
+                leaderboard: {
+                  top: [],
+                  playerEntry: null,
+                  aroundPlayer: [],
+                },
+              }),
+              submitScore: async () => undefined,
             },
           };
           window.playdrop = {
@@ -338,10 +369,12 @@ test(
 
       const previewState = await page.evaluate(() =>
         (window as typeof window & {
-          velvetArcanaDebug: { getState(): { previewMode: boolean; runMoves: number; tutorialStep: string | null } };
+          velvetArcanaDebug: { getState(): { active: string; previewMode: boolean; runMoves: number; spread: string; tutorialStep: string | null } };
         }).velvetArcanaDebug.getState(),
       );
       assert.equal(previewState.previewMode, true);
+      assert.equal(previewState.spread, "Present");
+      assert.notEqual(previewState.active, "empty");
       assert.ok(previewState.runMoves > 0, "expected preview autoplay to advance the run");
       assert.equal(previewState.tutorialStep, null);
       assert.equal(await page.locator(".hud").count(), 0);
@@ -375,3 +408,49 @@ test(
     }
   },
 );
+
+test("browser boot tolerates missing Web Audio and blocked localStorage", { timeout: 120_000 }, async () => {
+  await ensureBuild();
+
+  const server = await createStaticServer();
+  const browser = await chromium.launch({ headless: true });
+
+  try {
+    const noAudioPage = await browser.newPage({ viewport: { width: 430, height: 932 } });
+    try {
+      await noAudioPage.addInitScript(() => {
+        Object.defineProperty(window, "AudioContext", {
+          configurable: true,
+          value: undefined,
+        });
+        Object.defineProperty(window, "webkitAudioContext", {
+          configurable: true,
+          value: undefined,
+        });
+      });
+      await noAudioPage.goto(`${server.url}/index.html?seed=1009`, { waitUntil: "load" });
+      await waitForDebug(noAudioPage);
+    } finally {
+      await noAudioPage.close();
+    }
+
+    const blockedStoragePage = await browser.newPage({ viewport: { width: 430, height: 932 } });
+    try {
+      await blockedStoragePage.addInitScript(() => {
+        Object.defineProperty(window, "localStorage", {
+          configurable: true,
+          get() {
+            throw new Error("localStorage blocked by smoke test");
+          },
+        });
+      });
+      await blockedStoragePage.goto(`${server.url}/index.html?seed=1009`, { waitUntil: "load" });
+      await waitForDebug(blockedStoragePage);
+    } finally {
+      await blockedStoragePage.close();
+    }
+  } finally {
+    await browser.close();
+    await server.close();
+  }
+});

@@ -61,8 +61,11 @@ export class GameAudio {
     for (const element of Object.values(this.musicElements)) {
       element.load();
     }
+    if (!this.context) {
+      return;
+    }
     for (const cue of Object.keys(SFX_SRC) as AudioCue[]) {
-      this.loadSfxBuffer(cue);
+      void this.loadSfxBuffer(cue).catch(() => {});
     }
   }
 

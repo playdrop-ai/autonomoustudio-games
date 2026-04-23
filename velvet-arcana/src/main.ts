@@ -78,6 +78,9 @@ const PREVIEW_RESTART_DELAY_MS = 1100;
 const RESTART_INTERSTITIAL_MIN_RUN_MS = 45_000;
 const RESTART_INTERSTITIAL_MIN_RUN_MOVES = 12;
 const RESTART_INTERSTITIAL_COOLDOWN_MS = 180_000;
+const LEADERBOARD_KEY = "highest_score";
+const PREVIEW_RUN_SEED = 10_144;
+const PREVIEW_SPREAD_INDEX = 1;
 const HOW_TO_PLAY_LINES = [
   "Turn a new reading from the deck when the target is empty.",
   "Only the top card in each column can be played.",
@@ -95,8 +98,8 @@ const SEED_POOL_ASSETS: Record<SeedPoolDifficulty, string> = {
 };
 const SPREAD_POOL_BY_LABEL: Record<SpreadLabel, SeedPoolDifficulty> = {
   Past: "easy",
-  Present: "medium",
-  Future: "hard",
+  Present: "easy",
+  Future: "easy",
 };
 
 const rootElement = document.getElementById("app");
@@ -134,9 +137,8 @@ void bootstrap().catch((error) => {
 });
 
 async function bootstrap() {
-  platform = new PlaydropController(HAS_PLAYDROP_HOST);
+  platform = new PlaydropController(HAS_PLAYDROP_HOST, LEADERBOARD_KEY);
   await platform.init(PLAYDROP_INIT_TIMEOUT_MS);
-  platform.setLoadingState({ status: "loading", message: "Loading readings", progress: 0.2 });
   seedPools = await loadSeedPools();
   previewModeActive = platform.getSnapshot().phase === "preview";
   state = createInitialState();
@@ -167,28 +169,33 @@ async function bootstrap() {
 }
 
 function createInitialState(seed = defaultRunSeed()): GameState {
-  return createRunState(seed);
+  return createRunStateForSpread(seed, previewModeActive ? PREVIEW_SPREAD_INDEX : 0);
 }
 
 function createRunState(seed: number): GameState {
+  return createRunStateForSpread(seed, 0);
+}
+
+function createRunStateForSpread(seed: number, spreadIndex: number): GameState {
   const nextState: GameState = {
     phase: "playing",
     runSeed: seed,
-    spreadIndex: 0,
-    spread: createSpreadForRun(seed, 0),
-    runMoves: 0,
+    spreadIndex,
+    spread: createSpreadForRun(seed, spreadIndex),
+    runMoves: previewModeActive ? 1 : 0,
     score: 0,
     bestScore: readBestScore(),
     spreadsCleared: 0,
     victory: false,
     summaryMessage: "",
     recentRevealCardId: null,
-    tutorialStep: "welcome",
+    tutorialStep: spreadIndex === 0 ? "welcome" : null,
     dismissedTutorialStep: null,
     helpOpen: false,
   };
 
   if (previewModeActive) {
+    nextState.spread = drawFromStock(nextState.spread);
     nextState.tutorialStep = null;
     nextState.dismissedTutorialStep = null;
     nextState.helpOpen = false;
@@ -207,17 +214,10 @@ function startRunAtSpread(seed: number, spreadIndex: number) {
   clearRevealTimer();
   clearTutorialTimer();
   clearPreviewTimers();
-  state = createRunState(seed);
+  state = createRunStateForSpread(seed, spreadIndex);
   currentRunStartedAt = performance.now();
   restartInterstitialShownForRun = false;
   restartInterstitialInFlight = false;
-  if (spreadIndex !== 0) {
-    state.spreadIndex = spreadIndex;
-    state.spread = createSpreadForRun(seed, spreadIndex);
-    state.tutorialStep = null;
-    state.dismissedTutorialStep = null;
-    state.helpOpen = false;
-  }
   render();
   void preloadRestartInterstitial(performance.now());
 }
@@ -375,6 +375,7 @@ function finishRun(victory: boolean, summaryMessage: string) {
   state.bestScore = Math.max(state.bestScore, state.score);
   writeBestScore(state.bestScore);
   render();
+  void submitRunScore(state.score);
 }
 
 function setRecentReveal(cardId: string | null) {
@@ -516,6 +517,10 @@ function syncPreviewMode(phase: HostPhase) {
   }
 
   previewModeActive = nextPreviewMode;
+  if (previewModeActive) {
+    startPreviewRun();
+    return;
+  }
   startRun(randomSeed());
 }
 
@@ -528,7 +533,7 @@ function syncPreviewLoop() {
     previewRestartTimer = window.setTimeout(() => {
       previewRestartTimer = null;
       if (!previewModeActive) return;
-      startRun(randomSeed());
+      startPreviewRun();
     }, PREVIEW_RESTART_DELAY_MS);
     return;
   }
@@ -626,6 +631,24 @@ async function maybeShowRestartInterstitial() {
     restartInterstitialInFlight = false;
     void preloadRestartInterstitial(performance.now());
     render();
+  }
+}
+
+async function submitRunScore(score: number) {
+  const currentPlatform = platform;
+  if (previewModeActive || !currentPlatform || score <= 0) {
+    return;
+  }
+
+  try {
+    const snapshot = await currentPlatform.submitScore(score);
+    if (snapshot.playerBestScore !== null) {
+      state.bestScore = Math.max(state.bestScore, snapshot.playerBestScore);
+      writeBestScore(state.bestScore);
+      render();
+    }
+  } catch (error) {
+    console.warn("[velvet-arcana] Failed to submit leaderboard score", error);
   }
 }
 
@@ -1407,9 +1430,13 @@ function installDebugSurface() {
 
 function defaultRunSeed() {
   if (previewModeActive) {
-    return randomSeed();
+    return PREVIEW_RUN_SEED;
   }
   return readSeedFromUrl() ?? randomSeed();
+}
+
+function startPreviewRun() {
+  startRunAtSpread(PREVIEW_RUN_SEED, PREVIEW_SPREAD_INDEX);
 }
 
 function reportBootstrapError(error: unknown) {
@@ -1417,24 +1444,28 @@ function reportBootstrapError(error: unknown) {
   if (platform) {
     return;
   }
-  const playdrop = window.playdrop as { host?: { error?(message: string): void; setLoadingState?(state: { status: "error"; message?: string }): void } } | undefined;
+  const playdrop = window.playdrop as { host?: { error?(message: string): void } } | undefined;
   const message = String(error);
   if (playdrop?.host?.error) {
     playdrop.host.error(message);
-    return;
   }
-  playdrop?.host?.setLoadingState?.({ status: "error", message });
 }
 
 function readBestScore() {
-  const stored = window.localStorage.getItem(STORAGE_KEY);
-  if (!stored) return 0;
-  const parsed = Number(stored);
-  return Number.isFinite(parsed) ? parsed : 0;
+  try {
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    if (!stored) return 0;
+    const parsed = Number(stored);
+    return Number.isFinite(parsed) ? parsed : 0;
+  } catch {
+    return 0;
+  }
 }
 
 function writeBestScore(score: number) {
-  window.localStorage.setItem(STORAGE_KEY, String(score));
+  try {
+    window.localStorage.setItem(STORAGE_KEY, String(score));
+  } catch {}
 }
 
 async function loadSeedPools(): Promise<SeedPools> {

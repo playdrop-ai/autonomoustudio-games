@@ -782,8 +782,33 @@
       }
 
       @media (min-width: 901px) {
+        :root {
+          --column-gap: clamp(8px, 1.2vw, 16px);
+          --card-width: min(
+            calc((100vw - var(--safe-left) - var(--safe-right) - 36px - (6 * var(--column-gap))) / 7),
+            calc((100dvh - 180px) / (var(--card-height-ratio) * 2.12)),
+            112px
+          );
+          --pile-gap: calc(var(--card-width) * 1.24);
+          --active-altar-size: calc(var(--card-width) * 2.08);
+        }
+
+        .table {
+          gap: clamp(12px, 2vh, 20px);
+        }
+
+        .hud {
+          width: min(100%, calc(var(--board-width) + 42px));
+          padding-top: clamp(8px, 1.2vh, 14px);
+        }
+
         .board {
-          padding-top: calc(var(--hud-height) * 2);
+          gap: clamp(16px, 2.4vh, 28px);
+          padding-top: clamp(34px, 6vh, 64px);
+        }
+
+        .piles {
+          padding-bottom: clamp(24px, 5vh, 48px);
         }
       }
 
@@ -930,16 +955,15 @@
       @media (orientation: landscape) and (max-height: 520px) {
         :root {
           --hud-height: 42px;
-          --pile-gap: calc(var(--card-width) * 1);
+          --column-gap: clamp(5px, 1.4vw, 10px);
+          --pile-gap: calc(var(--card-width) * 1.08);
           --active-reading-offset-x: 8px;
-          --active-altar-size: calc(var(--card-width) * 1.968);
+          --active-altar-size: calc(var(--card-width) * 1.92);
           --stock-stack-lift: calc(var(--card-height) * -0.035);
-          --card-width: calc(
-            min(
-              calc((100vw - var(--safe-left) - var(--safe-right) - 24px - (6 * var(--column-gap))) / 7),
-              calc((100dvh - 150px) / (var(--card-height-ratio) * 2)),
-              82px
-            ) * 0.8
+          --card-width: min(
+            calc((100vw - var(--safe-left) - var(--safe-right) - 20px - (6 * var(--column-gap))) / 7),
+            calc((100dvh - 132px) / (var(--card-height-ratio) * 2.08)),
+            86px
           );
         }
 

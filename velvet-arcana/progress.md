@@ -452,3 +452,76 @@ Early blockers
 - Proof artifacts:
   - `/Users/olivier/Documents/autonomoustudio-games/velvet-arcana/output/playwright/scoreless-hud-proof.png`
   - `/Users/olivier/Documents/autonomoustudio-games/velvet-arcana/output/playwright/scoreless-hud-proof.json`
+
+2026-04-23 featured quality pass
+- Fixed the audio boot blocker:
+  - `GameAudio.preload()` now skips SFX buffer loading when Web Audio is unavailable
+  - SFX preload failures no longer abort the game render path
+- Fixed the storage boot blocker:
+  - best-score reads and writes now tolerate blocked `localStorage`
+  - added a browser smoke test that boots with both missing Web Audio and blocked storage
+- Updated the store copy to match the current game:
+  - removed reserve charm and candle-pressure claims
+  - description now focuses on the three higher-or-lower tarot spreads
+- Rebalanced the three-spread arc:
+  - mapped `Past`, `Present`, and `Future` to the easy seed pool for a featured casual pass
+  - 500-run planner sample improved from the previous `0.6%` full-clear baseline to `5.2%`
+  - latest 500-run sample: planner `5.2%` full clears, `37.4%` Past clears, `14.4%` Present clears, average score `5737.8`
+  - latest greedy sample: `0.8%` full clears, `17.0%` Past clears, `3.0%` Present clears, average score `4059.2`
+- Added PlayDrop leaderboard submission support:
+  - `PlaydropController` now tracks login state plus current player rank and best score
+  - game-over score submission targets the `highest_score` leaderboard for logged-in hosted play only
+  - local and anonymous runs remain non-submitting
+- Improved hosted preview:
+  - preview starts from a deterministic authored `Present` spread with an active reading already drawn
+  - preview hides HUD and tutorial, autoplays, and resets through the deterministic preview seed
+  - hosted preview smoke now stubs the current SDK surfaces used by the game
+- Polished desktop and short-landscape layout:
+  - desktop cards scale larger with wider board/HUD alignment and better pile spacing
+  - short landscape no longer applies the extra `0.8` card downscale, so cards read closer to mobile portrait quality
+- Verification:
+  - `npm test` passed, `18/18`
+  - `npm run validate` passed
+  - `playdrop project validate .` is blocked because the pinned `autonomoustudio` prod account is not logged in locally
+  - ran the required `develop-web-game` Playwright client against the final local build
+- Fresh review artifacts:
+  - responsive composite: `/Users/olivier/Documents/autonomoustudio-games/velvet-arcana/output/playwright/featured-pass-v2/responsive-composite.png`
+  - mobile portrait: `/Users/olivier/Documents/autonomoustudio-games/velvet-arcana/output/playwright/featured-pass-v2/mobile-portrait-gameplay.png`
+  - desktop: `/Users/olivier/Documents/autonomoustudio-games/velvet-arcana/output/playwright/featured-pass-v2/desktop-gameplay.png`
+  - landscape: `/Users/olivier/Documents/autonomoustudio-games/velvet-arcana/output/playwright/featured-pass-v2/landscape-gameplay.png`
+  - preview: `/Users/olivier/Documents/autonomoustudio-games/velvet-arcana/output/playwright/featured-pass-v2/mobile-preview.png`
+  - final shared web-game client artifact: `/Users/olivier/Documents/autonomoustudio-games/velvet-arcana/output/web-game/featured-pass-v2-final/shot-0.png`
+
+2026-04-23 PlayDrop CLI validation pass
+- Used the `@playdrop` dev-testing flow to validate what can be checked from the current machine.
+- Checked local PlayDrop CLI state:
+  - installed CLI: `0.7.13 (build 1)`
+  - workspace pin: `autonomoustudio` on `prod`
+  - stored prod accounts currently do not include `autonomoustudio`
+  - a local `ministudio` API key authenticates as `ministudio`, not `autonomoustudio`, so it cannot satisfy the pinned workspace
+- Ran public PlayDrop checks against the live app:
+  - `playdrop detail autonomoustudio/app/velvet-arcana --json`
+  - `playdrop versions browse autonomoustudio/app/velvet-arcana`
+  - `curl -I -L https://assets.playdrop.ai/creators/autonomoustudio/apps/velvet-arcana/v1.0.6/index.html`
+- Live production findings before the next publish:
+  - current live version is still `1.0.6`
+  - live description still mentions reserve charm and candle pressure
+  - live `leaderboardCount` is `0`
+  - live hosted captures emit the deprecated `sdk.host.setLoadingState(...)` warning
+- Patched the local `1.0.7` candidate based on those CLI findings:
+  - bumped `catalogue.json`, `package.json`, and `package-lock.json` from `1.0.6` to `1.0.7`
+  - added `username: "autonomoustudio"` to the app catalogue entry, matching the admin-on-behalf publishing path used by Starfold
+  - added the `highest_score` leaderboard definition to `catalogue.json`
+  - removed game-side `sdk.host.setLoadingState(...)` usage so the next hosted build should rely on `sdk.host.ready()` only
+- Validation after the CLI-driven patches:
+  - `npm test` passed, `18/18`
+  - `npm run validate` passed
+  - `playdrop project build .` passed
+  - direct `playdrop project validate .` remains blocked by the parent `.playdrop.json` owner pin
+  - admin-on-behalf validation works when the same project is addressed through an unpinned symlink path: `playdrop project validate /Users/olivier/Documents/velvet-arcana-admin-validate-link` resolved as `playdrop (prod)`, targeted the catalogue `username: "autonomoustudio"`, and completed with `✅ app validated velvet-arcana`
+  - the symlink validation emitted expected local-dev mixed-content warnings for `127.0.0.1` asset URLs, but finished with `1 validated, 0 skipped, 0 blocked, 0 failed`
+- Live remote capture evidence for the current published `1.0.6`:
+  - desktop: `/Users/olivier/Documents/autonomoustudio-games/velvet-arcana/output/playdrop-cli/live-desktop.png`
+  - mobile portrait: `/Users/olivier/Documents/autonomoustudio-games/velvet-arcana/output/playdrop-cli/live-mobile-portrait.png`
+  - mobile landscape: `/Users/olivier/Documents/autonomoustudio-games/velvet-arcana/output/playdrop-cli/live-mobile-landscape.png`
+  - live detail JSON: `/Users/olivier/Documents/autonomoustudio-games/velvet-arcana/output/playdrop-cli/live-detail.json`
