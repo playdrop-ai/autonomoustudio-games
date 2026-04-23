@@ -33,6 +33,9 @@
         --card-aspect-ratio: calc(422 / 710);
         --card-height-ratio: calc(710 / 422);
         --hud-height: 48px;
+        --hud-top-inset: 4px;
+        --hud-slot-height: var(--hud-height);
+        --hud-layout-height: calc(var(--hud-slot-height) + var(--hud-top-inset));
         --column-gap: clamp(6px, 1.8vw, 14px);
         --card-width: min(
           calc((100vw - var(--safe-left) - var(--safe-right) - 24px - (6 * var(--column-gap))) / 7),
@@ -161,11 +164,18 @@
 
       .hud {
         width: min(100%, calc(var(--board-width) + 10px));
+        height: var(--hud-layout-height);
+        min-height: 0;
+        max-height: var(--hud-layout-height);
+        flex: 0 0 var(--hud-layout-height);
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
         gap: 12px;
-        padding-top: 4px;
+        padding-top: var(--hud-top-inset);
+        overflow: visible;
+        position: relative;
+        z-index: 10;
       }
 
       .hud--speaking {
@@ -607,15 +617,15 @@
         height: var(--tap-target-size);
         z-index: 8;
         border-radius: 999px;
-        border: 3px solid rgba(255, 251, 242, 0.98);
-        outline: 2px solid rgba(16, 28, 18, 0.48);
+        border: 3px solid rgba(21, 18, 14, 0.96);
+        outline: 2px solid rgba(255, 247, 229, 0.82);
         outline-offset: 1px;
         background:
-          radial-gradient(circle at center, rgba(255, 247, 229, 0.62), rgba(255, 247, 229, 0.16) 62%, rgba(255, 247, 229, 0.04) 100%);
+          radial-gradient(circle at center, rgba(255, 248, 232, 0.06) 0 38%, rgba(22, 18, 14, 0.38) 44%, rgba(22, 18, 14, 0.2) 68%, rgba(255, 218, 164, 0.12) 100%);
         box-shadow:
-          0 0 0 3px rgba(255, 247, 229, 0.18),
-          0 0 0 7px rgba(16, 28, 18, 0.16),
-          0 0 18px rgba(255, 245, 214, 0.35);
+          0 0 0 3px rgba(255, 247, 229, 0.26),
+          0 0 0 7px rgba(18, 15, 12, 0.28),
+          0 0 18px rgba(255, 216, 146, 0.42);
         transform: translate(-50%, -50%);
         pointer-events: none;
       }
@@ -625,7 +635,7 @@
         position: absolute;
         inset: -4px;
         border-radius: inherit;
-        border: 3px solid rgba(255, 248, 236, 0.9);
+        border: 3px solid rgba(20, 17, 13, 0.86);
         opacity: 0.92;
         animation: tap-pulse 1.15s ease-out infinite;
       }
@@ -635,10 +645,11 @@
         position: absolute;
         top: 50%;
         left: 50%;
-        width: 26%;
-        height: 26%;
+        width: 38%;
+        height: 38%;
         border-radius: 999px;
-        background: rgba(255, 255, 255, 0.98);
+        border: 2px solid rgba(20, 17, 13, 0.78);
+        background: rgba(255, 249, 238, 0.1);
         transform: translate(-50%, -50%);
       }
 
@@ -783,6 +794,7 @@
 
       @media (min-width: 901px) {
         :root {
+          --hud-top-inset: clamp(8px, 1.2vh, 14px);
           --column-gap: clamp(8px, 1.2vw, 16px);
           --card-width: min(
             calc((100vw - var(--safe-left) - var(--safe-right) - 36px - (6 * var(--column-gap))) / 7),
@@ -799,7 +811,6 @@
 
         .hud {
           width: min(100%, calc(var(--board-width) + 42px));
-          padding-top: clamp(8px, 1.2vh, 14px);
         }
 
         .board {
@@ -815,6 +826,8 @@
       @media (orientation: portrait) and (max-width: 900px) {
         :root {
           --hud-height: 64px;
+          --hud-top-inset: 0px;
+          --hud-slot-height: calc(var(--hud-height) + 28px);
           --column-gap: 5px;
           --pile-gap: calc(var(--card-width) * 2.05);
           --active-reading-offset-x: 8px;
@@ -858,6 +871,7 @@
         .hud {
           grid-row: 2;
           width: 100%;
+          align-items: center;
         }
 
         .board {
@@ -955,6 +969,8 @@
       @media (orientation: landscape) and (max-height: 520px) {
         :root {
           --hud-height: 42px;
+          --hud-top-inset: 0px;
+          --hud-slot-height: var(--hud-height);
           --column-gap: clamp(5px, 1.4vw, 10px);
           --pile-gap: calc(var(--card-width) * 1.08);
           --active-reading-offset-x: 8px;
@@ -979,7 +995,6 @@
 
         .hud {
           width: min(100%, calc(var(--board-width) + 32px));
-          padding-top: 0;
         }
 
         .hud-right,
