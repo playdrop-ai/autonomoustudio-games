@@ -2,6 +2,8 @@ import type { PlaydropNamespace, PlaydropSDK } from "playdrop-sdk-types";
 import type { AudioPolicyState, HostPhase } from "playdrop-sdk-types/types.js";
 
 type AuthMode = PlaydropSDK["app"]["authMode"];
+type InterstitialLoadResult = Awaited<ReturnType<PlaydropSDK["ads"]["interstitial"]["load"]>>;
+type InterstitialShowResult = Awaited<ReturnType<PlaydropSDK["ads"]["interstitial"]["show"]>>;
 
 export type { HostPhase };
 
@@ -223,6 +225,39 @@ export class PlaydropController {
     return true;
   }
 
+  canUseInterstitialAds(): boolean {
+    if (!this.sdk || this.phase !== "play") {
+      return false;
+    }
+    return (
+      typeof this.sdk.ads?.interstitial?.load === "function" &&
+      typeof this.sdk.ads?.interstitial?.show === "function"
+    );
+  }
+
+  async preloadInterstitial(): Promise<InterstitialLoadResult> {
+    if (!this.sdk || this.phase !== "play") {
+      throw new Error("[starfold] Interstitial ads unavailable outside hosted play");
+    }
+    const interstitial = this.sdk.ads?.interstitial;
+    if (typeof interstitial?.load !== "function") {
+      throw new Error("[starfold] Interstitial ad load API unavailable");
+    }
+    return await interstitial.load();
+  }
+
+  async showInterstitial(): Promise<InterstitialShowResult["status"]> {
+    if (!this.sdk || this.phase !== "play") {
+      throw new Error("[starfold] Interstitial ads unavailable outside hosted play");
+    }
+    const interstitial = this.sdk.ads?.interstitial;
+    if (typeof interstitial?.show !== "function") {
+      throw new Error("[starfold] Interstitial ad show API unavailable");
+    }
+    const result = await interstitial.show();
+    return result.status;
+  }
+
   clearPendingMeta(): void {
     this.discardPendingMeta();
   }
@@ -281,23 +316,25 @@ export class PlaydropController {
       return;
     }
 
-    const unlock = this.sdk.achievements?.unlock;
-    if (!unlock) {
-      console.warn("[starfold] Achievement unlock API unavailable");
-      return;
+    const achievements = this.sdk.achievements;
+    const unlock = achievements?.unlock;
+    if (typeof unlock !== "function") {
+      throw new Error("[starfold] Achievement unlock API unavailable");
     }
 
     const unlocks = Array.from(this.pendingUnlocks);
     for (const key of unlocks) {
       try {
-        await unlock.call(this.sdk.achievements, key);
+        await unlock.call(achievements, key);
         this.pendingUnlocks.delete(key);
         if (!this.hasPendingMeta()) {
           this.pendingOwnerUserId = null;
         }
         this.emitChange();
       } catch (error) {
-        console.warn("[starfold] Failed to unlock achievement", key, error);
+        throw new Error(
+          `[starfold] Failed to unlock achievement ${key}: ${error instanceof Error ? error.message : String(error)}`,
+        );
       }
     }
   }
@@ -307,15 +344,23 @@ export class PlaydropController {
       return;
     }
 
+    const leaderboards = this.sdk.leaderboards;
+    const submitScore = leaderboards?.submitScore;
+    if (typeof submitScore !== "function") {
+      throw new Error("[starfold] Leaderboard submit API unavailable");
+    }
+
     try {
-      await this.sdk.leaderboards?.submitScore?.(this.leaderboardKey, this.pendingScore);
+      await submitScore.call(leaderboards, this.leaderboardKey, this.pendingScore);
       this.pendingScore = null;
       if (!this.hasPendingMeta()) {
         this.pendingOwnerUserId = null;
       }
       this.emitChange();
     } catch (error) {
-      console.warn("[starfold] Failed to submit leaderboard score", error);
+      throw new Error(
+        `[starfold] Failed to submit leaderboard score: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 

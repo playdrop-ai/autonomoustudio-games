@@ -1,11 +1,11 @@
 /// <reference types="playdrop-sdk-types" />
 
 import { GameAudio } from "./audio";
-import { applyMove, BOARD_COLS, BOARD_ROWS, boardKinds, cloneBoard, countAsh, createBoardFromKinds, createInitialState, getPlayableMoves, isAshKind, type Board, type ClearPulseKind, type ClearStage, type GameOverReason, type Move, type SigilKind, type TileKind, type TurnResult, type TurnStage } from "./game/logic";
+import { applyMove, BOARD_COLS, BOARD_ROWS, boardKinds, boardStateKinds, cloneBoard, countAsh, createBoardFromSpecs, createInitialState, getPlayableMoves, isAshKind, type Board, type ClearPulseKind, type ClearStage, type GameOverReason, type Move, type SigilKind, type TileKind, type TurnResult, type TurnStage } from "./game/logic";
 import { classifyGameOverResult, freezeHudSnapshot, type GameOverResult } from "./game/results";
 import { CanvasRenderer, type BoardResetTransition, type ComboLabel, type DragPreview, type IdleHint, type RenderQualityTier, type StartupIntroState, type TileInteractionState } from "./game/render";
 import { PlaydropController, type PlatformSnapshot } from "./platform";
-import { buildGameOverSubtitle, defaultGameOverSubtitle, shouldSnapbackDragOnHudPointerUp } from "./runtime-helpers";
+import { buildGameOverSubtitle, defaultGameOverSubtitle, shouldShowRestartInterstitial, shouldSnapbackDragOnHudPointerUp } from "./runtime-helpers";
 
 type Screen = "playing" | "losing" | "gameover";
 type AchievementKey = "first_constellation" | "ash_purified" | "triple_chain" | "shrine_sentinel";
@@ -29,6 +29,7 @@ declare global {
         matchedCount: number;
         damagedCount: number;
         cleansedCount: number;
+        restoredCount: number;
         combo: number;
         majorMatchSize: number;
         pulseTargetCount: number;
@@ -176,6 +177,9 @@ const QUALITY_SAMPLE_WINDOW = 8;
 const QUALITY_PROMOTE_STABLE_FRAMES = 18;
 const GAME_OVER_CTA_BOUNCE_DELAY_MS = 2000;
 const GAME_OVER_CTA_BOUNCE_WINDOW_MS = 1800;
+const RESTART_INTERSTITIAL_MIN_RUN_MS = 45_000;
+const RESTART_INTERSTITIAL_MIN_RUN_MOVES = 12;
+const RESTART_INTERSTITIAL_COOLDOWN_MS = 180_000;
 
 let platform: PlaydropController | null = null;
 
@@ -225,6 +229,15 @@ void (async () => {
   let gameOverSubtitle = defaultGameOverSubtitle(gameState.gameOverReason);
   let gameOverSyncPending = false;
   let gameOverShownAt: number | null = null;
+  const sessionStartedAt = performance.now();
+  let currentRunStartedAt = sessionStartedAt;
+  let interstitialReady = false;
+  let interstitialLoadInFlight = false;
+  let interstitialBlocked = false;
+  let interstitialRetryAfterAt: number | null = null;
+  let lastInterstitialShownAt: number | null = null;
+  let restartInterstitialShownForRun = false;
+  let restartInterstitialInFlight = false;
   let previewModeActive = false;
   let boardReset: BoardResetSequence | null = null;
   let boardResetSequenceSeed = 0;
@@ -295,7 +308,8 @@ void (async () => {
             settling: dragPreview.settling,
           }
         : null,
-      board: boardKinds(gameState.board),
+      board: boardStateKinds(gameState.board),
+      boardKinds: boardKinds(gameState.board),
       boardRect: {
         x: layout.boardX,
         y: layout.boardY,
@@ -375,6 +389,7 @@ void (async () => {
     }
     platform?.markReady();
     syncAudioRuntimeState();
+    void preloadRestartInterstitial(performance.now());
     markSceneDirty();
   });
 
@@ -386,6 +401,7 @@ void (async () => {
   function applyFreshRunState(nextState: typeof gameState, now: number): void {
     activeRunId += 1;
     gameState = nextState;
+    currentRunStartedAt = now;
     screen = "playing";
     activeStage = null;
     queuedStages = [];
@@ -405,6 +421,8 @@ void (async () => {
     gameOverSubtitle = defaultGameOverSubtitle(gameState.gameOverReason);
     gameOverSyncPending = false;
     gameOverShownAt = null;
+    restartInterstitialShownForRun = false;
+    restartInterstitialInFlight = false;
     boardReset = null;
     lastInteractionAt = now;
     qualitySamples = [];
@@ -413,6 +431,7 @@ void (async () => {
     previewLoop.nextMoveAt = previewModeActive ? now + PREVIEW_START_DELAY_MS : null;
     previewLoop.restartAt = null;
     syncAudioRuntimeState();
+    void preloadRestartInterstitial(now);
     markSceneDirty();
   }
 
@@ -477,6 +496,88 @@ void (async () => {
       markSceneDirty();
       await finalizeCompletedRunSync(activeRunId);
     }
+  }
+
+  async function preloadRestartInterstitial(now: number): Promise<void> {
+    if (
+      previewModeActive ||
+      interstitialReady ||
+      interstitialLoadInFlight ||
+      interstitialBlocked ||
+      (interstitialRetryAfterAt !== null && now < interstitialRetryAfterAt) ||
+      !platform?.canUseInterstitialAds()
+    ) {
+      return;
+    }
+    interstitialLoadInFlight = true;
+    try {
+      const result = await platform.preloadInterstitial();
+      interstitialReady = result.status === "ready";
+      interstitialBlocked = result.status === "blocked";
+      interstitialRetryAfterAt =
+        result.status === "rate_limited" ? now + result.retryAfterSeconds * 1000 : null;
+    } catch (error) {
+      interstitialReady = false;
+      platform?.reportError(error);
+    } finally {
+      interstitialLoadInFlight = false;
+      markSceneDirty();
+    }
+  }
+
+  async function maybeShowRestartInterstitial(): Promise<void> {
+    const now = performance.now();
+    if (
+      restartInterstitialInFlight ||
+      !shouldShowRestartInterstitial({
+        previewModeActive,
+        screen,
+        runMoves: gameState.moves,
+        runElapsedMs: Math.max(0, now - currentRunStartedAt),
+        shownThisRun: restartInterstitialShownForRun,
+        lastInterstitialShownAt,
+        sessionStartedAt,
+        now,
+        minRunMoves: RESTART_INTERSTITIAL_MIN_RUN_MOVES,
+        minRunMs: RESTART_INTERSTITIAL_MIN_RUN_MS,
+        cooldownMs: RESTART_INTERSTITIAL_COOLDOWN_MS,
+      })
+    ) {
+      void preloadRestartInterstitial(now);
+      return;
+    }
+    if (!interstitialReady || !platform?.canUseInterstitialAds()) {
+      void preloadRestartInterstitial(now);
+      return;
+    }
+    restartInterstitialInFlight = true;
+    interstitialReady = false;
+    markSceneDirty();
+    try {
+      const status = await platform.showInterstitial();
+      if (status === "dismissed") {
+        lastInterstitialShownAt = performance.now();
+        restartInterstitialShownForRun = true;
+      }
+    } catch (error) {
+      platform?.reportError(error);
+    } finally {
+      restartInterstitialInFlight = false;
+      void preloadRestartInterstitial(performance.now());
+      markSceneDirty();
+    }
+  }
+
+  async function handleRestartAction(): Promise<void> {
+    if (previewModeActive || boardReset || restartInterstitialInFlight) {
+      return;
+    }
+    await maybeShowRestartInterstitial();
+    if (previewModeActive || boardReset) {
+      return;
+    }
+    const now = performance.now();
+    startNewRunWithBoardReset(now, getVisibleBoardSnapshot(), getCurrentBoardAshedAmount(now));
   }
 
   async function finalizeCompletedRunSync(runId: number): Promise<void> {
@@ -663,6 +764,7 @@ void (async () => {
         screen = "gameover";
         lossTransition = null;
         gameOverShownAt = now;
+        void preloadRestartInterstitial(now);
       }
     }
 
@@ -969,7 +1071,7 @@ void (async () => {
       animating: shouldKeepRendering,
       phase: snapshot.phase,
       previewMode: previewModeActive,
-      board: boardKinds(gameState.board),
+      board: boardStateKinds(gameState.board),
       layout: (() => {
         const layout = renderer.getLayout();
         return {
@@ -1007,7 +1109,7 @@ void (async () => {
       gameOverOverlayProgress: previewModeActive ? 0 : screen === "gameover" ? 1 : gameOverTransition.overlayProgress,
       gameOverTileFadeProgress: screen === "gameover" ? 1 : gameOverTransition.tileFadeProgress,
       gameOverCtaElapsedMs: screen === "gameover" && gameOverShownAt !== null ? now - gameOverShownAt : 0,
-      overlayInteractive: !previewModeActive && screen === "gameover",
+      overlayInteractive: !previewModeActive && screen === "gameover" && !restartInterstitialInFlight,
       hudLoginEnabled: !snapshot.isLoggedIn && platform?.canPromptLogin() === true,
       idleHint: previewModeActive ? null : idleHint,
       dragPreview: boardReset ? null : dragPreview ? { move: dragPreview.move, offsetPx: dragPreview.offsetPx, settling: dragPreview.settling } : null,
@@ -1099,7 +1201,7 @@ void (async () => {
     if (overlayAction) {
       lastInteractionAt = performance.now();
       if (overlayAction === "restart") {
-        startNewRunWithBoardReset(performance.now(), getVisibleBoardSnapshot(), getCurrentBoardAshedAmount(performance.now()));
+        void handleRestartAction();
       }
       drag = null;
       dragPreview = null;
@@ -1209,12 +1311,12 @@ void (async () => {
     }
     audio.notifyUserGesture();
     if (event.key.toLowerCase() === "r" && screen === "gameover") {
-      startNewRunWithBoardReset(performance.now(), getVisibleBoardSnapshot(), getCurrentBoardAshedAmount(performance.now()));
+      void handleRestartAction();
       return;
     }
 
     if (screen === "gameover" && (event.key === "Enter" || event.key === " ")) {
-      startNewRunWithBoardReset(performance.now(), getVisibleBoardSnapshot(), getCurrentBoardAshedAmount(performance.now()));
+      void handleRestartAction();
       return;
     }
     markSceneDirty();
@@ -1538,11 +1640,11 @@ function createRunState(fixedInitialState: ReturnType<typeof readInitialStateFro
 }
 
 function readInitialStateFromLocation(seed: number | undefined) {
-  const boardKindsFromLocation = readBoardKindsFromLocation();
-  if (!boardKindsFromLocation) {
+  const boardSpecsFromLocation = readBoardSpecsFromLocation();
+  if (!boardSpecsFromLocation) {
     return null;
   }
-  const created = createBoardFromKinds(boardKindsFromLocation);
+  const created = createBoardFromSpecs(boardSpecsFromLocation);
   return {
     board: created.board,
     nextId: created.nextId,
@@ -1555,12 +1657,12 @@ function readInitialStateFromLocation(seed: number | undefined) {
   };
 }
 
-function readBoardKindsFromLocation(): TileKind[][] | null {
+function readBoardSpecsFromLocation(): Array<Array<{ kind: TileKind; contaminated: boolean }>> | null {
   const raw = new URL(window.location.href).searchParams.get("board");
   if (!raw) {
     return null;
   }
-  const validKinds = new Set<TileKind>(["sun", "moon", "wave", "leaf", "ember", "ash3", "ash2", "ash1"]);
+  const validKinds = new Set<TileKind>(["sun", "moon", "wave", "leaf", "ember", "ash5", "ash4", "ash3", "ash2", "ash1"]);
   const rows = raw
     .split(";")
     .map((row) => row.trim())
@@ -1577,10 +1679,18 @@ function readBoardKindsFromLocation(): TileKind[][] | null {
       throw new Error(`Expected ${BOARD_COLS} tiles in row ${rowIndex}, received ${tiles.length}`);
     }
     return tiles.map((tile, colIndex) => {
-      if (!validKinds.has(tile as TileKind)) {
+      const contaminated = tile.endsWith("*");
+      const normalized = contaminated ? tile.slice(0, -1) : tile;
+      if (!validKinds.has(normalized as TileKind)) {
         throw new Error(`Invalid tile kind at row ${rowIndex}, col ${colIndex}: ${tile}`);
       }
-      return tile as TileKind;
+      if (contaminated && isAshKind(normalized as TileKind)) {
+        throw new Error(`Ash tile cannot be contaminated at row ${rowIndex}, col ${colIndex}: ${tile}`);
+      }
+      return {
+        kind: normalized as TileKind,
+        contaminated,
+      };
     });
   });
 }
@@ -1590,6 +1700,7 @@ function summarizeActiveStage(stage: TurnStage): {
   matchedCount: number;
   damagedCount: number;
   cleansedCount: number;
+  restoredCount: number;
   combo: number;
   majorMatchSize: number;
   pulseTargetCount: number;
@@ -1601,6 +1712,7 @@ function summarizeActiveStage(stage: TurnStage): {
       matchedCount: 0,
       damagedCount: 0,
       cleansedCount: 0,
+      restoredCount: 0,
       combo: 0,
       majorMatchSize: 0,
       pulseTargetCount: 0,
@@ -1612,6 +1724,7 @@ function summarizeActiveStage(stage: TurnStage): {
     matchedCount: stage.matched.length,
     damagedCount: stage.damaged.length,
     cleansedCount: stage.cleansed.length,
+    restoredCount: stage.restored.length,
     combo: stage.combo,
     majorMatchSize: stage.majorMatchSize,
     pulseTargetCount: stage.pulseTargets.length,

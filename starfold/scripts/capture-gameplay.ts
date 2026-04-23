@@ -175,7 +175,7 @@ function planMoves(seed: number, moveCount: number): Move[] {
     for (const move of ALL_MOVES) {
       const result = applyMove(state, move);
       const clears = result.stages.filter((stage) => stage.kind === "clear").length;
-      const spawnedAsh = result.stages.some((stage) => stage.kind === "ash");
+      const spawnedAsh = result.stages.some((stage) => stage.kind === "ash" && stage.action === "spawn");
       const ashReduction = state.ashCount - result.state.ashCount;
       const heuristic =
         result.scoreGained * 14 +

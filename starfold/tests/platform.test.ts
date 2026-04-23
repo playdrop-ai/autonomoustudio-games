@@ -33,9 +33,15 @@ function createSdkHarness(options: {
   initialBestScore: number | null;
   syncedRank?: number | null;
   syncedBestScore?: number | null;
+  interstitialLoadStatus?: "ready" | "no_fill" | "rate_limited" | "blocked";
+  interstitialRetryAfterSeconds?: number;
+  interstitialBlockReason?: string;
+  interstitialShowStatus?: "dismissed" | "not_ready" | "expired";
 }) {
   const unlocked: string[] = [];
   const submitted: Array<{ key: string; score: number }> = [];
+  const interstitialLoads: Array<{ status: string }> = [];
+  const interstitialShows: Array<{ status: string }> = [];
   let audioPolicyListener: ((state: { enabled: boolean; reason: string }) => void) | null = null;
   let authChangeListener: ((state: { isLoggedIn: boolean; userId: number | null }) => void) | null = null;
   let phaseChangeListener: ((phase: "play" | "preview") => void) | null = null;
@@ -112,12 +118,44 @@ function createSdkHarness(options: {
         },
       }),
     },
+    ads: {
+      interstitial: {
+        load: async () => {
+          const status = options.interstitialLoadStatus ?? "ready";
+          interstitialLoads.push({ status });
+          if (status === "rate_limited") {
+            return {
+              status,
+              retryAfterSeconds: options.interstitialRetryAfterSeconds ?? 7,
+            };
+          }
+          if (status === "blocked") {
+            return {
+              status,
+              reason: options.interstitialBlockReason ?? "blocked",
+            };
+          }
+          return { status };
+        },
+        show: async () => {
+          const status = options.interstitialShowStatus ?? "dismissed";
+          interstitialShows.push({ status });
+          return { status };
+        },
+      },
+      rewarded: {
+        load: async () => ({ status: "no_fill" as const }),
+        show: async () => ({ status: "not_ready" as const }),
+      },
+    },
   };
 
   return {
     sdk,
     unlocked,
     submitted,
+    interstitialLoads,
+    interstitialShows,
     getAudioPolicyListener: () => audioPolicyListener,
     setAuthState: (state: { isLoggedIn: boolean; userId: number | null }) => {
       me.isLoggedIn = state.isLoggedIn;
@@ -363,6 +401,57 @@ test("pending logged-in score is discarded when a different user logs in before 
   }
 });
 
+test("completeRun rejects and keeps pending meta when the achievement API is unavailable", async () => {
+  const harness = createSdkHarness({
+    isLoggedIn: true,
+    initialUserId: 111,
+    initialRank: 20,
+    initialBestScore: 1800,
+  });
+  const restoreWindow = installWindow(async () => harness.sdk);
+  try {
+    (harness.sdk as { achievements?: unknown }).achievements = undefined;
+    const controller = new PlaydropController("highest_score");
+    await controller.init();
+    controller.queue({
+      score: 2400,
+      unlocks: ["first_constellation"],
+    });
+
+    await assert.rejects(controller.completeRun(), /Achievement unlock API unavailable/);
+    assert.deepEqual(harness.submitted, []);
+    assert.equal(controller.getSnapshot().pendingMeta, true);
+  } finally {
+    restoreWindow();
+  }
+});
+
+test("completeRun rejects and keeps pending meta when leaderboard submit is unavailable", async () => {
+  const harness = createSdkHarness({
+    isLoggedIn: true,
+    initialUserId: 111,
+    initialRank: 20,
+    initialBestScore: 1800,
+  });
+  const restoreWindow = installWindow(async () => harness.sdk);
+  try {
+    (harness.sdk as { leaderboards?: { get: () => Promise<unknown> } }).leaderboards = {
+      get: harness.sdk.leaderboards.get,
+    };
+    const controller = new PlaydropController("highest_score");
+    await controller.init();
+    controller.queue({
+      score: 2400,
+    });
+
+    await assert.rejects(controller.completeRun(), /Leaderboard submit API unavailable/);
+    assert.deepEqual(harness.submitted, []);
+    assert.equal(controller.getSnapshot().pendingMeta, true);
+  } finally {
+    restoreWindow();
+  }
+});
+
 test("post-run login can submit the finished logged-out run from the result screen", async () => {
   const harness = createSdkHarness({
     isLoggedIn: false,
@@ -409,6 +498,37 @@ test("audio policy callback updates snapshot from host policy object", async () 
     assert.ok(audioPolicyListener);
     audioPolicyListener({ enabled: false, reason: "user_preference" });
     assert.equal(controller.getSnapshot().audioEnabled, false);
+  } finally {
+    restoreWindow();
+  }
+});
+
+test("interstitial helpers expose hosted restart ad capability in play mode", async () => {
+  const harness = createSdkHarness({
+    isLoggedIn: true,
+    initialRank: 34,
+    initialBestScore: 402420,
+    interstitialLoadStatus: "rate_limited",
+    interstitialRetryAfterSeconds: 9,
+    interstitialShowStatus: "dismissed",
+  });
+  const restoreWindow = installWindow(async () => harness.sdk);
+  try {
+    const controller = new PlaydropController("highest_score");
+    await controller.init();
+
+    assert.equal(controller.canUseInterstitialAds(), true);
+    assert.deepEqual(await controller.preloadInterstitial(), {
+      status: "rate_limited",
+      retryAfterSeconds: 9,
+    });
+    assert.equal(await controller.showInterstitial(), "dismissed");
+    assert.deepEqual(harness.interstitialLoads, [{ status: "rate_limited" }]);
+    assert.deepEqual(harness.interstitialShows, [{ status: "dismissed" }]);
+
+    harness.setPhase("preview");
+    assert.equal(controller.canUseInterstitialAds(), false);
+    await assert.rejects(controller.preloadInterstitial(), /outside hosted play/);
   } finally {
     restoreWindow();
   }

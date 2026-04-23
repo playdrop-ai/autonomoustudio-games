@@ -4,16 +4,23 @@ import assert from "node:assert/strict";
 import { GameAudio } from "../src/audio.ts";
 
 class FakeHtmlAudioElement {
+  static playCalls = 0;
+
   loop = false;
   preload = "";
   volume = 1;
   paused = true;
+
+  static reset(): void {
+    FakeHtmlAudioElement.playCalls = 0;
+  }
 
   constructor(_url: string) {}
 
   load(): void {}
 
   play(): Promise<void> {
+    FakeHtmlAudioElement.playCalls += 1;
     this.paused = false;
     return Promise.resolve();
   }
@@ -47,12 +54,22 @@ class FakeAudioBufferSourceNode {
 }
 
 class FakeAudioContext {
+  static instances: FakeAudioContext[] = [];
+  static resumeCalls = 0;
+
   readonly destination = {};
   readonly sampleRate = 48_000;
   state: AudioContextState = "suspended";
   onstatechange: (() => void) | null = null;
 
-  constructor(_options?: AudioContextOptions) {}
+  static reset(): void {
+    FakeAudioContext.instances = [];
+    FakeAudioContext.resumeCalls = 0;
+  }
+
+  constructor(_options?: AudioContextOptions) {
+    FakeAudioContext.instances.push(this);
+  }
 
   createGain(): GainNode {
     return new FakeGainNode() as GainNode;
@@ -67,6 +84,7 @@ class FakeAudioContext {
   }
 
   resume(): Promise<void> {
+    FakeAudioContext.resumeCalls += 1;
     this.state = "running";
     this.onstatechange?.();
     return Promise.resolve();
@@ -89,12 +107,15 @@ class FakeAudioContext {
   }
 }
 
-function installAudioEnvironment() {
+function installAudioEnvironment(options: { fetchOk?: boolean } = {}) {
   const previousWindow = (globalThis as typeof globalThis & { window?: unknown }).window;
   const previousDocument = (globalThis as typeof globalThis & { document?: unknown }).document;
   const previousAudio = (globalThis as typeof globalThis & { Audio?: unknown }).Audio;
   const previousHtmlAudioElement = (globalThis as typeof globalThis & { HTMLAudioElement?: unknown }).HTMLAudioElement;
   const previousFetch = globalThis.fetch;
+
+  FakeHtmlAudioElement.reset();
+  FakeAudioContext.reset();
 
   (globalThis as typeof globalThis & { Audio: typeof FakeHtmlAudioElement }).Audio = FakeHtmlAudioElement;
   (globalThis as typeof globalThis & { HTMLAudioElement: typeof FakeHtmlAudioElement }).HTMLAudioElement =
@@ -112,7 +133,8 @@ function installAudioEnvironment() {
   };
   globalThis.fetch = async (input: string | URL | Request) =>
     ({
-      ok: false,
+      ok: options.fetchOk ?? false,
+      status: options.fetchOk ? 200 : 404,
       url: String(input),
       arrayBuffer: async () => new ArrayBuffer(0),
     }) as Response;
@@ -154,6 +176,22 @@ test("audio load rejects on SFX preload failure and later gameplay SFX calls sta
       audio.playAshBreak();
       audio.playGameOver();
     });
+  } finally {
+    restoreEnvironment();
+  }
+});
+
+test("gesture unlock resumes web audio and requests music playback immediately after load", async () => {
+  const restoreEnvironment = installAudioEnvironment({ fetchOk: true });
+  try {
+    const audio = new GameAudio();
+    await audio.load();
+
+    audio.notifyUserGesture();
+
+    assert.equal(FakeAudioContext.instances.length, 1);
+    assert.equal(FakeAudioContext.resumeCalls, 1);
+    assert.equal(FakeHtmlAudioElement.playCalls, 1);
   } finally {
     restoreEnvironment();
   }

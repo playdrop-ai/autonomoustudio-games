@@ -207,10 +207,12 @@ const ASSET_URLS = {
     ember: "./assets/runtime/tiles/generated-v2/starfold-tile-ember-highlight-r1.png",
   } satisfies Record<SigilKind, string>,
   ashTiles: {
+    ash5: "./assets/runtime/tiles/generated-v2/starfold-tile-ash5-r1.png",
+    ash4: "./assets/runtime/tiles/generated-v2/starfold-tile-ash4-r1.png",
     ash3: "./assets/runtime/tiles/generated-v2/starfold-tile-ash3-r1.png",
     ash2: "./assets/runtime/tiles/generated-v2/starfold-tile-ash2-r1.png",
     ash1: "./assets/runtime/tiles/generated-v2/starfold-tile-ash1-r1.png",
-  } satisfies Record<"ash3" | "ash2" | "ash1", string>,
+  } satisfies Record<"ash5" | "ash4" | "ash3" | "ash2" | "ash1", string>,
 } as const;
 
 const FRAME_ASPECT = 1;
@@ -316,6 +318,8 @@ export class CanvasRenderer {
       { key: "wave-highlight", src: ASSET_URLS.sigilTilesHighlight.wave },
       { key: "leaf-highlight", src: ASSET_URLS.sigilTilesHighlight.leaf },
       { key: "ember-highlight", src: ASSET_URLS.sigilTilesHighlight.ember },
+      { key: "ash5", src: ASSET_URLS.ashTiles.ash5 },
+      { key: "ash4", src: ASSET_URLS.ashTiles.ash4 },
       { key: "ash3", src: ASSET_URLS.ashTiles.ash3 },
       { key: "ash2", src: ASSET_URLS.ashTiles.ash2 },
       { key: "ash1", src: ASSET_URLS.ashTiles.ash1 },
@@ -338,6 +342,8 @@ export class CanvasRenderer {
         wave: loaded.get("wave-normal")!,
         leaf: loaded.get("leaf-normal")!,
         ember: loaded.get("ember-normal")!,
+        ash5: loaded.get("ash5")!,
+        ash4: loaded.get("ash4")!,
         ash3: loaded.get("ash3")!,
         ash2: loaded.get("ash2")!,
         ash1: loaded.get("ash1")!,
@@ -835,11 +841,14 @@ export class CanvasRenderer {
 
   private drawAshStage(stage: Extract<TurnStage, { kind: "ash" }>, progress: number): void {
     this.drawBoard(stage.after);
-    const x = this.layout.boardX + stage.position.col * (this.layout.cellSize + this.layout.gap);
-    const y = this.layout.boardY + stage.position.row * (this.layout.cellSize + this.layout.gap);
     const pulse = 1 + Math.sin(progress * Math.PI) * 0.14;
-    const tile = stage.after[stage.position.row]![stage.position.col]!;
-    this.drawToken(tile, x, y, this.layout.cellSize * pulse, true, 0.96, null, true);
+    const alpha = stage.action === "contaminate" ? 0.9 : 0.96;
+    for (const position of stage.positions) {
+      const x = this.layout.boardX + position.col * (this.layout.cellSize + this.layout.gap);
+      const y = this.layout.boardY + position.row * (this.layout.cellSize + this.layout.gap);
+      const tile = stage.after[position.row]![position.col]!;
+      this.drawToken(tile, x, y, this.layout.cellSize * pulse, true, alpha, null, true);
+    }
   }
 
   private drawClearPulse(stage: ClearStage, progress: number): void {
@@ -1255,7 +1264,7 @@ export class CanvasRenderer {
     fadeAtBoardEdge = false,
     matchedState = false,
   ): void {
-    const image = this.resolveTileImage(tile.kind, matchedState);
+    const image = this.resolveTileImage(tile, matchedState);
     const offset = (this.layout.cellSize - size) / 2;
     const drawX = x + offset;
     const drawY = y + offset;
@@ -1316,11 +1325,14 @@ export class CanvasRenderer {
     ctx.restore();
   }
 
-  private resolveTileImage(kind: TileKind, matchedState: boolean): HTMLImageElement {
-    if (!isAshKind(kind) && matchedState) {
-      return this.assets!.sigilTilesHighlight[kind];
+  private resolveTileImage(tile: Tile, matchedState: boolean): HTMLImageElement {
+    if (!isAshKind(tile.kind) && tile.contaminated) {
+      return this.assets!.sigilTilesAshed[tile.kind];
     }
-    return this.assets!.tiles[kind];
+    if (!isAshKind(tile.kind) && matchedState) {
+      return this.assets!.sigilTilesHighlight[tile.kind];
+    }
+    return this.assets!.tiles[tile.kind];
   }
 
   private edgeFadeAlpha(x: number, y: number, size: number): number {

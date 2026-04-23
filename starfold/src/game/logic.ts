@@ -1,19 +1,18 @@
 export const BOARD_ROWS = 5;
 export const BOARD_COLS = 5;
-export const ASH_GRACE_MOVES = 5;
-export const ASH_EVERY_TWO_END = 10;
-export const ASH_EVERY_MOVE_END = 20;
-export const DOUBLE_ASH_END = 30;
-export const TRIPLE_ASH_END = 40;
-export const QUAD_ASH_START = TRIPLE_ASH_END + 1;
+export const ASH_SPAWN_GAPS = [7, 6, 5, 4, 4, 3, 3, 3, 2, 2, 2, 2, 1] as const;
+export const ASH_SPAWN_TURNS = buildAshSpawnTurns(ASH_SPAWN_GAPS);
+export const ASH_ALWAYS_SPAWN_AFTER = ASH_SPAWN_TURNS[ASH_SPAWN_TURNS.length - 1] ?? 1;
 
 export type SigilKind = "sun" | "moon" | "wave" | "leaf" | "ember";
-export type AshKind = "ash3" | "ash2" | "ash1";
+export type AshKind = "ash5" | "ash4" | "ash3" | "ash2" | "ash1";
 export type TileKind = SigilKind | AshKind;
+export type TileStateKind = TileKind | `${SigilKind}*`;
 export type Axis = "row" | "col";
 export type Direction = -1 | 1;
 export type GameOverReason = "no_moves";
 export type ClearPulseKind = "none" | "shockwave" | "wipe";
+export type AshStageAction = "recover" | "harden" | "contaminate" | "spawn";
 
 export interface Position {
   row: number;
@@ -23,8 +22,10 @@ export interface Position {
 export interface Tile {
   id: number;
   kind: TileKind;
+  contaminated: boolean;
 }
 
+export type TileSpec = TileKind | { kind: TileKind; contaminated?: boolean };
 export type Board = Tile[][];
 export type SparseBoard = Array<Array<Tile | null>>;
 
@@ -59,6 +60,7 @@ export interface ClearStage {
   matched: Position[];
   damaged: Position[];
   cleansed: Position[];
+  restored: Position[];
   pulseTargets: Position[];
   majorMatchSize: number;
   pulseKind: ClearPulseKind;
@@ -77,7 +79,9 @@ export interface AshStage {
   kind: "ash";
   before: Board;
   after: Board;
+  action: AshStageAction;
   position: Position;
+  positions: Position[];
 }
 
 export type TurnStage = ShiftStage | ClearStage | CollapseStage | AshStage;
@@ -92,7 +96,7 @@ export interface TurnResult {
 }
 
 const SIGIL_KINDS: SigilKind[] = ["sun", "moon", "wave", "leaf", "ember"];
-const ASH_KINDS: AshKind[] = ["ash3", "ash2", "ash1"];
+const ASH_KINDS: AshKind[] = ["ash5", "ash4", "ash3", "ash2", "ash1"];
 const MATCH_SCORE_PER_TILE = 90;
 const ASH_CLEANSE_SCORE = 60;
 
@@ -114,7 +118,7 @@ export function createInitialState(seed = Date.now() >>> 0): GameState {
           rngState = result.rngState;
           guard += 1;
         } while (guard < 10 && createsGroupAt(board, line, row, col, pick));
-        line.push({ id: nextId, kind: pick });
+        line.push({ id: nextId, kind: pick, contaminated: false });
         nextId += 1;
       }
       board.push(line);
@@ -157,6 +161,8 @@ export function applyMove(state: GameState, move: Move, options: { startOffsetPx
   let totalGain = 0;
   let baseGain = 0;
   let maxCombo = 0;
+  let finalRefillPositions: Position[] = [];
+  const hitAshIds = new Set<number>();
 
   const shifted = rotateBoard(board, move);
   stages.push({ kind: "shift", before: board, after: shifted, move, startOffsetPx: options.startOffsetPx ?? 0 });
@@ -170,7 +176,7 @@ export function applyMove(state: GameState, move: Move, options: { startOffsetPx
     }
     combo += 1;
     maxCombo = Math.max(maxCombo, combo);
-    const { matched, damaged, cleansed, sparseBoard, pulseTargets, majorMatchSize, pulseKind } = clearGroups(board, groups);
+    const { matched, damaged, cleansed, restored, sparseBoard, pulseTargets, majorMatchSize, pulseKind } = clearGroups(board, groups);
     const scoreGain = matched.length * MATCH_SCORE_PER_TILE + cleansed.length * ASH_CLEANSE_SCORE;
     const currentBaseGain = baseGain + scoreGain;
     stages.push({
@@ -179,6 +185,7 @@ export function applyMove(state: GameState, move: Move, options: { startOffsetPx
       matched,
       damaged,
       cleansed,
+      restored,
       pulseTargets,
       majorMatchSize,
       pulseKind,
@@ -186,6 +193,8 @@ export function applyMove(state: GameState, move: Move, options: { startOffsetPx
       combo,
       comboPreviewBonus: Math.round(currentBaseGain * (comboMultiplierForDepth(combo) - 1)),
     });
+    addTileIdsToSet(hitAshIds, board, damaged);
+    addTileIdsToSet(hitAshIds, board, cleansed);
     score += scoreGain;
     totalGain += scoreGain;
     baseGain += scoreGain;
@@ -199,22 +208,66 @@ export function applyMove(state: GameState, move: Move, options: { startOffsetPx
     board = collapsed.board;
     nextId = collapsed.nextId;
     rngState = collapsed.rngState;
+    finalRefillPositions = collapsed.refillPositions;
   }
 
   const moves = state.moves + 1;
-  const ashBursts = ashBurstCountForMove(moves, maxCombo);
-  if (ashBursts > 0) {
-    for (let burst = 0; burst < ashBursts; burst += 1) {
-      const ashResult = addAsh(board, rngState);
-      if (!ashResult) break;
+  const prePressureBoard = cloneBoard(board);
+
+  const hardenedPositions = collectAllContaminatedPositions(board).map(decodePositionKey);
+  if (hardenedPositions.length > 0) {
+    const hardened = hardenContaminated(board, hardenedPositions);
+    stages.push({
+      kind: "ash",
+      before: board,
+      after: hardened.board,
+      action: "harden",
+      position: hardened.positions[0]!,
+      positions: hardened.positions,
+    });
+    board = hardened.board;
+  }
+
+  const recovered = recoverUntouchedAsh(board, hitAshIds, new Set(hardenedPositions.map(positionKey)));
+  if (recovered.positions.length > 0) {
+    stages.push({
+      kind: "ash",
+      before: board,
+      after: recovered.board,
+      action: "recover",
+      position: recovered.positions[0]!,
+      positions: recovered.positions,
+    });
+    board = recovered.board;
+  }
+
+  const contamination = contaminateFromEligibleSources(board, prePressureBoard, hitAshIds, rngState);
+  if (contamination) {
+    stages.push({
+      kind: "ash",
+      before: board,
+      after: contamination.board,
+      action: "contaminate",
+      position: contamination.position,
+      positions: [contamination.position],
+    });
+    board = contamination.board;
+    rngState = contamination.rngState;
+  }
+
+  if (shouldSpawnAshOnMove(moves)) {
+    const spawned = spawnAshFromRefill(board, finalRefillPositions, rngState);
+    if (spawned) {
       stages.push({
         kind: "ash",
         before: board,
-        after: ashResult.board,
-        position: ashResult.position,
+        after: spawned.board,
+        action: "spawn",
+        position: spawned.position,
+        positions: [spawned.position],
       });
-      board = ashResult.board;
-      rngState = ashResult.rngState;
+      board = spawned.board;
+      rngState = spawned.rngState;
     }
   }
 
@@ -254,42 +307,16 @@ export function countAsh(board: Board): number {
   let count = 0;
   for (const row of board) {
     for (const tile of row) {
-      if (isAshKind(tile.kind)) count += 1;
+      if (tile.contaminated || isAshKind(tile.kind)) {
+        count += 1;
+      }
     }
   }
   return count;
 }
 
-export function ashIntervalForMove(moves: number): number {
-  if (moves <= ASH_GRACE_MOVES) return 0;
-  if (moves <= ASH_EVERY_TWO_END) return 2;
-  return 1;
-}
-
-export function ashBurstCountForMove(moves: number, comboDepth = 1): number {
-  let baseBursts = 0;
-  if (moves <= ASH_GRACE_MOVES) {
-    baseBursts = 0;
-  } else if (moves <= ASH_EVERY_TWO_END) {
-    baseBursts = moves % 2 === 0 ? 1 : 0;
-  } else if (moves <= ASH_EVERY_MOVE_END) {
-    baseBursts = 1;
-  } else if (moves <= DOUBLE_ASH_END) {
-    baseBursts = 2;
-  } else if (moves <= TRIPLE_ASH_END) {
-    baseBursts = 3;
-  } else {
-    baseBursts = 4;
-  }
-
-  return Math.max(0, baseBursts - comboAshReductionForDepth(comboDepth));
-}
-
-export function comboAshReductionForDepth(depth: number): number {
-  if (depth >= 4) return 3;
-  if (depth === 3) return 2;
-  if (depth === 2) return 1;
-  return 0;
+export function shouldSpawnAshOnMove(moves: number): boolean {
+  return moves >= ASH_ALWAYS_SPAWN_AFTER || ASH_SPAWN_TURNS.includes(moves);
 }
 
 export function findGroups(board: Board): Position[][] {
@@ -300,7 +327,7 @@ export function findGroups(board: Board): Position[][] {
       if (visited[row]![col]) continue;
       const tile = board[row]![col]!;
       visited[row]![col] = true;
-      if (isAshKind(tile.kind)) continue;
+      if (tile.contaminated || isAshKind(tile.kind)) continue;
       const group = floodGroup(board, visited, row, col, tile.kind);
       if (group.length >= 3) groups.push(group);
     }
@@ -344,10 +371,29 @@ export function boardKinds(board: Board): TileKind[][] {
   return board.map((row) => row.map((tile) => tile.kind));
 }
 
+export function boardStateKinds(board: Board): TileStateKind[][] {
+  return board.map((row) =>
+    row.map((tile) => {
+      if (!tile.contaminated) {
+        return tile.kind as TileStateKind;
+      }
+      if (isAshKind(tile.kind)) {
+        throw new Error("Ash tiles cannot be contaminated");
+      }
+      return `${tile.kind}*` as TileStateKind;
+    }),
+  );
+}
+
 export function createBoardFromKinds(kinds: TileKind[][], nextId = 1): { board: Board; nextId: number } {
-  const board: Board = kinds.map((row) =>
-    row.map((kind) => {
-      const tile = { id: nextId, kind };
+  return createBoardFromSpecs(kinds, nextId);
+}
+
+export function createBoardFromSpecs(specs: TileSpec[][], nextId = 1): { board: Board; nextId: number } {
+  const board: Board = specs.map((row) =>
+    row.map((spec) => {
+      const normalized = normalizeTileSpec(spec);
+      const tile = { id: nextId, ...normalized };
       nextId += 1;
       return tile;
     }),
@@ -363,27 +409,11 @@ export function comboMultiplierForDepth(depth: number): number {
   return 2.5;
 }
 
-function floodGroup(board: Board, visited: boolean[][], startRow: number, startCol: number, kind: SigilKind): Position[] {
-  const queue: Position[] = [{ row: startRow, col: startCol }];
-  const group: Position[] = [{ row: startRow, col: startCol }];
-  while (queue.length > 0) {
-    const current = queue.shift()!;
-    for (const neighbor of neighbors(current.row, current.col)) {
-      if (visited[neighbor.row]![neighbor.col]) continue;
-      const tile = board[neighbor.row]![neighbor.col]!;
-      if (tile.kind !== kind) continue;
-      visited[neighbor.row]![neighbor.col] = true;
-      group.push(neighbor);
-      queue.push(neighbor);
-    }
-  }
-  return group;
-}
-
 function clearGroups(board: Board, groups: Position[][]): {
   matched: Position[];
   damaged: Position[];
   cleansed: Position[];
+  restored: Position[];
   pulseTargets: Position[];
   majorMatchSize: number;
   pulseKind: ClearPulseKind;
@@ -394,37 +424,42 @@ function clearGroups(board: Board, groups: Position[][]): {
   const matchedSet = toPositionKeySet(matched);
   const damagedSet = new Set<string>();
   const cleansedSet = new Set<string>();
+  const restoredSet = new Set<string>();
   const pulseTargetSet = new Set<string>();
   let majorMatchSize = 0;
   let pulseKind: ClearPulseKind = "none";
+
   for (const pos of matched) {
     sparseBoard[pos.row]![pos.col] = null;
   }
 
   for (const group of groups) {
     majorMatchSize = Math.max(majorMatchSize, group.length);
+    const touchedAsh = collectTouchedPositions(group, sparseBoard, matchedSet, isAshTileAtPosition);
+    const touchedContaminated = collectTouchedPositions(group, sparseBoard, matchedSet, isContaminatedSigilAtPosition);
+
     if (group.length >= 6) {
-      for (const key of collectAllAshPositions(sparseBoard)) {
-        pulseTargetSet.add(key);
-      }
-      purgeAllAsh(sparseBoard, damagedSet, cleansedSet);
+      const allAsh = collectAllAshPositions(sparseBoard);
+      const allContaminated = collectAllContaminatedPositions(sparseBoard);
+      addKeysToSet(pulseTargetSet, allAsh);
+      addKeysToSet(pulseTargetSet, allContaminated);
+      purgeAshPositions(sparseBoard, allAsh, damagedSet, cleansedSet);
+      restoreContaminatedPositions(sparseBoard, allContaminated, restoredSet);
       pulseKind = "wipe";
       continue;
     }
 
-    const touchedAsh = collectTouchedAsh(group, sparseBoard, matchedSet);
-    if (group.length >= 4) {
-      purgeAshPositions(sparseBoard, touchedAsh, damagedSet, cleansedSet);
-    } else {
-      damageAshPositions(sparseBoard, touchedAsh, damagedSet, cleansedSet);
-    }
+    const touchedDamage = group.length >= 4 ? 2 : 1;
+    damageAshPositions(sparseBoard, touchedAsh, touchedDamage, damagedSet, cleansedSet);
+    restoreContaminatedPositions(sparseBoard, touchedContaminated, restoredSet);
 
     if (group.length >= 5) {
       const remainingAsh = collectAllAshPositions(sparseBoard, new Set(touchedAsh));
-      for (const key of remainingAsh) {
-        pulseTargetSet.add(key);
-      }
-      damageAshPositions(sparseBoard, remainingAsh, damagedSet, cleansedSet);
+      const allContaminated = collectAllContaminatedPositions(sparseBoard);
+      addKeysToSet(pulseTargetSet, remainingAsh);
+      addKeysToSet(pulseTargetSet, allContaminated);
+      damageAshPositions(sparseBoard, remainingAsh, 1, damagedSet, cleansedSet);
+      restoreContaminatedPositions(sparseBoard, allContaminated, restoredSet);
       if (pulseKind !== "wipe") {
         pulseKind = "shockwave";
       }
@@ -435,6 +470,7 @@ function clearGroups(board: Board, groups: Position[][]): {
     matched,
     damaged: Array.from(damagedSet, decodePositionKey),
     cleansed: Array.from(cleansedSet, decodePositionKey),
+    restored: Array.from(restoredSet, decodePositionKey),
     pulseTargets: Array.from(pulseTargetSet, decodePositionKey),
     majorMatchSize,
     pulseKind,
@@ -442,7 +478,168 @@ function clearGroups(board: Board, groups: Position[][]): {
   };
 }
 
-function collectTouchedAsh(group: Position[], sparseBoard: SparseBoard, matchedSet: Set<string>): string[] {
+function collapseSparseBoard(
+  sparseBoard: SparseBoard,
+  nextId: number,
+  rngState: number,
+): { board: Board; nextId: number; rngState: number; refillPositions: Position[] } {
+  const board: Board = Array.from({ length: BOARD_ROWS }, () => Array<Tile>(BOARD_COLS));
+  const refillPositions: Position[] = [];
+  for (let col = 0; col < BOARD_COLS; col += 1) {
+    const survivors: Tile[] = [];
+    for (let row = BOARD_ROWS - 1; row >= 0; row -= 1) {
+      const tile = sparseBoard[row]![col];
+      if (tile) survivors.push(tile);
+    }
+    let row = BOARD_ROWS - 1;
+    for (const tile of survivors) {
+      board[row]![col] = tile;
+      row -= 1;
+    }
+    while (row >= 0) {
+      const result = randomSigil(rngState);
+      rngState = result.rngState;
+      board[row]![col] = { id: nextId, kind: result.kind, contaminated: false };
+      refillPositions.push({ row, col });
+      nextId += 1;
+      row -= 1;
+    }
+  }
+  return { board, nextId, rngState, refillPositions };
+}
+
+function hardenContaminated(board: Board, positions: Position[]): { board: Board; positions: Position[] } {
+  if (positions.length === 0) {
+    return { board, positions: [] };
+  }
+  const nextBoard = cloneBoard(board);
+  const changed: Position[] = [];
+  for (const position of positions) {
+    const tile = nextBoard[position.row]![position.col]!;
+    if (!tile.contaminated || isAshKind(tile.kind)) {
+      continue;
+    }
+    nextBoard[position.row]![position.col] = { ...tile, kind: "ash1", contaminated: false };
+    changed.push(position);
+  }
+  return { board: nextBoard, positions: changed };
+}
+
+function recoverUntouchedAsh(
+  board: Board,
+  hitAshIds: Set<number>,
+  blockedKeys: Set<string>,
+): { board: Board; positions: Position[] } {
+  const nextBoard = cloneBoard(board);
+  const changed: Position[] = [];
+  for (let row = 0; row < BOARD_ROWS; row += 1) {
+    for (let col = 0; col < BOARD_COLS; col += 1) {
+      const tile = nextBoard[row]![col]!;
+      if (!isAshKind(tile.kind)) {
+        continue;
+      }
+      const key = positionKey({ row, col });
+      if (hitAshIds.has(tile.id) || blockedKeys.has(key)) {
+        continue;
+      }
+      const recoveredKind = recoverAsh(tile.kind);
+      if (recoveredKind === tile.kind) {
+        continue;
+      }
+      nextBoard[row]![col] = { ...tile, kind: recoveredKind };
+      changed.push({ row, col });
+    }
+  }
+  return { board: nextBoard, positions: changed };
+}
+
+function contaminateFromEligibleSources(
+  board: Board,
+  prePressureBoard: Board,
+  hitAshIds: Set<number>,
+  rngState: number,
+): { board: Board; position: Position; rngState: number } | null {
+  const pairs: Array<{ source: Position; target: Position }> = [];
+  for (let row = 0; row < BOARD_ROWS; row += 1) {
+    for (let col = 0; col < BOARD_COLS; col += 1) {
+      const tileBeforePressure = prePressureBoard[row]![col]!;
+      if (tileBeforePressure.kind !== "ash5" || hitAshIds.has(tileBeforePressure.id)) {
+        continue;
+      }
+      const currentTile = board[row]![col]!;
+      if (!isAshKind(currentTile.kind)) {
+        continue;
+      }
+      for (const neighbor of neighbors(row, col)) {
+        const neighborTile = board[neighbor.row]![neighbor.col]!;
+        if (neighborTile.contaminated || isAshKind(neighborTile.kind)) {
+          continue;
+        }
+        pairs.push({
+          source: { row, col },
+          target: neighbor,
+        });
+      }
+    }
+  }
+
+  if (pairs.length === 0) {
+    return null;
+  }
+
+  const selected = pickRandomItem(pairs, rngState);
+  const nextBoard = cloneBoard(board);
+  const tile = nextBoard[selected.item.target.row]![selected.item.target.col]!;
+  nextBoard[selected.item.target.row]![selected.item.target.col] = { ...tile, contaminated: true };
+  return {
+    board: nextBoard,
+    position: selected.item.target,
+    rngState: selected.rngState,
+  };
+}
+
+function spawnAshFromRefill(
+  board: Board,
+  refillPositions: Position[],
+  rngState: number,
+): { board: Board; position: Position; rngState: number } | null {
+  if (refillPositions.length === 0) {
+    return null;
+  }
+  const selected = pickRandomItem(refillPositions, rngState);
+  const nextBoard = cloneBoard(board);
+  const tile = nextBoard[selected.item.row]![selected.item.col]!;
+  nextBoard[selected.item.row]![selected.item.col] = { ...tile, kind: "ash5", contaminated: false };
+  return {
+    board: nextBoard,
+    position: selected.item,
+    rngState: selected.rngState,
+  };
+}
+
+function floodGroup(board: Board, visited: boolean[][], startRow: number, startCol: number, kind: SigilKind): Position[] {
+  const queue: Position[] = [{ row: startRow, col: startCol }];
+  const group: Position[] = [{ row: startRow, col: startCol }];
+  while (queue.length > 0) {
+    const current = queue.shift()!;
+    for (const neighbor of neighbors(current.row, current.col)) {
+      if (visited[neighbor.row]![neighbor.col]) continue;
+      const tile = board[neighbor.row]![neighbor.col]!;
+      if (tile.contaminated || tile.kind !== kind) continue;
+      visited[neighbor.row]![neighbor.col] = true;
+      group.push(neighbor);
+      queue.push(neighbor);
+    }
+  }
+  return group;
+}
+
+function collectTouchedPositions(
+  group: Position[],
+  sparseBoard: SparseBoard,
+  matchedSet: Set<string>,
+  predicate: (sparseBoard: SparseBoard, position: Position) => boolean,
+): string[] {
   const touched = new Set<string>();
   for (const pos of group) {
     for (const neighbor of neighbors(pos.row, pos.col)) {
@@ -450,8 +647,7 @@ function collectTouchedAsh(group: Position[], sparseBoard: SparseBoard, matchedS
       if (matchedSet.has(key) || touched.has(key)) {
         continue;
       }
-      const tile = sparseBoard[neighbor.row]![neighbor.col];
-      if (tile && isAshKind(tile.kind)) {
+      if (predicate(sparseBoard, neighbor)) {
         touched.add(key);
       }
     }
@@ -467,8 +663,7 @@ function collectAllAshPositions(sparseBoard: SparseBoard, excluded = new Set<str
       if (excluded.has(key)) {
         continue;
       }
-      const tile = sparseBoard[row]![col];
-      if (tile && isAshKind(tile.kind)) {
+      if (isAshTileAtPosition(sparseBoard, { row, col })) {
         positions.push(key);
       }
     }
@@ -476,12 +671,20 @@ function collectAllAshPositions(sparseBoard: SparseBoard, excluded = new Set<str
   return positions;
 }
 
-function purgeAllAsh(
-  sparseBoard: SparseBoard,
-  damagedSet: Set<string>,
-  cleansedSet: Set<string>,
-): void {
-  purgeAshPositions(sparseBoard, collectAllAshPositions(sparseBoard), damagedSet, cleansedSet);
+function collectAllContaminatedPositions(sparseBoard: SparseBoard, excluded = new Set<string>()): string[] {
+  const positions: string[] = [];
+  for (let row = 0; row < BOARD_ROWS; row += 1) {
+    for (let col = 0; col < BOARD_COLS; col += 1) {
+      const key = positionKey({ row, col });
+      if (excluded.has(key)) {
+        continue;
+      }
+      if (isContaminatedSigilAtPosition(sparseBoard, { row, col })) {
+        positions.push(key);
+      }
+    }
+  }
+  return positions;
 }
 
 function purgeAshPositions(
@@ -505,81 +708,57 @@ function purgeAshPositions(
 function damageAshPositions(
   sparseBoard: SparseBoard,
   positions: string[],
+  amount: number,
   damagedSet: Set<string>,
   cleansedSet: Set<string>,
 ): void {
   for (const key of positions) {
     const position = decodePositionKey(key);
-    const tile = sparseBoard[position.row]![position.col];
+    let tile = sparseBoard[position.row]![position.col];
     if (!tile || !isAshKind(tile.kind)) {
       continue;
     }
     damagedSet.add(key);
-    if (tile.kind === "ash1") {
+    const nextKind = damageAsh(tile.kind, amount);
+    if (nextKind === null) {
       cleansedSet.add(key);
       sparseBoard[position.row]![position.col] = null;
       continue;
     }
     sparseBoard[position.row]![position.col] = {
       ...tile,
-      kind: damageAsh(tile.kind),
+      kind: nextKind,
     };
   }
 }
 
-function collapseSparseBoard(sparseBoard: SparseBoard, nextId: number, rngState: number): { board: Board; nextId: number; rngState: number } {
-  const board: Board = Array.from({ length: BOARD_ROWS }, () => Array<Tile>(BOARD_COLS));
-  for (let col = 0; col < BOARD_COLS; col += 1) {
-    const survivors: Tile[] = [];
-    for (let row = BOARD_ROWS - 1; row >= 0; row -= 1) {
-      const tile = sparseBoard[row]![col];
-      if (tile) survivors.push(tile);
+function restoreContaminatedPositions(
+  sparseBoard: SparseBoard,
+  positions: string[],
+  restoredSet: Set<string>,
+): void {
+  for (const key of positions) {
+    const position = decodePositionKey(key);
+    const tile = sparseBoard[position.row]![position.col];
+    if (!tile || isAshKind(tile.kind) || !tile.contaminated) {
+      continue;
     }
-    let row = BOARD_ROWS - 1;
-    for (const tile of survivors) {
-      board[row]![col] = tile;
-      row -= 1;
-    }
-    while (row >= 0) {
-      const result = randomSigil(rngState);
-      rngState = result.rngState;
-      board[row]![col] = { id: nextId, kind: result.kind };
-      nextId += 1;
-      row -= 1;
-    }
+    restoredSet.add(key);
+    sparseBoard[position.row]![position.col] = {
+      ...tile,
+      contaminated: false,
+    };
   }
-  return { board, nextId, rngState };
 }
 
-function addAsh(board: Board, rngState: number): { board: Board; position: Position; rngState: number } | null {
-  const candidates: Array<{ pos: Position; weight: number }> = [];
-  for (let row = 0; row < BOARD_ROWS; row += 1) {
-    for (let col = 0; col < BOARD_COLS; col += 1) {
-      if (isAshKind(board[row]![col]!.kind)) continue;
-      candidates.push({
-        pos: { row, col },
-        weight: (row + 1) * (row + 1),
-      });
-    }
-  }
-  if (candidates.length === 0) return null;
+function isAshTileAtPosition(sparseBoard: SparseBoard, position: Position): boolean {
+  const tile = sparseBoard[position.row]![position.col];
+  return Boolean(tile && isAshKind(tile.kind));
+}
 
-  const totalWeight = candidates.reduce((sum, item) => sum + item.weight, 0);
-  const roll = nextRandom(rngState);
-  rngState = roll.rngState;
-  let cursor = roll.value * totalWeight;
-  let chosen = candidates[candidates.length - 1]!;
-  for (const candidate of candidates) {
-    cursor -= candidate.weight;
-    if (cursor <= 0) {
-      chosen = candidate;
-      break;
-    }
-  }
-  const nextBoard = cloneBoard(board);
-  const tile = nextBoard[chosen.pos.row]![chosen.pos.col]!;
-  nextBoard[chosen.pos.row]![chosen.pos.col] = { ...tile, kind: "ash3" };
-  return { board: nextBoard, position: chosen.pos, rngState };
+function isContaminatedSigilAtPosition(sparseBoard: SparseBoard, position: Position): boolean {
+  const tile = sparseBoard[position.row]![position.col];
+  return Boolean(tile && tile.contaminated && !isAshKind(tile.kind));
 }
 
 function isPlayableMove(board: Board, move: Move): boolean {
@@ -589,8 +768,42 @@ function isPlayableMove(board: Board, move: Move): boolean {
   );
 }
 
-function damageAsh(kind: Exclude<AshKind, "ash1">): AshKind {
-  return kind === "ash3" ? "ash2" : "ash1";
+function damageAsh(kind: AshKind, amount: number): AshKind | null {
+  let current: AshKind | null = kind;
+  for (let hit = 0; hit < amount && current !== null; hit += 1) {
+    current = damageAshOnce(current);
+  }
+  return current;
+}
+
+function damageAshOnce(kind: AshKind): AshKind | null {
+  switch (kind) {
+    case "ash5":
+      return "ash4";
+    case "ash4":
+      return "ash3";
+    case "ash3":
+      return "ash2";
+    case "ash2":
+      return "ash1";
+    case "ash1":
+      return null;
+  }
+}
+
+function recoverAsh(kind: AshKind): AshKind {
+  switch (kind) {
+    case "ash5":
+      return "ash5";
+    case "ash4":
+      return "ash5";
+    case "ash3":
+      return "ash4";
+    case "ash2":
+      return "ash3";
+    case "ash1":
+      return "ash2";
+  }
 }
 
 function rotateBoard(board: Board, move: Move): Board {
@@ -617,6 +830,15 @@ function randomSigil(rngState: number): { kind: SigilKind; rngState: number } {
   return { kind: SIGIL_KINDS[index]!, rngState: next.rngState };
 }
 
+function pickRandomItem<T>(items: T[], rngState: number): { item: T; rngState: number } {
+  const next = nextRandom(rngState);
+  const index = Math.min(items.length - 1, Math.floor(next.value * items.length));
+  return {
+    item: items[index]!,
+    rngState: next.rngState,
+  };
+}
+
 function nextRandom(seed: number): { value: number; rngState: number } {
   let t = (seed + 0x6d2b79f5) >>> 0;
   t = Math.imul(t ^ (t >>> 15), t | 1);
@@ -626,16 +848,16 @@ function nextRandom(seed: number): { value: number; rngState: number } {
 }
 
 function createsGroupAt(existingRows: Tile[][], currentRow: Tile[], row: number, col: number, kind: SigilKind): boolean {
-  const boardKinds = existingRows.map((existing) => existing.map((tile) => tile.kind as SigilKind));
-  boardKinds[row] = currentRow.map((tile) => tile.kind as SigilKind);
-  boardKinds[row]!.push(kind);
+  const existingKinds = existingRows.map((existing) => existing.map((tile) => tile.kind as SigilKind));
+  existingKinds[row] = currentRow.map((tile) => tile.kind as SigilKind);
+  existingKinds[row]!.push(kind);
   const component = [{ row, col }];
   const seen = new Set<string>([positionKey({ row, col })]);
   const queue = component.slice();
   while (queue.length > 0) {
     const current = queue.shift()!;
     for (const neighbor of neighbors(current.row, current.col)) {
-      const rowKinds = boardKinds[neighbor.row];
+      const rowKinds = existingKinds[neighbor.row];
       const value = rowKinds?.[neighbor.col];
       if (value !== kind) continue;
       const key = positionKey(neighbor);
@@ -646,6 +868,20 @@ function createsGroupAt(existingRows: Tile[][], currentRow: Tile[], row: number,
     }
   }
   return component.length >= 3;
+}
+
+function normalizeTileSpec(spec: TileSpec): { kind: TileKind; contaminated: boolean } {
+  if (typeof spec === "string") {
+    return { kind: spec, contaminated: false };
+  }
+  const normalized = {
+    kind: spec.kind,
+    contaminated: spec.contaminated ?? false,
+  };
+  if (normalized.contaminated && isAshKind(normalized.kind)) {
+    throw new Error("Ash tile cannot be contaminated");
+  }
+  return normalized;
 }
 
 function neighbors(row: number, col: number): Position[] {
@@ -667,6 +903,31 @@ function flattenPositions(groups: Position[][]): Position[] {
 
 function toPositionKeySet(positions: Position[]): Set<string> {
   return new Set(positions.map(positionKey));
+}
+
+function addTileIdsToSet(target: Set<number>, board: Board, positions: Position[]): void {
+  for (const position of positions) {
+    const tile = board[position.row]?.[position.col];
+    if (tile && isAshKind(tile.kind)) {
+      target.add(tile.id);
+    }
+  }
+}
+
+function addKeysToSet(target: Set<string>, keys: string[]): void {
+  for (const key of keys) {
+    target.add(key);
+  }
+}
+
+function buildAshSpawnTurns(gaps: readonly number[]): number[] {
+  const turns: number[] = [];
+  let total = 0;
+  for (const gap of gaps) {
+    total += gap;
+    turns.push(total);
+  }
+  return turns;
 }
 
 function positionKey(position: Position): string {

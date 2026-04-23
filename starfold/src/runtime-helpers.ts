@@ -1,5 +1,6 @@
 type GameOverReason = "no_moves" | null;
 type GameOverResult = "normal" | "new_best" | "first_recorded";
+type Screen = "playing" | "losing" | "gameover";
 
 export function defaultGameOverSubtitle(reason: GameOverReason | null): string {
   if (reason === "no_moves") {
@@ -33,4 +34,27 @@ export function shouldSnapbackDragOnHudPointerUp(options: {
     return false;
   }
   return options.dragPreviewOffsetPx !== null && Math.abs(options.dragPreviewOffsetPx) >= 1;
+}
+
+export function shouldShowRestartInterstitial(options: {
+  previewModeActive: boolean;
+  screen: Screen;
+  runMoves: number;
+  runElapsedMs: number;
+  shownThisRun: boolean;
+  lastInterstitialShownAt: number | null;
+  sessionStartedAt: number;
+  now: number;
+  minRunMoves: number;
+  minRunMs: number;
+  cooldownMs: number;
+}): boolean {
+  if (options.previewModeActive || options.screen !== "gameover" || options.shownThisRun) {
+    return false;
+  }
+  if (options.runElapsedMs < options.minRunMs && options.runMoves < options.minRunMoves) {
+    return false;
+  }
+  const lastAnchor = options.lastInterstitialShownAt ?? options.sessionStartedAt;
+  return options.now - lastAnchor >= options.cooldownMs;
 }

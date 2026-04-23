@@ -1,6 +1,6 @@
 import { chromium, webkit, type BrowserType, type Page } from "playwright";
 
-import { createBoardFromKinds, getPlayableMoves, type TileKind } from "../src/game/logic.ts";
+import { createBoardFromSpecs, getPlayableMoves, type TileKind } from "../src/game/logic.ts";
 
 interface Options {
   url: string;
@@ -173,7 +173,17 @@ async function determinePlayableMove(page: Page) {
     }
     return debug.board;
   });
-  const board = createBoardFromKinds(boardKinds as TileKind[][]).board;
+  const board = createBoardFromSpecs(
+    (boardKinds as string[][]).map((row) =>
+      row.map((tile) => {
+        const contaminated = tile.endsWith("*");
+        return {
+          kind: (contaminated ? tile.slice(0, -1) : tile) as TileKind,
+          contaminated,
+        };
+      }),
+    ),
+  ).board;
   const moves = getPlayableMoves(board);
   const move = moves[0];
   if (!move) {

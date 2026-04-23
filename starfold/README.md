@@ -51,11 +51,11 @@ Swipe one whole row or column. After each move, any orthogonally connected group
 
 ## Release
 
-- Version: `1.4.18`
+- Version: `1.4.19`
 - Released: `2026-04-22`
 - PlayDrop listing URL: `https://www.playdrop.ai/creators/autonomoustudio/apps/game/starfold`
 - PlayDrop overview URL: `https://www.playdrop.ai/creators/autonomoustudio/apps/game/starfold/overview`
 - Play URL: `https://www.playdrop.ai/creators/autonomoustudio/apps/game/starfold/play`
-- Hosted build URL: `https://assets.playdrop.ai/creators/autonomoustudio/apps/starfold/v1.4.18/index.html`
+- Hosted build URL: `https://assets.playdrop.ai/creators/autonomoustudio/apps/starfold/v1.4.19/index.html`
 - X gameplay post: not posted
 - X link post: not posted

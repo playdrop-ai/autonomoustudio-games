@@ -268,3 +268,20 @@ Original prompt: Create and publish a new game using $playdrop skill.
 - The prompt is render-only and does not affect normal `play` UI.
 - Revalidated with `npm test`, `npx tsc --noEmit`, `npm run build`, and `playdrop project validate .`.
 - Updated proof sheet with the prompt: `output/playwright/preview-loop-v2/preview-loop-v2-composite.png`.
+
+2026-04-23 13:08 EDT
+- Replaced the old three-stage multi-spawn ash ramp with a five-stage corruption system. Ash now uses `ash5` through `ash1`, untouched ash recovers by one level per turn, contamination keeps the original sigil family, and only one contamination event plus one scheduled spawn can happen per move.
+- Reworked turn resolution in `src/game/logic.ts` around restore, harden, recover, contaminate, and spawn phases. Fresh ash now enters from final refill slots on a fixed move schedule, contaminated sigils are blocked for matching and move search, and `ashCount` now tracks all corrupted cells.
+- Updated rendering to load `ash4` and `ash5`, mapped contaminated sigils onto the family-specific ashed art, and kept the existing stage queue by extending `"ash"` stages with action metadata.
+- Expanded logic coverage for the new rules, including five-hit ash progression, contamination restore and harden, recovery, single-event contamination, scheduled spawn turns, spawn-from-refill behavior, and pressure-created dead boards.
+- Revalidated with `npm run validate`.
+- Browser proof for this pass:
+  - smoke artifacts: `output/web-game-corruption-smoke/shot-0.png`, `output/web-game-corruption-smoke/state-0.json`, `output/web-game-corruption-smoke-v2/shot-0.png`, `output/web-game-corruption-smoke-v2/state-0.json`
+  - raw deterministic portrait run: `output/playwright/videos-corruption/page@aa11ad51aa217746c49cb063ec57cf5e.webm`
+  - final 30 second portrait validation clip: `output/starfold-balance-30s.webm`
+  - sampled contact sheet for the final clip: `output/starfold-balance-contact.png`
+
+2026-04-23 13:42 EDT
+- Fixed the new five-stage ash art export. The initial `generated-v2` ash files had been saved as raw preview crops with full alpha, which left the red sheet background visible in runtime.
+- Regenerated `starfold-tile-ash5-r1.png` through `starfold-tile-ash1-r1.png` using the same runtime tile alpha mask as the shipped generated-v2 tiles, so the ash family now sits in the correct rounded cutout instead of full square PNGs.
+- Rebuilt the package and captured fresh browser proof with a forced debug board. Runtime screenshot: `output/ash-mask-fix-runtime.png`. The generic web-game client still showed the known intro-frame screenshot quirk, but text state confirmed the forced ash board and the direct Playwright runtime screenshot verified the actual board render.

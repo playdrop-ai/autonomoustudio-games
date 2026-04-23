@@ -144,7 +144,7 @@ function chooseGreedyMove(state: GameState, previousAxis: Move["axis"] | null): 
     const result = applyMove(state, move);
     const clears = result.stages.filter((stage) => stage.kind === "clear").length;
     const ashReduction = state.ashCount - result.state.ashCount;
-    const spawnedAsh = result.stages.some((stage) => stage.kind === "ash");
+    const spawnedAsh = result.stages.some((stage) => stage.kind === "ash" && stage.action === "spawn");
     const heuristic =
       result.scoreGained * 12 +
       clears * 500 +

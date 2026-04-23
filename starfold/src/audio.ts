@@ -131,6 +131,7 @@ export class GameAudio {
   private sfxMasterGain: GainNode | null = null;
   private sfxWarmupPlayed = false;
   private sfxStateSyncPromise: Promise<void> = Promise.resolve();
+  private sfxGestureResumePromise: Promise<void> | null = null;
   private sfxBytesPromise: Promise<void> | null = null;
   private decodeSequencePromise: Promise<void> | null = null;
   private recreatePromise: Promise<void> | null = null;
@@ -164,6 +165,7 @@ export class GameAudio {
   }
 
   notifyUserGesture(): void {
+    this.startMusicLoop();
     this.unlockAudio();
   }
 
@@ -265,13 +267,32 @@ export class GameAudio {
   private unlockAudio(): void {
     const wasActivated = this.userActivated;
     this.userActivated = true;
-    if (!wasActivated) {
+    if (!this.loadError) {
       this.recoveryState = "unlocking";
+      this.resumeSfxContextFromGesture();
+    }
+    if (!wasActivated) {
       this.requestPriorityDecodes(HOT_SFX_KEYS);
       this.requestPriorityDecodes(COLD_SFX_KEYS);
     }
     this.syncSfxContext(true);
     this.syncMusicPlayback();
+  }
+
+  private resumeSfxContextFromGesture(): void {
+    const context = this.ensureSfxContext();
+    const trackedResume = context
+      .resume()
+      .catch((error) => {
+        console.warn("[starfold] Sound effect context resume failed during gesture", error);
+      })
+      .then(() => undefined);
+    const inFlightResume = trackedResume.finally(() => {
+      if (this.sfxGestureResumePromise === inFlightResume) {
+        this.sfxGestureResumePromise = null;
+      }
+    });
+    this.sfxGestureResumePromise = inFlightResume;
   }
 
   private installUnlockListeners(): void {
@@ -578,6 +599,9 @@ export class GameAudio {
         }
 
         const context = this.ensureSfxContext();
+        if (this.sfxGestureResumePromise) {
+          await this.sfxGestureResumePromise;
+        }
         if (context.state !== "running") {
           try {
             await context.resume();
