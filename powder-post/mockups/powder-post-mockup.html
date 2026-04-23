@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Powder Post Mockup</title>
+    <style>
+      :root {
+        --sky-top: #0f2444;
+        --sky-mid: #1d3d67;
+        --sky-bottom: #5f82ae;
+        --snow-a: #f6fbff;
+        --snow-b: #d9e8f6;
+        --snow-c: #a9c0d9;
+        --ink: #102035;
+        --panel: rgba(14, 25, 40, 0.7);
+        --panel-strong: rgba(10, 18, 30, 0.86);
+        --panel-line: rgba(255, 255, 255, 0.14);
+        --glow: rgba(255, 250, 240, 0.3);
+        --warm-amber: #ffc868;
+        --warm-coral: #ff936c;
+        --warm-teal: #7ce7dc;
+        --cold-danger: #edf7ff;
+        --cold-danger-edge: #8bb8e4;
+        --hud-shadow: 0 16px 48px rgba(0, 0, 0, 0.28);
+        --button-shadow: 0 18px 44px rgba(255, 177, 67, 0.34);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background:
+          radial-gradient(circle at 50% 10%, rgba(255, 255, 255, 0.2), transparent 38%),
+          linear-gradient(180deg, var(--sky-top), var(--sky-mid) 42%, var(--sky-bottom) 72%, #90aac3);
+        color: #f7fbff;
+        font-family:
+          "Avenir Next",
+          "Trebuchet MS",
+          sans-serif;
+      }
+
+      body.surface-mobile {
+        letter-spacing: 0.02em;
+      }
+
+      #app {
+        position: relative;
+        width: 100%;
+        height: 100%;
+      }
+
+      canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      .hud-cluster {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        pointer-events: none;
+      }
+
+      .hud-primary {
+        top: 18px;
+        left: 18px;
+        padding: 12px 16px;
+        border-radius: 20px;
+        background: var(--panel);
+        border: 1px solid var(--panel-line);
+        box-shadow: var(--hud-shadow);
+        backdrop-filter: blur(12px);
+      }
+
+      .hud-score {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .hud-kicker {
+        font-size: 10px;
+        line-height: 1;
+        letter-spacing: 0.22em;
+        color: rgba(255, 255, 255, 0.72);
+      }
+
+      .hud-value {
+        font-size: 26px;
+        font-weight: 800;
+        line-height: 1;
+      }
+
+      .hud-streak {
+        min-width: 58px;
+        padding: 10px 12px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.08);
+        text-align: center;
+      }
+
+      .hud-streak .hud-value {
+        font-size: 24px;
+      }
+
+      .hud-secondary {
+        top: 18px;
+        right: 18px;
+        gap: 10px;
+      }
+
+      .parcel-panel {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 18px;
+        background: var(--panel);
+        border: 1px solid var(--panel-line);
+        box-shadow: var(--hud-shadow);
+        backdrop-filter: blur(12px);
+      }
+
+      .parcel-stack {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .parcel-next {
+        transform: scale(0.82);
+        opacity: 0.84;
+      }
+
+      .crest {
+        width: 34px;
+        height: 34px;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+      }
+
+      .crest svg {
+        width: 24px;
+        height: 24px;
+      }
+
+      .storm-panel {
+        width: 148px;
+        padding: 11px 12px 12px;
+        border-radius: 18px;
+        background: var(--panel);
+        border: 1px solid var(--panel-line);
+        box-shadow: var(--hud-shadow);
+        backdrop-filter: blur(12px);
+      }
+
+      .storm-bar {
+        margin-top: 8px;
+        width: 100%;
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.12);
+        overflow: hidden;
+      }
+
+      .storm-fill {
+        height: 100%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #e6f7ff 0%, #b6deff 44%, #86b6ef 100%);
+      }
+
+      .overlay {
+        position: absolute;
+        inset: 0;
+        display: none;
+        pointer-events: none;
+      }
+
+      .overlay.active {
+        display: block;
+      }
+
+      .title-lockup {
+        position: absolute;
+        left: 22px;
+        top: 92px;
+        max-width: min(34vw, 340px);
+      }
+
+      .eyebrow {
+        margin: 0 0 10px;
+        font-size: 11px;
+        letter-spacing: 0.28em;
+        color: rgba(240, 248, 255, 0.75);
+      }
+
+      .game-title {
+        margin: 0;
+        font-size: clamp(42px, 7vw, 72px);
+        line-height: 0.92;
+        font-weight: 900;
+        text-transform: uppercase;
+        text-shadow:
+          0 1px 0 rgba(255, 255, 255, 0.08),
+          0 22px 44px rgba(0, 0, 0, 0.28);
+      }
+
+      .deck-copy {
+        margin: 14px 0 0;
+        max-width: 24ch;
+        font-size: 16px;
+        line-height: 1.38;
+        color: rgba(247, 251, 255, 0.84);
+      }
+
+      .start-card,
+      .gameover-card {
+        position: absolute;
+        right: 22px;
+        bottom: 22px;
+        width: min(35vw, 360px);
+        padding: 18px 18px 20px;
+        border-radius: 24px;
+        background: var(--panel-strong);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow: 0 24px 64px rgba(0, 0, 0, 0.34);
+        backdrop-filter: blur(16px);
+      }
+
+      .gameover-card {
+        width: min(38vw, 388px);
+      }
+
+      .card-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .start-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 14px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.82);
+        font-size: 12px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 142px;
+        padding: 14px 18px;
+        border-radius: 18px;
+        background: linear-gradient(180deg, #ffd47a 0%, #ffb443 100%);
+        color: #1f2732;
+        font-size: 16px;
+        font-weight: 800;
+        box-shadow: var(--button-shadow);
+      }
+
+      .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 16px;
+      }
+
+      .stat {
+        padding: 12px 12px 13px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .stat .hud-kicker {
+        margin-bottom: 6px;
+      }
+
+      .stat .hud-value {
+        font-size: 22px;
+      }
+
+      body.surface-mobile .hud-primary {
+        top: 12px;
+        left: 12px;
+        padding: 10px 12px;
+        gap: 10px;
+      }
+
+      body.surface-mobile .hud-value {
+        font-size: 22px;
+      }
+
+      body.surface-mobile .hud-streak {
+        min-width: 48px;
+        padding: 8px 9px;
+      }
+
+      body.surface-mobile .hud-streak .hud-value {
+        font-size: 20px;
+      }
+
+      body.surface-mobile .hud-secondary {
+        top: 12px;
+        right: 12px;
+        gap: 8px;
+      }
+
+      body.surface-mobile .parcel-panel,
+      body.surface-mobile .storm-panel {
+        padding: 8px 10px;
+      }
+
+      body.surface-mobile .storm-panel {
+        width: 132px;
+      }
+
+      body.surface-mobile .title-lockup {
+        top: 66px;
+        left: 14px;
+        max-width: min(38vw, 280px);
+      }
+
+      body.surface-mobile .deck-copy {
+        font-size: 13px;
+      }
+
+      body.surface-mobile .game-title {
+        font-size: clamp(34px, 10vw, 52px);
+      }
+
+      body.surface-mobile .start-card,
+      body.surface-mobile .gameover-card {
+        right: 14px;
+        bottom: 14px;
+        width: min(42vw, 250px);
+        padding: 14px 14px 16px;
+        border-radius: 20px;
+      }
+
+      body.surface-mobile .button {
+        min-width: 112px;
+        padding: 12px 14px;
+        font-size: 14px;
+      }
+
+      body.surface-mobile .stat-grid {
+        gap: 8px;
+      }
+
+      body.surface-mobile .stat {
+        padding: 10px;
+        border-radius: 14px;
+      }
+
+      body.surface-mobile .stat .hud-value {
+        font-size: 18px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="scene" width="1280" height="720"></canvas>
+
+      <div class="hud-cluster hud-primary">
+        <div class="hud-score">
+          <div class="hud-kicker">SCORE</div>
+          <div class="hud-value" id="score-value">18,240</div>
+        </div>
+        <div class="hud-streak">
+          <div class="hud-kicker">STREAK</div>
+          <div class="hud-value" id="streak-value">x7</div>
+        </div>
+      </div>
+
+      <div class="hud-cluster hud-secondary">
+        <div class="parcel-panel">
+          <div class="parcel-stack">
+            <span class="crest" id="parcel-current"></span>
+            <span class="crest parcel-next" id="parcel-next"></span>
+          </div>
+        </div>
+        <div class="storm-panel">
+          <div class="hud-kicker">STORM</div>
+          <div class="storm-bar">
+            <div class="storm-fill" id="storm-fill"></div>
+          </div>
+        </div>
+      </div>
+
+      <section class="overlay" id="overlay-start">
+        <div class="title-lockup">
+          <p class="eyebrow">MIDNIGHT DELIVERY RUN</p>
+          <h1 class="game-title">Powder<br />Post</h1>
+          <p class="deck-copy">Thread the right gate, keep the streak alive, and do not let the storm close the slope.</p>
+        </div>
+        <div class="start-card">
+          <div class="card-row">
+            <div>
+              <div class="hud-kicker">BEST LINE</div>
+              <div class="hud-value">12 GATES</div>
+            </div>
+            <div class="button">Play</div>
+          </div>
+          <div class="start-chip">DRAG / A D TO CARVE</div>
+        </div>
+      </section>
+
+      <section class="overlay" id="overlay-gameover">
+        <div class="title-lockup">
+          <p class="eyebrow">RUN LOST TO THE STORM</p>
+          <h1 class="game-title">Whiteout</h1>
+          <p class="deck-copy">A late gate miss let the avalanche bite back. Reset the route and take the cleaner line.</p>
+        </div>
+        <div class="gameover-card">
+          <div class="card-row">
+            <div>
+              <div class="hud-kicker">RUN REPORT</div>
+              <div class="hud-value">31,860</div>
+            </div>
+            <div class="button">Run Again</div>
+          </div>
+          <div class="stat-grid">
+            <div class="stat">
+              <div class="hud-kicker">BEST</div>
+              <div class="hud-value">42,440</div>
+            </div>
+            <div class="stat">
+              <div class="hud-kicker">STREAK</div>
+              <div class="hud-value">x12</div>
+            </div>
+            <div class="stat">
+              <div class="hud-kicker">GATES</div>
+              <div class="hud-value">48</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const screen = params.get("screen") || "gameplay";
+      const surface = params.get("surface") || "desktop";
+
+      document.body.classList.add(`surface-${surface}`);
+      document.getElementById(`overlay-${screen}`)?.classList.add("active");
+
+      const canvas = document.getElementById("scene");
+      const ctx = canvas.getContext("2d");
+
+      const crestPalette = {
+        amber: { fill: "#ffc868", stroke: "#7f4b12" },
+        coral: { fill: "#ff936c", stroke: "#82311c" },
+        teal: { fill: "#7ce7dc", stroke: "#145055" },
+      };
+
+      const sceneState = {
+        start: {
+          score: "0",
+          streak: "x0",
+          current: "amber",
+          next: "teal",
+          storm: 24,
+          avalancheY: 0.14,
+          courierX: 0.44,
+          courierLean: -0.18,
+          gates: [
+            { x: 0.27, y: 0.32, crest: "coral", scale: 1.02 },
+            { x: 0.56, y: 0.24, crest: "amber", scale: 0.9 },
+            { x: 0.74, y: 0.4, crest: "teal", scale: 1.12 },
+          ],
+          trees: [
+            { x: 0.18, y: 0.56, scale: 1.18 },
+            { x: 0.64, y: 0.58, scale: 0.92 },
+            { x: 0.84, y: 0.67, scale: 1.08 },
+          ],
+          rocks: [
+            { x: 0.41, y: 0.46, scale: 0.86 },
+            { x: 0.7, y: 0.58, scale: 0.74 },
+          ],
+        },
+        gameplay: {
+          score: "18,240",
+          streak: "x7",
+          current: "coral",
+          next: "amber",
+          storm: 38,
+          avalancheY: 0.17,
+          courierX: 0.54,
+          courierLean: 0.16,
+          gates: [
+            { x: 0.23, y: 0.22, crest: "teal", scale: 0.92 },
+            { x: 0.48, y: 0.34, crest: "coral", scale: 1.06 },
+            { x: 0.78, y: 0.28, crest: "amber", scale: 0.96 },
+            { x: 0.69, y: 0.48, crest: "teal", scale: 1.12 },
+          ],
+          trees: [
+            { x: 0.13, y: 0.38, scale: 0.88 },
+            { x: 0.3, y: 0.58, scale: 1.18 },
+            { x: 0.86, y: 0.6, scale: 1.12 },
+            { x: 0.58, y: 0.73, scale: 0.94 },
+          ],
+          rocks: [
+            { x: 0.41, y: 0.28, scale: 0.78 },
+            { x: 0.68, y: 0.63, scale: 0.82 },
+            { x: 0.2, y: 0.78, scale: 0.72 },
+          ],
+        },
+        gameover: {
+          score: "31,860",
+          streak: "x12",
+          current: "teal",
+          next: "coral",
+          storm: 92,
+          avalancheY: 0.44,
+          courierX: 0.39,
+          courierLean: -0.1,
+          gates: [
+            { x: 0.24, y: 0.24, crest: "amber", scale: 0.88 },
+            { x: 0.57, y: 0.18, crest: "coral", scale: 0.82 },
+          ],
+          trees: [
+            { x: 0.18, y: 0.48, scale: 1.08 },
+            { x: 0.27, y: 0.69, scale: 0.9 },
+            { x: 0.73, y: 0.58, scale: 1.16 },
+            { x: 0.87, y: 0.72, scale: 0.94 },
+          ],
+          rocks: [
+            { x: 0.52, y: 0.38, scale: 0.8 },
+            { x: 0.64, y: 0.56, scale: 0.7 },
+          ],
+        },
+      }[screen];
+
+      document.getElementById("score-value").textContent = sceneState.score;
+      document.getElementById("streak-value").textContent = sceneState.streak;
+      document.getElementById("storm-fill").style.width = `${sceneState.storm}%`;
+      document.getElementById("parcel-current").innerHTML = crestSvg(sceneState.current);
+      document.getElementById("parcel-next").innerHTML = crestSvg(sceneState.next);
+
+      function crestSvg(name) {
+        const palette = crestPalette[name];
+        const shape =
+          name === "amber"
+            ? `<path d="M12 3 20 12 12 21 4 12Z" fill="${palette.stroke}" opacity="0.18"/><path d="M12 5.5 18.5 12 12 18.5 5.5 12Z" fill="${palette.stroke}"/>`
+            : name === "coral"
+              ? `<path d="M12 4 19 19H5Z" fill="${palette.stroke}" opacity="0.16"/><path d="M12 6.5 16.5 16H7.5Z" fill="${palette.stroke}"/>`
+              : `<circle cx="12" cy="12" r="7.5" fill="${palette.stroke}" opacity="0.15"/><circle cx="12" cy="12" r="5" fill="${palette.stroke}"/>`;
+
+        return `
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="1.25" y="1.25" width="21.5" height="21.5" rx="8" fill="${palette.fill}" />
+            ${shape}
+          </svg>
+        `;
+      }
+
+      function resize() {
+        canvas.width = canvas.clientWidth * devicePixelRatio;
+        canvas.height = canvas.clientHeight * devicePixelRatio;
+        ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+        draw();
+      }
+
+      function draw() {
+        const width = canvas.clientWidth;
+        const height = canvas.clientHeight;
+        ctx.clearRect(0, 0, width, height);
+
+        drawSky(width, height);
+        drawStars(width, height);
+        drawAvalanche(width, height, sceneState.avalancheY);
+        drawSlope(width, height);
+        sceneState.gates.forEach((gate) => drawGate(width, height, gate));
+        sceneState.trees.forEach((tree) => drawTree(width, height, tree));
+        sceneState.rocks.forEach((rock) => drawRock(width, height, rock));
+        drawCourier(width, height, sceneState.courierX, sceneState.courierLean);
+        drawSnowMist(width, height);
+      }
+
+      function drawSky(width, height) {
+        const sky = ctx.createLinearGradient(0, 0, 0, height * 0.5);
+        sky.addColorStop(0, "#102341");
+        sky.addColorStop(0.46, "#214a76");
+        sky.addColorStop(1, "rgba(33, 74, 118, 0)");
+        ctx.fillStyle = sky;
+        ctx.fillRect(0, 0, width, height);
+
+        const moonX = width * 0.81;
+        const moonY = height * 0.14;
+        const moonR = Math.min(width, height) * 0.05;
+        const moon = ctx.createRadialGradient(moonX, moonY, 0, moonX, moonY, moonR * 1.8);
+        moon.addColorStop(0, "rgba(255, 250, 230, 0.92)");
+        moon.addColorStop(0.4, "rgba(255, 250, 230, 0.62)");
+        moon.addColorStop(1, "rgba(255, 250, 230, 0)");
+        ctx.fillStyle = moon;
+        ctx.beginPath();
+        ctx.arc(moonX, moonY, moonR * 1.8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      function drawStars(width, height) {
+        const stars = [
+          [0.15, 0.09, 1.2],
+          [0.23, 0.16, 1.4],
+          [0.31, 0.11, 1.1],
+          [0.48, 0.14, 1.3],
+          [0.59, 0.08, 1.2],
+          [0.72, 0.19, 1.1],
+        ];
+        ctx.fillStyle = "rgba(255,255,255,0.62)";
+        for (const [x, y, r] of stars) {
+          ctx.beginPath();
+          ctx.arc(width * x, height * y, r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      function drawAvalanche(width, height, topRatio) {
+        const top = height * topRatio;
+        const wave = ctx.createLinearGradient(0, 0, 0, top + height * 0.08);
+        wave.addColorStop(0, "rgba(235, 247, 255, 0.98)");
+        wave.addColorStop(0.4, "rgba(220, 241, 255, 0.88)");
+        wave.addColorStop(1, "rgba(168, 205, 238, 0)");
+        ctx.fillStyle = wave;
+        ctx.fillRect(0, 0, width, top + height * 0.08);
+
+        ctx.strokeStyle = "rgba(255,255,255,0.78)";
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        for (let i = 0; i <= 12; i += 1) {
+          const x = (width / 12) * i;
+          const y = top + Math.sin(i * 0.74 + sceneState.storm * 0.02) * 9;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+
+      function drawSlope(width, height) {
+        const slopeTop = height * 0.11;
+        const topWidth = width * 0.28;
+        const bottomWidth = width * 0.94;
+        const centerX = width * 0.5;
+        const leftTop = centerX - topWidth * 0.5;
+        const rightTop = centerX + topWidth * 0.5;
+        const leftBottom = centerX - bottomWidth * 0.5;
+        const rightBottom = centerX + bottomWidth * 0.5;
+
+        const snow = ctx.createLinearGradient(0, slopeTop, 0, height);
+        snow.addColorStop(0, "#edf7ff");
+        snow.addColorStop(0.5, "#dceaf7");
+        snow.addColorStop(1, "#aec6de");
+
+        ctx.beginPath();
+        ctx.moveTo(leftTop, slopeTop);
+        ctx.lineTo(rightTop, slopeTop);
+        ctx.lineTo(rightBottom, height);
+        ctx.lineTo(leftBottom, height);
+        ctx.closePath();
+        ctx.fillStyle = snow;
+        ctx.fill();
+
+        const laneGlow = ctx.createLinearGradient(0, slopeTop, 0, height);
+        laneGlow.addColorStop(0, "rgba(255,255,255,0.45)");
+        laneGlow.addColorStop(0.4, "rgba(255,255,255,0.12)");
+        laneGlow.addColorStop(1, "rgba(255,255,255,0)");
+        ctx.fillStyle = laneGlow;
+        ctx.beginPath();
+        ctx.moveTo(centerX - topWidth * 0.18, slopeTop);
+        ctx.lineTo(centerX + topWidth * 0.18, slopeTop);
+        ctx.lineTo(centerX + bottomWidth * 0.24, height);
+        ctx.lineTo(centerX - bottomWidth * 0.24, height);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = "rgba(255,255,255,0.22)";
+        ctx.lineWidth = 1;
+        for (let i = 0; i < 10; i += 1) {
+          const y = slopeTop + (height - slopeTop) * (i / 9);
+          const widthAtY = topWidth + (bottomWidth - topWidth) * (i / 9);
+          ctx.beginPath();
+          ctx.moveTo(centerX - widthAtY * 0.5, y);
+          ctx.lineTo(centerX + widthAtY * 0.5, y);
+          ctx.stroke();
+        }
+      }
+
+      function drawGate(width, height, gate) {
+        const x = width * gate.x;
+        const y = height * gate.y;
+        const scale = gate.scale * (surface === "mobile" ? 0.92 : 1);
+        const poleHeight = 88 * scale;
+        const poleGap = 94 * scale;
+        const palette = crestPalette[gate.crest];
+
+        ctx.strokeStyle = "rgba(61, 34, 18, 0.94)";
+        ctx.lineWidth = 6 * scale;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(x - poleGap * 0.5, y);
+        ctx.lineTo(x - poleGap * 0.5, y + poleHeight);
+        ctx.moveTo(x + poleGap * 0.5, y);
+        ctx.lineTo(x + poleGap * 0.5, y + poleHeight);
+        ctx.stroke();
+
+        const banner = ctx.createLinearGradient(x, y + 8, x, y + 42 * scale);
+        banner.addColorStop(0, "rgba(255, 250, 238, 0.92)");
+        banner.addColorStop(1, palette.fill);
+        ctx.fillStyle = banner;
+        roundRect(x - poleGap * 0.46, y + 8, poleGap * 0.92, 34 * scale, 10 * scale);
+        ctx.fill();
+
+        ctx.strokeStyle = "rgba(255,255,255,0.42)";
+        ctx.lineWidth = 1.6 * scale;
+        roundRect(x - poleGap * 0.46, y + 8, poleGap * 0.92, 34 * scale, 10 * scale);
+        ctx.stroke();
+
+        drawCrestIcon(x, y + 25 * scale, gate.crest, 0.68 * scale);
+
+        ctx.fillStyle = "rgba(255, 229, 174, 0.42)";
+        ctx.beginPath();
+        ctx.arc(x, y + poleHeight * 0.56, 42 * scale, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      function drawTree(width, height, tree) {
+        const x = width * tree.x;
+        const y = height * tree.y;
+        const scale = tree.scale * (surface === "mobile" ? 0.96 : 1);
+        ctx.fillStyle = "#1b3c38";
+        ctx.beginPath();
+        ctx.moveTo(x, y - 40 * scale);
+        ctx.lineTo(x - 26 * scale, y + 10 * scale);
+        ctx.lineTo(x - 12 * scale, y + 10 * scale);
+        ctx.lineTo(x - 34 * scale, y + 50 * scale);
+        ctx.lineTo(x + 34 * scale, y + 50 * scale);
+        ctx.lineTo(x + 12 * scale, y + 10 * scale);
+        ctx.lineTo(x + 26 * scale, y + 10 * scale);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#735036";
+        ctx.fillRect(x - 6 * scale, y + 50 * scale, 12 * scale, 22 * scale);
+      }
+
+      function drawRock(width, height, rock) {
+        const x = width * rock.x;
+        const y = height * rock.y;
+        const scale = rock.scale * (surface === "mobile" ? 0.96 : 1);
+        ctx.fillStyle = "#6d7f95";
+        ctx.beginPath();
+        ctx.moveTo(x - 28 * scale, y + 12 * scale);
+        ctx.lineTo(x - 16 * scale, y - 10 * scale);
+        ctx.lineTo(x + 14 * scale, y - 16 * scale);
+        ctx.lineTo(x + 32 * scale, y + 8 * scale);
+        ctx.lineTo(x + 10 * scale, y + 20 * scale);
+        ctx.lineTo(x - 12 * scale, y + 24 * scale);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      function drawCourier(width, height, xRatio, lean) {
+        const x = width * xRatio;
+        const y = height * 0.78;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(lean * 0.55);
+
+        ctx.strokeStyle = "rgba(255,255,255,0.52)";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(-40, 26);
+        ctx.lineTo(44, 38);
+        ctx.stroke();
+
+        ctx.fillStyle = "#11253d";
+        ctx.beginPath();
+        ctx.arc(0, -18, 10, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = "#ffb84d";
+        ctx.lineWidth = 5;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(-6, -6);
+        ctx.lineTo(10, 8);
+        ctx.lineTo(22, 24);
+        ctx.stroke();
+
+        ctx.strokeStyle = "#1c334e";
+        ctx.lineWidth = 9;
+        ctx.beginPath();
+        ctx.moveTo(0, -6);
+        ctx.lineTo(-4, 20);
+        ctx.moveTo(-2, 6);
+        ctx.lineTo(-22, 20);
+        ctx.moveTo(4, 6);
+        ctx.lineTo(16, 22);
+        ctx.stroke();
+
+        ctx.fillStyle = "#ff936c";
+        ctx.fillRect(6, -2, 12, 14);
+        ctx.fillStyle = "#1c334e";
+        ctx.fillRect(8, 2, 8, 10);
+
+        ctx.restore();
+      }
+
+      function drawSnowMist(width, height) {
+        const mist = ctx.createLinearGradient(0, height * 0.54, 0, height);
+        mist.addColorStop(0, "rgba(255,255,255,0)");
+        mist.addColorStop(0.55, "rgba(255,255,255,0.08)");
+        mist.addColorStop(1, "rgba(255,255,255,0.2)");
+        ctx.fillStyle = mist;
+        ctx.fillRect(0, height * 0.54, width, height * 0.46);
+      }
+
+      function drawCrestIcon(x, y, crest, scale) {
+        const palette = crestPalette[crest];
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(scale, scale);
+        ctx.fillStyle = palette.stroke;
+        if (crest === "amber") {
+          ctx.rotate(Math.PI * 0.25);
+          ctx.fillRect(-7, -7, 14, 14);
+        } else if (crest === "coral") {
+          ctx.beginPath();
+          ctx.moveTo(0, -9);
+          ctx.lineTo(9, 8);
+          ctx.lineTo(-9, 8);
+          ctx.closePath();
+          ctx.fill();
+        } else {
+          ctx.beginPath();
+          ctx.arc(0, 0, 7, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = palette.fill;
+          ctx.beginPath();
+          ctx.arc(0, 0, 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      function roundRect(x, y, width, height, radius) {
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.lineTo(x + width - radius, y);
+        ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+        ctx.lineTo(x + width, y + height - radius);
+        ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+        ctx.lineTo(x + radius, y + height);
+        ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+        ctx.lineTo(x, y + radius);
+        ctx.quadraticCurveTo(x, y, x + radius, y);
+        ctx.closePath();
+      }
+
+      window.addEventListener("resize", resize);
+      resize();
+    </script>
+  </body>
+</html>

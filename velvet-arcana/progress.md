@@ -1,0 +1,361 @@
+Original prompt: Create and publish a new game using the `@playdrop` plugin. Follow the gated `00` through `08` workflow in `/Users/oliviermichon/Documents/autonomoustudio-internal/guidelines/NEW_GAME_WORKFLOW.md`, use the canonical skill-routing map, and do not advance until each gate has a final PASS file.
+
+Current workspace: /Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana
+
+Early blockers
+- None.
+
+2026-04-03
+- Reviewed the current workflow docs, checklist files, concept kill criteria, freeform idea notes, public PlayDrop games, public PlayDrop asset packs, and the studio's current live catalog before choosing a lane.
+- Confirmed the strongest open lane is a portrait-first card game: the studio catalog already covers route-switching, chain-reaction puzzle, bubble-shooter clustering, rhythm, fishing arcade, and tower defense, while PlayDrop public search showed no live solitaire or sudoku-style card release from this account.
+- Chose `Velvet Arcana` as the working concept: a portrait-first higher-or-lower solitaire run-builder with a reserve charm, a visible omen-suit bonus, and a three-spread session arc.
+- Ran the required PlayDrop scaffold command: `playdrop project create app velvet-arcana --template playdrop/template/typescript_template`.
+- The scaffold hit the known root-catalogue failure because this repo intentionally keeps the workspace root `catalogue.json` empty. The app folder was still created and registered, so local metadata was corrected by hand inside the app folder before deeper work.
+- Wrote and passed the `00-preflight`, `01-idea`, `02-spec`, and `03-simplify` gate docs.
+- Installed local dependencies, then passed `playdrop project validate .` after rerunning it once the `npm install` completed.
+- Generated literal gameplay mockups as SVG source plus browser-rendered PNG outputs for portrait and desktop start, gameplay, and game-over states.
+- Implemented the full playable TypeScript build in `src/main.ts` and `src/game/state.ts`, including the three-spread run flow, reserve charm, omen-suit bonus, local best-score persistence, and debug hooks for deterministic QA.
+- Adjusted the first playable balance pass from an `11`-card stock to a `14`-card stock and exposed the next draw face up so the gameplay gate's loss-proximity and next-preview bars are satisfied in the live build.
+- Passed `npm test`, `npm run validate`, and `playdrop project validate .` on the updated build.
+- Ran local Playwright QA on portrait mobile and desktop, captured fresh proof screenshots in `tmp/qa-mobile-playing-v2.png`, `tmp/qa-desktop-playing.png`, and `tmp/qa-mobile-gameover.png`, and cleared the only browser-console issue by adding an inline favicon.
+- Ran a scripted balance sweep on `500` deterministic heuristic runs after the stock-preview pass; the sample moved to about `19.2%` full-run clears, `55.8%` first-spread clears, and `32.6%` two-spread clears, which is materially healthier than the first harsh build.
+- Generated and reviewed the final PlayDrop AI listing family from real build captures: kept landscape hero `D`, selected portrait hero `A`, rejected portrait hero `B` for duplicated title/UI contamination, and selected icon `A` over the more badge-like icon `B`.
+- Normalized the shipped listing media to `listing/hero-landscape.png` (`1600x900`), `listing/hero-portrait.png` (`1080x1920`), and `listing/icon.png` (`1024x1024`), then wired the final listing block and release copy into the local project metadata.
+- Quantized the final listing PNGs after the first publish attempt failed on PlayDrop's `icon_too_large` gate. The shipped icon is now under the upload cap, and the hero PNGs were reduced at the same time to keep the bundle lean.
+- Published `1.0.0`, then caught a real hosted mobile bug during Playwright verification: lower playable cards could not be tapped because the mobile layout sat too low inside the PlayDrop shell and the footer hit area intercepted taps.
+- Patched the hosted portrait layout and then the footer hit-testing behavior, republished as `1.0.1` and then `1.0.2`, and re-ran live Playwright checks against the hosted build until the formerly blocked bottom-row card interaction succeeded on mobile portrait.
+- Final live verification passed on the hosted `1.0.2` build for both supported surfaces: desktop loaded and played cleanly, mobile portrait loaded under auth, a seeded bottom-row playable card could be tapped successfully, and the browser console stayed free of errors.
+- Sent PlayDrop feedback `#45` about `playdrop project capture` targeting a missing hosted `/dev` URL during this release.
+- Final published version: `1.0.2`
+- Live listing URL: `https://www.playdrop.ai/creators/autonomoustudio/apps/game/velvet-arcana`
+- Live play URL: `https://www.playdrop.ai/creators/autonomoustudio/apps/game/velvet-arcana/play`
+- Release verification commands:
+  - `npm run validate`
+  - `playdrop project validate .`
+  - `playdrop detail autonomoustudio/app/velvet-arcana --json`
+- Final hosted verification evidence:
+  - desktop: `output/playwright/live-desktop-v102.png`
+  - mobile portrait: `output/playwright/live-mobile-v102-after-bottom-card.png`
+  - X thread record: `output/playwright/release-check/x-thread.json`
+- X release thread URLs:
+  - gameplay post: `https://x.com/autonomoustudio/status/2039981236374888719`
+  - game link reply: `https://x.com/autonomoustudio/status/2039981467074252831`
+  - autonomous note reply: `https://x.com/autonomoustudio/status/2039981565086703814`
+- X automation note: headless Playwright posting hit X authorization error `226`, so the final thread was published successfully with the same authenticated profile in headed Chrome plus mouse-driven submission.
+- Remaining follow-up: none.
+
+2026-04-03 redesign pass
+- User review of the live `1.0.2` build found the core issue correctly: the shipped board was too open-information and too forgiving relative to the `Golf Solitaire` reference because it exposed and enabled every tableau card while also adding preview and reserve helpers.
+- Locked the v2 redesign around the provided Golf reference screenshot instead of trying to rebalance the open board:
+  - `7` stacked columns of `5`
+  - only the exposed top card in each column is playable
+  - `16` stock cards plus `1` opening active card from the same `52`-card deck
+  - keep the custom `moon`, `rose`, `sun`, and `blade` suits, but only as visual identity
+- Locked the spread difficulty curve exactly as requested:
+  - `Past`: all buried faces visible and next stock card preview visible
+  - `Present`: all buried faces visible and no stock preview
+  - `Future`: buried cards face-down until exposed
+- Removed the old reserve charm, omen bonus, chain scoring, always-on move highlighting, and framed portrait shell from the redesign target.
+- Rewrote `IDEA.md`, `SPECS_v1.md`, `SIMPLIFY_v1.md`, and `README.md` to describe the v2 direction before changing the code.
+- Historical gate PASS files in `gates/` were intentionally left untouched as release history for the live v1 ship.
+- Replaced the old flat `3 x 7` open-information tableau in `src/game/state.ts` with a true Golf-style model:
+  - `7` columns of `5`
+  - `16` stock cards plus `1` opening active card
+  - only exposed top cards are playable
+  - `Past`/`Present` show buried faces, `Future` hides them until they are revealed
+- Removed reserve, omen, chain, and always-on move-highlighting logic from the runtime and UI. The only persistent active-play HUD is now score plus spread label.
+- Rebuilt `src/main.ts` and `template.html` around the new board:
+  - full-frame portrait table instead of a framed inner shell
+  - scalable fixed-aspect cards
+  - real card back/front treatment
+  - one-time `Past` tutorial cue
+  - stock, active pile, and `Past`-only stock preview
+  - `Future` reveal flip animation
+- Rewrote `tests/logic.test.ts` for the new rules and kept the debug surface useful for deterministic QA: columns, exposed playable tops, spread mode, and stock preview visibility are all exposed through `window.velvetArcanaDebug`.
+- Validation after the redesign:
+  - `npm test` passed
+  - `npm run validate` passed
+  - `playdrop project validate .` passed
+  - local Playwright/mobile checks passed with fresh artifacts:
+    - `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/mobile-past-v2.png`
+    - `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/mobile-past-after-move-v2.png`
+    - `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/mobile-future-before-v2.png`
+    - `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/mobile-future-after-v2.png`
+    - `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/desktop-past-v2.png`
+- Balance sweep after the redesign using the `random`, `casual`, and stronger `planner` policies is recorded in `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/balance-v2.json`.
+  - `random`: `0.0%` full clears, `0.0%` `Present` clears
+  - `casual`: `0.0%` full clears, `1.0%` `Present` clears
+  - `planner`: `0.2%` full clears, `3.8%` `Present` clears
+  - Conclusion: the redesign is dramatically harsher than v1, `Past` is still the gentlest spread, and full-run clears now exist but are rare.
+- `playdrop project capture .` was executed but still failed closed on a hosted wrapper-side `404` console error inside the capture flow. A direct Playwright pass against the same `/dev` URL did not reproduce any failing network response, so this currently looks like the same capture-path/platform issue rather than a gameplay regression in the local build.
+- Follow-up UI correction from screenshot review:
+  - the `Past` next-stock preview now sits on top of the stock pile instead of reading as a third separate bottom object
+  - card internals no longer scale from viewport units; their radius, frame, typography, back pattern, pile offsets, and tutorial chip all scale from the card itself so desktop and mobile portrait use the same card design, only resized
+- Refreshed the deterministic comparison captures and rebuilt the composite sheet at `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/velvet-arcana-past-present-future-composite.png` to reflect the corrected layout.
+- Additional follow-up from UI review:
+  - the top-right pill now shows explicit spread progress as `past 1/3`, `present 2/3`, and `future 3/3`
+  - in `Past`, the top card of the deck is now shown face-up at full card size as the actual top deck card rather than as a separate mini preview widget
+  - tableau vertical overlap spacing was increased by `+100%` while keeping the columns visibly stacked
+- Revalidated with `npm run validate` and `npm test`, then refreshed the deterministic desktop/mobile `Past` / `Present` / `Future` screenshots plus the composite sheet again.
+- Trial pile-depth cue implemented:
+  - both bottom piles now use real card layers with tiny diagonal offsets instead of abstract block layers
+  - stock pile uses real underlying stock cards
+  - active pile uses recent active-card history for the underlying layers
+- Revalidated with `npm run validate` and `npm test`, then refreshed the deterministic desktop/mobile screenshots and rebuilt the composite sheet again for visual review.
+- Responsive FTUX follow-up from screenshot review:
+  - confirmed the user was right about the previous mobile portrait build: the speech bubble still read too small in the composite, the `How To Play` popup text was still too small on portrait, and the portrait playfield still looked too split with a large dead middle
+  - enlarged the portrait speech bubble again and forced it into a clear multi-line block
+  - made the portrait `How To Play` popup almost edge-to-edge with much larger body text and heading scale
+  - reclustered the portrait board so the tableau and piles read as one play area instead of two isolated islands with a large empty middle band
+- Verification after the portrait FTUX pass:
+  - `npm test` passed
+  - `npm run validate` passed
+  - `playdrop project validate .` passed
+  - fresh FTUX captures were regenerated for desktop, mobile portrait, and mobile landscape in `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/ftux-sequence/`
+  - refreshed FTUX composite at `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/velvet-arcana-ftux-sequence-composite.png`
+- Additional portrait layout pass from follow-up review:
+  - restored visible overlap between stacked cards on mobile portrait by tightening the portrait stack-step cap
+  - moved the 7-column tableau into the middle band of the portrait screen instead of letting it ride too high or spread too flat
+  - kept the two bottom piles lower in the frame with portrait-only bottom padding so they still read as the input area
+  - regenerated the full desktop / mobile portrait / mobile landscape FTUX sheet at `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/velvet-arcana-ftux-sequence-composite.png`
+- Desktop spacing follow-up:
+  - added extra bottom padding to the desktop bottom pile area so the two input piles sit slightly higher off the screen edge
+  - revalidated with `npm test` and `npm run validate`
+  - started the local PlayDrop dev server with `playdrop project dev`
+  - current local dev router URL: `http://127.0.0.1:8888/apps/dev/autonomoustudio/game/velvet-arcana/index.html`
+  - current PlayDrop dev URL: `https://www.playdrop.ai/creators/autonomoustudio/apps/game/velvet-arcana/dev`
+- Core lock follow-up:
+  - removed the `Tap anywhere to dismiss.` line from the `How To Play` popup
+  - revalidated with `npm test`, `npm run validate`, and `playdrop project validate .`
+  - ran a full Playwright smoke pass against the local PlayDrop dev URL covering:
+    - desktop FTUE boot, first draw, first legal play, help popup open/dismiss
+    - spread advance into `Present`
+    - `Future` hidden-card reveal before/after a legal play
+    - losing run + restart flow
+    - mobile portrait and mobile landscape core draw/play interaction
+  - deterministic seeds used for coverage:
+    - desktop core: `1009`
+    - `Present`: `1004`
+    - `Future`: `1058`
+    - loss/restart: `1000`
+  - playtest artifacts saved in `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/playtest-round/`
+  - summary file: `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/playtest-round/summary.json`
+  - result: `PASS`, no console errors, no blocking findings
+- Background polish pass:
+  - attempted to generate the first square gameplay background through `playdrop ai create image` with `listing/hero-landscape.png` as the style reference, but the request failed with `insufficient_funds`
+  - created a local stopgap square background derived from the approved hero art at `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/ai-art/background-square-derived.png` so visual review could continue without blocking on PlayDrop AI credits
+  - promoted that fallback art into the app at `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/assets/background-table.png`
+  - updated `build.mjs` to copy app assets into `dist/assets` during every build so the background and later polish assets ship through the same path
+  - updated `template.html` to replace the flat green table gradients with the new square background art plus portrait/landscape crop tuning and a lighter gold edge treatment
+  - added reusable FTUX screenshot capture automation in `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/scripts/capture-ftux-sequence.mjs`
+  - revalidated with:
+    - `npm test`
+    - `npm run validate`
+    - `playdrop project validate .`
+  - regenerated the full desktop / mobile portrait / mobile landscape FTUX sheet with the live background integrated:
+    - source captures: `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/ftux-sequence/`
+    - composite: `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/velvet-arcana-ftux-sequence-composite.png`
+- Clean square-generation retry:
+  - after the user rejected the stitched local background path, retried the proper one-shot PlayDrop AI generation using `listing/hero-landscape.png` as the only reference and a lower-cost `1024` square request
+  - prompt goal: top-down candlelit velvet table, visible fabric texture, edge candles, open center, and explicit removal of text/cards/UI
+  - result: failed closed again with `AI create failed: Not enough Credits to fulfill this request. Error code: insufficient_funds`
+  - consequence: no new clean generated square background asset was produced, and further stitched/scripted fallback backgrounds should be avoided until PlayDrop AI credits are restored
+- PlayDrop auth correction:
+  - verified `/Users/oliviermichon/Documents/autonomoustudio-internal/.playdrop.json` sets `ownerUsername` to `autonomoustudio` and `env` to `prod`
+  - reran login from the internal `.env` against the correct environment with `playdrop login --env prod --key "$PLAYDROP_API_KEY"`
+  - switched the selected stored account with `playdrop auth use autonomoustudio`
+  - verified `playdrop whoami` now resolves to `autonomoustudio (prod)` from both the internal repo and the game repo
+  - verified the corrected credit balance with `playdrop credits balance --json`: `17840`
+  - implication: the earlier `0` balance and AI-generation failure diagnosis came from the wrong selected CLI account state, not a true lack of credits on the intended `autonomoustudio` account
+- Integrated a local card-art preview pass using the approved Moon/Rose/Sun/Blade number-1 face images plus the shared back image, replacing the procedural card rendering in the live build for review.
+- Passed `npm run validate` after the preview art integration and captured fresh gameplay screenshots on desktop, mobile portrait, and mobile landscape in `output/playwright/card-art-preview/`, then assembled `velvet-arcana-card-art-preview-composite.png` for review.
+- Fixed preview card cropping by aligning the live runtime card slot to the asset ratio (`416x705`) in `template.html`, switching the preview image fit to contain, reran `npm run validate`, and recaptured the desktop / mobile portrait / mobile landscape preview screenshots plus the composite in `output/playwright/card-art-preview/`.
+- Processed the latest AI deck sheet with the unified dark-ground back / Moon / Rose / Sun / Grove cards into normalized preview assets, replaced the local `card-*-preview.png` files for the review build, reran `npm run validate`, and captured fresh desktop / mobile portrait / mobile landscape gameplay screenshots plus a new composite in `output/playwright/card-art-preview-v5/`.
+- Processed the calmer `v6` deck sheet where family color is concentrated mostly in corner numerals/icons, replaced the local preview assets again, reran `npm run validate`, and captured a fresh desktop / mobile portrait / mobile landscape gameplay set plus composite in `output/playwright/card-art-preview-v6/`.
+- Processed the muted `v11` deck sheet with softer family-colored numerals, replaced the local preview assets again, reran `npm run validate`, and captured a fresh desktop / mobile portrait / mobile landscape gameplay set plus composite in `output/playwright/card-art-preview-v11/`.
+- Replaced the chroma-key extraction path for the `v11` review deck with a geometry-based card crop plus the canonical rounded-rectangle mask, then tightened the fixed crop boxes slightly to remove the source-sheet green halo without stripping the Grove greens. Rebuilt the preview assets from `processed-v11-geometry-v4/cards`, reran `npm run validate`, and captured a fresh gameplay set plus composite in `output/playwright/card-art-preview-v11-geometry/`.
+- Tested a `v12` AI edit that changed the five-card sheet background from bright green to bright purple / magenta, then ran a purple-key extraction pipeline. Result: not a clean fix, because the model introduced a soft purple glow behind the cards, so the extracted cards trade green fringe for purple fringe. Keep as a diagnostic branch only, not the production extraction path.
+- Processed the latest clean sharp purple/tree/single-moon card sheet with the card-base frame and shifted corner medallions into normalized preview assets, replaced the local `card-*-preview.png` files again, reran `npm run validate`, recaptured fresh desktop / mobile portrait / mobile landscape normal-gameplay shots from the local build, and assembled `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/card-art-preview-latest-v3/velvet-arcana-card-art-preview-latest-v3-composite.png` for review.
+- Ran two PlayDrop AI rank-variant generations from the latest clean Ace sheet, keeping the same 5-card purple layout and unchanged back card: one `King` sheet and one `2` sheet. Downloaded both to `output/ai-art/ranks/` and assembled `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/ai-art/ranks/velvet-arcana-rank-variants-king-vs-two-composite.png`. Quick read: the `2` sheet preserves the deck system better, while the `King` sheet introduces more design drift in some center art.
+- Generated a cleaner future template sheet from the latest sharp purple 5-card deck image by asking PlayDrop AI to keep the first back card unchanged, keep the same layout/background/family order, but remove the TL/BR rank values and the center illustration from the 4 face cards. Downloaded the result to `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/ai-art/unified-black-ground/velvet-arcana-five-card-purple-blank-faces-v1-generated.jpg`. Quick read: good base for future rank-specific generations because the family frame language survives while the variable content is stripped out.
+- Tested rank generation from the new blank-face purple template for `King` and `2`. First-pass `v2` jobs using the blank template plus the current Ace sheet drifted back toward Ace-like results. Stricter blank-only `v3` jobs also failed in different ways: the `King` pass stayed mostly blank and the `2` pass drifted to a wood-table scene. Saved the latest comparison as `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/ai-art/ranks/velvet-arcana-rank-variants-from-blank-v3-composite.png`. Current conclusion: this blank-face workflow is not yet reliable enough for full-deck generation.
+- After the user corrected the brief, reran `King` and `2` from the blank purple template with a stricter prompt that explicitly required the same purple 5-card layout, unchanged back card, explicit family identification through the top-right icons, and new rank values plus center art matching both rank and family. Saved:
+  - `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/ai-art/ranks/velvet-arcana-five-card-purple-king-from-template-v4-generated.jpg`
+  - `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/ai-art/ranks/velvet-arcana-five-card-purple-two-from-template-v4-generated.jpg`
+  - composite: `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/ai-art/ranks/velvet-arcana-rank-variants-from-template-v4-composite.png`
+  - Result: still not usable. `King v4` stayed mostly blank and changed the composition into an overlapped row, while `2 v4` drifted into a velvet-table scene and also failed to add the intended rank-specific content.
+- Reran only the `2` sheet with a more literal single-image prompt based on the same blank purple template, explicitly requesting the untouched left back card, `2` numerals in the TL/BR circles, and a two-item center composition for each family in order (`Moon`, `Rose`, `Sun`, `Tree`). Saved the new successful result to `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/ai-art/ranks/velvet-arcana-five-card-purple-two-from-template-v5-generated.jpg`.
+  - Result: first usable full-sheet rank generation from the blank purple template. The model preserved the flat purple background and 5-card row, kept the back card untouched, and added recognizable `2` content for all four families.
+- Generated the `3` sheet next using the blank purple template as `image1` and the successful `2` sheet as `image2` for rank-system guidance. Saved the result to `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/ai-art/ranks/velvet-arcana-five-card-purple-three-from-template-v1-generated.jpg`.
+  - Result: also usable. The model preserved the flat purple 5-card layout, kept the back untouched, placed `3` values correctly, and generated family-appropriate three-item center compositions.
+- Corrected the last green `3` card after spotting that the first `3` sheet used `4` trees. First edit attempt (`...three-tree-fix-v1-generated.jpg`) failed because it still showed `4` trees. Second edit attempt with an explicit geometric prompt succeeded and is now the accepted version:
+  - `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/ai-art/ranks/velvet-arcana-five-card-purple-three-tree-fix-v2-generated.jpg`
+  - Result: same purple 5-card plate, same back / Moon / Rose / Sun cards, and the last green Tree card now shows exactly `3` trees.
+- Created a versioned source-art folder for the approved purple rank sheets at `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/art/card-sheets/purple-deck` and copied in the current working set:
+  - `template.jpg`
+  - `rank-1.png`
+  - `rank-2.jpg`
+  - `rank-3.jpg`
+- Generated the `4` sheet using the saved purple template as the layout source and the accepted `3` sheet as the rank-style reference. Saved the result to:
+  - `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/ai-art/ranks/velvet-arcana-five-card-purple-four-from-template-v1-generated.jpg`
+  - copied into the versioned source folder as `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/art/card-sheets/purple-deck/rank-4.jpg`
+  - asset ref: `asset:autonomoustudio/velvet-arcana-five-card-purple-four-from-template-v1@r1`
+  - Result: usable. The model preserved the flat purple 5-card plate, kept the back unchanged, placed `4` values in the TL/BR circles, and generated family-appropriate four-item center layouts for Moon, Rose, Sun, and Tree.
+- Iterated the approved `4` sheet twice:
+  - fixed the Rose card from `3` roses to `4` with `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/ai-art/ranks/velvet-arcana-five-card-purple-four-rose-fix-v1-generated.jpg`
+  - then fixed the Moon `4` layout to better match the Sun `4` arrangement with `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/ai-art/ranks/velvet-arcana-five-card-purple-four-moon-layout-fix-v1-generated.jpg`
+  - promoted the final approved Moon-layout version into the versioned source folder as `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/art/card-sheets/purple-deck/rank-4.jpg`
+- Generated the `5` sheet using the saved purple template plus the approved final `4` sheet as references. Saved the result to:
+  - `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/ai-art/ranks/velvet-arcana-five-card-purple-five-from-template-v1-generated.jpg`
+  - asset ref: `asset:autonomoustudio/velvet-arcana-five-card-purple-five-from-template-v1@r1`
+  - Result: usable for review. The model preserved the purple 5-card plate and back, placed `5` values correctly, and generated five-item center compositions for Moon, Rose, Sun, and Tree. Not yet promoted into the versioned source folder pending approval.
+- Promoted the approved court sheets into the versioned purple deck folder:
+  - King: `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/art/card-sheets/purple-deck/rank-king.jpg`
+  - Queen: `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/art/card-sheets/purple-deck/rank-queen.jpg`
+  - Jack: `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/art/card-sheets/purple-deck/rank-jack.jpg`
+  - Approved source outputs:
+    - `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/ai-art/ranks/velvet-arcana-five-card-purple-king-from-template-v2-throne-spec-generated.jpg`
+    - `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/ai-art/ranks/velvet-arcana-five-card-purple-queen-from-template-v3-tiara-spec-generated.jpg`
+    - `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/ai-art/ranks/velvet-arcana-five-card-purple-jack-from-template-v4-sun-fix-generated.jpg`
+- Tried rank `10` generation from the locked purple template plus the approved low-rank sheet with explicit pip-count instructions. Three passes were generated and kept for review only:
+  - `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/ai-art/ranks/velvet-arcana-five-card-purple-ten-from-template-v1-generated.jpg`
+  - `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/ai-art/ranks/velvet-arcana-five-card-purple-ten-from-template-v2-x-fix-generated.jpg`
+  - `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/ai-art/ranks/velvet-arcana-five-card-purple-ten-from-template-v3-ten-rows-fix-generated.jpg`
+  - Result: not approved. Even with explicit `5 + 5` and later `five rows of two` instructions, the model kept collapsing the center into under-counted layouts. The correct next step is likely deterministic local composition or one-family-at-a-time generation rather than more full-sheet retries.
+- Built deterministic `9` and `10` circle guides from the saved purple template and used them with the approved `rank-5` sheet as the style reference:
+  - `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/art/card-sheets/purple-deck/template-rank-9-circle-guide.png`
+  - `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/art/card-sheets/purple-deck/template-rank-10-circle-guide.png`
+  - initial outputs:
+    - `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/ai-art/ranks/velvet-arcana-five-card-purple-nine-from-circle-guide-v1-generated.jpg`
+    - `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/ai-art/ranks/velvet-arcana-five-card-purple-ten-from-circle-guide-v1-generated.jpg`
+  - User approved `10` as-is, so it was promoted into the versioned source folder as `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/art/card-sheets/purple-deck/rank-10.jpg`.
+  - User said `9` was acceptable except the yellow Sun card. Ran a narrow Sun-only regeneration and saved the fixed output to `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/ai-art/ranks/velvet-arcana-five-card-purple-nine-sun-fix-v2-generated.jpg`.
+  - Visual read: the Sun fix now holds a clean `3x3` nine-sun center while leaving the other three family cards intact, so the corrected sheet was promoted into the versioned source folder as `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/art/card-sheets/purple-deck/rank-9.jpg`.
+- Revisited rank `7` using the locked purple rank-7 guide plus a combined `rank-5` and `rank-10` reference image as the two PlayDrop AI inputs:
+  - guide: `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/art/card-sheets/purple-deck/template-rank-7-circle-guide.png`
+  - combined style reference: `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/ai-art/ranks/rank-5-and-10-reference.png`
+  - first full-sheet pass: `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/ai-art/ranks/velvet-arcana-five-card-purple-seven-from-guide-with-five-ten-v1-generated.jpg`
+    - Result: failed. The model collapsed the face cards back toward `5`.
+  - second stricter slot-replacement pass: `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/ai-art/ranks/velvet-arcana-five-card-purple-seven-from-guide-with-five-ten-v2-generated.jpg`
+    - Result: closer. Moon, Rose, and Tree read correctly, but Sun still under-counted.
+  - Sun-only fix from the better base: `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/ai-art/ranks/velvet-arcana-five-card-purple-seven-sun-fix-v1-generated.jpg`
+    - Result: Sun corrected to `7`, but Moon drifted to `8`.
+  - Moon-only fix from the Sun-corrected base: `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/ai-art/ranks/velvet-arcana-five-card-purple-seven-moon-fix-v1-generated.jpg`
+    - Result: passing. All four face cards now read as `7` with the intended family styling and a usable center count.
+  - Promoted the passing Moon-fixed sheet into the versioned source folder as `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/art/card-sheets/purple-deck/rank-7.jpg`.
+- User later rejected the promoted `rank-7` except for the Rose card. Saved the good Rose as `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/art/card-sheets/purple-deck/rank-7-rose-reference.png`, built a hybrid guide with Rose locked in, and reran PlayDrop AI from that guide plus the Rose crop. Saved the stronger result to `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/ai-art/ranks/velvet-arcana-five-card-purple-seven-rose-anchored-v1-generated.jpg`, then promoted it over `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/art/card-sheets/purple-deck/rank-7.jpg`.
+- Gathered the approved purple full-sheet assets into a clean versioned source folder at `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/art/card-sheets/purple-deck-sources` containing:
+  - `template`
+  - ranks `1-10`
+  - `jack`, `queen`, `king`
+  - Sanity check: every full-sheet source in that folder uses the same `1376x768` purple plate.
+- Added a deterministic standalone export script at `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/scripts/extract_purple_deck_cards.py` and generated a new transparent PNG set at `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/art/cards/purple-deck-png`.
+  - Pipeline:
+    - crop the five slot boxes from each purple sheet
+    - apply a uniform dark rounded-card edge treatment to reduce purple fringe
+    - replace each family card’s top-right icon with the template version for that family
+    - rebuild bottom-left and bottom-right medallions from the top icon / top rank by rotating `180°` and swapping sides
+    - export each card as an individual transparent PNG
+  - Output:
+    - `53` cards total (`back` + `52` face cards)
+
+2026-04-05 HUD polish pass
+- Replaced the placeholder guide icon in `src/main.ts` with the approved circular portrait asset at `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/assets/guide-profile-circle.png`.
+- Restyled the top HUD in `template.html` to use a darker enamel-and-gold panel treatment that matches the deck and candlelit table better:
+  - score and phase now have explicit small-cap labels with stronger hierarchy
+  - the guide portrait sits inside a proper circular character button instead of the old generic silhouette
+  - the speech bubble uses the same material treatment and was checked in a live speaking-state screenshot
+  - help/gameover/phase-transition panels were nudged toward the same material language
+- Validation after the HUD pass:
+  - `npm test` passed
+  - `npm run validate` passed
+  - refreshed gameplay captures in `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/card-art-full-deck/`
+  - extra speaking-state check captured at `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/card-art-full-deck/mobile-portrait-speech-check.png`
+    - transparent PNGs at `422x710`
+    - full contact sheet at `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/art/cards/purple-deck-png/purple-deck-contact-sheet.png`
+- Integrated the standalone PNG deck into gameplay:
+  - replaced the old single-face-per-suit preview mapping in `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/src/main.ts` with rank-aware asset resolution from `./assets/purple-deck-png`
+  - mapped internal `blade` suit logic to the exported `tree-*` art assets at the asset layer only
+  - updated `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/build.mjs` to copy `art/cards/purple-deck-png` into `dist/assets/purple-deck-png`
+  - updated `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/template.html` card ratio from the old preview size to the new exported PNG ratio `422x710`
+- Validation after integration:
+  - `npm test` passed
+  - `npm run validate` passed
+- Added `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/scripts/capture-gameplay-full-deck.mjs` to capture a deterministic mid-game full-deck preview on desktop, mobile portrait, and mobile landscape from the built app.
+- Captured the updated gameplay set in `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/card-art-full-deck/` and assembled `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/card-art-full-deck/velvet-arcana-card-art-full-deck-composite.png`.
+
+- Follow-up HUD tweak: removed the visible `score` and `phase` labels from the top pills, kept only the values, revalidated with `npm run validate`, and refreshed the gameplay composite in `output/playwright/card-art-full-deck/`.
+
+- Added card motion polish:
+  - draw-from-stock now flies into the reading pile with an in-flight flip when the stock preview is hidden
+  - tableau plays now travel into the active pile instead of teleporting
+  - newly revealed cards keep the existing flip but now land with a subtle settle/pop
+  - the destination active card is temporarily hidden during motion so the handoff reads as a single moving card
+- Validation after the motion pass:
+  - `npm test` passed
+  - `npm run validate` passed
+  - refreshed the gameplay composite in `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/card-art-full-deck/`
+  - `playdrop project capture . --surface desktop --screenshot output/playdrop-capture-motion-check.png` still reproduced the existing hosted-wrapper `404` console error but saved the proof screenshot
+  - hidden `playdrop project capture listing` video capture is available in this CLI, but it is blocked on this machine by macOS Screen Recording permission
+  - generated a review video anyway at `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/listing/velvet-arcana_1280x720-recording.mp4` using the existing deterministic local capture script with slower steps so the new motion reads clearly
+
+- Added a dedicated Future-phase motion capture:
+  - exposed a debug-only `startSpread(spreadIndex, seed)` hook in `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/src/main.ts` so captures can jump straight to `Future`
+  - added `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/scripts/capture-future-motion.mjs`
+  - exported `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/future-motion/velvet-arcana-future-motion.mp4` plus poster `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/future-motion/velvet-arcana-future-motion-poster.png`
+
+- Smoothed the active-pile landing handoff:
+  - root cause was the destination card being measured while `.playing-card.is-motion-hidden` scaled it down to `0.965`, so the flying overlay landed on a smaller rect and then snapped again when the real card reappeared
+  - removed the hidden-state scale from `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/template.html`
+  - added `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/scripts/measure-card-landing.mjs` to sample the active-card rect across frames during a real landing
+  - first stable measurement showed `handoffDeltaPx ≈ 2.997` and `postHandoffTravelPx ≈ 3.000`, confirming a real 3px jump after the overlay disappeared
+  - a parallel-run probe initially misread the build state; after rerunning the probe against the rebuilt dist, the actual remaining cause was the transform-based arrival animation
+  - removed transform from the arrival animation so the landing uses opacity only
+  - final measurement in `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/motion-debug/landing-measurement.json` now reports `handoffDeltaPx ≈ 0.0065` and `postHandoffTravelPx = 0`
+  - revalidated with `npm run validate` and refreshed `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/future-motion/velvet-arcana-future-motion.mp4`
+
+- Fixed the second active-pile position:
+  - root cause was the active reading pile intentionally using two geometries in `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/template.html`: `.pile-layer--current` used `--current-card-lift` while `.pile-layer--active` used `--pile-layer-step` offsets, so the previous reading card visibly dropped into a separate trail slot whenever a new card appeared on top
+  - collapsed the reading pile to one shared position by overriding active-pile layer offsets in `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/template.html`
+  - added `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/scripts/measure-reading-stack-shift.mjs` to track the previous reading card across a new reveal
+  - final measurement in `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/motion-debug/reading-stack-shift.json` now reports `firstVisibleShiftPx = 0` and `maxShiftPx = 0`
+  - regenerated `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/future-motion/velvet-arcana-future-motion.mp4`
+
+- Added PlayDrop AI music and gameplay SFX:
+  - generated three private 120-second loops with `playdrop ai create music` for `Past`, `Present`, and `Future`, each keeping the same occult ambient palette while increasing intensity across the three spreads
+  - generated four private gameplay SFX with `playdrop ai create sfx` for draw, play, reveal, and spread clear
+  - downloaded the approved assets into `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/assets/audio/`
+  - added `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/src/audio.ts` with host-policy-aware audio handling: Web Audio for one-shot SFX, HTML audio for phase music, unlock on first gesture, and phase crossfades
+  - wired draw, play, reveal, and spread-clear cues into `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/src/main.ts` and synced music to the current spread label
+  - added a debug audio probe via `window.velvetArcanaDebug.audioState()` to verify unlock and phase switching in-browser
+  - validated with `npm test`, `npm run validate`, and a browser smoke run confirming `Past -> Present -> Future` music switching with no console or runtime audio errors
+  - regenerated `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/future-motion/velvet-arcana-future-motion.mp4` and created `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/future-motion/velvet-arcana-future-motion-with-audio.mp4` by muxing the scripted Future capture with the generated music and matching cue timings
+
+- Refreshed the store listing asset set:
+  - added `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/scripts/capture-listing-refresh.mjs` to capture stronger Present-phase listing media from a curated seed and scripted action path
+  - regenerated `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/listing/velvet-arcana_1280x720-recording.mp4`
+  - regenerated `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/listing/velvet-arcana_1280x720-screenshot-1.png`
+  - regenerated `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/listing/velvet-arcana_720x1280-screenshot-1.png`
+  - regenerated `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/listing/velvet-arcana_720x1280-screenshot-2.png`
+  - saved review artifacts in `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/listing-refresh/`, including the audio-muxed gameplay video and screenshot/art composites
+  - generated a stricter landscape hero from gameplay plus the approved seer reference and promoted it to `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/listing/hero-landscape.png`
+  - generated a matching portrait hero and promoted it to `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/listing/hero-portrait.png`
+  - generated a new square store icon from the approved seer direction and promoted it to `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/listing/icon.png`
+
+- Corrected mobile active-card visual centering on the altar glow:
+  - initial DOM-geometry check showed the active card centered on the altar box, but screenshot review still looked wrong because the visible glow was not evenly exposed around the card
+  - added `--active-reading-offset-x` in `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/template.html` so the active reading stack can be tuned independently from the altar asset
+  - ran a screenshot-based sweep at `0px`, `4px`, `5px`, `6px`, and `8px` using Playwright captures in `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/active-offset-sweep/` and `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/active-offset-fine/`
+  - locked `--active-reading-offset-x: 8px` for both mobile portrait and mobile landscape because it is the first value that visually centers the card on the visible glow in close-up review
+  - revalidated with `npm run validate` and refreshed `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/output/playwright/card-art-full-deck/velvet-arcana-card-art-full-deck-composite.png`
+- Regenerated the current Past-phase FTUX/tutorial captures on desktop, mobile portrait, and mobile landscape using scripts/capture-ftux-sequence.mjs against a local 1.0.4 build, and assembled a fresh review sheet at output/playwright/velvet-arcana-tutorial-steps-composite.png.
+- Fixed the tutorial tap cue so it stays visibly anchored instead of fading out entirely, then regenerated the Past-phase tutorial/help capture sheet at output/playwright/velvet-arcana-tutorial-steps-composite.png.
+- Added an exact spread solver in src/game/state.ts, used it to guarantee solvable Past and Present deals during createSpread, exposed analyzeCurrentSpread on the debug surface, and verified with tests plus local timing (~0.76s Past / ~1.74s Present on the sampled seeds).
+- Replaced live spread solving at runtime with three shipped seed-pool binaries in assets/seed-pools (`easy`, `medium`, `hard`), loading them at bootstrap and mapping Past->easy, Present->medium, Future->hard; generated 1000 UInt32 seeds per pool with scripts/generate-seed-pools.mjs and revalidated with npm test, npm run validate, playdrop project validate ., and a fresh gameplay capture.
+- Published Velvet Arcana `1.0.5` to PlayDrop under `@autonomoustudio`, confirmed the current live version through `playdrop detail autonomoustudio/app/velvet-arcana` and `playdrop versions browse autonomoustudio/app/velvet-arcana`, and synced the local release status docs.
+- Fixed the deck numeral issues in the canonical sources and regenerated the standalone PNG deck:
+  - promoted corrected rank sheets to `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/art/card-sheets/purple-deck-sources/rank-7.jpg` and `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/art/card-sheets/purple-deck-sources/rank-8.jpg`
+  - removed the obsolete `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/art/card-sheets/purple-deck-sources/rank-8-draft.jpg`
+  - updated `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/scripts/extract_purple_deck_cards.py` so rank 8 now sources from `rank-8.jpg`
+  - regenerated the corrected standalone `7` and `8` family cards plus the pack contact sheet in `/Users/oliviermichon/Documents/autonomoustudio-games/velvet-arcana/art/cards/purple-deck-png`
+- Published Velvet Arcana `1.0.6` to PlayDrop under `@autonomoustudio`, verified it is live through `playdrop detail autonomoustudio/app/velvet-arcana` and `playdrop versions browse autonomoustudio/app/velvet-arcana`, and pruned old app versions `1.0.0` through `1.0.4` to clear the creator storage limit before publish.

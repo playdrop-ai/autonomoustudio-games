@@ -1,0 +1,38 @@
+{
+  "apps": [
+    {
+      "name": "whiteout-watch",
+      "version": "1.0.0",
+      "displayName": "Whiteout Watch",
+      "description": "Spend limited battery pulses on the right system before the next whiteout hits and the station goes dark.",
+      "type": "GAME",
+      "emoji": "❄️",
+      "color": "#74CBE6",
+      "file": "dist/index.html",
+      "authMode": "OPTIONAL",
+      "controllerMode": "UNSUPPORTED",
+      "previewable": true,
+      "listing": {
+        "icon": "listing/icon.png",
+        "heroLandscape": "listing/hero-landscape.png",
+        "heroPortrait": "listing/hero-portrait.png",
+        "screenshotsLandscape": [
+          "listing/whiteout-watch_1280x720-screenshot-1.png"
+        ],
+        "screenshotsPortrait": [
+          "listing/whiteout-watch_720x1280-screenshot-1.png",
+          "listing/whiteout-watch_720x1280-screenshot-2.png"
+        ],
+        "videosLandscape": [
+          "listing/whiteout-watch_1280x720-recording.mp4"
+        ]
+      },
+      "surfaceTargets": {
+        "desktop": true,
+        "mobileLandscape": false,
+        "mobilePortrait": true
+      },
+      "templateSource": "playdrop/template/typescript_template"
+    }
+  ]
+}

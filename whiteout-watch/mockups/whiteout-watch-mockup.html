@@ -1,0 +1,672 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Whiteout Watch Mockup</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2307121b'/%3E%3Cpath d='M9 21h14' stroke='%2396f4ff' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M16 8v16' stroke='%23ff695d' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E"
+    />
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg-top: #07121b;
+        --bg-bottom: #11283a;
+        --panel: rgba(6, 16, 25, 0.78);
+        --panel-edge: rgba(210, 240, 255, 0.14);
+        --panel-soft: rgba(160, 205, 230, 0.08);
+        --text-main: #f4fbff;
+        --text-soft: rgba(229, 244, 251, 0.75);
+        --safe: #6fe0f1;
+        --warn: #ffcc7a;
+        --danger: #ff695d;
+        --pulse: #96f4ff;
+        --shadow: 0 22px 70px rgba(0, 0, 0, 0.42);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        font-family:
+          "Avenir Next",
+          "SF Pro Display",
+          "Segoe UI",
+          sans-serif;
+        background:
+          radial-gradient(circle at 20% 15%, rgba(162, 219, 255, 0.16), transparent 28%),
+          radial-gradient(circle at 78% 5%, rgba(255, 255, 255, 0.08), transparent 22%),
+          linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
+        color: var(--text-main);
+      }
+
+      body::before,
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+      }
+
+      body::before {
+        opacity: 0.55;
+        background:
+          repeating-linear-gradient(
+            115deg,
+            transparent 0 22px,
+            rgba(255, 255, 255, 0.045) 22px 24px,
+            transparent 24px 46px
+          );
+        animation: drift 14s linear infinite;
+      }
+
+      body::after {
+        inset: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 28px;
+      }
+
+      @keyframes drift {
+        from {
+          transform: translate3d(0, -12px, 0);
+        }
+        to {
+          transform: translate3d(-36px, 18px, 0);
+        }
+      }
+
+      .screen {
+        position: relative;
+        display: grid;
+        grid-template-rows: auto auto 1fr;
+        gap: 16px;
+        min-height: 100%;
+        padding:
+          max(18px, env(safe-area-inset-top))
+          max(18px, env(safe-area-inset-right))
+          max(18px, env(safe-area-inset-bottom))
+          max(18px, env(safe-area-inset-left));
+      }
+
+      .topbar,
+      .forecast,
+      .system,
+      .overlay-card {
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0)),
+          var(--panel);
+        border: 1px solid var(--panel-edge);
+        box-shadow: var(--shadow);
+      }
+
+      .topbar {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 16px;
+        padding: 14px 16px;
+        border-radius: 22px;
+      }
+
+      .eyebrow {
+        margin: 0;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--text-soft);
+      }
+
+      .timer {
+        margin: 4px 0 0;
+        font-size: clamp(28px, 6vw, 44px);
+        font-weight: 700;
+        letter-spacing: -0.04em;
+      }
+
+      .pulse-strip {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .pulse {
+        width: 16px;
+        height: 38px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0)),
+          rgba(157, 236, 255, 0.16);
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+      }
+
+      .pulse.active {
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0)),
+          linear-gradient(180deg, #c8fbff, #52d7ef);
+        box-shadow:
+          0 0 18px rgba(134, 239, 255, 0.42),
+          inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+      }
+
+      .forecast {
+        display: grid;
+        gap: 10px;
+        padding: 14px 16px;
+        border-radius: 22px;
+      }
+
+      .forecast-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 16px;
+      }
+
+      .forecast-meta {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+      }
+
+      .forecast-row strong {
+        font-size: 18px;
+        letter-spacing: -0.03em;
+      }
+
+      .forecast-countdown {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 58px;
+        padding: 7px 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--text-main);
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+      }
+
+      .forecast-hit {
+        display: inline-flex;
+        gap: 10px;
+        align-items: center;
+        color: var(--warn);
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .forecast-hit::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--warn);
+        box-shadow: 0 0 10px rgba(255, 204, 122, 0.55);
+      }
+
+      .systems {
+        display: grid;
+        gap: 14px;
+        align-content: stretch;
+      }
+
+      .system {
+        position: relative;
+        display: grid;
+        grid-template-rows: auto auto 1fr auto;
+        gap: 14px;
+        padding: 16px;
+        border-radius: 26px;
+        overflow: hidden;
+      }
+
+      .system::after {
+        content: "";
+        position: absolute;
+        inset: auto -20% -25% 35%;
+        height: 80px;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.14), transparent 60%);
+        transform: rotate(-8deg);
+      }
+
+      .system[data-tone="safe"] {
+        border-color: rgba(117, 227, 242, 0.22);
+      }
+
+      .system[data-tone="warn"] {
+        border-color: rgba(255, 204, 122, 0.26);
+      }
+
+      .system[data-tone="danger"] {
+        border-color: rgba(255, 105, 93, 0.28);
+      }
+
+      .system-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .system-name {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        font-size: 18px;
+        background: rgba(255, 255, 255, 0.07);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .name-stack h2,
+      .name-stack p,
+      .state,
+      .status-copy,
+      .system-button,
+      .overlay-chip,
+      .overlay-actions button {
+        margin: 0;
+      }
+
+      .name-stack h2 {
+        font-size: 20px;
+        letter-spacing: -0.04em;
+      }
+
+      .name-stack p,
+      .status-copy {
+        color: var(--text-soft);
+        font-size: 13px;
+      }
+
+      .state {
+        min-width: 88px;
+        padding: 8px 10px;
+        border-radius: 999px;
+        text-align: center;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .state.safe {
+        background: rgba(111, 224, 241, 0.14);
+        color: var(--safe);
+      }
+
+      .state.warn {
+        background: rgba(255, 204, 122, 0.16);
+        color: var(--warn);
+      }
+
+      .state.danger {
+        background: rgba(255, 105, 93, 0.18);
+        color: var(--danger);
+      }
+
+      .meter-stack {
+        display: grid;
+        gap: 10px;
+      }
+
+      .meter-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+      }
+
+      .percent {
+        font-size: clamp(38px, 8vw, 62px);
+        line-height: 0.94;
+        letter-spacing: -0.06em;
+        font-weight: 700;
+      }
+
+      .meter {
+        position: relative;
+        height: 14px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        overflow: hidden;
+      }
+
+      .meter > span {
+        position: absolute;
+        inset: 0 auto 0 0;
+        border-radius: inherit;
+        background:
+          linear-gradient(90deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0)),
+          linear-gradient(90deg, #94f1ff, #49cae7);
+      }
+
+      .system[data-tone="warn"] .meter > span {
+        background:
+          linear-gradient(90deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0)),
+          linear-gradient(90deg, #ffd699, #efb04b);
+      }
+
+      .system[data-tone="danger"] .meter > span {
+        background:
+          linear-gradient(90deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0)),
+          linear-gradient(90deg, #ff917d, #ff5b4d);
+      }
+
+      .system-button {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        padding: 15px 16px;
+        border: 0;
+        border-radius: 18px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0)),
+          linear-gradient(90deg, rgba(150, 244, 255, 0.36), rgba(116, 174, 255, 0.18));
+        color: var(--text-main);
+        font: inherit;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .system-button span {
+        color: rgba(244, 251, 255, 0.78);
+        letter-spacing: 0;
+        text-transform: none;
+        font-weight: 500;
+      }
+
+      .system[data-tone="danger"] .system-button {
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0)),
+          linear-gradient(90deg, rgba(255, 123, 109, 0.42), rgba(255, 99, 89, 0.18));
+      }
+
+      .overlay {
+        position: absolute;
+        inset: 0;
+        display: none;
+        place-items: center;
+        padding: 20px;
+        background: rgba(3, 10, 16, 0.34);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+      }
+
+      .overlay-card {
+        display: grid;
+        gap: 16px;
+        width: min(100%, 420px);
+        padding: 26px;
+        border-radius: 28px;
+      }
+
+      .overlay-chip {
+        display: inline-flex;
+        align-items: center;
+        width: max-content;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text-soft);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      .overlay h1 {
+        margin: 0;
+        font-size: clamp(40px, 10vw, 62px);
+        line-height: 0.92;
+        letter-spacing: -0.07em;
+      }
+
+      .overlay p {
+        margin: 0;
+        color: var(--text-soft);
+        font-size: 16px;
+        line-height: 1.4;
+      }
+
+      .overlay-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .overlay-actions button {
+        padding: 14px 18px;
+        border-radius: 18px;
+        border: 0;
+        font: inherit;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .overlay-actions .primary {
+        background: linear-gradient(90deg, #dff9ff, #88dfff);
+        color: #07202f;
+      }
+
+      .overlay-actions .secondary {
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--text-main);
+      }
+
+      .overlay[data-active="true"] {
+        display: grid;
+      }
+
+      body[data-view="play"] #play-overlay,
+      body[data-view="start"] #start-overlay,
+      body[data-view="end"] #end-overlay {
+        display: grid;
+      }
+
+      body[data-view="play"] #start-overlay,
+      body[data-view="play"] #end-overlay,
+      body[data-view="start"] #play-overlay,
+      body[data-view="start"] #end-overlay,
+      body[data-view="end"] #play-overlay,
+      body[data-view="end"] #start-overlay {
+        display: none;
+      }
+
+      @media (min-width: 860px) {
+        .screen {
+          grid-template-rows: auto 1fr;
+          grid-template-columns: 1.1fr 0.9fr;
+          align-items: start;
+          gap: 18px;
+        }
+
+        .topbar {
+          grid-column: 1 / 2;
+        }
+
+        .forecast {
+          grid-column: 2 / 3;
+          grid-row: 1 / 2;
+          min-height: 100%;
+        }
+
+        .systems {
+          grid-column: 1 / 3;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          grid-template-rows: 1fr;
+          min-height: 0;
+          height: 100%;
+          align-self: stretch;
+        }
+
+        .overlay {
+          padding: 32px;
+        }
+      }
+    </style>
+  </head>
+  <body data-view="start">
+    <main class="screen">
+      <section class="topbar" aria-label="Status">
+        <div>
+          <p class="eyebrow">Shift Timer</p>
+          <p class="timer" id="timer">01:32</p>
+        </div>
+        <div>
+          <p class="eyebrow">Battery Pulses</p>
+          <div class="pulse-strip" aria-label="Battery Pulses">
+            <div class="pulse active"></div>
+            <div class="pulse active"></div>
+            <div class="pulse"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="forecast" aria-label="Next Storm">
+        <p class="eyebrow">Next Storm</p>
+        <div class="forecast-row">
+          <div class="forecast-meta">
+            <strong id="forecast-title">Static Wall</strong>
+            <span class="forecast-countdown" id="forecast-countdown">2.7s</span>
+          </div>
+          <span class="forecast-hit" id="forecast-hits">Power -8  Comms -14</span>
+        </div>
+        <p class="status-copy" id="forecast-copy">
+          Keep comms healthy to preserve early warning. Lose the mast and the next hit disappears.
+        </p>
+      </section>
+
+      <section class="systems" aria-label="Station Systems">
+        <article class="system" data-tone="danger">
+          <div class="system-head">
+            <div class="system-name">
+              <div class="icon" aria-hidden="true">H</div>
+              <div class="name-stack">
+                <h2>Heat</h2>
+                <p>Low heat increases all station drift.</p>
+              </div>
+            </div>
+            <p class="state danger">Critical</p>
+          </div>
+          <div class="meter-stack">
+            <div class="meter-row">
+              <strong class="percent">18%</strong>
+              <p class="status-copy">Icing is spreading through every line.</p>
+            </div>
+            <div class="meter"><span style="width: 18%"></span></div>
+          </div>
+          <button class="system-button" type="button">Spend 1 Pulse <span>Restore Heat</span></button>
+        </article>
+
+        <article class="system" data-tone="warn">
+          <div class="system-head">
+            <div class="system-name">
+              <div class="icon" aria-hidden="true">P</div>
+              <div class="name-stack">
+                <h2>Power</h2>
+                <p>Low power slows battery recharge.</p>
+              </div>
+            </div>
+            <p class="state warn">Unstable</p>
+          </div>
+          <div class="meter-stack">
+            <div class="meter-row">
+              <strong class="percent">44%</strong>
+              <p class="status-copy">Recharge is already dragging.</p>
+            </div>
+            <div class="meter"><span style="width: 44%"></span></div>
+          </div>
+          <button class="system-button" type="button">Spend 1 Pulse <span>Restore Power</span></button>
+        </article>
+
+        <article class="system" data-tone="safe">
+          <div class="system-head">
+            <div class="system-name">
+              <div class="icon" aria-hidden="true">C</div>
+              <div class="name-stack">
+                <h2>Comms</h2>
+                <p>Low comms hides the next storm hit.</p>
+              </div>
+            </div>
+            <p class="state safe">Stable</p>
+          </div>
+          <div class="meter-stack">
+            <div class="meter-row">
+              <strong class="percent">71%</strong>
+              <p class="status-copy">Forecast is still visible.</p>
+            </div>
+            <div class="meter"><span style="width: 71%"></span></div>
+          </div>
+          <button class="system-button" type="button">Spend 1 Pulse <span>Restore Comms</span></button>
+        </article>
+      </section>
+
+      <div class="overlay" id="start-overlay" data-active="true" aria-hidden="false">
+        <section class="overlay-card">
+          <p class="overlay-chip">Whiteout Watch</p>
+          <h1>Hold the station.</h1>
+          <p>Tap a system to spend one pulse. Keep heat, power, and comms alive as the storm gets worse.</p>
+          <div class="overlay-actions">
+            <button class="primary" type="button">Start Shift</button>
+            <button class="secondary" type="button">Best 02:48</button>
+          </div>
+        </section>
+      </div>
+
+      <div class="overlay" id="play-overlay" aria-hidden="true"></div>
+
+      <div class="overlay" id="end-overlay" data-active="false" aria-hidden="false">
+        <section class="overlay-card">
+          <p class="overlay-chip">Station Lost</p>
+          <h1>Heat collapsed.</h1>
+          <p>The vents sealed under ice before the next pulse recharged. Best shift: 02:48.</p>
+          <div class="overlay-actions">
+            <button class="primary" type="button">Retry Shift</button>
+            <button class="secondary" type="button">132s survived</button>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const view = params.get("view");
+      if (view === "play" || view === "start" || view === "end") {
+        document.body.dataset.view = view;
+      }
+
+      if (document.body.dataset.view === "end") {
+        document.getElementById("timer").textContent = "02:12";
+        document.getElementById("forecast-title").textContent = "Signal Burial";
+        document.getElementById("forecast-hits").textContent = "Comms -20";
+        document.getElementById("forecast-copy").textContent =
+          "Forecast held until the last safe second, but the heater fell first.";
+      }
+    </script>
+  </body>
+</html>

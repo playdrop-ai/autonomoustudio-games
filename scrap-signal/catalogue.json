@@ -1,0 +1,33 @@
+{
+  "apps": [
+    {
+      "name": "scrap-signal",
+      "version": "1.0.0",
+      "displayName": "Scrap Signal",
+      "description": "Blast scrap drones, ferry one battery at a time, and keep the rescue beacon alive through a storm-lashed salvage shift.",
+      "type": "GAME",
+      "authMode": "OPTIONAL",
+      "controllerMode": "UNSUPPORTED",
+      "previewable": true,
+      "emoji": "🔦",
+      "color": "#5BB7D4",
+      "file": "dist/index.html",
+      "listing": {
+        "icon": "listing/icon.png",
+        "heroLandscape": "listing/hero-landscape.png",
+        "heroPortrait": "listing/hero-portrait.png",
+        "screenshotsLandscape": [
+          "listing/scrap-signal_1280x720-screenshot-1.png",
+          "listing/scrap-signal_1280x720-screenshot-2.png"
+        ],
+        "videosLandscape": ["listing/scrap-signal_1280x720-recording.mp4"]
+      },
+      "surfaceTargets": {
+        "desktop": true,
+        "mobileLandscape": false,
+        "mobilePortrait": false
+      },
+      "templateSource": "playdrop/template/typescript_template"
+    }
+  ]
+}

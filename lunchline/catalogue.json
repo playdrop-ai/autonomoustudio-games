@@ -1,0 +1,37 @@
+{
+  "apps": [
+    {
+      "name": "lunchline",
+      "version": "1.0.0",
+      "displayName": "Lunchline",
+      "description": "Tap connected ingredient groups to fill the lunchbox order at the top of the screen before patience runs out and 3 complaints end the shift.",
+      "type": "GAME",
+      "authMode": "OPTIONAL",
+      "previewable": true,
+      "emoji": "🍱",
+      "color": "#E37A4E",
+      "file": "dist/index.html",
+      "listing": {
+        "icon": "listing/icon.png",
+        "heroLandscape": "listing/hero-landscape.png",
+        "heroPortrait": "listing/hero-portrait.png",
+        "screenshotsLandscape": [
+          "listing/lunchline_1280x720-screenshot-1.png"
+        ],
+        "screenshotsPortrait": [
+          "listing/lunchline_720x1280-screenshot-1.png",
+          "listing/lunchline_720x1280-screenshot-2.png"
+        ],
+        "videosLandscape": [
+          "listing/lunchline_1280x720-recording.mp4"
+        ]
+      },
+      "surfaceTargets": {
+        "desktop": true,
+        "mobileLandscape": false,
+        "mobilePortrait": true
+      },
+      "templateSource": "playdrop/template/typescript_template"
+    }
+  ]
+}

@@ -1,0 +1,753 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Relayline Mockup</title>
+    <style>
+      :root {
+        --bg-0: #04070c;
+        --bg-1: #0b1420;
+        --panel: rgba(12, 19, 30, 0.88);
+        --panel-strong: rgba(10, 16, 25, 0.94);
+        --panel-line: rgba(133, 179, 255, 0.12);
+        --cell-covered: #131d2d;
+        --cell-covered-edge: #1f2b40;
+        --cell-revealed: #101826;
+        --cell-border: rgba(160, 196, 255, 0.12);
+        --cell-grid: rgba(255, 255, 255, 0.03);
+        --ink: #e7f2ff;
+        --ink-soft: #8ba6c3;
+        --ink-dim: #62809f;
+        --cyan: #4af0ff;
+        --cyan-soft: rgba(74, 240, 255, 0.16);
+        --gold: #ffbd45;
+        --amber: #ff9a38;
+        --danger: #ff5b66;
+        --danger-soft: rgba(255, 91, 102, 0.2);
+        --good: #7bf5d1;
+        --shadow-strong: 0 26px 64px rgba(0, 0, 0, 0.46);
+        --shadow-soft: 0 12px 28px rgba(0, 0, 0, 0.28);
+        --radius-xl: 34px;
+        --radius-lg: 26px;
+        --radius-md: 18px;
+        --radius-sm: 12px;
+        --font-display: "Eurostile", "Avenir Next Condensed", "Trebuchet MS", sans-serif;
+        --font-body: "Avenir Next", "Segoe UI", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background:
+          radial-gradient(circle at top, rgba(74, 240, 255, 0.18), transparent 22%),
+          radial-gradient(circle at 80% 10%, rgba(255, 157, 65, 0.15), transparent 24%),
+          linear-gradient(180deg, var(--bg-1) 0%, var(--bg-0) 100%);
+        color: var(--ink);
+        font-family: var(--font-body);
+      }
+
+      body {
+        overflow: hidden;
+      }
+
+      body::before,
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+      }
+
+      body::before {
+        background:
+          radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.06), transparent 34%),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 30%);
+      }
+
+      body::after {
+        background:
+          repeating-linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.02) 0 18px,
+            rgba(0, 0, 0, 0) 18px 36px
+          ),
+          repeating-linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.018) 0 18px,
+            rgba(0, 0, 0, 0) 18px 36px
+          );
+        opacity: 0.32;
+      }
+
+      .app-shell {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100vw;
+        height: 100vh;
+        padding:
+          max(18px, env(safe-area-inset-top))
+          max(18px, env(safe-area-inset-right))
+          max(18px, env(safe-area-inset-bottom))
+          max(18px, env(safe-area-inset-left));
+      }
+
+      .app-shell.surface-desktop {
+        padding: 28px 34px;
+      }
+
+      .scene-frame {
+        position: relative;
+        width: min(100%, 540px);
+        height: 100%;
+        max-height: 900px;
+        border-radius: 42px;
+        padding: 18px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 16%),
+          linear-gradient(180deg, rgba(15, 25, 38, 0.96), rgba(8, 13, 22, 0.98));
+        box-shadow: var(--shadow-strong);
+        overflow: hidden;
+      }
+
+      .surface-desktop .scene-frame {
+        width: min(100%, 1120px);
+        max-height: none;
+      }
+
+      .scene-frame::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(circle at 50% -8%, rgba(74, 240, 255, 0.18), transparent 32%),
+          radial-gradient(circle at 50% 100%, rgba(255, 157, 65, 0.12), transparent 28%);
+        pointer-events: none;
+      }
+
+      .surface-desktop .scene-frame::after {
+        content: "";
+        position: absolute;
+        inset: 14px;
+        border-radius: 32px;
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        pointer-events: none;
+      }
+
+      .board-stage {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+      }
+
+      .surface-desktop .board-stage {
+        padding: 0 28px;
+      }
+
+      .portrait-column {
+        position: relative;
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+      }
+
+      .surface-desktop .portrait-column {
+        max-width: 436px;
+        height: calc(100% - 8px);
+        margin: 0 auto;
+      }
+
+      .hud {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 14px;
+      }
+
+      .chip {
+        display: inline-flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 84px;
+        padding: 12px 14px;
+        border-radius: 20px;
+        border: 1px solid rgba(133, 179, 255, 0.14);
+        background: rgba(10, 16, 25, 0.84);
+        box-shadow: var(--shadow-soft);
+        backdrop-filter: blur(8px);
+      }
+
+      .chip--surges {
+        align-items: flex-end;
+      }
+
+      .chip__label {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-dim);
+      }
+
+      .chip__value {
+        font-family: var(--font-display);
+        font-size: 24px;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+      }
+
+      .hud-spacer {
+        height: 100%;
+      }
+
+      .surge-pips {
+        display: flex;
+        gap: 6px;
+      }
+
+      .surge-pip {
+        width: 16px;
+        height: 16px;
+        border-radius: 999px;
+        background: rgba(255, 91, 102, 0.16);
+        box-shadow: inset 0 0 0 1px rgba(255, 91, 102, 0.18);
+      }
+
+      .surge-pip.is-on {
+        background: radial-gradient(circle at 35% 35%, #ffd1d4, var(--danger) 62%);
+        box-shadow:
+          inset 0 -1px 0 rgba(103, 17, 32, 0.38),
+          0 0 12px rgba(255, 91, 102, 0.32);
+      }
+
+      .surge-pip.is-spent {
+        background: rgba(255, 91, 102, 0.06);
+        box-shadow: inset 0 0 0 1px rgba(255, 91, 102, 0.08);
+      }
+
+      .board-shell {
+        position: relative;
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        gap: 10px;
+        min-height: 0;
+        padding: 18px 16px;
+        border-radius: 32px;
+        border: 1px solid rgba(133, 179, 255, 0.12);
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 16%),
+          linear-gradient(180deg, rgba(13, 21, 33, 0.96), rgba(7, 12, 20, 0.98));
+        box-shadow: var(--shadow-soft);
+        overflow: hidden;
+      }
+
+      .board-shell::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(circle at 50% 0%, rgba(74, 240, 255, 0.1), transparent 18%),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 22%);
+        pointer-events: none;
+      }
+
+      .terminal {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 34px;
+      }
+
+      .terminal__node {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 12px;
+        font-size: 18px;
+        font-weight: 800;
+        box-shadow: 0 0 18px rgba(74, 240, 255, 0.16);
+      }
+
+      .terminal__node--source {
+        color: #00131a;
+        background: radial-gradient(circle at 35% 35%, #ecfff9, var(--gold) 70%);
+      }
+
+      .terminal__node--relay {
+        color: #00131a;
+        background: radial-gradient(circle at 35% 35%, #ecffff, var(--cyan) 70%);
+      }
+
+      .terminal__rail {
+        width: 90px;
+        height: 8px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, rgba(255, 189, 69, 0.75), rgba(74, 240, 255, 0.85));
+        box-shadow: 0 0 18px rgba(74, 240, 255, 0.18);
+      }
+
+      .board-grid {
+        position: relative;
+        display: grid;
+        gap: 6px;
+        align-self: stretch;
+        min-height: 0;
+      }
+
+      .cell {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 0;
+        min-height: 0;
+        border-radius: 12px;
+        border: 1px solid var(--cell-border);
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 28%),
+          var(--cell-covered);
+        color: var(--ink);
+        font-family: var(--font-display);
+        font-size: clamp(16px, 1.9vw, 22px);
+        font-weight: 900;
+        letter-spacing: 0.03em;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+        overflow: hidden;
+      }
+
+      .cell::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 24%),
+          linear-gradient(90deg, transparent 0 50%, var(--cell-grid) 50% 50.8%, transparent 50.8% 100%);
+        pointer-events: none;
+      }
+
+      .cell--covered {
+        border-color: rgba(133, 179, 255, 0.08);
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 24%),
+          linear-gradient(180deg, #182338 0%, var(--cell-covered) 100%);
+      }
+
+      .cell--revealed {
+        background:
+          linear-gradient(180deg, rgba(74, 240, 255, 0.05), transparent 28%),
+          var(--cell-revealed);
+      }
+
+      .cell--lit {
+        border-color: rgba(74, 240, 255, 0.4);
+        background:
+          linear-gradient(180deg, rgba(167, 255, 251, 0.12), transparent 26%),
+          linear-gradient(180deg, rgba(18, 42, 57, 0.92), rgba(8, 25, 36, 0.96));
+        box-shadow:
+          inset 0 0 0 1px rgba(74, 240, 255, 0.16),
+          0 0 16px rgba(74, 240, 255, 0.16);
+      }
+
+      .cell--zero {
+        color: transparent;
+      }
+
+      .cell--flagged {
+        color: var(--amber);
+        background:
+          linear-gradient(180deg, rgba(255, 154, 56, 0.08), transparent 24%),
+          linear-gradient(180deg, #172232 0%, #121a28 100%);
+      }
+
+      .cell--burnt {
+        color: #ffd3d8;
+        border-color: rgba(255, 91, 102, 0.26);
+        background:
+          radial-gradient(circle at 35% 35%, rgba(255, 172, 178, 0.22), transparent 46%),
+          linear-gradient(180deg, rgba(120, 20, 30, 0.34), rgba(42, 8, 12, 0.94));
+      }
+
+      .cell--source,
+      .cell--relay {
+        font-size: clamp(18px, 2.2vw, 24px);
+      }
+
+      .cell--source {
+        color: #1b1300;
+        background:
+          radial-gradient(circle at 35% 35%, #fff7cc, var(--gold) 70%),
+          #d1991d;
+        border-color: rgba(255, 189, 69, 0.4);
+      }
+
+      .cell--relay {
+        color: #00161a;
+        background:
+          radial-gradient(circle at 35% 35%, #ecffff, var(--cyan) 70%),
+          #1f8e96;
+        border-color: rgba(74, 240, 255, 0.48);
+      }
+
+      .cell__label {
+        position: relative;
+        z-index: 1;
+      }
+
+      .n1 {
+        color: #6dc7ff;
+      }
+
+      .n2 {
+        color: #78e7c6;
+      }
+
+      .n3 {
+        color: #ffcb68;
+      }
+
+      .n4 {
+        color: #ff8aa0;
+      }
+
+      .n5,
+      .n6,
+      .n7,
+      .n8 {
+        color: #ffdbe1;
+      }
+
+      .flag-chip {
+        position: relative;
+        justify-self: center;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 18px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 154, 56, 0.2);
+        background:
+          linear-gradient(180deg, rgba(255, 154, 56, 0.12), rgba(10, 16, 25, 0.9)),
+          rgba(10, 16, 25, 0.9);
+        box-shadow: var(--shadow-soft);
+      }
+
+      .flag-chip__icon {
+        font-size: 19px;
+      }
+
+      .flag-chip__copy {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+      }
+
+      .flag-chip__eyebrow {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--ink-dim);
+      }
+
+      .flag-chip__state {
+        font-family: var(--font-display);
+        font-size: 18px;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .flag-chip.is-on {
+        border-color: rgba(255, 154, 56, 0.38);
+        box-shadow:
+          var(--shadow-soft),
+          0 0 22px rgba(255, 154, 56, 0.18);
+      }
+
+      .overlay {
+        position: absolute;
+        left: 18px;
+        right: 18px;
+        bottom: 18px;
+        display: none;
+        padding: 18px 18px 20px;
+        border-radius: 26px;
+        border: 1px solid var(--panel-line);
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 18%),
+          var(--panel-strong);
+        box-shadow: var(--shadow-soft);
+        backdrop-filter: blur(12px);
+      }
+
+      .overlay__eyebrow {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--ink-dim);
+      }
+
+      .overlay__title {
+        margin-top: 8px;
+        font-family: var(--font-display);
+        font-size: 34px;
+        font-weight: 900;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+
+      .overlay__copy {
+        margin-top: 10px;
+        font-size: 16px;
+        line-height: 1.45;
+        color: var(--ink-soft);
+      }
+
+      .button-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 16px;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 94px;
+        padding: 12px 14px;
+        border-radius: 999px;
+        border: 1px solid rgba(74, 240, 255, 0.2);
+        background: rgba(10, 16, 25, 0.76);
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--ink);
+      }
+
+      .pill--primary {
+        border-color: rgba(74, 240, 255, 0.4);
+        background:
+          linear-gradient(180deg, rgba(74, 240, 255, 0.22), rgba(10, 16, 25, 0.84)),
+          rgba(10, 16, 25, 0.84);
+        box-shadow: 0 0 18px rgba(74, 240, 255, 0.16);
+      }
+
+      .pill--danger {
+        border-color: rgba(255, 91, 102, 0.32);
+        background:
+          linear-gradient(180deg, rgba(255, 91, 102, 0.16), rgba(10, 16, 25, 0.88)),
+          rgba(10, 16, 25, 0.88);
+      }
+
+      .state-start .overlay--start,
+      .state-gameover .overlay--gameover {
+        display: block;
+      }
+
+      .state-start .board-shell {
+        box-shadow:
+          var(--shadow-soft),
+          0 0 0 1px rgba(74, 240, 255, 0.08);
+      }
+
+      .state-start .board-grid,
+      .state-gameover .board-grid {
+        filter: saturate(0.95);
+      }
+
+      .state-start .board-grid::after,
+      .state-gameover .board-grid::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 24px;
+        background: linear-gradient(180deg, rgba(4, 7, 12, 0.08), rgba(4, 7, 12, 0.28));
+        pointer-events: none;
+      }
+
+      .state-gameover .board-shell {
+        box-shadow:
+          var(--shadow-soft),
+          0 0 0 1px rgba(255, 91, 102, 0.1);
+      }
+
+      .state-gameover .overlay--gameover {
+        border-color: rgba(255, 91, 102, 0.22);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const state = params.get("state") || "play";
+      const surface = params.get("surface") || "portrait";
+
+      const gameplayRows = [
+        ["source", "lit-0", "flag", "covered", "covered", "covered", "covered", "covered", "covered"],
+        ["lit-0", "lit-1", "revealed-2", "covered", "covered", "covered", "covered", "covered", "covered"],
+        ["lit-0", "lit-0", "lit-1", "revealed-3", "flag", "covered", "covered", "covered", "covered"],
+        ["revealed-0", "lit-0", "lit-0", "lit-1", "revealed-2", "covered", "covered", "covered", "covered"],
+        ["covered", "revealed-1", "lit-0", "lit-0", "lit-0", "revealed-2", "covered", "covered", "covered"],
+        ["covered", "covered", "revealed-1", "revealed-1", "lit-0", "lit-1", "covered", "covered", "covered"],
+        ["covered", "covered", "covered", "revealed-1", "lit-0", "lit-0", "revealed-2", "covered", "covered"],
+        ["covered", "covered", "covered", "covered", "revealed-2", "lit-0", "lit-0", "flag", "covered"],
+        ["covered", "covered", "covered", "covered", "covered", "revealed-2", "lit-0", "lit-1", "covered"],
+        ["covered", "covered", "covered", "covered", "covered", "covered", "revealed-1", "lit-0", "covered"],
+        ["covered", "covered", "covered", "covered", "covered", "covered", "covered", "lit-0", "covered"],
+        ["covered", "covered", "covered", "covered", "covered", "covered", "covered", "lit-1", "relay"],
+        ["covered", "covered", "covered", "covered", "covered", "covered", "covered", "revealed-2", "covered"],
+      ];
+
+      const startRows = gameplayRows.map((row) => [...row]);
+      startRows[1][2] = "covered";
+      startRows[3][4] = "covered";
+      startRows[7][7] = "covered";
+
+      const gameoverRows = gameplayRows.map((row) => [...row]);
+      gameoverRows[2][4] = "burnt";
+      gameoverRows[6][6] = "burnt";
+      gameoverRows[10][7] = "burnt";
+
+      const rowsByState = {
+        start: startRows,
+        play: gameplayRows,
+        gameover: gameoverRows,
+      };
+
+      const app = document.getElementById("app");
+
+      function cellMarkup(kind) {
+        if (kind === "source") {
+          return '<div class="cell cell--source"><span class="cell__label">⚡</span></div>';
+        }
+        if (kind === "relay") {
+          return '<div class="cell cell--relay"><span class="cell__label">◉</span></div>';
+        }
+        if (kind === "covered") {
+          return '<div class="cell cell--covered"></div>';
+        }
+        if (kind === "flag") {
+          return '<div class="cell cell--flagged"><span class="cell__label">⚑</span></div>';
+        }
+        if (kind === "burnt") {
+          return '<div class="cell cell--burnt"><span class="cell__label">✕</span></div>';
+        }
+
+        const [prefix, value] = kind.split("-");
+        const classes = ["cell", "cell--revealed"];
+        if (prefix === "lit") {
+          classes.push("cell--lit");
+        }
+        if (value === "0") {
+          classes.push("cell--zero");
+        } else {
+          classes.push(`n${value}`);
+        }
+
+        return `<div class="${classes.join(" ")}"><span class="cell__label">${value === "0" ? "" : value}</span></div>`;
+      }
+
+      const rows = rowsByState[state] || rowsByState.play;
+      const boardMarkup = rows.flat().map(cellMarkup).join("");
+      const appClass = `app-shell surface-${surface} state-${state}`;
+
+      app.innerHTML = `
+        <main class="${appClass}">
+          <section class="scene-frame">
+            <div class="board-stage">
+              <div class="portrait-column">
+                <header class="hud">
+                  <div class="chip">
+                    <div class="chip__label">Time</div>
+                    <div class="chip__value">${state === "gameover" ? "03:42" : state === "start" ? "--:--" : "01:26"}</div>
+                  </div>
+
+                  <div class="hud-spacer"></div>
+
+                  <div class="chip chip--surges">
+                    <div class="chip__label">Surges</div>
+                    <div class="surge-pips">
+                      <div class="surge-pip ${state === "gameover" ? "is-spent" : "is-on"}"></div>
+                      <div class="surge-pip ${state === "gameover" ? "is-spent" : state === "play" ? "is-on" : "is-on"}"></div>
+                      <div class="surge-pip ${state === "gameover" ? "is-spent" : state === "play" ? "is-on" : "is-on"}"></div>
+                    </div>
+                  </div>
+                </header>
+
+                <section class="board-shell">
+                  <div class="terminal">
+                    <div class="terminal__node terminal__node--source">⚡</div>
+                    <div class="terminal__rail"></div>
+                  </div>
+
+                  <div class="board-grid" style="grid-template-columns: repeat(9, minmax(0, 1fr)); grid-template-rows: repeat(13, minmax(0, 1fr));">
+                    ${boardMarkup}
+                  </div>
+
+                  <div class="terminal">
+                    <div class="terminal__rail"></div>
+                    <div class="terminal__node terminal__node--relay">◉</div>
+                  </div>
+
+                  <section class="overlay overlay--start">
+                    <div class="overlay__eyebrow">Start run</div>
+                    <div class="overlay__title">Light the route</div>
+                    <div class="overlay__copy">
+                      Reveal safe cells, flag shorts, and connect the source to the relay before the third surge burns the board.
+                    </div>
+                    <div class="button-row">
+                      <div class="pill pill--primary">Warm</div>
+                      <div class="pill">Live</div>
+                      <div class="pill">Deep</div>
+                    </div>
+                  </section>
+
+                  <section class="overlay overlay--gameover">
+                    <div class="overlay__eyebrow">Run blown</div>
+                    <div class="overlay__title">Circuit lost</div>
+                    <div class="overlay__copy">
+                      The third overload burned the route. Best progress: one cell short of the relay.
+                    </div>
+                    <div class="button-row">
+                      <div class="pill pill--danger">Retry</div>
+                      <div class="pill">Deep</div>
+                    </div>
+                  </section>
+                </section>
+
+                <footer class="flag-chip ${state === "play" ? "is-on" : ""}">
+                  <div class="flag-chip__icon">⚑</div>
+                  <div class="flag-chip__copy">
+                    <div class="flag-chip__eyebrow">Flag mode</div>
+                    <div class="flag-chip__state">${state === "play" ? "Armed" : "Standby"}</div>
+                  </div>
+                </footer>
+              </div>
+            </div>
+          </section>
+        </main>
+      `;
+    </script>
+  </body>
+</html>
