@@ -285,3 +285,8 @@ Original prompt: Create and publish a new game using $playdrop skill.
 - Fixed the new five-stage ash art export. The initial `generated-v2` ash files had been saved as raw preview crops with full alpha, which left the red sheet background visible in runtime.
 - Regenerated `starfold-tile-ash5-r1.png` through `starfold-tile-ash1-r1.png` using the same runtime tile alpha mask as the shipped generated-v2 tiles, so the ash family now sits in the correct rounded cutout instead of full square PNGs.
 - Rebuilt the package and captured fresh browser proof with a forced debug board. Runtime screenshot: `output/ash-mask-fix-runtime.png`. The generic web-game client still showed the known intro-frame screenshot quirk, but text state confirmed the forced ash board and the direct Playwright runtime screenshot verified the actual board render.
+
+2026-04-23 16:45 EDT
+- Reworked Starfold achievements around the new mechanic set and long-term goals. The catalogue now defines eleven achievements: eight standard unlocks plus three incremental PlayDrop progress achievements for ash destroyed, match groups completed, and full-board wipes.
+- Replaced the four legacy achievement icons and added seven new icons from the selected Images 2.0 Starfold-style sheet. The generated source sheet is stored at `output/achievement-art-v2-source/selected-achievement-sheet-v2.png`.
+- Extended the runtime meta queue to submit PlayDrop incremental progress with `sdk.achievements.setProgressAtLeast(...)` after reading current progress through `sdk.achievements.list()`.

@@ -58,6 +58,7 @@ export interface ClearStage {
   kind: "clear";
   board: Board;
   matched: Position[];
+  groupCount: number;
   damaged: Position[];
   cleansed: Position[];
   restored: Position[];
@@ -183,6 +184,7 @@ export function applyMove(state: GameState, move: Move, options: { startOffsetPx
       kind: "clear",
       board,
       matched,
+      groupCount: groups.length,
       damaged,
       cleansed,
       restored,

@@ -2,7 +2,7 @@
   "apps": [
     {
       "name": "starfold",
-      "version": "1.4.19",
+      "version": "1.4.20",
       "username": "autonomoustudio",
       "displayName": "Starfold",
       "description": "Slide any row or column to create matches of 3 or more. Score as much as you can before the ashes take over, build stronger matches to fight the ash, chain combos for bonus points, and climb the leaderboard.",
@@ -46,6 +46,58 @@
           "displayName": "Shrine Sentinel",
           "description": "Reach 5,000 points in a run.",
           "icon": "listing/achievements/shrine-sentinel.png"
+        },
+        {
+          "key": "cinder_reclaimed",
+          "kind": "STANDARD",
+          "displayName": "Cinder Reclaimed",
+          "description": "Restore a contaminated sigil before it hardens.",
+          "icon": "listing/achievements/cinder-reclaimed.png"
+        },
+        {
+          "key": "shockwave_rite",
+          "kind": "STANDARD",
+          "displayName": "Shockwave Rite",
+          "description": "Trigger a 5-match shockwave.",
+          "icon": "listing/achievements/shockwave-rite.png"
+        },
+        {
+          "key": "sanctum_reset",
+          "kind": "STANDARD",
+          "displayName": "Sanctum Reset",
+          "description": "Trigger a 6+ match full-board wipe.",
+          "icon": "listing/achievements/sanctum-reset.png"
+        },
+        {
+          "key": "starfold_legend",
+          "kind": "STANDARD",
+          "displayName": "Starfold Legend",
+          "description": "Reach 100,000 points in a run.",
+          "icon": "listing/achievements/starfold-legend.png"
+        },
+        {
+          "key": "ashbreaker_hundred",
+          "kind": "INCREMENTAL",
+          "displayName": "Ashbreaker",
+          "description": "Destroy 100 ash across all runs.",
+          "maxProgress": 100,
+          "icon": "listing/achievements/ashbreaker-hundred.png"
+        },
+        {
+          "key": "constellation_mason",
+          "kind": "INCREMENTAL",
+          "displayName": "Constellation Mason",
+          "description": "Complete 1,000 match groups across all runs.",
+          "maxProgress": 1000,
+          "icon": "listing/achievements/constellation-mason.png"
+        },
+        {
+          "key": "three_hundred_guardians",
+          "kind": "INCREMENTAL",
+          "displayName": "Three Hundred Guardians",
+          "description": "Trigger 300 full-board wipes across all runs.",
+          "maxProgress": 300,
+          "icon": "listing/achievements/three-hundred-guardians.png"
         }
       ],
       "leaderboards": [

@@ -37,8 +37,10 @@ function createSdkHarness(options: {
   interstitialRetryAfterSeconds?: number;
   interstitialBlockReason?: string;
   interstitialShowStatus?: "dismissed" | "not_ready" | "expired";
+  initialAchievementProgress?: Record<string, number>;
 }) {
   const unlocked: string[] = [];
+  const progressed: Array<{ key: string; progress: number }> = [];
   const submitted: Array<{ key: string; score: number }> = [];
   const interstitialLoads: Array<{ status: string }> = [];
   const interstitialShows: Array<{ status: string }> = [];
@@ -49,6 +51,7 @@ function createSdkHarness(options: {
     rank: options.initialRank,
     score: options.initialBestScore,
   };
+  const achievementProgress = new Map(Object.entries(options.initialAchievementProgress ?? {}));
 
   const me = {
     isLoggedIn: options.isLoggedIn,
@@ -87,8 +90,44 @@ function createSdkHarness(options: {
     },
     me,
     achievements: {
+      list: async () => ({
+        achievements: Array.from(achievementProgress.entries()).map(([key, progress]) => ({
+          definition: {
+            key,
+            displayName: key,
+            description: key,
+            kind: "INCREMENTAL" as const,
+            hidden: false,
+            maxProgress: null,
+            iconUrl: "",
+            status: "ACTIVE" as const,
+          },
+          player: {
+            progress,
+            unlocked: false,
+            unlockedAt: null,
+          },
+        })),
+      }),
       unlock: async (key: string) => {
         unlocked.push(key);
+      },
+      setProgressAtLeast: async (key: string, progress: number) => {
+        const nextProgress = Math.max(achievementProgress.get(key) ?? 0, progress);
+        achievementProgress.set(key, nextProgress);
+        progressed.push({ key, progress });
+        return {
+          accepted: true as const,
+          changed: true,
+          unlocked: false,
+          progress: nextProgress,
+          unlockedAt: null,
+          achievement: {
+            key,
+            displayName: key,
+            iconUrl: "",
+          },
+        };
       },
     },
     leaderboards: {
@@ -153,6 +192,7 @@ function createSdkHarness(options: {
   return {
     sdk,
     unlocked,
+    progressed,
     submitted,
     interstitialLoads,
     interstitialShows,
@@ -233,6 +273,29 @@ test("queue does not submit leaderboard score before completeRun", async () => {
   }
 });
 
+test("queue reports pending meta for progress-only achievement updates", async () => {
+  const harness = createSdkHarness({
+    isLoggedIn: true,
+    initialRank: 34,
+    initialBestScore: 402420,
+  });
+  const restoreWindow = installWindow(async () => harness.sdk);
+  try {
+    const controller = new PlaydropController("highest_score");
+    await controller.init();
+    controller.queue({
+      progressDeltas: {
+        ashbreaker_hundred: 1,
+      },
+    });
+
+    assert.deepEqual(harness.progressed, []);
+    assert.equal(controller.getSnapshot().pendingMeta, true);
+  } finally {
+    restoreWindow();
+  }
+});
+
 test("completeRun unlocks achievements and submits score for logged-in play sessions", async () => {
   const harness = createSdkHarness({
     isLoggedIn: true,
@@ -257,6 +320,41 @@ test("completeRun unlocks achievements and submits score for logged-in play sess
     assert.equal(controller.getSnapshot().playerRank, 33);
     assert.equal(controller.getSnapshot().playerBestScore, 37800);
     assert.equal(typeof harness.getAudioPolicyListener(), "function");
+  } finally {
+    restoreWindow();
+  }
+});
+
+test("completeRun submits cumulative achievement progress for logged-in play sessions", async () => {
+  const harness = createSdkHarness({
+    isLoggedIn: true,
+    initialRank: 34,
+    initialBestScore: 32000,
+    initialAchievementProgress: {
+      ashbreaker_hundred: 12,
+      constellation_mason: 90,
+    },
+  });
+  const restoreWindow = installWindow(async () => harness.sdk);
+  try {
+    const controller = new PlaydropController("highest_score");
+    await controller.init();
+    controller.queue({
+      progressDeltas: {
+        ashbreaker_hundred: 3,
+        constellation_mason: 4,
+        three_hundred_guardians: 1,
+      },
+      score: 37800,
+    });
+    await controller.completeRun();
+
+    assert.deepEqual(harness.progressed, [
+      { key: "ashbreaker_hundred", progress: 15 },
+      { key: "constellation_mason", progress: 94 },
+      { key: "three_hundred_guardians", progress: 1 },
+    ]);
+    assert.equal(controller.getSnapshot().pendingMeta, false);
   } finally {
     restoreWindow();
   }
@@ -419,6 +517,34 @@ test("completeRun rejects and keeps pending meta when the achievement API is una
     });
 
     await assert.rejects(controller.completeRun(), /Achievement unlock API unavailable/);
+    assert.deepEqual(harness.submitted, []);
+    assert.equal(controller.getSnapshot().pendingMeta, true);
+  } finally {
+    restoreWindow();
+  }
+});
+
+test("completeRun rejects and keeps pending meta when the achievement progress API is unavailable", async () => {
+  const harness = createSdkHarness({
+    isLoggedIn: true,
+    initialUserId: 111,
+    initialRank: 20,
+    initialBestScore: 1800,
+  });
+  const restoreWindow = installWindow(async () => harness.sdk);
+  try {
+    (harness.sdk.achievements as { setProgressAtLeast?: unknown }).setProgressAtLeast = undefined;
+    const controller = new PlaydropController("highest_score");
+    await controller.init();
+    controller.queue({
+      score: 2400,
+      progressDeltas: {
+        ashbreaker_hundred: 1,
+      },
+    });
+
+    await assert.rejects(controller.completeRun(), /Achievement progress API unavailable/);
+    assert.deepEqual(harness.progressed, []);
     assert.deepEqual(harness.submitted, []);
     assert.equal(controller.getSnapshot().pendingMeta, true);
   } finally {

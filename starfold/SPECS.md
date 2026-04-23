@@ -16,7 +16,7 @@ Ship a polished Playdrop v0.5 update that keeps Starfold fast and readable while
 - Account use must be optional so the game is playable immediately without login friction.
 - The app must support preview mode with a ready-to-play board already visible.
 - Runs should submit to a live leaderboard when the player is authenticated.
-- A small achievement set should reward first clear, ash cleanse, combo play, and score progress.
+- A small achievement set should reward first clear, ash cleanse, combo play, score progress, major match mastery, and lifetime goals.
 - The board presentation should feel cleaner and more premium than v1.0.x.
 
 ## Core Gameplay Promise
@@ -36,11 +36,18 @@ Ship a polished Playdrop v0.5 update that keeps Starfold fast and readable while
 - Optional auth with a post-run login prompt instead of a hard gate
 - Previewable board state in Playdrop surfaces
 - One leaderboard for highest score
-- Four achievements:
+- Eleven achievements:
 - `first_constellation`
 - `ash_purified`
 - `triple_chain`
 - `shrine_sentinel`
+- `cinder_reclaimed`
+- `shockwave_rite`
+- `sanctum_reset`
+- `starfold_legend`
+- `ashbreaker_hundred`
+- `constellation_mason`
+- `three_hundred_guardians`
 - Image-based runtime board presentation using the approved shrine background, trimmed gold frame, and bespoke sigil tiles
 - Minimal HUD that stays outside the frame on portrait, mobile landscape, and desktop
 - Updated listing media, hero art, icon, screenshots, and gameplay recordings

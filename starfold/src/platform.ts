@@ -31,6 +31,7 @@ export interface PlatformSnapshot {
 
 export interface MetaUpdate {
   unlocks?: string[];
+  progressDeltas?: Record<string, number>;
   score?: number;
 }
 
@@ -50,6 +51,9 @@ export class PlaydropController {
   private playerBestScore: number | null = null;
   private leaderboard: LeaderboardEntry[] = [];
   private pendingUnlocks = new Set<string>();
+  private pendingProgressDeltas = new Map<string, number>();
+  private achievementProgress = new Map<string, number>();
+  private achievementProgressLoaded = false;
   private pendingScore: number | null = null;
   private pendingOwnerUserId: PendingOwnerUserId = null;
   private unlockFlushPromise: Promise<void> | null = null;
@@ -69,7 +73,7 @@ export class PlaydropController {
       isLoggedIn: this.isLoggedIn,
       audioEnabled: this.audioEnabled,
       paused: this.paused,
-      pendingMeta: this.pendingUnlocks.size > 0 || this.pendingScore !== null,
+      pendingMeta: this.hasPendingMeta(),
       busy: this.busy,
       playerRank: this.playerRank,
       playerBestScore: this.playerBestScore,
@@ -137,6 +141,8 @@ export class PlaydropController {
         }
       }
       this.currentUserId = nextUserId;
+      this.achievementProgress.clear();
+      this.achievementProgressLoaded = false;
       if (!this.isLoggedIn) {
         this.playerRank = null;
         this.playerBestScore = null;
@@ -168,6 +174,12 @@ export class PlaydropController {
       if (this.pendingUnlocks.has(key)) continue;
       this.pendingUnlocks.add(key);
       addedUnlock = true;
+    }
+    for (const [key, delta] of Object.entries(update.progressDeltas ?? {})) {
+      if (!Number.isSafeInteger(delta) || delta <= 0) {
+        continue;
+      }
+      this.pendingProgressDeltas.set(key, (this.pendingProgressDeltas.get(key) ?? 0) + delta);
     }
     if (typeof update.score === "number" && update.score > 0) {
       this.pendingScore = Math.max(this.pendingScore ?? 0, update.score);
@@ -263,11 +275,12 @@ export class PlaydropController {
   }
 
   private hasPendingMeta(): boolean {
-    return this.pendingUnlocks.size > 0 || this.pendingScore !== null;
+    return this.pendingUnlocks.size > 0 || this.pendingProgressDeltas.size > 0 || this.pendingScore !== null;
   }
 
   private discardPendingMeta(): void {
     this.pendingUnlocks.clear();
+    this.pendingProgressDeltas.clear();
     this.pendingScore = null;
     this.pendingOwnerUserId = null;
     this.emitChange();
@@ -298,6 +311,7 @@ export class PlaydropController {
 
   private async flushPendingMeta(): Promise<void> {
     await this.requestUnlockFlush();
+    await this.flushPendingProgress();
     await this.flushPendingScore();
   }
 
@@ -312,7 +326,7 @@ export class PlaydropController {
   }
 
   private async flushPendingUnlocks(): Promise<void> {
-    if (!this.canFlushPendingMeta() || !this.sdk) {
+    if (!this.canFlushPendingMeta() || !this.sdk || this.pendingUnlocks.size === 0) {
       return;
     }
 
@@ -337,6 +351,54 @@ export class PlaydropController {
         );
       }
     }
+  }
+
+  private async flushPendingProgress(): Promise<void> {
+    if (!this.canFlushPendingMeta() || !this.sdk || this.pendingProgressDeltas.size === 0) {
+      return;
+    }
+
+    const achievements = this.sdk.achievements;
+    const setProgressAtLeast = achievements?.setProgressAtLeast;
+    if (typeof setProgressAtLeast !== "function") {
+      throw new Error("[starfold] Achievement progress API unavailable");
+    }
+
+    await this.ensureAchievementProgressLoaded();
+    const entries = Array.from(this.pendingProgressDeltas.entries());
+    for (const [key, delta] of entries) {
+      const nextProgress = (this.achievementProgress.get(key) ?? 0) + delta;
+      try {
+        const response = await setProgressAtLeast.call(achievements, key, nextProgress);
+        this.achievementProgress.set(key, response.progress);
+        this.pendingProgressDeltas.delete(key);
+        if (!this.hasPendingMeta()) {
+          this.pendingOwnerUserId = null;
+        }
+        this.emitChange();
+      } catch (error) {
+        throw new Error(
+          `[starfold] Failed to update achievement progress ${key}: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+    }
+  }
+
+  private async ensureAchievementProgressLoaded(): Promise<void> {
+    if (this.achievementProgressLoaded) {
+      return;
+    }
+    const achievements = this.sdk?.achievements;
+    const list = achievements?.list;
+    if (typeof list !== "function") {
+      throw new Error("[starfold] Achievement list API unavailable");
+    }
+    const response = await list.call(achievements);
+    this.achievementProgress.clear();
+    for (const entry of response.achievements ?? []) {
+      this.achievementProgress.set(entry.definition.key, entry.player?.progress ?? 0);
+    }
+    this.achievementProgressLoaded = true;
   }
 
   private async flushPendingScore(): Promise<void> {

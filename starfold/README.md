@@ -29,7 +29,7 @@ Swipe one whole row or column. After each move, any orthogonally connected group
 - Optional account flow with post-run score saving
 - Preview-ready board boot on supported Playdrop surfaces
 - Live highest-score leaderboard
-- Four achievements with bespoke store art
+- Eleven achievements with bespoke store art, including lifetime progress goals
 - Approved shrine artwork now drives the runtime board background, frame, and tile set
 - Minimal HUD stays outside the frame on portrait, mobile landscape, and desktop
 - Refined board frame and smoother elimination chaining

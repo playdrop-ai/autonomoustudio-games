@@ -8,7 +8,19 @@ import { PlaydropController, type PlatformSnapshot } from "./platform";
 import { buildGameOverSubtitle, defaultGameOverSubtitle, shouldShowRestartInterstitial, shouldSnapbackDragOnHudPointerUp } from "./runtime-helpers";
 
 type Screen = "playing" | "losing" | "gameover";
-type AchievementKey = "first_constellation" | "ash_purified" | "triple_chain" | "shrine_sentinel";
+type StandardAchievementKey =
+  | "first_constellation"
+  | "ash_purified"
+  | "triple_chain"
+  | "shrine_sentinel"
+  | "cinder_reclaimed"
+  | "shockwave_rite"
+  | "sanctum_reset"
+  | "starfold_legend";
+type IncrementalAchievementKey =
+  | "ashbreaker_hundred"
+  | "constellation_mason"
+  | "three_hundred_guardians";
 
 declare global {
   interface Window {
@@ -216,7 +228,7 @@ void (async () => {
   let hoverCell: { row: number; col: number } | null = null;
   let pressFeedback: PressFeedback | null = null;
   let comboLabel: ComboLabel | null = null;
-  let runAchievements = new Set<AchievementKey>();
+  let runAchievements = new Set<StandardAchievementKey>();
   let lastFrame = performance.now();
   let lastInteractionAt = performance.now();
   let completedRun = false;
@@ -410,7 +422,7 @@ void (async () => {
     dragPreview = null;
     hoverCell = null;
     pressFeedback = null;
-    runAchievements = new Set<AchievementKey>();
+    runAchievements = new Set<StandardAchievementKey>();
     completedRun = false;
     lossTransition = null;
     majorMatchFlash = null;
@@ -470,9 +482,10 @@ void (async () => {
 
     if (!previewModeActive) {
       audio.startMusicLoop();
-      const newlyUnlocked = collectAchievements(result, runAchievements);
+      const achievementUpdate = collectAchievements(result, runAchievements);
       platform?.queue({
-        unlocks: newlyUnlocked,
+        unlocks: achievementUpdate.unlocks,
+        progressDeltas: achievementUpdate.progressDeltas,
         score: result.state.score,
       });
     }
@@ -1329,10 +1342,16 @@ void (async () => {
   throw error;
 });
 
-function collectAchievements(result: TurnResult, unlocked: Set<AchievementKey>): AchievementKey[] {
+function collectAchievements(
+  result: TurnResult,
+  unlocked: Set<StandardAchievementKey>,
+): { unlocks: StandardAchievementKey[]; progressDeltas: Partial<Record<IncrementalAchievementKey, number>> } {
   const clearStages = result.stages.filter((stage): stage is Extract<TurnStage, { kind: "clear" }> => stage.kind === "clear");
   const cleansedCount = clearStages.reduce((total, stage) => total + stage.cleansed.length, 0);
-  const newlyUnlocked: AchievementKey[] = [];
+  const restoredCount = clearStages.reduce((total, stage) => total + stage.restored.length, 0);
+  const matchGroupCount = clearStages.reduce((total, stage) => total + stage.groupCount, 0);
+  const wipeCount = clearStages.reduce((total, stage) => total + (stage.pulseKind === "wipe" ? 1 : 0), 0);
+  const newlyUnlocked: StandardAchievementKey[] = [];
 
   if (result.scoreGained > 0) {
     maybeUnlock("first_constellation", unlocked, newlyUnlocked);
@@ -1346,11 +1365,34 @@ function collectAchievements(result: TurnResult, unlocked: Set<AchievementKey>):
   if (result.state.score >= 5000) {
     maybeUnlock("shrine_sentinel", unlocked, newlyUnlocked);
   }
+  if (restoredCount > 0) {
+    maybeUnlock("cinder_reclaimed", unlocked, newlyUnlocked);
+  }
+  if (clearStages.some((stage) => stage.pulseKind === "shockwave")) {
+    maybeUnlock("shockwave_rite", unlocked, newlyUnlocked);
+  }
+  if (wipeCount > 0) {
+    maybeUnlock("sanctum_reset", unlocked, newlyUnlocked);
+  }
+  if (result.state.score >= 100000) {
+    maybeUnlock("starfold_legend", unlocked, newlyUnlocked);
+  }
 
-  return newlyUnlocked;
+  return {
+    unlocks: newlyUnlocked,
+    progressDeltas: {
+      ...(cleansedCount > 0 ? { ashbreaker_hundred: cleansedCount } : {}),
+      ...(matchGroupCount > 0 ? { constellation_mason: matchGroupCount } : {}),
+      ...(wipeCount > 0 ? { three_hundred_guardians: wipeCount } : {}),
+    },
+  };
 }
 
-function maybeUnlock(key: AchievementKey, unlocked: Set<AchievementKey>, target: AchievementKey[]): void {
+function maybeUnlock(
+  key: StandardAchievementKey,
+  unlocked: Set<StandardAchievementKey>,
+  target: StandardAchievementKey[],
+): void {
   if (unlocked.has(key)) {
     return;
   }
