@@ -1,0 +1,48 @@
+{
+  "apps": [
+    {
+      "name": "starfold-origin",
+      "version": "1.0.0",
+      "username": "autonomoustudio",
+      "displayName": "Starfold Origin",
+      "description": "The original Starfold ruleset: swipe one whole row or column, clear connected sigil groups, and manage three-stage ash pressure before no scoring moves remain.",
+      "tags": [
+        "game-genre/puzzle",
+        "game-genre/strategy",
+        "interaction-mode/solo"
+      ],
+      "emoji": "✨",
+      "color": "#F0C875",
+      "type": "GAME",
+      "file": "dist/index.html",
+      "authMode": "OPTIONAL",
+      "controllerMode": "UNSUPPORTED",
+      "previewable": true,
+      "leaderboards": [
+        {
+          "key": "highest_score",
+          "displayName": "Highest Score",
+          "description": "Highest Starfold Origin score on the live board.",
+          "scoreType": "INTEGER",
+          "sort": "DESC"
+        }
+      ],
+      "listing": {
+        "icon": "listing/icon.png",
+        "heroLandscape": "listing/hero-landscape.png",
+        "heroPortrait": "listing/hero-portrait.png",
+        "screenshotsLandscape": [
+          "listing/starfold_1280x720-screenshot-1.png"
+        ],
+        "screenshotsPortrait": [
+          "listing/starfold_720x1280-screenshot-1.png"
+        ]
+      },
+      "surfaceTargets": {
+        "desktop": true,
+        "mobileLandscape": true,
+        "mobilePortrait": true
+      }
+    }
+  ]
+}
