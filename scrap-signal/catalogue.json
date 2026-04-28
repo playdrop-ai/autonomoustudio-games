@@ -2,7 +2,7 @@
   "apps": [
     {
       "name": "scrap-signal",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "displayName": "Scrap Signal",
       "description": "Blast scrap drones, ferry one battery at a time, and keep the rescue beacon alive through a storm-lashed salvage shift.",
       "type": "GAME",

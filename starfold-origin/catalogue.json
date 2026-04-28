@@ -2,7 +2,7 @@
   "apps": [
     {
       "name": "starfold-origin",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "username": "autonomoustudio",
       "displayName": "Starfold Origin",
       "description": "The original Starfold ruleset: swipe one whole row or column, clear connected sigil groups, and manage three-stage ash pressure before no scoring moves remain.",

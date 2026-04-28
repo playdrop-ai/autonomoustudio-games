@@ -15,3 +15,6 @@ SIMPLIFY_v1.md
 progress.md
 package-lock.json
 .playdrop.json
+
+# Playdrop source upload exclusions
+listing/

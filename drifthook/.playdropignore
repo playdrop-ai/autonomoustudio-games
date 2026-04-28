@@ -5,3 +5,21 @@ coverage/
 listing/workfiles/
 listing/exports/
 
+# Playdrop source upload exclusions
+gates/
+listing/
+tests/
+IDEA.md
+SPECS.md
+SPECS_v1.md
+SIMPLIFY_v1.md
+progress.md
+scripts/capture*
+scripts/export-listing-art.mjs
+scripts/post-x-thread.mjs
+scripts/release-check.mjs
+scripts/render-mockups.mjs
+scripts/build-transparent-contact-sheet.py
+scripts/extract-fruit-sheet.py
+scripts/find-showcase-seeds.mjs
+scripts/playtest-content.mjs

@@ -2,7 +2,7 @@
   "apps": [
     {
       "name": "whiteout-watch",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "displayName": "Whiteout Watch",
       "description": "Spend limited battery pulses on the right system before the next whiteout hits and the station goes dark.",
       "type": "GAME",

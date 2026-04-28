@@ -2,7 +2,7 @@
   "apps": [
     {
       "name": "powder-post",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "displayName": "Powder Post",
       "description": "Carve downhill through the right village gates, chain parcel deliveries, and stay ahead of the avalanche.",
       "type": "GAME",

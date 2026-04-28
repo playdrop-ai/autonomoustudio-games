@@ -14,3 +14,11 @@ SPECS_v1.md
 SIMPLIFY_v1.md
 progress.md
 package-lock.json
+
+# Playdrop source upload exclusions
+listing/
+
+assets/runtime/background-shrine-v1.png
+assets/runtime/background-square.jpg
+assets/runtime/frame.png
+assets/runtime/tiles/generated-v2/generated-v2-preview.png

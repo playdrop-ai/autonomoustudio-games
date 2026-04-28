@@ -11,3 +11,11 @@ README.md
 progress.md
 package-lock.json
 tmp-hero-*.jpg
+
+# Playdrop source upload exclusions
+gates/
+listing/
+IDEA.md
+SPECS.md
+SPECS_v1.md
+SIMPLIFY_v1.md

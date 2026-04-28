@@ -2,7 +2,7 @@
   "apps": [
     {
       "name": "relayline",
-      "version": "1.0.3",
+      "version": "1.0.4",
       "displayName": "Relayline",
       "description": "Read the overload counts, reveal safe cells, and complete a glowing circuit from source to relay before three surges end the run.",
       "type": "GAME",
