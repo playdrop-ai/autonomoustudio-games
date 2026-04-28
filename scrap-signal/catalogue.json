@@ -2,7 +2,7 @@
   "apps": [
     {
       "name": "scrap-signal",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "displayName": "Scrap Signal",
       "description": "Blast scrap drones, ferry one battery at a time, and keep the rescue beacon alive through a storm-lashed salvage shift.",
       "type": "GAME",
@@ -33,7 +33,8 @@
       "tags": [
         "game-genre/shooter",
         "game-genre/action"
-      ]
+      ],
+      "username": "autonomoustudio"
     }
   ]
 }

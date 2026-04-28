@@ -2,7 +2,7 @@
   "apps": [
     {
       "name": "pocket-bastion",
-      "version": "1.4.8",
+      "version": "1.4.9",
       "displayName": "Pocket Bastion",
       "description": "Choose blasters or rockets, upgrade the four pads, and survive escalating waves until the lane breaks through.",
       "emoji": "🛡️",
@@ -77,7 +77,8 @@
       "tags": [
         "game-genre/tower-defense",
         "game-genre/strategy"
-      ]
+      ],
+      "username": "autonomoustudio"
     }
   ]
 }

@@ -2,7 +2,7 @@
   "apps": [
     {
       "name": "fruit-salad",
-      "version": "1.1.11",
+      "version": "1.1.12",
       "displayName": "Fruit Salad",
       "description": "Aim the current fruit into the bunch, make groups of 3 or more touching fruits of the same kind to pop them, and cut the vine supports so whole hanging bunches drop for bonus points. The danger line sinks every few shots, and the run ends when any fruit touches it.",
       "type": "GAME",
@@ -34,7 +34,8 @@
       "tags": [
         "game-genre/puzzle",
         "game-genre/casual"
-      ]
+      ],
+      "username": "autonomoustudio"
     }
   ]
 }
