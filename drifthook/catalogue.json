@@ -29,7 +29,11 @@
         "mobileLandscape": false,
         "mobilePortrait": true
       },
-      "templateSource": "playdrop/template/typescript_template"
+      "templateSource": "playdrop/template/typescript_template",
+      "tags": [
+        "game-genre/arcade",
+        "game-genre/casual"
+      ]
     }
   ]
 }

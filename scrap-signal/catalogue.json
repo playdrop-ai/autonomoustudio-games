@@ -20,14 +20,20 @@
           "listing/scrap-signal_1280x720-screenshot-1.png",
           "listing/scrap-signal_1280x720-screenshot-2.png"
         ],
-        "videosLandscape": ["listing/scrap-signal_1280x720-recording.mp4"]
+        "videosLandscape": [
+          "listing/scrap-signal_1280x720-recording.mp4"
+        ]
       },
       "surfaceTargets": {
         "desktop": true,
         "mobileLandscape": false,
         "mobilePortrait": false
       },
-      "templateSource": "playdrop/template/typescript_template"
+      "templateSource": "playdrop/template/typescript_template",
+      "tags": [
+        "game-genre/shooter",
+        "game-genre/action"
+      ]
     }
   ]
 }

@@ -44,7 +44,11 @@
         "desktop": true,
         "mobileLandscape": true,
         "mobilePortrait": true
-      }
+      },
+      "tags": [
+        "game-genre/card",
+        "game-genre/casual"
+      ]
     }
   ]
 }

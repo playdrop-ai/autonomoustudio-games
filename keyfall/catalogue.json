@@ -14,7 +14,11 @@
       },
       "emoji": "🎹",
       "color": "#58D3C3",
-      "templateSource": "playdrop/template/typescript_template"
+      "templateSource": "playdrop/template/typescript_template",
+      "tags": [
+        "game-genre/music",
+        "game-genre/casual"
+      ]
     }
   ]
 }
