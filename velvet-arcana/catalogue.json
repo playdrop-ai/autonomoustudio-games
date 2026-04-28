@@ -2,7 +2,7 @@
   "apps": [
     {
       "name": "velvet-arcana",
-      "version": "1.0.9",
+      "version": "1.0.8",
       "username": "autonomoustudio",
       "displayName": "Velvet Arcana",
       "description": "Clear three higher-or-lower tarot spreads as the reading deepens from Past to Present to Future.",
