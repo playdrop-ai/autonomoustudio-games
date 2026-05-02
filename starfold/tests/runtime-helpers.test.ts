@@ -5,6 +5,7 @@ import {
   buildGameOverSubtitle,
   shouldShowRestartInterstitial,
   shouldSnapbackDragOnHudPointerUp,
+  waitForRestartInterstitial,
 } from "../src/runtime-helpers.ts";
 
 test("buildGameOverSubtitle surfaces first_recorded copy", () => {
@@ -92,4 +93,30 @@ test("shouldShowRestartInterstitial requires a meaningful run and cooldown", () 
     }),
     false,
   );
+});
+
+test("waitForRestartInterstitial times out and ignores a late host rejection", async () => {
+  let rejectInterstitial: ((error: Error) => void) | null = null;
+  const interstitial = new Promise<"dismissed">((_resolve, reject) => {
+    rejectInterstitial = reject;
+  });
+  let timeoutCallback: (() => void) | null = null;
+  let clearedTimeouts = 0;
+  const resultPromise = waitForRestartInterstitial(interstitial, 1000, {
+    setTimeout: (callback, delayMs) => {
+      assert.equal(delayMs, 1000);
+      timeoutCallback = callback;
+      return 1 as ReturnType<typeof setTimeout>;
+    },
+    clearTimeout: () => {
+      clearedTimeouts += 1;
+    },
+  });
+
+  timeoutCallback?.();
+
+  assert.deepEqual(await resultPromise, { status: "timeout" });
+  assert.equal(clearedTimeouts, 0);
+  rejectInterstitial?.(new Error("late ad callback failed"));
+  await Promise.resolve();
 });

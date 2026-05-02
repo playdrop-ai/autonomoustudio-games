@@ -1,6 +1,6 @@
 {
   "name": "starfold",
-  "version": "1.4.20",
+  "version": "1.4.22",
   "type": "module",
   "private": true,
   "scripts": {

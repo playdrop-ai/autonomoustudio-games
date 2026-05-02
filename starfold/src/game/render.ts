@@ -51,6 +51,8 @@ export interface RenderModel {
   gameOverTileFadeProgress: number;
   gameOverCtaElapsedMs: number;
   overlayInteractive: boolean;
+  overlayPending: boolean;
+  overlayPendingElapsedMs: number;
   hudLoginEnabled: boolean;
   idleHint: IdleHint | null;
   dragPreview: DragPreview | null;
@@ -1471,12 +1473,50 @@ export class CanvasRenderer {
       height: ctaLayout.height,
       primary: true,
     };
+    if (model.overlayPending) {
+      this.overlayButtons = [];
+      this.drawGlassSpinnerButton(button, {
+        opacity: eased,
+        elapsedMs: model.overlayPendingElapsedMs,
+      });
+      return;
+    }
     this.overlayButtons = model.overlayInteractive ? [button] : [];
     this.drawGlassButton(button, {
       fontSize: this.layout.portrait ? 17 : 20,
       opacity: eased,
       attentionElapsedMs: model.gameOverCtaElapsedMs,
     });
+  }
+
+  private drawGlassSpinnerButton(
+    button: OverlayButtonLayout,
+    options: { opacity: number; elapsedMs: number },
+  ): void {
+    const radius = Math.round(clamp(button.height * 0.36, 22, 30));
+    this.drawGlassPanelShell(button.x, button.y, button.width, button.height, radius, options.opacity * 0.98);
+    this.ctx.save();
+    this.ctx.globalAlpha = Math.min(1, options.opacity * 0.98);
+    const innerInset = 6;
+    const innerGradient = this.ctx.createLinearGradient(button.x, button.y + innerInset, button.x, button.y + button.height - innerInset);
+    innerGradient.addColorStop(0, "rgba(255, 255, 255, 0.28)");
+    innerGradient.addColorStop(0.34, "rgba(255, 255, 255, 0.2)");
+    innerGradient.addColorStop(1, "rgba(255, 255, 255, 0.12)");
+    fillRoundedRect(this.ctx, button.x + innerInset, button.y + innerInset, button.width - innerInset * 2, button.height - innerInset * 2, Math.max(0, radius - 8), innerGradient);
+
+    const centerX = button.x + button.width / 2;
+    const centerY = button.y + button.height / 2;
+    const spinnerRadius = Math.min(button.width, button.height) * 0.18;
+    const startAngle = ((options.elapsedMs % 820) / 820) * Math.PI * 2;
+    this.ctx.beginPath();
+    this.ctx.arc(centerX, centerY, spinnerRadius, startAngle, startAngle + Math.PI * 1.35);
+    this.ctx.lineWidth = Math.max(3, spinnerRadius * 0.24);
+    this.ctx.lineCap = "round";
+    this.ctx.strokeStyle = "rgba(255, 255, 255, 0.92)";
+    this.ctx.shadowColor = "rgba(14, 16, 42, 0.24)";
+    this.ctx.shadowBlur = 8;
+    this.ctx.stroke();
+    this.ctx.restore();
   }
 
   private getGameOverButtonLayout(): {

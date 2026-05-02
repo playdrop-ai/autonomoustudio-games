@@ -5,7 +5,7 @@ import { applyMove, BOARD_COLS, BOARD_ROWS, boardKinds, boardStateKinds, cloneBo
 import { classifyGameOverResult, freezeHudSnapshot, type GameOverResult } from "./game/results";
 import { CanvasRenderer, type BoardResetTransition, type ComboLabel, type DragPreview, type IdleHint, type RenderQualityTier, type StartupIntroState, type TileInteractionState } from "./game/render";
 import { PlaydropController, type PlatformSnapshot } from "./platform";
-import { buildGameOverSubtitle, defaultGameOverSubtitle, shouldShowRestartInterstitial, shouldSnapbackDragOnHudPointerUp } from "./runtime-helpers";
+import { buildGameOverSubtitle, defaultGameOverSubtitle, shouldShowRestartInterstitial, shouldSnapbackDragOnHudPointerUp, waitForRestartInterstitial } from "./runtime-helpers";
 
 type Screen = "playing" | "losing" | "gameover";
 type StandardAchievementKey =
@@ -192,6 +192,7 @@ const GAME_OVER_CTA_BOUNCE_WINDOW_MS = 1800;
 const RESTART_INTERSTITIAL_MIN_RUN_MS = 45_000;
 const RESTART_INTERSTITIAL_MIN_RUN_MOVES = 12;
 const RESTART_INTERSTITIAL_COOLDOWN_MS = 180_000;
+const RESTART_INTERSTITIAL_SHOW_TIMEOUT_MS = 1_000;
 
 let platform: PlaydropController | null = null;
 
@@ -250,6 +251,7 @@ void (async () => {
   let lastInterstitialShownAt: number | null = null;
   let restartInterstitialShownForRun = false;
   let restartInterstitialInFlight = false;
+  let restartInterstitialStartedAt: number | null = null;
   let previewModeActive = false;
   let boardReset: BoardResetSequence | null = null;
   let boardResetSequenceSeed = 0;
@@ -310,6 +312,7 @@ void (async () => {
         hoverCell,
         pressFeedback,
         lastInteractionAt,
+        restartInterstitialInFlight,
       }),
       dragPreview: dragPreview
         ? {
@@ -435,6 +438,7 @@ void (async () => {
     gameOverShownAt = null;
     restartInterstitialShownForRun = false;
     restartInterstitialInFlight = false;
+    restartInterstitialStartedAt = null;
     boardReset = null;
     lastInteractionAt = now;
     qualitySamples = [];
@@ -559,23 +563,30 @@ void (async () => {
       void preloadRestartInterstitial(now);
       return;
     }
-    if (!interstitialReady || !platform?.canUseInterstitialAds()) {
+    const controller = platform;
+    if (!interstitialReady || !controller?.canUseInterstitialAds()) {
       void preloadRestartInterstitial(now);
       return;
     }
     restartInterstitialInFlight = true;
+    const showStartedAt = performance.now();
+    restartInterstitialStartedAt = showStartedAt;
+    lastInterstitialShownAt = showStartedAt;
+    restartInterstitialShownForRun = true;
     interstitialReady = false;
     markSceneDirty();
     try {
-      const status = await platform.showInterstitial();
-      if (status === "dismissed") {
+      const result = await waitForRestartInterstitial(controller.showInterstitial(), RESTART_INTERSTITIAL_SHOW_TIMEOUT_MS);
+      if (result.status === "resolved" && result.value === "dismissed") {
         lastInterstitialShownAt = performance.now();
-        restartInterstitialShownForRun = true;
+      } else if (result.status === "rejected") {
+        controller.reportError(result.error);
       }
     } catch (error) {
       platform?.reportError(error);
     } finally {
       restartInterstitialInFlight = false;
+      restartInterstitialStartedAt = null;
       void preloadRestartInterstitial(performance.now());
       markSceneDirty();
     }
@@ -1016,6 +1027,7 @@ void (async () => {
       hoverCell,
       pressFeedback,
       lastInteractionAt,
+      restartInterstitialInFlight,
     });
     const nextQualityTier = updateQualityTier({
       current: qualityTier,
@@ -1123,6 +1135,8 @@ void (async () => {
       gameOverTileFadeProgress: screen === "gameover" ? 1 : gameOverTransition.tileFadeProgress,
       gameOverCtaElapsedMs: screen === "gameover" && gameOverShownAt !== null ? now - gameOverShownAt : 0,
       overlayInteractive: !previewModeActive && screen === "gameover" && !restartInterstitialInFlight,
+      overlayPending: restartInterstitialInFlight,
+      overlayPendingElapsedMs: restartInterstitialStartedAt === null ? 0 : Math.max(0, now - restartInterstitialStartedAt),
       hudLoginEnabled: !snapshot.isLoggedIn && platform?.canPromptLogin() === true,
       idleHint: previewModeActive ? null : idleHint,
       dragPreview: boardReset ? null : dragPreview ? { move: dragPreview.move, offsetPx: dragPreview.offsetPx, settling: dragPreview.settling } : null,
@@ -1859,6 +1873,7 @@ function shouldContinueRenderLoop(options: {
   hoverCell: { row: number; col: number } | null;
   pressFeedback: PressFeedback | null;
   lastInteractionAt: number;
+  restartInterstitialInFlight: boolean;
 }): boolean {
   if (!options.startupIntro.completed) {
     return true;
@@ -1870,6 +1885,9 @@ function shouldContinueRenderLoop(options: {
     return true;
   }
   if (options.comboLabel) {
+    return true;
+  }
+  if (options.restartInterstitialInFlight) {
     return true;
   }
   if (options.dragPreview?.settling) {

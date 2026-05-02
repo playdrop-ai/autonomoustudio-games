@@ -290,3 +290,11 @@ Original prompt: Create and publish a new game using $playdrop skill.
 - Reworked Starfold achievements around the new mechanic set and long-term goals. The catalogue now defines eleven achievements: eight standard unlocks plus three incremental PlayDrop progress achievements for ash destroyed, match groups completed, and full-board wipes.
 - Replaced the four legacy achievement icons and added seven new icons from the selected Images 2.0 Starfold-style sheet. The generated source sheet is stored at `output/achievement-art-v2-source/selected-achievement-sheet-v2.png`.
 - Extended the runtime meta queue to submit PlayDrop incremental progress with `sdk.achievements.setProgressAtLeast(...)` after reading current progress through `sdk.achievements.list()`.
+
+2026-05-02 10:57 EDT
+- Added immediate pending feedback for the hosted Play Again restart ad path. When a ready restart interstitial is shown, the canvas CTA now swaps to the same glass button shell with a simple spinner in the original button slot.
+- Capped `sdk.ads.interstitial.show()` waiting at one second through `waitForRestartInterstitial(...)`, then the game starts the fresh run even if the hosted ad promise is still pending. Late host rejections are handled by the helper instead of surfacing as unhandled promise failures, and the show attempt starts the restart-ad cooldown.
+- Added regression coverage for the timeout path and late rejection handling in `tests/runtime-helpers.test.ts`.
+- Validation for this pass: red test confirmed the missing helper, then `node --experimental-strip-types --test tests/runtime-helpers.test.ts`, `npm test`, `npx tsc --noEmit`, `npm run build`, and browser proof with a mocked hosted SDK.
+- Prepared the publish metadata for PlayDrop version `1.4.22`.
+- Spinner proof screenshot: `output/playwright/restart-spinner-v1/starfold-restart-spinner.png`.
