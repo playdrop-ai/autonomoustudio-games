@@ -5,7 +5,7 @@ import { applyMove, BOARD_COLS, BOARD_ROWS, boardKinds, boardStateKinds, cloneBo
 import { classifyGameOverResult, freezeHudSnapshot, type GameOverResult } from "./game/results";
 import { CanvasRenderer, type BoardResetTransition, type ComboLabel, type DragPreview, type IdleHint, type RenderQualityTier, type StartupIntroState, type TileInteractionState } from "./game/render";
 import { PlaydropController, type PlatformSnapshot } from "./platform";
-import { buildGameOverSubtitle, defaultGameOverSubtitle, shouldAnimatePreviewRestart, shouldShowRestartInterstitial, shouldSnapbackDragOnHudPointerUp, waitForRestartInterstitial } from "./runtime-helpers";
+import { buildGameOverSubtitle, calculateComboStageDuration, defaultGameOverSubtitle, shouldAnimatePreviewRestart, shouldShowRestartInterstitial, shouldSnapbackDragOnHudPointerUp, waitForRestartInterstitial } from "./runtime-helpers";
 
 type Screen = "playing" | "losing" | "gameover";
 type StandardAchievementKey =
@@ -154,6 +154,8 @@ const STAGE_DURATIONS: Record<TurnStage["kind"], number> = {
   collapse: 300,
   ash: 270,
 };
+const CLEAR_COMBO_SPEED_MULTIPLIER = 0.9;
+const MIN_CLEAR_STAGE_MS = 155;
 const IDLE_HINT_DELAY_MS = 4500;
 const IDLE_HINT_ACTIVE_MS = 1300;
 const IDLE_HINT_REST_MS = 2400;
@@ -856,7 +858,7 @@ void (async () => {
         activeStage = {
           stage,
           startTime: stageCursor,
-          duration: STAGE_DURATIONS[stage.kind],
+          duration: getStageDuration(stage),
         };
       }
 
@@ -872,6 +874,18 @@ void (async () => {
       stageCursor = stageEnd;
       activeStage = null;
     }
+  }
+
+  function getStageDuration(stage: TurnStage): number {
+    if (stage.kind !== "clear") {
+      return STAGE_DURATIONS[stage.kind];
+    }
+    return calculateComboStageDuration({
+      baseMs: STAGE_DURATIONS.clear,
+      comboDepth: stage.combo,
+      multiplier: CLEAR_COMBO_SPEED_MULTIPLIER,
+      minMs: MIN_CLEAR_STAGE_MS,
+    });
   }
 
   function schedulePreviewStart(now: number): void {

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import {
   buildGameOverSubtitle,
+  calculateComboStageDuration,
   shouldAnimatePreviewRestart,
   shouldShowRestartInterstitial,
   shouldSnapbackDragOnHudPointerUp,
@@ -123,6 +124,45 @@ test("preview game-over restart uses animated board reset after the restart time
       now: 1200,
     }),
     false,
+  );
+});
+
+test("calculateComboStageDuration speeds up later combo clears with a readable floor", () => {
+  assert.equal(
+    calculateComboStageDuration({
+      baseMs: 255,
+      comboDepth: 1,
+      multiplier: 0.9,
+      minMs: 155,
+    }),
+    255,
+  );
+  assert.equal(
+    calculateComboStageDuration({
+      baseMs: 255,
+      comboDepth: 2,
+      multiplier: 0.9,
+      minMs: 155,
+    }),
+    230,
+  );
+  assert.equal(
+    calculateComboStageDuration({
+      baseMs: 255,
+      comboDepth: 3,
+      multiplier: 0.9,
+      minMs: 155,
+    }),
+    207,
+  );
+  assert.equal(
+    calculateComboStageDuration({
+      baseMs: 255,
+      comboDepth: 12,
+      multiplier: 0.9,
+      minMs: 155,
+    }),
+    155,
   );
 });
 

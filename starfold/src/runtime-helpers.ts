@@ -83,6 +83,29 @@ export function shouldAnimatePreviewRestart(options: {
   );
 }
 
+export function calculateComboStageDuration(options: {
+  baseMs: number;
+  comboDepth: number;
+  multiplier: number;
+  minMs: number;
+}): number {
+  if (!Number.isFinite(options.baseMs) || options.baseMs <= 0) {
+    throw new Error("combo stage base duration must be a positive finite number");
+  }
+  if (!Number.isSafeInteger(options.comboDepth) || options.comboDepth < 1) {
+    throw new Error("combo stage depth must be a positive integer");
+  }
+  if (!Number.isFinite(options.multiplier) || options.multiplier <= 0 || options.multiplier >= 1) {
+    throw new Error("combo stage multiplier must be greater than 0 and less than 1");
+  }
+  if (!Number.isFinite(options.minMs) || options.minMs <= 0 || options.minMs > options.baseMs) {
+    throw new Error("combo stage minimum duration must be positive and no greater than the base duration");
+  }
+
+  const scaledMs = options.baseMs * Math.pow(options.multiplier, options.comboDepth - 1);
+  return Math.max(options.minMs, Math.round(scaledMs));
+}
+
 export function waitForRestartInterstitial<T>(
   interstitial: Promise<T>,
   timeoutMs: number,
