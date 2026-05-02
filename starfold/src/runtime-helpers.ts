@@ -69,6 +69,20 @@ export function shouldShowRestartInterstitial(options: {
   return options.now - lastAnchor >= options.cooldownMs;
 }
 
+export function shouldAnimatePreviewRestart(options: {
+  previewModeActive: boolean;
+  screen: Screen;
+  restartAt: number | null;
+  now: number;
+}): boolean {
+  return (
+    options.previewModeActive &&
+    options.screen === "gameover" &&
+    options.restartAt !== null &&
+    options.now >= options.restartAt
+  );
+}
+
 export function waitForRestartInterstitial<T>(
   interstitial: Promise<T>,
   timeoutMs: number,

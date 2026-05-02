@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import {
   buildGameOverSubtitle,
+  shouldAnimatePreviewRestart,
   shouldShowRestartInterstitial,
   shouldSnapbackDragOnHudPointerUp,
   waitForRestartInterstitial,
@@ -90,6 +91,36 @@ test("shouldShowRestartInterstitial requires a meaningful run and cooldown", () 
       minRunMoves: 12,
       minRunMs: 45_000,
       cooldownMs: 180_000,
+    }),
+    false,
+  );
+});
+
+test("preview game-over restart uses animated board reset after the restart timer", () => {
+  assert.equal(
+    shouldAnimatePreviewRestart({
+      previewModeActive: true,
+      screen: "gameover",
+      restartAt: 1200,
+      now: 1200,
+    }),
+    true,
+  );
+  assert.equal(
+    shouldAnimatePreviewRestart({
+      previewModeActive: true,
+      screen: "gameover",
+      restartAt: 1200,
+      now: 1199,
+    }),
+    false,
+  );
+  assert.equal(
+    shouldAnimatePreviewRestart({
+      previewModeActive: false,
+      screen: "gameover",
+      restartAt: 1200,
+      now: 1200,
     }),
     false,
   );

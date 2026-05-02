@@ -5,7 +5,7 @@ import { applyMove, BOARD_COLS, BOARD_ROWS, boardKinds, boardStateKinds, cloneBo
 import { classifyGameOverResult, freezeHudSnapshot, type GameOverResult } from "./game/results";
 import { CanvasRenderer, type BoardResetTransition, type ComboLabel, type DragPreview, type IdleHint, type RenderQualityTier, type StartupIntroState, type TileInteractionState } from "./game/render";
 import { PlaydropController, type PlatformSnapshot } from "./platform";
-import { buildGameOverSubtitle, defaultGameOverSubtitle, shouldShowRestartInterstitial, shouldSnapbackDragOnHudPointerUp, waitForRestartInterstitial } from "./runtime-helpers";
+import { buildGameOverSubtitle, defaultGameOverSubtitle, shouldAnimatePreviewRestart, shouldShowRestartInterstitial, shouldSnapbackDragOnHudPointerUp, waitForRestartInterstitial } from "./runtime-helpers";
 
 type Screen = "playing" | "losing" | "gameover";
 type StandardAchievementKey =
@@ -919,8 +919,15 @@ void (async () => {
       if (previewLoop.restartAt === null) {
         previewLoop.restartAt = now + PREVIEW_RESTART_DELAY_MS;
       }
-      if (now >= previewLoop.restartAt) {
-        startNewRun();
+      if (
+        shouldAnimatePreviewRestart({
+          previewModeActive,
+          screen,
+          restartAt: previewLoop.restartAt,
+          now,
+        })
+      ) {
+        startNewRunWithBoardReset(now, getVisibleBoardSnapshot(), getCurrentBoardAshedAmount(now));
       }
       return;
     }
