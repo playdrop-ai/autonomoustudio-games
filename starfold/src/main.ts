@@ -150,12 +150,12 @@ interface BoardResetSequence {
 const LEADERBOARD_KEY = "highest_score";
 const STAGE_DURATIONS: Record<TurnStage["kind"], number> = {
   shift: 225,
-  clear: 255,
+  clear: 204,
   collapse: 300,
   ash: 270,
 };
 const CLEAR_COMBO_SPEED_MULTIPLIER = 0.9;
-const MIN_CLEAR_STAGE_MS = 155;
+const MIN_CLEAR_STAGE_MS = 124;
 const IDLE_HINT_DELAY_MS = 4500;
 const IDLE_HINT_ACTIVE_MS = 1300;
 const IDLE_HINT_REST_MS = 2400;

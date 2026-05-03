@@ -130,39 +130,39 @@ test("preview game-over restart uses animated board reset after the restart time
 test("calculateComboStageDuration speeds up later combo clears with a readable floor", () => {
   assert.equal(
     calculateComboStageDuration({
-      baseMs: 255,
+      baseMs: 204,
       comboDepth: 1,
       multiplier: 0.9,
-      minMs: 155,
+      minMs: 124,
     }),
-    255,
+    204,
   );
   assert.equal(
     calculateComboStageDuration({
-      baseMs: 255,
+      baseMs: 204,
       comboDepth: 2,
       multiplier: 0.9,
-      minMs: 155,
+      minMs: 124,
     }),
-    230,
+    184,
   );
   assert.equal(
     calculateComboStageDuration({
-      baseMs: 255,
+      baseMs: 204,
       comboDepth: 3,
       multiplier: 0.9,
-      minMs: 155,
+      minMs: 124,
     }),
-    207,
+    165,
   );
   assert.equal(
     calculateComboStageDuration({
-      baseMs: 255,
+      baseMs: 204,
       comboDepth: 12,
       multiplier: 0.9,
-      minMs: 155,
+      minMs: 124,
     }),
-    155,
+    124,
   );
 });
 
