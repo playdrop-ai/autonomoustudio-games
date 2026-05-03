@@ -478,13 +478,13 @@ void (async () => {
     previewLoop.restartAt = null;
   }
 
-  function queueMove(move: Move, startOffsetPx = 0): void {
-    if (screen !== "playing" || activeStage || queuedStages.length > 0 || boardReset || gameState.gameOver || !startupIntro.completed) return;
+  function queueMove(move: Move, startOffsetPx = 0): boolean {
+    if (screen !== "playing" || activeStage || queuedStages.length > 0 || boardReset || gameState.gameOver || !startupIntro.completed) return false;
     lastInteractionAt = performance.now();
     comboLabel = null;
 
     const result = applyMove(gameState, move, { startOffsetPx });
-    if (result.stages.length === 0) return;
+    if (result.stages.length === 0) return false;
 
     if (!previewModeActive) {
       audio.startMusicLoop();
@@ -500,6 +500,7 @@ void (async () => {
 
     gameState = result.state;
     markSceneDirty();
+    return true;
   }
 
   async function handleHudLogin(): Promise<void> {
@@ -964,7 +965,9 @@ void (async () => {
       throw new Error("Preview autoplay could not find a playable move");
     }
     previewLoop.nextMoveAt = null;
-    queueMove(move);
+    if (queueMove(move)) {
+      advanceStages(now);
+    }
   }
 
   function getVisibleBoardSnapshot(): Board {
