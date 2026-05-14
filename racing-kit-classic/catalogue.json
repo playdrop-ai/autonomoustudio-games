@@ -1,0 +1,290 @@
+{
+  "apps": [
+    {
+      "name": "racing-kit-classic",
+      "version": "1.0.0",
+      "username": "autonomoustudio",
+      "displayName": "Racing Kit Classic",
+      "description": "Race around Kenney's classic low-poly sandbox track, switch vehicles, then open the built-in editor to create, playtest, and publish custom racing tracks on PlayDrop.",
+      "type": "GAME",
+      "authMode": "OPTIONAL",
+      "controllerMode": "SUPPORTED",
+      "previewable": true,
+      "emoji": "🏎️",
+      "color": "#8DB8F6",
+      "file": "dist/index.html",
+      "ownedAssets": [
+        {
+          "name": "starter-kit-racing-vehicle-truck-yellow",
+          "runtimeKey": "vehicle-truck-yellow",
+          "displayName": "Starter Kit Racing Yellow Truck",
+          "description": "Public runtime asset for the yellow truck used by Starter Kit Racing.",
+          "category": "MODEL_3D",
+          "subcategory": "generic",
+          "format": "GLB",
+          "visibility": "PUBLIC",
+          "files": {
+            "primary": "assets/models/vehicle-truck-yellow.glb",
+            "preview": "assets/previews/vehicle.png"
+          }
+        },
+        {
+          "name": "starter-kit-racing-vehicle-truck-red",
+          "runtimeKey": "vehicle-truck-red",
+          "displayName": "Starter Kit Racing Red Truck",
+          "description": "Public runtime asset for the red truck used by Starter Kit Racing.",
+          "category": "MODEL_3D",
+          "subcategory": "generic",
+          "format": "GLB",
+          "visibility": "PUBLIC",
+          "files": {
+            "primary": "assets/models/vehicle-truck-red.glb",
+            "preview": "assets/previews/vehicle.png"
+          }
+        },
+        {
+          "name": "starter-kit-racing-vehicle-truck-green",
+          "runtimeKey": "vehicle-truck-green",
+          "displayName": "Starter Kit Racing Green Truck",
+          "description": "Public runtime asset for the green truck used by Starter Kit Racing.",
+          "category": "MODEL_3D",
+          "subcategory": "generic",
+          "format": "GLB",
+          "visibility": "PUBLIC",
+          "files": {
+            "primary": "assets/models/vehicle-truck-green.glb",
+            "preview": "assets/previews/vehicle.png"
+          }
+        },
+        {
+          "name": "starter-kit-racing-vehicle-truck-purple",
+          "runtimeKey": "vehicle-truck-purple",
+          "displayName": "Starter Kit Racing Purple Truck",
+          "description": "Public runtime asset for the purple truck used by Starter Kit Racing.",
+          "category": "MODEL_3D",
+          "subcategory": "generic",
+          "format": "GLB",
+          "visibility": "PUBLIC",
+          "files": {
+            "primary": "assets/models/vehicle-truck-purple.glb",
+            "preview": "assets/previews/vehicle.png"
+          }
+        },
+        {
+          "name": "starter-kit-racing-vehicle-motorcycle",
+          "runtimeKey": "vehicle-motorcycle",
+          "displayName": "Starter Kit Racing Motorcycle",
+          "description": "Public runtime asset for the motorcycle used by Starter Kit Racing.",
+          "category": "MODEL_3D",
+          "subcategory": "generic",
+          "format": "GLB",
+          "visibility": "PUBLIC",
+          "files": {
+            "primary": "assets/models/vehicle-motorcycle.glb",
+            "preview": "assets/previews/vehicle.png"
+          }
+        },
+        {
+          "name": "starter-kit-racing-tile-track-corner",
+          "runtimeKey": "tile-track-corner",
+          "displayName": "Starter Kit Racing Corner Track Tile",
+          "description": "Public runtime asset for the driveable corner road tile used by Starter Kit Racing.",
+          "category": "MODEL_3D",
+          "subcategory": "block",
+          "format": "GLB",
+          "visibility": "PUBLIC",
+          "files": {
+            "primary": "assets/models/track-corner.glb",
+            "preview": "assets/previews/track-tile.png",
+            "collision": "assets/collision/track-corner.json"
+          }
+        },
+        {
+          "name": "starter-kit-racing-tile-track-finish",
+          "runtimeKey": "tile-track-finish",
+          "displayName": "Starter Kit Racing Finish Track Tile",
+          "description": "Public runtime asset for the finish road tile used by Starter Kit Racing.",
+          "category": "MODEL_3D",
+          "subcategory": "block",
+          "format": "GLB",
+          "visibility": "PUBLIC",
+          "files": {
+            "primary": "assets/models/track-finish.glb",
+            "preview": "assets/previews/track-tile.png",
+            "collision": "assets/collision/track-finish.json"
+          }
+        },
+        {
+          "name": "starter-kit-racing-tile-track-straight",
+          "runtimeKey": "tile-track-straight",
+          "displayName": "Starter Kit Racing Straight Track Tile",
+          "description": "Public runtime asset for the straight road tile used by Starter Kit Racing.",
+          "category": "MODEL_3D",
+          "subcategory": "block",
+          "format": "GLB",
+          "visibility": "PUBLIC",
+          "files": {
+            "primary": "assets/models/track-straight.glb",
+            "preview": "assets/previews/track-tile.png",
+            "collision": "assets/collision/track-straight.json"
+          }
+        },
+        {
+          "name": "starter-kit-racing-tile-deco-empty",
+          "runtimeKey": "tile-deco-empty",
+          "displayName": "Starter Kit Racing Empty Ground Tile",
+          "description": "Public runtime asset for the empty ground tile used by Starter Kit Racing.",
+          "category": "MODEL_3D",
+          "subcategory": "block",
+          "format": "GLB",
+          "visibility": "PUBLIC",
+          "files": {
+            "primary": "assets/models/decoration-empty.glb",
+            "preview": "assets/previews/deco-tile.png"
+          }
+        },
+        {
+          "name": "starter-kit-racing-tile-deco-forest",
+          "runtimeKey": "tile-deco-forest",
+          "displayName": "Starter Kit Racing Forest Decoration Tile",
+          "description": "Public runtime asset for the forest decoration tile used by Starter Kit Racing.",
+          "category": "MODEL_3D",
+          "subcategory": "block",
+          "format": "GLB",
+          "visibility": "PUBLIC",
+          "files": {
+            "primary": "assets/models/decoration-forest.glb",
+            "preview": "assets/previews/deco-tile.png"
+          }
+        },
+        {
+          "name": "starter-kit-racing-tile-deco-tents",
+          "runtimeKey": "tile-deco-tents",
+          "displayName": "Starter Kit Racing Tents Decoration Tile",
+          "description": "Public runtime asset for the tents decoration tile used by Starter Kit Racing.",
+          "category": "MODEL_3D",
+          "subcategory": "block",
+          "format": "GLB",
+          "visibility": "PUBLIC",
+          "files": {
+            "primary": "assets/models/decoration-tents.glb",
+            "preview": "assets/previews/deco-tile.png"
+          }
+        },
+        {
+          "name": "starter-kit-racing-smoke-sprite",
+          "runtimeKey": "sprite-smoke",
+          "displayName": "Starter Kit Racing Smoke Sprite",
+          "description": "Public runtime asset for the smoke sprite used by Starter Kit Racing particles.",
+          "category": "IMAGE",
+          "subcategory": "generic",
+          "format": "PNG",
+          "visibility": "PUBLIC",
+          "files": {
+            "primary": "assets/sprites/smoke.png",
+            "preview": "assets/previews/smoke.png"
+          }
+        },
+        {
+          "name": "starter-kit-racing-sfx-engine-truck",
+          "runtimeKey": "sfx-engine-truck",
+          "displayName": "Starter Kit Racing Truck Engine SFX",
+          "description": "Public runtime asset for the truck engine loop used by Starter Kit Racing.",
+          "category": "AUDIO",
+          "subcategory": "sfx",
+          "format": "OGG",
+          "visibility": "PUBLIC",
+          "files": {
+            "primary": "assets/audio/engine.ogg",
+            "cover": "assets/previews/audio-engine.png"
+          }
+        },
+        {
+          "name": "starter-kit-racing-sfx-engine-motorcycle",
+          "runtimeKey": "sfx-engine-motorcycle",
+          "displayName": "Starter Kit Racing Motorcycle Engine SFX",
+          "description": "Public runtime asset for the motorcycle engine loop used by Starter Kit Racing.",
+          "category": "AUDIO",
+          "subcategory": "sfx",
+          "format": "OGG",
+          "visibility": "PUBLIC",
+          "files": {
+            "primary": "assets/audio/engine-motorcycle.ogg",
+            "cover": "assets/previews/audio-engine.png"
+          }
+        },
+        {
+          "name": "starter-kit-racing-sfx-skid",
+          "runtimeKey": "sfx-skid",
+          "displayName": "Starter Kit Racing Skid SFX",
+          "description": "Public runtime asset for the skid sound effect used by Starter Kit Racing.",
+          "category": "AUDIO",
+          "subcategory": "sfx",
+          "format": "OGG",
+          "visibility": "PUBLIC",
+          "files": {
+            "primary": "assets/audio/skid.ogg",
+            "cover": "assets/previews/audio-sfx.png"
+          }
+        },
+        {
+          "name": "starter-kit-racing-sfx-impact",
+          "runtimeKey": "sfx-impact",
+          "displayName": "Starter Kit Racing Impact SFX",
+          "description": "Public runtime asset for the impact sound effect used by Starter Kit Racing.",
+          "category": "AUDIO",
+          "subcategory": "sfx",
+          "format": "OGG",
+          "visibility": "PUBLIC",
+          "files": {
+            "primary": "assets/audio/impact.ogg",
+            "cover": "assets/previews/audio-sfx.png"
+          }
+        }
+      ],
+      "assetSpecSupport": [
+        {
+          "assetSpec": "asset-spec:playdrop/racing-track",
+          "versionRange": "^1.0.0",
+          "capabilities": ["READ", "WRITE", "EDIT", "PREVIEW"]
+        }
+      ],
+      "uses": {
+        "assets": [
+          {
+            "ref": "asset:playdrop/starter-kit-racing-stock@r1",
+            "runtimeKey": "stock-track"
+          }
+        ]
+      },
+      "surfaceTargets": {
+        "desktop": true,
+        "mobileLandscape": true,
+        "mobilePortrait": true
+      },
+      "listing": {
+        "icon": "listing/icon.png",
+        "heroLandscape": "listing/hero-landscape.png",
+        "heroPortrait": "listing/hero-portrait.png",
+        "screenshotsLandscape": [
+          "listing/starter-kit-racing_1280x720-screenshot-1.png",
+          "listing/starter-kit-racing_1280x720-screenshot-2.png"
+        ],
+        "videosLandscape": [
+          "listing/starter-kit-racing_1280x720-recording.mp4"
+        ],
+        "screenshotsPortrait": [
+          "listing/starter-kit-racing_720x1280-screenshot-1.png",
+          "listing/starter-kit-racing_720x1280-screenshot-2.png"
+        ],
+        "videosPortrait": [
+          "listing/starter-kit-racing_720x1280-recording.mp4"
+        ]
+      },
+      "tags": [
+        "game-genre/racing",
+        "game-genre/arcade"
+      ]
+    }
+  ]
+}

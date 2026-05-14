@@ -1,0 +1,956 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Racing Kit Classic</title>
+    <style>
+      :root {
+        color-scheme: only light;
+        font-family: "Trebuchet MS", "Avenir Next", sans-serif;
+        background: #90b5ef;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: linear-gradient(180deg, #8db8f6 0%, #d7eefc 100%);
+      }
+
+      body {
+        color: #0f172a;
+        overscroll-behavior: none;
+      }
+
+      body.touch-device,
+      body.touch-device #app,
+      body.touch-device #game-canvas {
+        touch-action: none;
+      }
+
+      #app {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+      }
+
+      #game-canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      #player-label-layer {
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        pointer-events: none;
+        overflow: hidden;
+      }
+
+      .player-name-tag {
+        position: absolute;
+        left: 0;
+        top: 0;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.78);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: #f8fafc;
+        font-size: 12px;
+        font-weight: 800;
+        line-height: 1;
+        letter-spacing: 0.01em;
+        white-space: nowrap;
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.25);
+        will-change: transform;
+      }
+
+      .debug-panel {
+        position: absolute;
+        top: max(12px, env(safe-area-inset-top));
+        left: max(12px, env(safe-area-inset-left));
+        z-index: 8;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px;
+        border-radius: 999px;
+        background: rgba(255, 253, 248, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.72);
+        box-shadow: 0 14px 30px rgba(15, 23, 42, 0.18);
+        backdrop-filter: blur(14px);
+      }
+
+      .debug-panel[hidden] {
+        display: none;
+      }
+
+      .debug-button {
+        min-width: 88px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: transparent;
+        box-shadow: none;
+        color: #475569;
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .debug-button[aria-pressed="true"],
+      .debug-button.is-selected {
+        background: rgba(15, 23, 42, 0.92);
+        color: #f8fafc;
+      }
+
+      .overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: linear-gradient(180deg, rgba(35, 61, 95, 0.12) 0%, rgba(35, 61, 95, 0.5) 100%);
+      }
+
+      .overlay[hidden] {
+        display: none;
+      }
+
+      .panel {
+        width: min(860px, calc(100vw - 48px));
+        max-height: calc(100vh - 48px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+        border-radius: 20px;
+        padding: 22px 24px 20px;
+        background: rgba(255, 253, 248, 0.92);
+        border: 2px solid rgba(255, 255, 255, 0.7);
+        box-shadow: 0 20px 60px rgba(15, 23, 42, 0.2);
+        backdrop-filter: blur(14px);
+        overflow-y: auto;
+      }
+
+      #start-overlay {
+        --vehicle-picker-gap: 12px;
+        --vehicle-tile-size: 112px;
+      }
+
+      #start-overlay .panel {
+        width: fit-content;
+        max-width: calc(100vw - 48px);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .eyebrow {
+        margin: 0 0 10px;
+        font-size: 12px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: #475569;
+      }
+
+      h1 {
+        margin: 0 0 12px;
+        font-size: clamp(28px, 4vw, 42px);
+        line-height: 0.95;
+      }
+
+      #start-overlay h1 {
+        text-align: center;
+      }
+
+      .picker-heading {
+        margin: 0 0 14px;
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #475569;
+      }
+
+      .overlay-status {
+        margin: 0;
+        color: #334155;
+        font-size: 15px;
+        line-height: 1.5;
+      }
+
+      #start-overlay .overlay-status {
+        max-width: 32rem;
+        text-align: center;
+      }
+
+      .overlay-status[hidden] {
+        display: none;
+      }
+
+      .overlay-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 18px;
+      }
+
+      .overlay-action-button {
+        min-height: 64px;
+        padding: 14px 18px;
+        border-radius: 18px;
+        border: 2px solid rgba(148, 163, 184, 0.28);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        font-size: 16px;
+        font-weight: 800;
+        line-height: 1.2;
+        transition:
+          transform 120ms ease,
+          box-shadow 120ms ease,
+          border-color 120ms ease,
+          background 120ms ease;
+      }
+
+      .overlay-action-button:hover:not(:disabled) {
+        transform: translateY(-1px);
+      }
+
+      .overlay-action-button.is-focused {
+        border-color: rgba(245, 158, 11, 0.95);
+        box-shadow:
+          0 0 0 2px rgba(255, 247, 219, 0.96),
+          0 16px 28px rgba(245, 158, 11, 0.2);
+      }
+
+      .overlay-primary-button {
+        background: linear-gradient(180deg, #f8b639 0%, #f59e0b 100%);
+        color: #1f2937;
+      }
+
+      .overlay-secondary-button {
+        background: rgba(15, 23, 42, 0.92);
+        color: #f8fafc;
+        box-shadow: 0 16px 30px rgba(15, 23, 42, 0.18);
+      }
+
+      .truck-picker-shell {
+        margin-top: 18px;
+        display: flex;
+        justify-content: center;
+      }
+
+      .truck-picker-shell[hidden] {
+        display: none;
+      }
+
+      .truck-picker {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: var(--vehicle-picker-gap);
+        max-width: calc(var(--vehicle-tile-size) * 3 + var(--vehicle-picker-gap) * 2);
+        margin: 0;
+      }
+
+      .truck-button {
+        display: block;
+        flex: 0 0 var(--vehicle-tile-size);
+        width: var(--vehicle-tile-size);
+        padding: 0;
+        border: 0;
+        border-radius: 18px;
+        background: transparent;
+        color: #334155;
+        font-weight: 700;
+        box-shadow: none;
+        transition:
+          transform 120ms ease,
+          box-shadow 120ms ease,
+          border-color 120ms ease,
+          background 120ms ease;
+      }
+
+      .truck-button:hover {
+        transform: translateY(-2px);
+      }
+
+      .truck-button[aria-pressed="true"],
+      .truck-button.is-selected {
+        background: transparent;
+        color: #0f172a;
+        box-shadow: none;
+      }
+
+      .truck-button:disabled {
+        transform: none;
+        opacity: 0.68;
+        cursor: wait;
+        box-shadow: none;
+      }
+
+      .truck-preview-frame {
+        display: block;
+        width: 100%;
+        aspect-ratio: 1;
+        border-radius: 18px;
+        overflow: hidden;
+      }
+
+      .truck-preview-image {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        border-radius: inherit;
+      }
+
+      .truck-button[aria-pressed="true"] .truck-preview-image,
+      .truck-button.is-selected .truck-preview-image {
+        box-shadow:
+          0 0 0 4px rgba(245, 158, 11, 0.92),
+          0 16px 28px rgba(245, 158, 11, 0.22);
+      }
+
+      .truck-button:focus-visible .truck-preview-image {
+        box-shadow:
+          0 0 0 4px rgba(59, 130, 246, 0.82),
+          0 16px 28px rgba(59, 130, 246, 0.18);
+      }
+
+      button {
+        appearance: none;
+        border: 0;
+        border-radius: 999px;
+        padding: 12px 18px;
+        background: #f59e0b;
+        color: #1f2937;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 10px 30px rgba(245, 158, 11, 0.35);
+      }
+
+      button:disabled {
+        cursor: wait;
+        opacity: 0.68;
+        box-shadow: none;
+      }
+
+      .mode-bar {
+        position: absolute;
+        top: max(12px, env(safe-area-inset-top));
+        left: 50%;
+        z-index: 8;
+        transform: translateX(-50%);
+      }
+
+      .mode-bar[hidden] {
+        display: none;
+      }
+
+      .mode-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px;
+        border-radius: 999px;
+        background: rgba(255, 253, 248, 0.92);
+        border: 1px solid rgba(255, 255, 255, 0.72);
+        box-shadow: 0 14px 30px rgba(15, 23, 42, 0.18);
+        backdrop-filter: blur(14px);
+      }
+
+      .mode-toggle-button {
+        min-width: 126px;
+        padding: 10px 16px;
+        background: transparent;
+        box-shadow: none;
+        color: #475569;
+      }
+
+      .mode-toggle-button[aria-pressed="true"],
+      .mode-toggle-button.is-selected {
+        background: rgba(15, 23, 42, 0.92);
+        color: #f8fafc;
+        box-shadow: 0 10px 20px rgba(15, 23, 42, 0.18);
+      }
+
+      #touch-controls {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 50%;
+        z-index: 6;
+        pointer-events: none;
+      }
+
+      #touch-controls[hidden] {
+        display: none;
+      }
+
+      #touch-steering-zone {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 45%;
+        pointer-events: auto;
+        touch-action: none;
+      }
+
+      .touch-steering-base {
+        position: absolute;
+        left: max(24px, env(safe-area-inset-left));
+        bottom: max(24px, env(safe-area-inset-bottom));
+        width: 140px;
+        height: 140px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+      }
+
+      #touch-steering-knob {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 60px;
+        height: 60px;
+        margin-left: -30px;
+        margin-top: -30px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.35);
+        will-change: transform;
+      }
+
+      .touch-pedals {
+        position: absolute;
+        right: max(24px, env(safe-area-inset-right));
+        bottom: max(24px, env(safe-area-inset-bottom));
+        width: 156px;
+        height: 156px;
+        pointer-events: auto;
+        touch-action: none;
+      }
+
+      .touch-pedal {
+        position: absolute;
+        width: 76px;
+        height: 76px;
+        padding: 0;
+        border-radius: 999px;
+        border: 2px solid rgba(255, 255, 255, 0.25);
+        color: rgba(255, 255, 255, 0.5);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
+        pointer-events: auto;
+        box-shadow: none;
+      }
+
+      .touch-pedal-gas {
+        right: 0;
+        bottom: 80px;
+        background: rgba(80, 180, 80, 0.25);
+      }
+
+      .touch-pedal-brake {
+        right: 80px;
+        bottom: 0;
+        background: rgba(200, 80, 80, 0.25);
+      }
+
+      .touch-pedal-gas.is-active {
+        background: rgba(80, 180, 80, 0.5);
+        border-color: rgba(80, 180, 80, 0.6);
+        color: rgba(255, 255, 255, 0.92);
+      }
+
+      .touch-pedal-brake.is-active {
+        background: rgba(200, 80, 80, 0.5);
+        border-color: rgba(200, 80, 80, 0.6);
+        color: rgba(255, 255, 255, 0.92);
+      }
+
+      #desktop-control-hints {
+        position: absolute;
+        left: max(18px, env(safe-area-inset-left));
+        bottom: max(18px, env(safe-area-inset-bottom));
+        z-index: 6;
+        pointer-events: none;
+      }
+
+      #desktop-control-hints[hidden] {
+        display: none;
+      }
+
+      .desktop-control-cluster {
+        display: grid;
+        grid-template-columns: 62px 62px 62px;
+        grid-template-rows: 54px 54px;
+        gap: 10px;
+        align-items: end;
+      }
+
+      .desktop-key-row {
+        display: contents;
+      }
+
+      .desktop-key {
+        min-width: 62px;
+        height: 54px;
+        padding: 0 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        background: rgba(15, 23, 42, 0.32);
+        color: rgba(241, 245, 249, 0.88);
+        font-size: 17px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        box-shadow: 0 18px 38px rgba(15, 23, 42, 0.2);
+        transition:
+          background-color 120ms ease,
+          border-color 120ms ease,
+          color 120ms ease,
+          box-shadow 120ms ease,
+          transform 120ms ease;
+      }
+
+      #desktop-key-w {
+        grid-column: 2;
+        grid-row: 1;
+      }
+
+      #desktop-key-a {
+        grid-column: 1;
+        grid-row: 2;
+      }
+
+      #desktop-key-s {
+        grid-column: 2;
+        grid-row: 2;
+      }
+
+      #desktop-key-d {
+        grid-column: 3;
+        grid-row: 2;
+      }
+
+      .desktop-key[data-pressed='true'] {
+        background: rgba(248, 250, 252, 0.2);
+        border-color: rgba(248, 250, 252, 0.42);
+        color: #ffffff;
+        box-shadow:
+          0 0 0 1px rgba(248, 250, 252, 0.12),
+          0 18px 38px rgba(125, 211, 252, 0.18);
+        transform: translateY(-1px);
+      }
+
+      @media (max-width: 900px) {
+        .panel {
+          width: min(100%, calc(100vw - 28px));
+        }
+      }
+
+      @media (orientation: portrait) and (max-width: 720px) {
+        #start-overlay {
+          --vehicle-picker-gap: 10px;
+          --vehicle-tile-size: 94px;
+        }
+
+        .debug-panel {
+          top: max(10px, env(safe-area-inset-top));
+          left: max(10px, env(safe-area-inset-left));
+          padding: 5px;
+        }
+
+        .debug-button {
+          min-width: 78px;
+          padding: 7px 10px;
+          font-size: 12px;
+        }
+
+        .overlay {
+          padding: 12px;
+          align-items: center;
+        }
+
+        .panel {
+          width: min(460px, calc(100vw - 24px));
+          margin-top: 0;
+          padding: 18px 16px 20px;
+        }
+
+        .mode-toggle-button {
+          min-width: 108px;
+          padding: 9px 14px;
+          font-size: 14px;
+        }
+
+        #touch-steering-zone {
+          width: 48%;
+        }
+
+        .touch-steering-base {
+          left: max(16px, env(safe-area-inset-left));
+          bottom: max(18px, env(safe-area-inset-bottom));
+          width: 132px;
+          height: 132px;
+        }
+
+        #touch-steering-knob {
+          width: 56px;
+          height: 56px;
+          margin-left: -28px;
+          margin-top: -28px;
+        }
+
+        .touch-pedals {
+          right: max(16px, env(safe-area-inset-right));
+          bottom: max(18px, env(safe-area-inset-bottom));
+          width: 144px;
+          height: 144px;
+        }
+
+        .touch-pedal {
+          width: 72px;
+          height: 72px;
+          font-size: 12px;
+        }
+
+        .touch-pedal-gas {
+          bottom: 72px;
+        }
+
+        .touch-pedal-brake {
+          right: 72px;
+        }
+      }
+
+      @media (orientation: landscape) {
+        #start-overlay {
+          --vehicle-picker-gap: 12px;
+          --vehicle-tile-size: 118px;
+        }
+
+        #start-overlay .panel {
+          width: fit-content;
+          max-width: calc(100vw - 24px);
+          max-height: calc(100vh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+          padding: 16px 18px 14px;
+          overflow: hidden;
+        }
+
+        #start-overlay h1 {
+          margin-bottom: 8px;
+          font-size: clamp(24px, 3vw, 34px);
+        }
+
+        #start-overlay .picker-heading {
+          margin-bottom: 8px;
+          font-size: 12px;
+        }
+
+        #start-overlay .overlay-status {
+          font-size: 14px;
+        }
+
+        #start-overlay .overlay-actions {
+          margin-top: 14px;
+        }
+
+        #start-overlay .overlay-action-button {
+          min-height: 58px;
+          padding: 12px 16px;
+          border-radius: 16px;
+          font-size: 14px;
+        }
+
+        #start-overlay .truck-picker-shell {
+          margin-top: 14px;
+        }
+
+        .mode-bar {
+          top: max(10px, env(safe-area-inset-top));
+        }
+      }
+
+      @media (orientation: landscape) and (max-height: 540px) {
+        #start-overlay {
+          --vehicle-picker-gap: 8px;
+          --vehicle-tile-size: 94px;
+        }
+
+        .overlay {
+          padding: 10px 12px;
+          align-items: center;
+        }
+
+        #start-overlay .panel {
+          width: fit-content;
+          max-width: calc(100vw - 20px);
+          max-height: calc(100vh - 20px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+          margin-top: 0;
+          padding: 12px 14px;
+        }
+
+        #start-overlay .eyebrow {
+          margin-bottom: 6px;
+          font-size: 11px;
+        }
+
+        #start-overlay h1 {
+          margin-bottom: 8px;
+          font-size: clamp(22px, 4vw, 30px);
+        }
+
+        #start-overlay .picker-heading {
+          margin-bottom: 6px;
+          font-size: 11px;
+        }
+
+        #start-overlay .overlay-status {
+          font-size: 13px;
+        }
+
+        #start-overlay .overlay-actions {
+          gap: 8px;
+          margin-top: 10px;
+        }
+
+        #start-overlay .overlay-action-button {
+          min-height: 50px;
+          padding: 10px 12px;
+          border-radius: 14px;
+          font-size: 13px;
+        }
+
+        #start-overlay .truck-picker-shell {
+          margin-top: 10px;
+        }
+
+        .mode-bar {
+          top: max(8px, env(safe-area-inset-top));
+        }
+
+        .mode-toggle-button {
+          min-width: 96px;
+          padding: 8px 12px;
+          font-size: 12px;
+        }
+
+        #touch-steering-zone {
+          width: 44%;
+        }
+
+        .touch-steering-base {
+          left: max(14px, env(safe-area-inset-left));
+          bottom: max(14px, env(safe-area-inset-bottom));
+          width: 124px;
+          height: 124px;
+        }
+
+        #touch-steering-knob {
+          width: 52px;
+          height: 52px;
+          margin-left: -26px;
+          margin-top: -26px;
+        }
+
+        .touch-pedals {
+          right: max(14px, env(safe-area-inset-right));
+          bottom: max(14px, env(safe-area-inset-bottom));
+          width: 132px;
+          height: 132px;
+        }
+
+        .touch-pedal {
+          width: 66px;
+          height: 66px;
+          font-size: 11px;
+        }
+
+        .touch-pedal-gas {
+          bottom: 66px;
+        }
+
+        .touch-pedal-brake {
+          right: 66px;
+        }
+      }
+
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game-canvas"></canvas>
+      <div id="player-label-layer" aria-hidden="true"></div>
+      <div id="mode-bar" class="mode-bar" hidden>
+        <div class="mode-toggle" role="group" aria-label="Game mode">
+          <button id="mode-solo-button" class="mode-toggle-button" type="button" aria-pressed="true">
+            Solo
+          </button>
+          <button id="mode-multiplayer-button" class="mode-toggle-button" type="button" aria-pressed="false">
+            Multiplayer
+          </button>
+        </div>
+      </div>
+      <div id="debug-panel" class="debug-panel" aria-label="Debug view toggle" hidden>
+        <button class="debug-button" type="button" data-debug-mode="render" aria-pressed="true">Render</button>
+        <button class="debug-button" type="button" data-debug-mode="physics" aria-pressed="false">Physics</button>
+      </div>
+      <div id="start-overlay" class="overlay">
+        <div class="panel">
+          <h1>Choose your vehicle</h1>
+          <p id="overlay-status" class="overlay-status" hidden></p>
+          <div id="vehicle-picker-shell" class="truck-picker-shell" hidden>
+            <div class="truck-picker" role="group" aria-label="Vehicle selection">
+              <button
+                class="truck-button"
+                type="button"
+                data-vehicle-id="truck-yellow"
+                aria-label="Yellow Truck"
+                aria-pressed="false"
+                disabled
+              >
+                <span class="truck-preview-frame">
+                  <img class="truck-preview-image" data-vehicle-preview="truck-yellow" alt="" />
+                </span>
+              </button>
+              <button
+                class="truck-button"
+                type="button"
+                data-vehicle-id="truck-red"
+                aria-label="Red Truck"
+                aria-pressed="false"
+                disabled
+              >
+                <span class="truck-preview-frame">
+                  <img class="truck-preview-image" data-vehicle-preview="truck-red" alt="" />
+                </span>
+              </button>
+              <button
+                class="truck-button"
+                type="button"
+                data-vehicle-id="truck-green"
+                aria-label="Green Truck"
+                aria-pressed="false"
+                disabled
+              >
+                <span class="truck-preview-frame">
+                  <img class="truck-preview-image" data-vehicle-preview="truck-green" alt="" />
+                </span>
+              </button>
+              <button
+                class="truck-button"
+                type="button"
+                data-vehicle-id="truck-purple"
+                aria-label="Purple Truck"
+                aria-pressed="false"
+                disabled
+              >
+                <span class="truck-preview-frame">
+                  <img class="truck-preview-image" data-vehicle-preview="truck-purple" alt="" />
+                </span>
+              </button>
+              <button
+                class="truck-button"
+                type="button"
+                data-vehicle-id="motorcycle"
+                aria-label="Motorcycle"
+                aria-pressed="false"
+                disabled
+              >
+                <span class="truck-preview-frame">
+                  <img class="truck-preview-image" data-vehicle-preview="motorcycle" alt="" />
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="unsupported-overlay" class="overlay" hidden>
+        <div class="panel">
+          <p class="eyebrow">Unsupported Browser</p>
+          <h1>WebGL 2 is required</h1>
+          <p>This game targets the latest desktop Chrome build with WebGL 2 enabled.</p>
+        </div>
+      </div>
+      <div id="touch-controls" hidden>
+        <div id="touch-steering-zone" aria-label="Steering pad">
+          <div class="touch-steering-base">
+            <div id="touch-steering-knob"></div>
+          </div>
+        </div>
+        <div class="touch-pedals">
+          <button id="touch-gas-button" class="touch-pedal touch-pedal-gas" type="button" aria-label="Accelerate">GAS</button>
+          <button id="touch-brake-button" class="touch-pedal touch-pedal-brake" type="button" aria-label="Brake or reverse">BRK</button>
+        </div>
+      </div>
+      <div id="desktop-control-hints" hidden aria-hidden="true">
+        <div class="desktop-control-cluster">
+          <div class="desktop-key-row top">
+            <div id="desktop-key-w" class="desktop-key" data-pressed="false">W</div>
+          </div>
+          <div class="desktop-key-row bottom">
+            <div id="desktop-key-a" class="desktop-key" data-pressed="false">A</div>
+            <div id="desktop-key-s" class="desktop-key" data-pressed="false">S</div>
+            <div id="desktop-key-d" class="desktop-key" data-pressed="false">D</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="https://assets.playdrop.ai/sdk/playdrop.js"></script>
+    <script type="module">
+      (async () => {
+        const host = window;
+        if (!host.playdrop) {
+          throw new Error('[starter-kit-racing] window.playdrop unavailable');
+        }
+        if (!host.__starterKitRacingSdkPromise__) {
+          if (typeof host.playdrop.init !== 'function') {
+            throw new Error('[starter-kit-racing] playdrop.init unavailable');
+          }
+          host.__starterKitRacingSdkPromise__ = host.playdrop.init();
+        }
+        const sdk = await host.__starterKitRacingSdkPromise__;
+        await sdk.libs.three.load({
+          addons: [
+            'loaders/GLTFLoader.js',
+            'postprocessing/EffectComposer.js',
+            'postprocessing/RenderPass.js',
+            'postprocessing/GTAOPass.js',
+            'postprocessing/UnrealBloomPass.js',
+            'postprocessing/OutputPass.js',
+          ],
+        });
+        const rapier = await sdk.libs.rapier.load();
+        host.__starterKitRacingVendorRuntime__ = {
+          RAPIER: rapier,
+        };
+        await import('./app.js');
+      })().catch((error) => {
+        console.error('[starter-kit-racing] bootstrap failed', error);
+        window.playdrop?.host?.error?.(
+          error && error.message ? error.message : 'Failed to load Racing Kit Classic',
+        );
+      });
+    </script>
+  </body>
+</html>
