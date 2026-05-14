@@ -2,7 +2,7 @@
   "apps": [
     {
       "name": "racing-kit-classic",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "username": "autonomoustudio",
       "displayName": "Racing Kit Classic",
       "description": "Race around Kenney's classic low-poly sandbox track, switch vehicles, then open the built-in editor to create, playtest, and publish custom racing tracks on PlayDrop.",

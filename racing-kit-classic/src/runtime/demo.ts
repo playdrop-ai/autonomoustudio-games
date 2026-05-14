@@ -146,7 +146,7 @@ export class StarterKitRacingDemo {
   private stopResumeSubscription: (() => void) | null = null;
   private stopAudioPolicySubscription: (() => void) | null = null;
   private animationReady = false;
-  private sessionMode: SessionMode = 'preview';
+  private sessionMode: SessionMode = 'overlay';
   private busyAction: BusyAction = null;
   private vehiclePickerVisible = false;
   private overlayFocusedVehicle: VehicleId | null = null;
