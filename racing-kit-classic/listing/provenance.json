@@ -1,79 +1,34 @@
 {
-  "slug": "starter-kit-racing",
-  "generatedAt": "2026-03-21T15:07:53.682Z",
+  "slug": "racing-kit-classic",
+  "displayName": "Pocket Circuit",
+  "generatedAt": "2026-05-14",
+  "reference": "assets/marketing/playdrop/reference-game-capture.png",
+  "vehicleReferences": [
+    "assets/marketing/playdrop/reference-truck-yellow.png",
+    "assets/marketing/playdrop/reference-truck-red.png",
+    "assets/marketing/playdrop/reference-truck-green.png",
+    "assets/marketing/playdrop/reference-truck-purple.png"
+  ],
+  "referenceGames": [
+    "Starfold",
+    "Team Sweeper",
+    "Tomb Sweeper"
+  ],
   "assets": {
-    "heroLandscape": {
-      "prompt": "Using the reference gameplay image as strict style guidance, create polished marketing hero art for Starter Kit Racing. Keep the same chunky low poly 3D truck, track pieces, trees, smoke, and cheerful color palette. Enhance lighting and composition only. Do not redesign the vehicle or art style. No UI, no logo. Integrate the exact title text \"STARTER KIT\" on the first line and \"RACING\" on the second line directly into the artwork, near the visual center of the wide composition, as one compact floating title logo block suspended in front of the scene. The title must not be painted onto roads, platforms, walls, floors, buildings, clouds, props, or any other scenery. Create exactly one title treatment only. Do not duplicate, repeat, echo, mirror, or restate the title anywhere else in the image. The title text must be part of the image itself, not a flat overlay, and it must use a font style, shape language, material treatment, and color palette that match the game art. Keep the lettering clean, highly readable, premium, and clearly smaller than the main gameplay subject cluster so it supports the composition instead of overwhelming it. Do not add any other words, logos, UI, badges, borders, or translucent title panels.",
-      "ratio": "16:9",
-      "referenceImages": [
-        "/Users/oliviermichon/Documents/playdrop-samples/output/listing-refresh/starter-kit-racing/ai/starter-kit-racing-hero-landscape-original-hero.jpg",
-        "/Users/oliviermichon/Documents/playdrop-samples/apps/demos/starter-kit-racing/listing/starter-kit-racing_1280x720-screenshot-1.png"
-      ],
-      "preparedReferenceImages": [
-        "/Users/oliviermichon/Documents/playdrop-samples/output/listing-refresh/starter-kit-racing/ai/starter-kit-racing-hero-landscape-ref-1.jpg",
-        "/Users/oliviermichon/Documents/playdrop-samples/output/listing-refresh/starter-kit-racing/ai/starter-kit-racing-hero-landscape-ref-2.jpg"
-      ],
-      "outputPath": "/Users/oliviermichon/Documents/playdrop-samples/apps/demos/starter-kit-racing/listing/hero-landscape.png",
-      "jobId": "cmn0gpaor005byjvcgyq0xuzv",
-      "imageUrl": "http://localhost:8082/ai/image-outputs/02614cd9-b088-4ae2-8b78-023c42954dd4.jpg",
-      "generatedAsset": {
-        "ref": "asset:playdrop/starter-kit-racing-marketing-hero-art-6@r1",
-        "revision": 1,
-        "assetName": "starter-kit-racing-marketing-hero-art-6",
-        "versionId": 3909,
-        "displayName": "Starter Kit Racing Marketing Hero Art",
-        "subcategory": "generic",
-        "creatorUsername": "playdrop"
-      },
-      "billing": {
-        "amount": 5,
-        "paidBy": "USER",
-        "generationId": "gen_b8fefc0b03d14373a90d993f23924c49",
-        "creditBalance": 4715,
-        "transactionId": 58
-      },
-      "metadata": {
-        "description": "High-fidelity marketing hero art for Starter Kit Racing, featuring the iconic low-poly truck on a vibrant track. Includes an integrated 3D title logo, optimized lighting, and professional composition for promotional use.",
-        "displayName": "Starter Kit Racing Marketing Hero Art",
-        "assetNameBase": "starter-kit-racing-marketing-hero-art",
-        "previewPrompt": "Polished 16:9 marketing hero art for Starter Kit Racing. Chunky low-poly 3D truck on a stylized racetrack with trees and smoke. Vibrant, cheerful color palette with enhanced cinematic lighting. A compact 3D floating title 'STARTER KIT RACING' is suspended in the visual center, matching the game's art style and material. No UI, no extra text, no overlays."
-      },
-      "originalHeroReferenceImageUrl": "http://localhost:8082/ai/image-outputs/6dfd2818-2e5b-429c-864c-c94477ddbe57.jpg"
-    },
     "icon": {
-      "prompt": "Using the reference hero art, create a square app icon focused on a single chunky green racing truck. Preserve the same low poly 3D style, same colors, and same toy-like proportions. No text, no logo, no border.",
-      "ratio": "1:1",
-      "referenceImages": [
-        "/Users/oliviermichon/Documents/playdrop-samples/apps/demos/starter-kit-racing/listing/hero-landscape.png"
-      ],
-      "preparedReferenceImages": [
-        "/Users/oliviermichon/Documents/playdrop-samples/output/listing-refresh/starter-kit-racing/ai/starter-kit-racing-icon-ref-1.jpg"
-      ],
-      "outputPath": "/Users/oliviermichon/Documents/playdrop-samples/apps/demos/starter-kit-racing/listing/icon.png",
-      "jobId": "cmn0eeze90031yjvcxutwrt1i",
-      "imageUrl": "http://localhost:8082/ai/image-outputs/d4faf446-cc77-4956-be3f-752df048bcf3.jpg",
-      "generatedAsset": {
-        "ref": "asset:playdrop/chunky-green-racing-truck-icon-2@r1",
-        "revision": 1,
-        "assetName": "chunky-green-racing-truck-icon-2",
-        "versionId": 3880,
-        "displayName": "Chunky Green Racing Truck Icon",
-        "subcategory": "generic",
-        "creatorUsername": "playdrop"
-      },
-      "billing": {
-        "amount": 5,
-        "paidBy": "USER",
-        "generationId": "gen_d1de4fdd698846d08c1163a3a895c1ec",
-        "creditBalance": 4860,
-        "transactionId": 29
-      },
-      "metadata": {
-        "description": "A square app icon featuring a single chunky, low-poly 3D green racing truck with toy-like proportions, designed in a stylized, minimalist aesthetic without text or borders.",
-        "displayName": "Chunky Green Racing Truck Icon",
-        "assetNameBase": "chunky-green-racing-truck-icon",
-        "previewPrompt": "A square app icon centered on a single chunky green racing truck, low poly 3D style, vibrant colors, toy-like exaggerated proportions, isolated on a clean background, no text, no logo, no border."
-      }
+      "source": "assets/marketing/playdrop/icon-art.png",
+      "outputPath": "listing/icon.png",
+      "notes": "AI-generated full-bleed square icon centered on a nicer rendering of the real yellow truck shape."
+    },
+    "heroLandscape": {
+      "source": "assets/marketing/playdrop/hero-landscape-art.png",
+      "outputPath": "listing/hero-landscape.png",
+      "notes": "AI-generated landscape hero art with integrated POCKET CIRCUIT logo, nicer versions of the four real truck shapes, a complete visible circuit, and faster motion cues."
+    },
+    "heroPortrait": {
+      "source": "assets/marketing/playdrop/hero-portrait-art.png",
+      "outputPath": "listing/hero-portrait.png",
+      "notes": "AI-generated portrait hero art with integrated POCKET CIRCUIT logo, nicer versions of the four real truck shapes, and faster motion cues."
     }
   }
 }

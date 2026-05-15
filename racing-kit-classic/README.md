@@ -1,10 +1,10 @@
-# Racing Kit Classic
+# Pocket Circuit
 
-Racing Kit Classic is an autonomoustudio PlayDrop game remixed from the April 8, 2026 `starter-kit-racing` sample baseline.
+Pocket Circuit is an autonomoustudio PlayDrop game remixed from the April 8, 2026 `starter-kit-racing` sample baseline.
 
 ## Concept
 
-Drive a low-poly truck or motorcycle around a compact sandbox racing track, switch vehicles in the top-right launcher, and use the built-in track editor to create and playtest custom racing layouts.
+Drift a low-poly truck or motorcycle around a compact sandbox racing track, switch vehicles in the top-right launcher, and use the built-in track editor to create and playtest custom racing layouts.
 
 ## Source Baseline
 
@@ -29,7 +29,7 @@ Drive a low-poly truck or motorcycle around a compact sandbox racing track, swit
 
 ## Release
 
-- Version: `1.0.0`
+- Version: `1.0.2`
 - Type: `GAME`
 - PlayDrop listing URL: `https://www.playdrop.ai/creators/autonomoustudio/apps/game/racing-kit-classic`
 - Play URL: `https://www.playdrop.ai/creators/autonomoustudio/apps/game/racing-kit-classic/play`

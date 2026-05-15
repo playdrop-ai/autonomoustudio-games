@@ -2,10 +2,10 @@
   "apps": [
     {
       "name": "racing-kit-classic",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "username": "autonomoustudio",
-      "displayName": "Racing Kit Classic",
-      "description": "Race around Kenney's classic low-poly sandbox track, switch vehicles, then open the built-in editor to create, playtest, and publish custom racing tracks on PlayDrop.",
+      "displayName": "Pocket Circuit",
+      "description": "Drift tiny low-poly trucks around a bright pocket-sized circuit, switch vehicles, and remix the track with the built-in editor.",
       "type": "GAME",
       "authMode": "OPTIONAL",
       "controllerMode": "SUPPORTED",
@@ -17,8 +17,8 @@
         {
           "name": "starter-kit-racing-vehicle-truck-yellow",
           "runtimeKey": "vehicle-truck-yellow",
-          "displayName": "Starter Kit Racing Yellow Truck",
-          "description": "Public runtime asset for the yellow truck used by Starter Kit Racing.",
+          "displayName": "Pocket Circuit Yellow Truck",
+          "description": "Public runtime asset for the yellow truck used by Pocket Circuit.",
           "category": "MODEL_3D",
           "subcategory": "generic",
           "format": "GLB",
@@ -31,8 +31,8 @@
         {
           "name": "starter-kit-racing-vehicle-truck-red",
           "runtimeKey": "vehicle-truck-red",
-          "displayName": "Starter Kit Racing Red Truck",
-          "description": "Public runtime asset for the red truck used by Starter Kit Racing.",
+          "displayName": "Pocket Circuit Red Truck",
+          "description": "Public runtime asset for the red truck used by Pocket Circuit.",
           "category": "MODEL_3D",
           "subcategory": "generic",
           "format": "GLB",
@@ -45,8 +45,8 @@
         {
           "name": "starter-kit-racing-vehicle-truck-green",
           "runtimeKey": "vehicle-truck-green",
-          "displayName": "Starter Kit Racing Green Truck",
-          "description": "Public runtime asset for the green truck used by Starter Kit Racing.",
+          "displayName": "Pocket Circuit Green Truck",
+          "description": "Public runtime asset for the green truck used by Pocket Circuit.",
           "category": "MODEL_3D",
           "subcategory": "generic",
           "format": "GLB",
@@ -59,8 +59,8 @@
         {
           "name": "starter-kit-racing-vehicle-truck-purple",
           "runtimeKey": "vehicle-truck-purple",
-          "displayName": "Starter Kit Racing Purple Truck",
-          "description": "Public runtime asset for the purple truck used by Starter Kit Racing.",
+          "displayName": "Pocket Circuit Purple Truck",
+          "description": "Public runtime asset for the purple truck used by Pocket Circuit.",
           "category": "MODEL_3D",
           "subcategory": "generic",
           "format": "GLB",
@@ -73,8 +73,8 @@
         {
           "name": "starter-kit-racing-vehicle-motorcycle",
           "runtimeKey": "vehicle-motorcycle",
-          "displayName": "Starter Kit Racing Motorcycle",
-          "description": "Public runtime asset for the motorcycle used by Starter Kit Racing.",
+          "displayName": "Pocket Circuit Motorcycle",
+          "description": "Public runtime asset for the motorcycle used by Pocket Circuit.",
           "category": "MODEL_3D",
           "subcategory": "generic",
           "format": "GLB",
@@ -87,8 +87,8 @@
         {
           "name": "starter-kit-racing-tile-track-corner",
           "runtimeKey": "tile-track-corner",
-          "displayName": "Starter Kit Racing Corner Track Tile",
-          "description": "Public runtime asset for the driveable corner road tile used by Starter Kit Racing.",
+          "displayName": "Pocket Circuit Corner Track Tile",
+          "description": "Public runtime asset for the driveable corner road tile used by Pocket Circuit.",
           "category": "MODEL_3D",
           "subcategory": "block",
           "format": "GLB",
@@ -102,8 +102,8 @@
         {
           "name": "starter-kit-racing-tile-track-finish",
           "runtimeKey": "tile-track-finish",
-          "displayName": "Starter Kit Racing Finish Track Tile",
-          "description": "Public runtime asset for the finish road tile used by Starter Kit Racing.",
+          "displayName": "Pocket Circuit Finish Track Tile",
+          "description": "Public runtime asset for the finish road tile used by Pocket Circuit.",
           "category": "MODEL_3D",
           "subcategory": "block",
           "format": "GLB",
@@ -117,8 +117,8 @@
         {
           "name": "starter-kit-racing-tile-track-straight",
           "runtimeKey": "tile-track-straight",
-          "displayName": "Starter Kit Racing Straight Track Tile",
-          "description": "Public runtime asset for the straight road tile used by Starter Kit Racing.",
+          "displayName": "Pocket Circuit Straight Track Tile",
+          "description": "Public runtime asset for the straight road tile used by Pocket Circuit.",
           "category": "MODEL_3D",
           "subcategory": "block",
           "format": "GLB",
@@ -132,8 +132,8 @@
         {
           "name": "starter-kit-racing-tile-deco-empty",
           "runtimeKey": "tile-deco-empty",
-          "displayName": "Starter Kit Racing Empty Ground Tile",
-          "description": "Public runtime asset for the empty ground tile used by Starter Kit Racing.",
+          "displayName": "Pocket Circuit Empty Ground Tile",
+          "description": "Public runtime asset for the empty ground tile used by Pocket Circuit.",
           "category": "MODEL_3D",
           "subcategory": "block",
           "format": "GLB",
@@ -146,8 +146,8 @@
         {
           "name": "starter-kit-racing-tile-deco-forest",
           "runtimeKey": "tile-deco-forest",
-          "displayName": "Starter Kit Racing Forest Decoration Tile",
-          "description": "Public runtime asset for the forest decoration tile used by Starter Kit Racing.",
+          "displayName": "Pocket Circuit Forest Decoration Tile",
+          "description": "Public runtime asset for the forest decoration tile used by Pocket Circuit.",
           "category": "MODEL_3D",
           "subcategory": "block",
           "format": "GLB",
@@ -160,8 +160,8 @@
         {
           "name": "starter-kit-racing-tile-deco-tents",
           "runtimeKey": "tile-deco-tents",
-          "displayName": "Starter Kit Racing Tents Decoration Tile",
-          "description": "Public runtime asset for the tents decoration tile used by Starter Kit Racing.",
+          "displayName": "Pocket Circuit Tents Decoration Tile",
+          "description": "Public runtime asset for the tents decoration tile used by Pocket Circuit.",
           "category": "MODEL_3D",
           "subcategory": "block",
           "format": "GLB",
@@ -174,8 +174,8 @@
         {
           "name": "starter-kit-racing-smoke-sprite",
           "runtimeKey": "sprite-smoke",
-          "displayName": "Starter Kit Racing Smoke Sprite",
-          "description": "Public runtime asset for the smoke sprite used by Starter Kit Racing particles.",
+          "displayName": "Pocket Circuit Smoke Sprite",
+          "description": "Public runtime asset for the smoke sprite used by Pocket Circuit particles.",
           "category": "IMAGE",
           "subcategory": "generic",
           "format": "PNG",
@@ -188,8 +188,8 @@
         {
           "name": "starter-kit-racing-sfx-engine-truck",
           "runtimeKey": "sfx-engine-truck",
-          "displayName": "Starter Kit Racing Truck Engine SFX",
-          "description": "Public runtime asset for the truck engine loop used by Starter Kit Racing.",
+          "displayName": "Pocket Circuit Truck Engine SFX",
+          "description": "Public runtime asset for the truck engine loop used by Pocket Circuit.",
           "category": "AUDIO",
           "subcategory": "sfx",
           "format": "OGG",
@@ -202,8 +202,8 @@
         {
           "name": "starter-kit-racing-sfx-engine-motorcycle",
           "runtimeKey": "sfx-engine-motorcycle",
-          "displayName": "Starter Kit Racing Motorcycle Engine SFX",
-          "description": "Public runtime asset for the motorcycle engine loop used by Starter Kit Racing.",
+          "displayName": "Pocket Circuit Motorcycle Engine SFX",
+          "description": "Public runtime asset for the motorcycle engine loop used by Pocket Circuit.",
           "category": "AUDIO",
           "subcategory": "sfx",
           "format": "OGG",
@@ -216,8 +216,8 @@
         {
           "name": "starter-kit-racing-sfx-skid",
           "runtimeKey": "sfx-skid",
-          "displayName": "Starter Kit Racing Skid SFX",
-          "description": "Public runtime asset for the skid sound effect used by Starter Kit Racing.",
+          "displayName": "Pocket Circuit Skid SFX",
+          "description": "Public runtime asset for the skid sound effect used by Pocket Circuit.",
           "category": "AUDIO",
           "subcategory": "sfx",
           "format": "OGG",
@@ -230,8 +230,8 @@
         {
           "name": "starter-kit-racing-sfx-impact",
           "runtimeKey": "sfx-impact",
-          "displayName": "Starter Kit Racing Impact SFX",
-          "description": "Public runtime asset for the impact sound effect used by Starter Kit Racing.",
+          "displayName": "Pocket Circuit Impact SFX",
+          "description": "Public runtime asset for the impact sound effect used by Pocket Circuit.",
           "category": "AUDIO",
           "subcategory": "sfx",
           "format": "OGG",
@@ -246,7 +246,12 @@
         {
           "assetSpec": "asset-spec:playdrop/racing-track",
           "versionRange": "^1.0.0",
-          "capabilities": ["READ", "WRITE", "EDIT", "PREVIEW"]
+          "capabilities": [
+            "READ",
+            "WRITE",
+            "EDIT",
+            "PREVIEW"
+          ]
         }
       ],
       "uses": {

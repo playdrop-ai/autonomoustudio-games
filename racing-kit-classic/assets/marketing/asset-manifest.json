@@ -1,0 +1,49 @@
+{
+  "game": {
+    "slug": "racing-kit-classic",
+    "displayName": "Pocket Circuit"
+  },
+  "workflow": "playdrop:listing-art",
+  "generatedAt": "2026-05-14",
+  "reference": "assets/marketing/playdrop/reference-game-capture.png",
+  "vehicleReferences": [
+    "assets/marketing/playdrop/reference-truck-yellow.png",
+    "assets/marketing/playdrop/reference-truck-red.png",
+    "assets/marketing/playdrop/reference-truck-green.png",
+    "assets/marketing/playdrop/reference-truck-purple.png"
+  ],
+  "referenceGames": [
+    "Starfold",
+    "Team Sweeper",
+    "Tomb Sweeper"
+  ],
+  "assets": {
+    "icon": {
+      "source": "assets/marketing/playdrop/icon-art.png",
+      "output": "listing/icon.png",
+      "size": {
+        "width": 1024,
+        "height": 1024
+      },
+      "promptIntent": "AI-generated full-bleed square app icon with a nicer rendering of the real yellow truck shape, no title text or border."
+    },
+    "heroLandscape": {
+      "source": "assets/marketing/playdrop/hero-landscape-art.png",
+      "output": "listing/hero-landscape.png",
+      "size": {
+        "width": 1376,
+        "height": 768
+      },
+      "promptIntent": "AI-generated landscape hero art with integrated POCKET CIRCUIT logo, a complete visible circuit, faster motion cues, and nicer renderings of the four real truck shapes."
+    },
+    "heroPortrait": {
+      "source": "assets/marketing/playdrop/hero-portrait-art.png",
+      "output": "listing/hero-portrait.png",
+      "size": {
+        "width": 768,
+        "height": 1376
+      },
+      "promptIntent": "AI-generated portrait hero art with integrated POCKET CIRCUIT logo, faster motion cues, and nicer renderings of the four real truck shapes."
+    }
+  }
+}
