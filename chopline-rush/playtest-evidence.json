@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "environment": "PlayDrop prod hosted dev shell with local final build",
+      "url": "https://www.playdrop.ai/creators/autonomoustudio/apps/game/chopline-rush/dev?devAuth=anonymous",
+      "surface": "mobilePortrait 390x844; desktop is compatibility-only",
+      "captures": [
+        "evidence/rescue-final/01-ready.png",
+        "evidence/rescue-final/02-primary-input.png",
+        "evidence/rescue-final/03-wall-cut.png",
+        "evidence/rescue-final/04-continued-run.png",
+        "evidence/rescue-final/05-pressure.png",
+        "evidence/rescue-final/mobile-portrait-poster.png",
+        "evidence/rescue-final/mobile-portrait-listing.mp4"
+      ],
+      "actions": [
+        "Loaded the final hosted dev build directly into the endless opening.",
+        "Tapped once and observed the textured chopping knife leave its blade-tip start pivot and begin a forward flip.",
+        "Tapped a second time after 420ms and observed the knife cut through the opening wall, award seven points, and send physical brick fragments into the course.",
+        "Continued tapping at 520ms intervals and reached the orange and emoji target lane with visible split halves and a best score of ten.",
+        "Tapped once without recovery input and observed a partial wall cut followed by a readable side-stab pressure state.",
+        "Recorded the final preview through PlayDrop native capture at an exact 390x844 portrait gameplay viewport."
+      ],
+      "statesObserved": [
+        "Direct-to-endless ready state with no blocking overlay",
+        "Textured and correctly oriented PlayDrop chopping-knife GLB",
+        "Multiple airborne taps preserve forward travel and add another visible rotation",
+        "Blade contact cuts seven wall courses and leaves independently simulated debris",
+        "Orange targets split into visible halves while the run continues into the authored emoji and camera beats",
+        "Bad timing remains readable and recoverable through the side-stab and rotating-stick states",
+        "Native portrait capture fills 390x844 edge to edge without desktop chrome or letterboxing",
+        "Hosted runtime reaches ready with hardware WebGL and no uncaught console errors"
+      ],
+      "consoleErrors": [],
+      "webglRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M2 Pro, Unspecified Version)",
+      "checkedAt": "2026-07-17T18:55:03Z"
+    }
+  ],
+  "proof": {
+    "primaryInput": {
+      "action": "tap once in the center of the portrait game frame, then wait 260ms",
+      "observed": "the chopping knife leaves its blade-tip start pivot and visibly flips forward toward the opening wall",
+      "capture": "evidence/rescue-final/02-primary-input.png"
+    },
+    "win": {
+      "action": "tap, wait 420ms, tap again, then wait 520ms",
+      "observed": "the blade cuts through the opening wall, the score and best update to seven, and physical brick debris separates behind the planted knife",
+      "capture": "evidence/rescue-final/03-wall-cut.png"
+    },
+    "loss": {
+      "action": "tap once and provide no recovery tap for 1800ms",
+      "observed": "the knife makes only a partial wall cut and enters a readable side-stab pressure state instead of silently clipping or teleporting",
+      "capture": "evidence/rescue-final/05-pressure.png"
+    }
+  }
+}

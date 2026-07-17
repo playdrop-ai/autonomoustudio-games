@@ -290,18 +290,12 @@ async function main() {
     await page.evaluate(() => window.__choplineTest.startEndless());
     await page.waitForFunction(() => window.__choplineTest.state().screen === "playing", null, { timeout: 10000 });
     const beforeJump = await page.evaluate(() => window.__choplineTest.state().knife);
-    await page.evaluate(() => {
-      window.__choplineTest.makeNextFlipReady();
-      window.__choplineTest.tap();
-      window.__choplineTest.advance(0.24);
-    });
+    await page.mouse.click(360, 900);
+    await page.waitForTimeout(320);
     const beforeSecondTap = await page.evaluate(() => window.__choplineTest.state().knife);
-    await page.evaluate(() => {
-      window.__choplineTest.makeNextFlipReady();
-      window.__choplineTest.tap();
-      window.__choplineTest.advance(0.08);
-      window.__choplineTest.setProofFrozen(true);
-    });
+    await page.mouse.click(360, 900);
+    await page.waitForTimeout(20);
+    await page.evaluate(() => window.__choplineTest.setProofFrozen(true));
     const afterSecondTap = await page.evaluate(() => window.__choplineTest.state());
     assert(beforeJump.state === "stuck", `Expected initial stuck knife, got ${beforeJump.state}`);
     assert(beforeSecondTap.state === "flying", `Expected airborne knife before second tap, got ${beforeSecondTap.state}`);
@@ -373,18 +367,16 @@ async function main() {
       },
     ));
 
-    await page.evaluate(() => {
-      window.__choplineTest.stageHandleLandingProof();
-      window.__choplineTest.advance(0.04);
-      window.__choplineTest.setProofFrozen(true);
-    });
+    await page.evaluate(() => window.__choplineTest.stageHandleLandingProof());
+    await page.waitForFunction(() => ["rotating-stick", "stuck"].includes(window.__choplineTest.state().knife.state), null, { timeout: 10000 });
+    await page.evaluate(() => window.__choplineTest.setProofFrozen(true));
     const rejectedLanding = await page.evaluate(() => window.__choplineTest.state());
-    assert(rejectedLanding.run.outcome === "lost", "Handle landing did not fail the run");
-    assert(["tumbling", "dead"].includes(rejectedLanding.knife.state), `Handle landing should tumble or die, got ${rejectedLanding.knife.state}`);
+    assert(rejectedLanding.run.outcome === null, "Recoverable handle landing ended the run");
+    assert(["rotating-stick", "stuck"].includes(rejectedLanding.knife.state), `Handle landing should rotate into recovery, got ${rejectedLanding.knife.state}`);
     captures.push(await capture(
       page,
       "04-rejected-handle-landing.png",
-      "4. Handle Landing Rejected (Mobile Portrait)",
+      "4. Handle Landing Recovery (Mobile Portrait)",
       [
         `state=${rejectedLanding.knife.state} outcome=${rejectedLanding.run.outcome}`,
         `score=${rejectedLanding.run.score}`,
@@ -403,7 +395,7 @@ async function main() {
     await page.waitForTimeout(120);
     await page.evaluate(() => window.__choplineTest.setProofFrozen(true));
     const cutting = await page.evaluate(() => window.__choplineTest.state());
-    assert(cutting.slicePieces.count === cutting.sliceables.sliced * 2, "Cutting did not create two halves per sliced object");
+    assert(cutting.slicePieces.count >= cutting.sliceables.sliced * 2, "Cutting did not create physical halves and stack rubble");
     assert(cutting.slicePieces.maxSourceSpawnSpreadX <= 0.001, `Slice halves spawned with X offset ${cutting.slicePieces.maxSourceSpawnSpreadX}`);
     assert(cutting.slicePieces.maxSourceSpawnSpreadY <= 0.001, `Slice halves spawned with Y offset ${cutting.slicePieces.maxSourceSpawnSpreadY}`);
     captures.push(await capture(

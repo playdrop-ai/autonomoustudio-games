@@ -16,18 +16,19 @@
 - Reproduce observed behavior with original code and licensed PlayDrop assets; do not redistribute extracted proprietary code or assets.
 - Taps launch the planted knife and remain responsive while it is airborne.
 - Each airborne tap adds bounded lift and rotation while preserving forward momentum.
-- Blade-region, angle, and motion determine a successful cut or landing. Handle and bad-angle contacts knock back or fail.
+- Blade-region, angle, and motion determine a successful cut or landing. Handle and bad-angle contacts knock back or rotate into a recoverable stick.
 - Tip-first platform contact plants the blade with a short impact squash, sound, haptic pulse, shadow response, and restrained camera kick.
 - Successful cuts replace the intact target with two persistent physical halves with visible interior caps; chips are secondary feedback only.
 - Cut halves separate clearly in the portrait side view, tumble, fall, contact the ground, and settle.
+- The authored endless opening is pedestal, thirteen-course wall, orange stacks, yellow face target, camera props, then reviewed reusable chunks.
 
 ## Visual Target
 
 - Bright cyan sky, green ground, white and gray course blocks, low-poly mountain bands, and pine silhouettes.
 - Side-on perspective camera that keeps the knife large and previews the next target.
-- The starter uses the specified broad PlayDrop chopping-knife GLB with preserved texture, explicit orientation, polished blade response, red grip, and rivets.
+- The starter uses the specified broad PlayDrop chopping-knife GLB with its source texture preserved, explicit semantic anchors, and collision geometry derived from the real tip, hilt, and handle end.
 - HUD contains only score, best, coins, pause, gear, and the initial tap prompt.
-- Target cuts show `+1`, occasional praise, audio, haptics, a brief flash, and restrained camera feedback.
+- Target cuts show `+1`, occasional praise, audio, haptics, a brief impact hold, flash, and restrained camera feedback.
 
 ## Release Bar
 

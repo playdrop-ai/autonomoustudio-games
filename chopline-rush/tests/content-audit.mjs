@@ -73,17 +73,18 @@ function auditOwnedAssets(source) {
   assert(modelPaths.length === 6 && imagePaths.length === 6 && sourceRefs.length === 6, "Every knife must have a model, preview, and PlayDrop source ref");
   for (const filePath of [...modelPaths, ...imagePaths]) assertFile(filePath);
   assert(source.includes('const STARTER_KNIFE_ID = "chopping";'), "The supplied chopping knife must remain the starter model");
-  assert(source.includes('modelAxis: "x"') && source.includes("bladeDirection: -1"), "Knife models must declare explicit visual axes and blade direction");
+  assert(source.includes('sourceAxis: "x"') && source.includes("bladeDirection: -1"), "Knife models must declare explicit visual axes and blade direction");
 }
 
 function auditEndlessContract(source) {
   assert(source.includes('let selectedMode: Mode = "endless";'), "The app must boot into endless mode");
   assert(source.includes('newRun("endless", 0, true);'), "Endless must be the direct playable route");
-  assert(source.includes('const openingSequence = [0, 1, 2];'), "The curated opening sequence must remain deterministic");
-  assert(source.includes("const openingGaps = [1.8, 2, 2.2];"), "The learned opening cadence must remain deterministic");
+  assert(source.includes('const openingSequence = [0, 1, 2, 3];'), "The curated opening sequence must remain deterministic");
+  assert(source.includes("const openingGaps = [1.55, 1.1, 1.4, 1.6];"), "The learned opening cadence must remain deterministic");
   assert(source.includes(": 1.4 + Math.random() * 2.4;"), "Post-opening endless gaps must stay dense and inside the playable flip range");
-  assert(source.includes("const authored = buildEndlessTemplatePool().filter"), "Endless must draw from the authored reference-level chunk pool");
+  assert(source.includes("return curated;"), "Endless must use the reviewed authored chunk pool");
   assert(source.includes('sliceables: [{ type: "brick", y: 0.5, z: 1.4, count: 13 }]'), "The close opening brick wall is missing");
+  assert(source.includes('{ type: "emoji", y: 0.5, z: 5.5 }') && source.includes('{ type: "camera", y: 0.5, z: 2.2 }'), "The observed orange, emoji, and camera opening beats are missing");
   assert(/function scoreForSlice\([^)]*\): number \{[\s\S]*?return 1;\s*\}/.test(source), "Every cut must be worth exactly one point");
   assert(source.includes("currentRun.coinsAwarded += 1;"), "Every cut must collect one coin");
   assert(source.includes("profile.coins += 1;"), "Collected coins must immediately update the persistent wallet");
@@ -93,12 +94,13 @@ function auditEndlessContract(source) {
 }
 
 function auditGameplayParity(source) {
-  assert(source.includes("const FLIP_COOLDOWN = 0.12;"), "Repeated taps must use the fast 120ms input cadence");
-  assert(source.includes("knife.velocity.y = Math.min(MAX_TAP_UPWARD_SPEED"), "Air taps must add bounded upward velocity");
-  assert(source.includes("knife.rotationTarget + TAP_ROTATION_ADD"), "Air taps must add another visible rotation");
+  assert(source.includes("const FLIP_COOLDOWN = 0.28;"), "Repeated taps must reject accidental sub-280ms double taps");
+  assert(source.includes("Math.max(0, knife.velocity.y) + AIR_TAP_LIFT"), "Air taps must add bounded upward velocity");
+  assert(source.includes("knife.rotation + TAP_ROTATION_ANGLE"), "Air taps must add another visible rotation");
   assert(source.includes("function enterRotatingStick(platformEntity: PlatformEntity): void"), "Bad-angle blade landings must rotate into a stick");
   assert(source.includes("knife.landingPunch = 0.75 + impactSpeed * 0.25;"), "Blade landings must have impact squash");
   assert(source.includes("spawnSlicePieces(slice);"), "A cut must spawn persistent physical halves");
+  assert(source.includes("collapseCutStackRemainder(brickSiblings, acceptedHits);"), "A scored wall cut must convert the remaining stack into non-scoring rubble");
   assert(source.includes('if (type === "brick") {'), "Brick walls need dedicated intact and split geometry");
   assert(source.includes("spawnScorePopup(position, points);"), "Cuts must show immediate +1 feedback");
   assert(source.includes("startCameraShake("), "Cuts and landings must drive camera impact");

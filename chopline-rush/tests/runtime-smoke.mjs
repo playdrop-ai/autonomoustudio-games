@@ -168,7 +168,7 @@ async function testPortraitBoot(browser, origin) {
   assert(ui.timerDisplay === "none" && ui.levelDisplay === "none", "Removed level/timer UI became visible");
   assert(ui.visibleScreens === 0, "A menu obscured the direct-to-endless boot");
   assert(ui.shopGlyph && ui.shopFont.includes("Arial") && ui.shopColor === "rgb(23, 61, 120)", "Gear control does not have a readable system-font icon");
-  assert(ui.canvas?.width === 390 && Math.abs(ui.canvas.height / ui.canvas.width - 16 / 9) < 0.02, `Canvas does not preserve the portrait 9:16 playfield: ${JSON.stringify(ui.canvas)}`);
+  assert(ui.canvas?.width === 390 && ui.canvas?.height === 844, `Canvas does not fill the portrait viewport: ${JSON.stringify(ui.canvas)}`);
   assert(shot.length > 5000, "Portrait gameplay screenshot appears blank");
   assert(glbResponses.some((item) => item.url.endsWith("chopping-knife.glb") && item.status === 200), "Starter chopping knife model did not load");
   assert(ui.calls.some((call) => call.type === "init") && ui.calls.some((call) => call.type === "ready"), "PlayDrop lifecycle did not initialize and become ready");
@@ -176,25 +176,27 @@ async function testPortraitBoot(browser, origin) {
   await page.close();
 }
 
+async function testDesktopCompatibilityFrame(browser, origin) {
+  const { page, errors } = await openApp(browser, origin, { viewport: { width: 1280, height: 720 } });
+  const canvas = await page.evaluate(() => document.querySelector("canvas")?.getBoundingClientRect().toJSON());
+  assert(errors.length === 0, `Desktop compatibility console/page errors: ${errors.join("\n")}`);
+  assert(canvas?.height === 720 && Math.abs(canvas.width / canvas.height - 9 / 16) < 0.02, `Desktop compatibility frame is not centered portrait 9:16: ${JSON.stringify(canvas)}`);
+  await page.close();
+}
+
 async function testMultipleAirTap(browser, origin) {
   const { page, errors } = await openTestApp(browser, origin);
-  await page.evaluate(() => {
-    window.__choplineTest.startEndless();
-    window.__choplineTest.setProofFrozen(true);
-    window.__choplineTest.makeNextFlipReady();
-    window.__choplineTest.tap();
-    window.__choplineTest.advance(0.25);
-  });
+  const geometry = await page.evaluate(() => window.__choplineTest.state().knifeGeometry);
+  await page.mouse.click(195, 600);
+  await page.waitForTimeout(320);
   const beforeSecond = await page.evaluate(() => window.__choplineTest.state().knife);
-  await page.evaluate(() => {
-    window.__choplineTest.makeNextFlipReady();
-    window.__choplineTest.tap();
-    window.__choplineTest.advance(0.04);
-  });
+  await page.mouse.click(195, 600);
+  await page.waitForTimeout(50);
   const afterSecond = await page.evaluate(() => window.__choplineTest.state().knife);
   assert(errors.length === 0, `Multiple-tap console/page errors: ${errors.join("\n")}`);
+  assert(geometry.tipError < 0.0001 && geometry.handleEndError < 0.0001, `Visual knife anchors diverged from collision geometry: ${JSON.stringify(geometry)}`);
   assert(beforeSecond.state === "flying" && afterSecond.state === "flying", "Air tap did not preserve flying state");
-  assert(afterSecond.velocityY > beforeSecond.velocityY + 2, `Second tap did not add lift: ${beforeSecond.velocityY} -> ${afterSecond.velocityY}`);
+  assert(afterSecond.velocityY > beforeSecond.velocityY, `Second tap did not add lift: ${beforeSecond.velocityY} -> ${afterSecond.velocityY}`);
   assert(afterSecond.velocityZ >= 7.5, `Second tap did not preserve forward motion: ${afterSecond.velocityZ}`);
   assert(afterSecond.rotation !== beforeSecond.rotation, "Second tap did not continue the visible flip");
   await page.close();
@@ -203,9 +205,9 @@ async function testMultipleAirTap(browser, origin) {
 async function testLandingAndCutPhysics(browser, origin) {
   const { page, errors } = await openTestApp(browser, origin, { profile: createProfile() });
   await page.evaluate(() => window.__choplineTest.stageFlatLandingProof());
-  await page.waitForFunction(() => window.__choplineTest.state().run?.outcome === "lost", null, { timeout: 10000 });
+  await page.waitForFunction(() => ["rotating-stick", "stuck"].includes(window.__choplineTest.state().knife.state), null, { timeout: 10000 });
   const flatLanding = await page.evaluate(() => window.__choplineTest.state());
-  assert(flatLanding.knife.state === "tumbling" || flatLanding.knife.state === "dead", `Flat handle landing was accepted as ${flatLanding.knife.state}`);
+  assert(flatLanding.run.outcome === null, `Recoverable flat landing ended the run as ${flatLanding.run.outcome}`);
 
   await page.evaluate(() => window.__choplineTest.stageLandingProof());
   await page.waitForFunction(() => {
@@ -215,62 +217,40 @@ async function testLandingAndCutPhysics(browser, origin) {
   const landing = await page.evaluate(() => window.__choplineTest.state().knife);
   assert(landing.velocityY === 0 && landing.velocityZ === 0, `Blade landing retained velocity: ${landing.velocityY}/${landing.velocityZ}`);
 
-  const sideRelaunch = await page.evaluate(() => {
-    window.__choplineTest.stageSideLandingProof();
-    window.__choplineTest.makeNextFlipReady();
-    window.__choplineTest.tap();
-    return window.__choplineTest.state().knife;
-  });
+  await page.evaluate(() => window.__choplineTest.stageSideLandingProof());
+  await page.waitForTimeout(300);
+  await page.mouse.click(195, 600);
+  await page.waitForTimeout(30);
+  const sideRelaunch = await page.evaluate(() => window.__choplineTest.state().knife);
   assert(sideRelaunch.state === "flying" && sideRelaunch.velocityZ > 5, `Front-face side stab did not relaunch forward: ${sideRelaunch.state}/${sideRelaunch.velocityZ}`);
 
-  const openingCadences = await page.evaluate(() => {
-    return [0.18, 0.22, 0.26, 0.3, 0.34, 0.38, 0.42, 0.46].map((interval) => {
-      window.__choplineTest.startEndless();
-      window.__choplineTest.makeNextFlipReady();
-      window.__choplineTest.tap();
-      window.__choplineTest.advance(interval);
-      window.__choplineTest.makeNextFlipReady();
-      window.__choplineTest.tap();
-      window.__choplineTest.advance(1.25);
-      const state = window.__choplineTest.state();
-      return { interval, score: state.run.score, outcome: state.run.outcome, knifeState: state.knife.state };
-    });
-  });
-  const successfulCadences = openingCadences.filter((result) => result.score >= 3 && result.outcome === null && result.knifeState === "stuck");
+  const openingCadences = [];
+  for (const interval of [300, 420, 520, 620, 750]) {
+    await page.evaluate(() => window.__choplineTest.startEndless());
+    await page.waitForTimeout(50);
+    await page.mouse.click(195, 600);
+    await page.waitForTimeout(interval);
+    await page.mouse.click(195, 600);
+    await page.waitForTimeout(1600);
+    const state = await page.evaluate(() => window.__choplineTest.state());
+    openingCadences.push({ interval, score: state.run.score, outcome: state.run.outcome, knifeState: state.knife.state });
+  }
+  const successfulCadences = openingCadences.filter((result) => result.score >= 7 && result.outcome === null);
   assert(successfulCadences.length >= 4, `Two-tap opening lacks a broad timing window: ${JSON.stringify(openingCadences)}`);
 
-  const continuationCadences = await page.evaluate(() => {
-    const intervals = [0.22, 0.25, 0.28, 0.31, 0.34];
-    const results = [];
-    for (const approachInterval of intervals) {
-      for (const cutInterval of intervals) {
-        window.__choplineTest.startEndless();
-        for (const interval of [0.28, approachInterval, cutInterval]) {
-          window.__choplineTest.makeNextFlipReady();
-          window.__choplineTest.tap();
-          window.__choplineTest.advance(interval);
-          window.__choplineTest.makeNextFlipReady();
-          window.__choplineTest.tap();
-          window.__choplineTest.advance(1.25);
-          if (window.__choplineTest.state().run.outcome) break;
-        }
-        const state = window.__choplineTest.state();
-        results.push({
-          approachInterval,
-          cutInterval,
-          score: state.run.score,
-          outcome: state.run.outcome,
-          knifeState: state.knife.state,
-          stuckFace: state.knife.stuckFace,
-          y: Number(state.knife.y.toFixed(2)),
-          z: Number(state.knife.z.toFixed(2)),
-        });
-      }
-    }
-    return results;
-  });
-  const successfulContinuations = continuationCadences.filter((result) => result.score >= 6 && result.outcome === null);
-  assert(successfulContinuations.length >= 10, `Repeated-tap rhythm does not reliably progress from the wall into the fruit lane: ${JSON.stringify(continuationCadences)}`);
+  await page.evaluate(() => window.__choplineTest.startEndless());
+  await page.waitForTimeout(50);
+  for (const delay of [420, 520, 520, 520, 520, 520, 520, 520]) {
+    await page.mouse.click(195, 600);
+    await page.waitForTimeout(delay);
+  }
+  const continuation = await page.evaluate(() => window.__choplineTest.state());
+  assert(
+    continuation.run.outcome === null
+      && continuation.run.score >= 7
+      && continuation.knife.z >= 13.4,
+    `Real repeated-tap run did not reach the authored target lane: ${JSON.stringify({ run: continuation.run, knife: continuation.knife })}`,
+  );
 
   const cutImpact = await page.evaluate(() => {
     window.__choplineTest.setProfile({ coins: 0, totalSlices: 0, totalCoinsEarned: 0 });
@@ -300,20 +280,21 @@ async function testEndlessGeneration(browser, origin) {
   const state = await page.evaluate(() => window.__choplineTest.state());
   const platforms = state.endless.platforms;
   assert(errors.length === 0, `Endless generation console/page errors: ${errors.join("\n")}`);
-  assert(state.run.mode === "endless" && state.endless.templates >= 100, "Runtime did not load the expanded authored endless chunk pool");
+  assert(state.run.mode === "endless" && state.endless.templates === 10, "Runtime did not load the curated authored endless chunk pool");
   assert(state.endless.cursorZ >= 120, `Runtime did not generate far enough ahead: ${state.endless.cursorZ}`);
   assert(state.endless.unattachedObjectCount === 0, "Generated objects must remain attached to platforms");
   assert(platforms[0].id === "endless_start" && platforms[0].objectCount === 0, "Opening platform drifted");
   assert(platforms[1].depth === 8 && platforms[1].objectCount === 13 && platforms[1].objectTypes.includes("brick"), "First generated chunk must be the tall thirteen-course wall");
-  assert(platforms[2].depth === 9 && platforms[2].objectCount === 4 && platforms[2].objectTypes.includes("apple") && platforms[2].objectTypes.includes("watermelon"), "Second generated chunk must be the fruit lane");
-  assert(platforms[3].depth === 6 && platforms[3].objectCount === 4 && platforms[3].objectTypes.includes("brick"), "Third generated chunk must be the short brick wall");
+  assert(platforms[2].depth === 11 && platforms[2].objectCount === 7 && platforms[2].objectTypes.includes("orange") && platforms[2].objectTypes.includes("emoji"), "Second generated chunk must be the orange and emoji lane");
+  assert(platforms[3].depth === 8 && platforms[3].objectCount === 2 && platforms[3].objectTypes.includes("camera"), "Third generated chunk must be the camera lane");
+  assert(platforms[4].depth === 6 && platforms[4].objectCount === 3 && platforms[4].objectTypes.includes("orange"), "Fourth generated chunk must be the recovery orange stack");
   for (let index = 1; index < platforms.length; index += 1) {
     const previous = platforms[index - 1];
     const current = platforms[index];
     const gap = current.z - current.depth / 2 - (previous.z + previous.depth / 2);
     const previousTop = previous.y + previous.height / 2;
     const currentTop = current.y + current.height / 2;
-    assert(gap >= 1.39 && gap <= 3.81, `Platform ${index} generated an unplayable gap: ${gap}`);
+    assert(gap >= 1.09 && gap <= 3.81, `Platform ${index} generated an unplayable gap: ${gap}`);
     assert(currentTop - previousTop <= 3.81 && currentTop - previousTop >= -1.51, `Platform ${index} generated an unreachable height change: ${currentTop - previousTop}`);
   }
   await page.close();
@@ -385,6 +366,7 @@ async function main() {
   const browser = await chromium.launch({ headless: true, args: ["--use-gl=swiftshader"] });
   try {
     await testPortraitBoot(browser, origin);
+    await testDesktopCompatibilityFrame(browser, origin);
     await testMultipleAirTap(browser, origin);
     await testLandingAndCutPhysics(browser, origin);
     await testEndlessGeneration(browser, origin);

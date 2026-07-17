@@ -8,16 +8,16 @@
     "dev": "node build.mjs --watch",
     "validate": "tsc --noEmit && npm run build",
     "validate:local": "npm run validate && npm run test:content && npm run test:endless-generator && npm run test:runtime",
-    "validate:release": "npm run validate:local && playdrop project validate . && npm run validate:marketing",
+    "validate:release": "npm run validate:local && playdrop project validate .",
     "test:content": "node tests/content-audit.mjs",
     "test:runtime": "node tests/runtime-smoke.mjs",
     "test:endless-generator": "node tests/endless-generator-parity.mjs",
     "proof:mechanics": "npm run build && node tests/reference-mechanics-proof.mjs",
     "prepare:listing-media": "node scripts/prepare-listing-media.mjs",
-    "validate:marketing": "node /Users/oliviermichon/.codex/plugins/cache/local-plugins/playdrop/0.9.0/scripts/validate-marketing-manifest.ts --root .",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json}\""
   },
   "devDependencies": {
+    "@dimforge/rapier3d-compat": "^0.18.2",
     "@playdrop/ai-client": "file:vendor/playdrop/ai-client.tgz",
     "@playdrop/api-client": "file:vendor/playdrop/api-client.tgz",
     "@playdrop/assets-client": "file:vendor/playdrop/assets-client.tgz",

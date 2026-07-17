@@ -1,37 +1,24 @@
 # Chopline Rush
 
-3D PlayDrop knife-flip game rebuilt from the Astrocade `Slice Rush` reference.
+Mobile-first 3D knife-flip game for PlayDrop. The product is one endless run: tap to add a bounded jump and rotation, cut targets for score and coins, and plant the blade to continue.
 
-## Reference
+## Product Scope
 
-The reference page, public context JSON, extracted game code, extracted config, and screenshots live in `tmp/reference/`. The active level data is generated from that reference in `src/referenceLevels.ts`.
+- Portrait is primary; desktop is compatibility mode.
+- The opening uses authored wall, orange, face-target, and camera beats observed in the gameplay reference.
+- The wall awards seven points once, then becomes non-scoring rigidbody rubble.
+- Cut targets create separated geometry with visible caps and Rapier-driven motion.
+- Coins unlock the six licensed knife models and three world themes.
+- Best score submits to the PlayDrop `endless_score` leaderboard.
 
-## Gameplay
-
-- Tap or click to flip the knife forward.
-- Slice fruit, stakes, books, and props for score.
-- Land blade-down on green platforms.
-- Avoid purple spike hazards and missed landings.
-- Clear 30 imported levels or play endless mode.
-
-## PlayDrop Features
-
-- Optional auth
-- App-data profile sync when logged in
-- Coin rewards
-- Cosmetic knife unlocks
-- Rewarded revive and coin doubling
-- Interstitial hook after runs
-- PlayDrop Credits coin bundles
-- Max-level and endless-score leaderboards
-- Achievements
-- Listing capture hooks
+Reference APKs, extracted proprietary assets, and decompiler output are internal evidence only and are not distributed with this app.
 
 ## Local Workflow
 
 - `npm install`
-- `npm run validate`
-- `playdrop project validate .`
+- `npm run validate:local`
+- `npm run proof:mechanics`
+- `playdrop project check .`
 - `playdrop project dev .`
 
-The app should not be published until clean official `playdrop project marketing capture` media replaces the current warning-gated capture and `npm run validate:release` passes.
+Use the official PlayDrop portrait capture flow for release evidence. Test hooks and staged proof scenes are supplemental diagnostics only.

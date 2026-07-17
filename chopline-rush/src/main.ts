@@ -1,5 +1,7 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { FragmentPhysics } from "./game/fragmentPhysics";
+import { normalizeKnifeModel, type KnifeGeometry, type KnifeModelDefinition } from "./game/knifeModel";
 import { REFERENCE_CONFIG } from "./referenceLevels";
 
 export {};
@@ -120,6 +122,14 @@ declare global {
           velocityZ: number;
           rotation: number;
           landingPunch: number;
+        };
+        knifeGeometry: {
+          bladeReach: number;
+          handleReach: number;
+          tipError: number;
+          handleEndError: number;
+          physicsTip: { x: number; y: number; z: number };
+          visualTip: { x: number; y: number; z: number };
         };
       sliceables: {
         total: number;
@@ -291,6 +301,7 @@ interface SliceEntity {
   radius: number;
   collision: CollisionAABB;
   sliced: boolean;
+  collisionEnabled: boolean;
   moving: boolean;
   moveAxis: "x" | "y" | "z";
   moveDistance: number;
@@ -332,11 +343,7 @@ interface SlicePiece {
   phase: SlicePiecePhase;
   objectType: string;
   velocity: THREE.Vector3;
-  angularVelocity: THREE.Vector3;
-  surfaceY: number;
-  platformEdgeX: number;
   direction: -1 | 1;
-  groundY: number;
   localBounds: {
     xMin: number;
     xMax: number;
@@ -345,9 +352,7 @@ interface SlicePiece {
     zMin?: number;
     zMax?: number;
   };
-  surfaceBounces: number;
-  restAngle?: number;
-  restAngleX?: number;
+  bodyHandle: number;
 }
 
 interface SlicePieceProofSummary {
@@ -381,8 +386,7 @@ interface KnifeSkin {
   handle: number;
   blade: number;
   trail: number;
-  modelAxis: "x" | "y" | "z";
-  bladeDirection: -1 | 1;
+  modelDefinition: KnifeModelDefinition;
 }
 
 interface WorldTheme {
@@ -508,8 +512,15 @@ const KNIVES: KnifeSkin[] = [
     handle: 0xc43cff,
     blade: 0xe8f2ff,
     trail: 0x75d4ff,
-    modelAxis: "x",
-    bladeDirection: -1,
+    modelDefinition: {
+      sourceAxis: "x",
+      bladeDirection: -1,
+      anchors: { tip: [-0.300384, 0.009, 0], hilt: [0.11, 0.009, 0], handleEnd: [0.300384, 0.009, 0] },
+      bladeReach: 1.7,
+      bladeHalfWidth: 0.15,
+      handleHalfWidth: 0.1,
+      readyAngle: THREE.MathUtils.degToRad(-140),
+    },
   },
   {
     id: "cooking",
@@ -521,8 +532,15 @@ const KNIVES: KnifeSkin[] = [
     handle: 0x9f4bff,
     blade: 0xf2f6ff,
     trail: 0xff8cdc,
-    modelAxis: "x",
-    bladeDirection: -1,
+    modelDefinition: {
+      sourceAxis: "x",
+      bladeDirection: -1,
+      anchors: { tip: [-0.358125, 0.02, 0], hilt: [0.08, 0.02, 0], handleEnd: [0.358125, 0.02, 0] },
+      bladeReach: 1.7,
+      bladeHalfWidth: 0.2,
+      handleHalfWidth: 0.12,
+      readyAngle: THREE.MathUtils.degToRad(-140),
+    },
   },
   {
     id: "chopping",
@@ -534,8 +552,15 @@ const KNIVES: KnifeSkin[] = [
     handle: 0x4935e8,
     blade: 0xf6fbff,
     trail: 0xffcf4d,
-    modelAxis: "x",
-    bladeDirection: -1,
+    modelDefinition: {
+      sourceAxis: "x",
+      bladeDirection: -1,
+      anchors: { tip: [-0.3, 0.02, 0.014], hilt: [0.11, 0.02, 0.014], handleEnd: [0.3, 0.02, 0.014] },
+      bladeReach: 1.76,
+      bladeHalfWidth: 0.3,
+      handleHalfWidth: 0.14,
+      readyAngle: THREE.MathUtils.degToRad(-140),
+    },
   },
   {
     id: "ultimate-food",
@@ -547,8 +572,15 @@ const KNIVES: KnifeSkin[] = [
     handle: 0xff5aa5,
     blade: 0xffffff,
     trail: 0x47f4b4,
-    modelAxis: "y",
-    bladeDirection: 1,
+    modelDefinition: {
+      sourceAxis: "z",
+      bladeDirection: 1,
+      anchors: { tip: [0, 0, 1.291942], hilt: [0, 0, -0.32], handleEnd: [0, 0, -0.715891] },
+      bladeReach: 1.72,
+      bladeHalfWidth: 0.17,
+      handleHalfWidth: 0.11,
+      readyAngle: THREE.MathUtils.degToRad(-140),
+    },
   },
   {
     id: "home-interior",
@@ -560,8 +592,15 @@ const KNIVES: KnifeSkin[] = [
     handle: 0x6f52ff,
     blade: 0xeaf2ff,
     trail: 0xffffff,
-    modelAxis: "y",
-    bladeDirection: 1,
+    modelDefinition: {
+      sourceAxis: "z",
+      bladeDirection: 1,
+      anchors: { tip: [0, 0, 0.159239], hilt: [0, 0, -0.12], handleEnd: [0, 0, -0.259893] },
+      bladeReach: 1.7,
+      bladeHalfWidth: 0.16,
+      handleHalfWidth: 0.11,
+      readyAngle: THREE.MathUtils.degToRad(-140),
+    },
   },
   {
     id: "survival",
@@ -573,8 +612,15 @@ const KNIVES: KnifeSkin[] = [
     handle: 0x263238,
     blade: 0xd7dde8,
     trail: 0xff4f7a,
-    modelAxis: "z",
-    bladeDirection: 1,
+    modelDefinition: {
+      sourceAxis: "y",
+      bladeDirection: 1,
+      anchors: { tip: [0, 1.19925, 0], hilt: [0, 0.12, 0], handleEnd: [0, -0.363614, 0] },
+      bladeReach: 1.72,
+      bladeHalfWidth: 0.23,
+      handleHalfWidth: 0.14,
+      readyAngle: THREE.MathUtils.degToRad(-140),
+    },
   },
 ];
 const STARTER_KNIFE_ID = "chopping";
@@ -1975,6 +2021,7 @@ const sliceEntities: SliceEntity[] = [];
 const obstacleEntities: ObstacleEntity[] = [];
 const particles: Particle[] = [];
 const slicePieces: SlicePiece[] = [];
+const fragmentPhysics = new FragmentPhysics();
 const tempBox = new THREE.Box3();
 const tempVector = new THREE.Vector3();
 const cameraShakeVector = new THREE.Vector3();
@@ -2020,6 +2067,10 @@ const materials = {
   baguetteBottom: new THREE.MeshPhongMaterial({ color: 0xc8903a, shininess: 20, side: THREE.DoubleSide }),
   cube: new THREE.MeshPhongMaterial({ color: 0xffeb3b, shininess: 25 }),
   sphere: new THREE.MeshPhongMaterial({ color: 0xff69b4, shininess: 35 }),
+  orange: new THREE.MeshPhongMaterial({ color: 0xff8617, shininess: 34 }),
+  emoji: new THREE.MeshPhongMaterial({ color: 0xffd43b, shininess: 34 }),
+  cameraBody: new THREE.MeshPhongMaterial({ color: 0x53565f, shininess: 28 }),
+  cameraDark: new THREE.MeshPhongMaterial({ color: 0x24262c, shininess: 18 }),
   white: new THREE.MeshLambertMaterial({ color: 0xffffff }),
   mountainOrange: new THREE.MeshLambertMaterial({ color: 0xff6347 }),
   treeTrunk: new THREE.MeshLambertMaterial({ color: 0xf5f4ff }),
@@ -2137,19 +2188,14 @@ const knifeModelCache = new Map<string, Promise<THREE.Object3D>>();
 const knifeModelLength = 2.05;
 const knifeModelCrossSection = 0.58;
 
-const INITIAL_KNIFE_ROTATION = (-Math.PI * 2) / 3;
-const KNIFE_STUCK_Y_OFFSET = 0.77;
-const KNIFE_BLADE_TIP_OFFSET = 1.42;
-const KNIFE_HILT_OFFSET = 0.98;
 const KNIFE_TIP_EMBED = 0.08;
 const BASE_FLIP_Y = 10;
 const BASE_FLIP_Z = 8;
-const AIR_TAP_Y = 7.5;
-const MAX_TAP_UPWARD_SPEED = 13;
-const TAP_ROTATION_ADD = Math.PI * 0.85;
+const AIR_TAP_LIFT = 4;
+const TAP_ROTATION_ANGLE = Math.PI * 2;
 const GRAVITY = -20;
 const ROTATION_SPEED = 7;
-const FLIP_COOLDOWN = 0.12;
+const FLIP_COOLDOWN = 0.28;
 const MIN_CUT_SPEED = 2.4;
 const MIN_CUT_TIP_FORWARD_SPEED = -0.75;
 const MIN_CUT_BLADE_PROGRESS = 0.18;
@@ -2158,12 +2204,6 @@ const BRICK_CUT_COURSES = 7;
 const MAX_SUB_STEP = 1 / 120;
 const KNIFE_CEILING_DEFAULT = 30;
 const KNIFE_LYING_OFFSET = 0.21;
-const BLADE_REACH = 1.69;
-const HANDLE_REACH = 0.78;
-const BLADE_OBB_HALF_LEN = BLADE_REACH / 2;
-const HANDLE_OBB_HALF_LEN = HANDLE_REACH / 2;
-const BLADE_HALF_WID = 0.25;
-const HANDLE_HALF_WID = 0.12;
 const BLADE_EDGE_OFFSET = 0;
 const BLADE_EMBED_DEPTH = 0.15;
 const SIDE_EMBED_DEPTH = 0.4;
@@ -2183,7 +2223,19 @@ const BAGUETTE_STACK_HEIGHT = 0.35;
 const SAUSAGE_STACK_HEIGHT = 0.4;
 const CAM_OFFSET = new THREE.Vector3(-9.5, 2.8, -2.4);
 const CAM_LOOK_AHEAD = 2.2;
-const KNIFE_VISUAL_YAW = Math.atan2(-CAM_OFFSET.x, CAM_LOOK_AHEAD - CAM_OFFSET.z);
+const KNIFE_VISUAL_X = -1.25;
+const KNIFE_VISUAL_YAW = 0;
+let activeKnifeGeometry: KnifeGeometry = {
+  bladeReach: 1.7,
+  handleReach: 0.78,
+  bladeHalfWidth: 0.25,
+  handleHalfWidth: 0.12,
+  tipLocal: new THREE.Vector3(0, 1.7, 0),
+  hiltLocal: new THREE.Vector3(),
+  handleEndLocal: new THREE.Vector3(0, -0.78, 0),
+  readyAngle: THREE.MathUtils.degToRad(-140),
+  yawOffset: 0,
+};
 const TRAJECTORY_POINT_LIMIT = 42;
 const TRAJECTORY_WIDTH = 0.11;
 const SLICE_HALF_LAUNCH_MIN_X = 4;
@@ -2215,6 +2267,7 @@ let lastTime = 0;
 let cameraShakeTime = 0;
 let cameraShakeDuration = 0;
 let cameraShakeStrength = 0;
+let hitStopTime = 0;
 let proofFrozen = false;
 
 function startCameraShake(strength: number, duration: number): void {
@@ -2238,6 +2291,7 @@ function saveProfile(): void {
 }
 
 async function init(): Promise<void> {
+  await fragmentPhysics.init();
   await platform.init();
   try {
     const remote = await platform.loadRemoteProfile();
@@ -2357,42 +2411,6 @@ function loadKnifeSourceModel(skin: KnifeSkin): Promise<THREE.Object3D> {
   return request;
 }
 
-function orientKnifeAxisToY(asset: THREE.Object3D, skin: KnifeSkin): void {
-  if (skin.modelAxis === "x") {
-    asset.rotation.z += skin.bladeDirection < 0 ? -Math.PI / 2 : Math.PI / 2;
-  } else if (skin.modelAxis === "z") {
-    asset.rotation.x += skin.bladeDirection > 0 ? -Math.PI / 2 : Math.PI / 2;
-  } else if (skin.bladeDirection < 0) {
-    asset.rotation.z += Math.PI;
-  }
-  asset.updateMatrixWorld(true);
-}
-
-function normalizeKnifeAsset(asset: THREE.Object3D, skin: KnifeSkin): void {
-  orientKnifeAxisToY(asset, skin);
-  asset.updateMatrixWorld(true);
-  let box = new THREE.Box3().setFromObject(asset);
-  let size = box.getSize(new THREE.Vector3());
-  if (size.x <= 0 || size.y <= 0 || size.z <= 0) {
-    throw new Error(`[chopline-rush] Knife model has invalid bounds: ${skin.model}`);
-  }
-  const scale = (BLADE_REACH + HANDLE_REACH) / size.y;
-  asset.scale.multiplyScalar(scale);
-  asset.updateMatrixWorld(true);
-  box = new THREE.Box3().setFromObject(asset);
-  size = box.getSize(new THREE.Vector3());
-  if (size.y <= 0) {
-    throw new Error(`[chopline-rush] Knife model failed normalization: ${skin.model}`);
-  }
-  const center = box.getCenter(new THREE.Vector3());
-  asset.position.x -= center.x;
-  asset.position.z -= center.z;
-  asset.updateMatrixWorld(true);
-  box = new THREE.Box3().setFromObject(asset);
-  asset.position.y += BLADE_REACH - box.max.y;
-  asset.updateMatrixWorld(true);
-}
-
 function polishKnifeMaterial(source: THREE.Material, skin: KnifeSkin): THREE.Material {
   const material = source.clone();
   material.side = THREE.DoubleSide;
@@ -2403,32 +2421,10 @@ function polishKnifeMaterial(source: THREE.Material, skin: KnifeSkin): THREE.Mat
     roughness?: number;
     metalness?: number;
   };
-  if (skin.id === STARTER_KNIFE_ID) {
-    if (readable.color) readable.color.lerp(new THREE.Color(0xf8fbff), 0.72);
-    if (readable.roughness !== undefined) {
-      readable.roughness = 0.16;
-    }
-    if (readable.metalness !== undefined) {
-      readable.metalness = 0.65;
-    }
-    if (readable.emissive) readable.emissive.setHex(0xa8b8c4);
-    readable.emissiveIntensity = 0.18;
-    material.needsUpdate = true;
-    return material;
-  }
-  if (readable.color) {
-    readable.color.lerp(new THREE.Color(0xffffff), 0.18);
-  }
-  if (readable.emissive) {
-    readable.emissive = new THREE.Color(skin.blade);
-    readable.emissiveIntensity = Math.max(readable.emissiveIntensity ?? 0, 0.26);
-  }
-  if (readable.roughness !== undefined) {
-    readable.roughness = Math.min(0.82, Math.max(0.48, readable.roughness));
-  }
-  if (readable.metalness !== undefined) {
-    readable.metalness = Math.max(readable.metalness, 0.04);
-  }
+  void skin;
+  if (readable.color) readable.color.setHex(0xffffff);
+  if (readable.emissive) readable.emissive.setHex(0x000000);
+  readable.emissiveIntensity = 0;
   material.needsUpdate = true;
   return material;
 }
@@ -2442,7 +2438,7 @@ function polishKnifeAsset(asset: THREE.Object3D, skin: KnifeSkin): void {
   });
 }
 
-function cloneKnifeAsset(source: THREE.Object3D, skin: KnifeSkin): THREE.Group {
+function cloneKnifeAsset(source: THREE.Object3D, skin: KnifeSkin): { model: THREE.Group; geometry: KnifeGeometry } {
   const asset = source.clone(true);
   polishKnifeAsset(asset, skin);
   asset.traverse((node) => {
@@ -2451,33 +2447,18 @@ function cloneKnifeAsset(source: THREE.Object3D, skin: KnifeSkin): THREE.Group {
       node.receiveShadow = true;
     }
   });
-  normalizeKnifeAsset(asset, skin);
+  const geometry = normalizeKnifeModel(asset, skin.modelDefinition);
 
   const wrapper = new THREE.Group();
   wrapper.add(asset);
-  if (skin.id === STARTER_KNIFE_ID) {
-    const grip = new THREE.Mesh(
-      new THREE.CapsuleGeometry(0.19, 0.48, 5, 8),
-      new THREE.MeshStandardMaterial({ color: 0xe20f43, roughness: 0.3, metalness: 0.12 }),
-    );
-    grip.position.y = -0.39;
-    grip.scale.z = 0.58;
-    grip.castShadow = true;
-    wrapper.add(grip);
-    const rivetMaterial = new THREE.MeshStandardMaterial({ color: 0xf4f4ef, roughness: 0.24, metalness: 0.72 });
-    for (const y of [-0.23, -0.51]) {
-      const rivet = new THREE.Mesh(new THREE.SphereGeometry(0.045, 10, 8), rivetMaterial);
-      rivet.position.set(-0.18, y, 0);
-      wrapper.add(rivet);
-    }
-  }
-  return wrapper;
+  return { model: wrapper, geometry };
 }
 
 async function buildKnife(): Promise<void> {
   const skin = KNIVES.find((item) => item.id === profile.equippedKnife) ?? KNIVES[0]!;
   const source = await loadKnifeSourceModel(skin);
-  const model = cloneKnifeAsset(source, skin);
+  const { model, geometry } = cloneKnifeAsset(source, skin);
+  activeKnifeGeometry = geometry;
   knifeGroup.clear();
   knifeGroup.add(model);
   knifeGroup.scale.setScalar(1);
@@ -2485,6 +2466,8 @@ async function buildKnife(): Promise<void> {
 }
 
 function clearWorld(): void {
+  fragmentPhysics.reset();
+  hitStopTime = 0;
   for (const group of [platformGroup, sliceGroup, obstacleGroup, particleGroup]) {
     while (group.children.length) {
       const child = group.children[0];
@@ -2553,22 +2536,32 @@ function resetGameOverTumble(): void {
   tumbleTargetQuat.identity();
 }
 
+function plantedPivotOnTop(platform: PlatformEntity, rotation = activeKnifeGeometry.readyAngle): THREE.Vector3 {
+  const platformTop = getPlatformTop(platform);
+  const tipY = platformTop - KNIFE_TIP_EMBED;
+  const tipZ = platform.mesh.position.z;
+  return new THREE.Vector3(
+    KNIFE_VISUAL_X,
+    tipY - Math.cos(rotation) * activeKnifeGeometry.bladeReach,
+    tipZ - Math.sin(rotation) * activeKnifeGeometry.bladeReach,
+  );
+}
+
 function resetKnife(): void {
   resetGameOverTumble();
   const start = platformEntities[0];
-  const y = start ? getPlatformTop(start) + KNIFE_STUCK_Y_OFFSET : 2.2;
-  const z = start ? start.mesh.position.z : -1.2;
-  knife.position.set(0, y, z);
+  const readyAngle = activeKnifeGeometry.readyAngle;
+  knife.position.copy(start ? plantedPivotOnTop(start, readyAngle) : new THREE.Vector3(KNIFE_VISUAL_X, 2.2, -1.2));
   knife.previousPosition.copy(knife.position);
-  knife.previousRotation = INITIAL_KNIFE_ROTATION;
+  knife.previousRotation = readyAngle;
   knife.velocity.set(0, 0, 0);
-  knife.rotation = INITIAL_KNIFE_ROTATION;
+  knife.rotation = readyAngle;
   knife.angularVelocity = 0;
   knife.state = "stuck";
   knife.stuckFace = "top";
   knife.stuckPlatform = start ?? null;
   knife.stuckSideDir = 1;
-  knife.rotationTarget = INITIAL_KNIFE_ROTATION;
+  knife.rotationTarget = readyAngle;
   knife.slicing = false;
   knife.flipSourcePlatform = null;
   knife.flipSourceFaceY = null;
@@ -2745,8 +2738,8 @@ function withIsolatedVisualRandom<T>(work: () => T): T {
 function prepareEndlessSpawnPlans(targetCursorZ: number): void {
   if (endlessTemplates.length === 0) throw new Error("[chopline-rush] Endless templates are not initialized");
   while (endlessPlanCursorZ < targetCursorZ) {
-    const openingSequence = [0, 1, 2];
-    const openingGaps = [1.8, 2, 2.2];
+    const openingSequence = [0, 1, 2, 3];
+    const openingGaps = [1.55, 1.1, 1.4, 1.6];
     const gap = endlessPlanCount < openingGaps.length
       ? openingGaps[endlessPlanCount]!
       : 1.4 + Math.random() * 2.4;
@@ -2777,23 +2770,27 @@ function prepareEndlessSpawnPlans(targetCursorZ: number): void {
 function buildEndlessCourseTemplates(): EndlessTemplate[] {
   const curated: EndlessTemplate[] = [
     {
-      platform: { y: 0, depth: 8, height: 1 },
+      platform: { y: 0, depth: 8, height: 1.4 },
       sliceables: [{ type: "brick", y: 0.5, z: 1.4, count: 13 }],
     },
     {
-      platform: { y: 0, depth: 9, height: 1 },
+      platform: { y: 0, depth: 11, height: 1.4 },
       sliceables: [
-        { type: "apple", y: 0.5, z: 2.8, count: 2 },
-        { type: "watermelon", y: 0.5, z: 6.5, count: 2 },
+        { type: "orange", y: 0.5, z: 2.4, count: 3 },
+        { type: "emoji", y: 0.5, z: 5.5 },
+        { type: "orange", y: 0.5, z: 8.8, count: 3 },
       ],
     },
     {
-      platform: { y: 0, depth: 6, height: 1 },
-      sliceables: [{ type: "brick", y: 0.5, z: 3.3, count: 4 }],
+      platform: { y: 0.35, depth: 8, height: 2.1 },
+      sliceables: [
+        { type: "camera", y: 0.5, z: 2.2 },
+        { type: "camera", y: 0.5, z: 5.8 },
+      ],
     },
     {
-      platform: { y: 0.5, depth: 7, height: 2 },
-      sliceables: [{ type: "sphere", y: 1, z: 3.8, count: 3 }],
+      platform: { y: 0, depth: 6, height: 1.4 },
+      sliceables: [{ type: "orange", y: 0.5, z: 3.3, count: 3 }],
     },
     {
       platform: { y: 0, depth: 10, height: 1 },
@@ -2827,27 +2824,7 @@ function buildEndlessCourseTemplates(): EndlessTemplate[] {
     },
   ];
 
-  const authored = buildEndlessTemplatePool().filter((template) => {
-    const { platform } = template;
-    const objectCount = expandedEndlessObjectCount(template);
-    const obstacles = template.obstacles ?? [];
-    const objects = [...(template.sliceables ?? []), ...obstacles];
-    return platform.depth >= 4
-      && platform.depth <= 24
-      && platform.height > 0
-      && platform.height <= 7
-      && (platform.y ?? 0) >= -1
-      && (platform.y ?? 0) <= 6
-      && objectCount >= 1
-      && objectCount <= 22
-      && obstacles.length <= 1
-      && objects.every((object) => {
-        const z = object.z ?? 0;
-        return z >= -1 && z <= platform.depth + 1;
-      });
-  });
-
-  return [...curated, ...authored];
+  return curated;
 }
 
 function chooseEndlessTemplateIndex(): number {
@@ -2917,7 +2894,7 @@ function buildEndlessWorld(): void {
     endlessTemplates = buildEndlessCourseTemplates();
   }
   endlessCursorZ = 0;
-  endlessPlanCursorZ = 5;
+  endlessPlanCursorZ = 3.6;
   endlessSpawnPlans = [];
   endlessPlanCount = 0;
   endlessLastTemplateIndex = -1;
@@ -2927,9 +2904,9 @@ function buildEndlessWorld(): void {
 
   prepareEndlessSpawnPlans(ENDLESS_GENERATE_AHEAD);
 
-  const startPlatform = withIsolatedVisualRandom(() => createPlatform({ id: "endless_start", y: 0, z: 0, depth: 5, height: 1 }, 0));
+  const startPlatform = withIsolatedVisualRandom(() => createPlatform({ id: "endless_start", y: 0, z: 0, depth: 3.6, height: 1.4 }, 0));
   platformEntities.push(startPlatform);
-  endlessCursorZ = 5;
+  endlessCursorZ = 3.6;
   endlessPlatformCounter = 1;
 
   while (endlessCursorZ < ENDLESS_GENERATE_AHEAD) {
@@ -2948,6 +2925,7 @@ function updateEndlessWorld(): void {
   for (let i = platformEntities.length - 1; i >= 0; i -= 1) {
     const platformEntity = platformEntities[i]!;
     if (platformEntity.mesh.position.z + platformEntity.depth / 2 < cleanupZ) {
+      fragmentPhysics.removePlatform(platformEntity.id);
       removeAndDispose(platformGroup, platformEntity.mesh);
       platformEntities.splice(i, 1);
     }
@@ -3019,6 +2997,7 @@ function createPlatform(def: RefPlatform, index: number): PlatformEntity {
     bounds: new THREE.Box3(),
   };
   updatePlatformBounds(entity);
+  fragmentPhysics.addPlatform(entity.id, entity.mesh.position, { x: width, y: height, z: depth }, entity.moving);
   return entity;
 }
 
@@ -3061,6 +3040,7 @@ function createRoof(def: RefPlatform, index: number): PlatformEntity {
     bounds: new THREE.Box3(),
   };
   updatePlatformBounds(entity);
+  fragmentPhysics.addPlatform(entity.id, entity.mesh.position, { x: width, y: height, z: depth }, false);
   return entity;
 }
 
@@ -3099,6 +3079,7 @@ function createSliceable(def: RefThing, index: number, platformById: Map<string,
       radius: sliceRadius(def.type),
       collision: sliceCollisionAABB(def.type),
       sliced: false,
+      collisionEnabled: true,
       moving: Boolean(def.moving),
       moveAxis: def.moveAxis ?? "y",
       moveDistance: def.moveDistance ?? 2,
@@ -3115,6 +3096,9 @@ function sliceCollisionAABB(type: string): CollisionAABB {
   if (type === "book") return { bottomY: 0, topY: BOOK_HEIGHT * SLICEABLE_VISUAL_SCALE, halfZ: 0.3 * SLICEABLE_VISUAL_SCALE };
   if (type === "watermelon") return { bottomY: 0, topY: 1.0 * SLICEABLE_VISUAL_SCALE, halfZ: 0.5 * SLICEABLE_VISUAL_SCALE };
   if (type === "apple") return { bottomY: 0, topY: 0.95 * SLICEABLE_VISUAL_SCALE, halfZ: 0.4 * SLICEABLE_VISUAL_SCALE };
+  if (type === "orange") return { bottomY: 0, topY: 0.9 * SLICEABLE_VISUAL_SCALE, halfZ: 0.42 * SLICEABLE_VISUAL_SCALE };
+  if (type === "emoji") return { bottomY: 0, topY: 1.0 * SLICEABLE_VISUAL_SCALE, halfZ: 0.5 * SLICEABLE_VISUAL_SCALE };
+  if (type === "camera") return { bottomY: 0, topY: 1.55 * SLICEABLE_VISUAL_SCALE, halfZ: 0.62 * SLICEABLE_VISUAL_SCALE };
   if (type === "donut") return { bottomY: 0, topY: 1.0 * SLICEABLE_VISUAL_SCALE, halfZ: 0.18 * SLICEABLE_VISUAL_SCALE };
   if (type === "cheese") return { bottomY: 0, topY: 0.6 * SLICEABLE_VISUAL_SCALE, halfZ: 0.375 * SLICEABLE_VISUAL_SCALE };
   if (type === "cube") return { bottomY: 0, topY: 0.75 * SLICEABLE_VISUAL_SCALE, halfZ: 0.375 * SLICEABLE_VISUAL_SCALE };
@@ -3130,6 +3114,9 @@ function getStackGap(type: string): number {
   if (type === "wooden_stake") return STAKE_STACK_HEIGHT;
   if (type === "watermelon") return WATERMELON_STACK_HEIGHT;
   if (type === "apple") return APPLE_STACK_HEIGHT;
+  if (type === "orange") return 0.82;
+  if (type === "emoji") return 1;
+  if (type === "camera") return 1.6;
   if (type === "donut") return DONUT_STACK_HEIGHT;
   if (type === "cheese") return CHEESE_STACK_HEIGHT;
   if (type === "cube") return CUBE_STACK_HEIGHT;
@@ -3149,6 +3136,8 @@ function sliceRadius(type: string): number {
     if (type === "wooden_stake") return 0.6;
     if (type === "book") return 0.48;
     if (type === "watermelon") return 0.75;
+    if (type === "orange" || type === "emoji") return 0.55;
+    if (type === "camera") return 0.75;
     if (type === "donut") return 0.55;
     return 0.5;
   })();
@@ -3198,6 +3187,66 @@ function buildSliceMesh(type: string, index: number): THREE.Group {
     const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.2, 6), materials.wood);
     stem.position.y = 0.85;
     group.add(stem);
+  } else if (type === "orange" || type === "emoji") {
+    const radius = type === "orange" ? 0.42 : 0.5;
+    const fruit = new THREE.Mesh(new THREE.SphereGeometry(radius, 20, 16), type === "orange" ? materials.orange : materials.emoji);
+    fruit.position.y = radius;
+    fruit.castShadow = true;
+    group.add(fruit);
+    if (type === "orange") {
+      const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.03, 0.12, 6), materials.wood);
+      stem.position.y = radius * 2 + 0.04;
+      group.add(stem);
+      const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 6), materials.bookGreen);
+      leaf.scale.set(0.35, 0.18, 1);
+      leaf.position.set(0, radius * 2 + 0.07, 0.08);
+      group.add(leaf);
+    } else {
+      for (const z of [-0.16, 0.16]) {
+        const eye = new THREE.Mesh(new THREE.SphereGeometry(0.055, 10, 8), materials.cameraDark);
+        eye.scale.x = 0.35;
+        eye.position.set(-0.48, 0.63, z);
+        group.add(eye);
+      }
+      const smileCurve = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(-0.49, 0.38, -0.18),
+        new THREE.Vector3(-0.51, 0.3, 0),
+        new THREE.Vector3(-0.49, 0.38, 0.18),
+      ]);
+      const smile = new THREE.Mesh(new THREE.TubeGeometry(smileCurve, 12, 0.028, 6, false), materials.cameraDark);
+      group.add(smile);
+    }
+  } else if (type === "camera") {
+    const body = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.45, 0.78), materials.cameraBody);
+    body.position.y = 1.02;
+    body.castShadow = true;
+    group.add(body);
+    const lens = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.2, 0.2, 14), materials.cameraDark);
+    lens.rotation.z = Math.PI / 2;
+    lens.position.set(-0.36, 1.02, 0);
+    lens.castShadow = true;
+    group.add(lens);
+    for (const z of [-0.22, 0.22]) {
+      const reel = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.13, 14), materials.cameraBody);
+      reel.rotation.z = Math.PI / 2;
+      reel.position.set(-0.03, 1.4, z);
+      reel.castShadow = true;
+      group.add(reel);
+      const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.14, 10), materials.cameraDark);
+      hub.rotation.z = Math.PI / 2;
+      hub.position.copy(reel.position);
+      group.add(hub);
+    }
+    const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.3, 7), materials.cameraDark);
+    neck.position.y = 0.66;
+    group.add(neck);
+    for (const [z, angle] of [[-0.26, -0.32], [0.26, 0.32], [0, 0]] as Array<[number, number]>) {
+      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.04, 0.72, 7), materials.cameraDark);
+      leg.rotation.x = angle;
+      leg.position.set(0, 0.32, z / 2);
+      leg.castShadow = true;
+      group.add(leg);
+    }
   } else if (type === "donut") {
     buildReferenceDonut(group);
   } else if (type === "cheese") {
@@ -3593,6 +3642,7 @@ function updateMovingWorld(dt: number): void {
       platformEntity.mesh.position[platformEntity.moveAxis] += offset;
     }
     updatePlatformBounds(platformEntity);
+    fragmentPhysics.updatePlatform(platformEntity.id, platformEntity.mesh.position);
   }
 
   if (stuckPlatform && stuckOldY !== undefined && stuckOldZ !== undefined) {
@@ -3618,7 +3668,7 @@ function updateMovingWorld(dt: number): void {
   }
 
   for (const slice of sliceEntities) {
-    if (slice.sliced) continue;
+    if (slice.sliced || !slice.collisionEnabled) continue;
     const base = getChildBasePosition(slice);
     const offset = calculateMovingOffset(slice, dt);
     slice.group.position.copy(base);
@@ -3648,6 +3698,11 @@ function frame(timestamp: number): void {
 function update(dt: number, elapsed: number): void {
   void elapsed;
   if (proofFrozen) return;
+  if (hitStopTime > 0) {
+    hitStopTime = Math.max(0, hitStopTime - dt);
+    updateCamera(dt);
+    return;
+  }
   knife.landingPunch = Math.max(0, knife.landingPunch - dt * 8);
   updateMovingWorld(dt);
   updateKnife(dt);
@@ -3706,7 +3761,7 @@ function updateKnifePhysics(dt: number): void {
     if (knife.rotatingStickPlatform) {
       const platformTop = getPlatformTop(knife.rotatingStickPlatform);
       const cosR = Math.cos(knife.rotation);
-      const lowestDrop = cosR < 0 ? -BLADE_REACH * cosR : HANDLE_REACH * cosR;
+      const lowestDrop = cosR < 0 ? -activeKnifeGeometry.bladeReach * cosR : activeKnifeGeometry.handleReach * cosR;
       const targetY = platformTop + lowestDrop;
       if (knife.position.y >= platformTop && targetY > knife.position.y) {
         knife.position.y = targetY;
@@ -3748,7 +3803,8 @@ function updateKnifePhysics(dt: number): void {
 
 function syncKnifeTransform(): void {
   knifeGroup.position.copy(knife.position);
-  knifeGroup.rotation.set(knife.rotation, KNIFE_VISUAL_YAW, 0);
+  knifeGroup.position.x = KNIFE_VISUAL_X;
+  knifeGroup.rotation.set(knife.rotation, KNIFE_VISUAL_YAW + activeKnifeGeometry.yawOffset, 0);
   knifeGroup.scale.setScalar(1 + knife.landingPunch * 0.075);
 }
 
@@ -3777,7 +3833,7 @@ function flipKnife(): void {
     const platform = knife.flipSourcePlatform;
     const zMin = platform.mesh.position.z - platform.depth / 2;
     const zMax = platform.mesh.position.z + platform.depth / 2;
-    const bladeExtZ = BLADE_REACH * Math.abs(Math.sin(knife.rotation));
+    const bladeExtZ = activeKnifeGeometry.bladeReach * Math.abs(Math.sin(knife.rotation));
     const margin = 0.1;
     if (knife.stuckSideDir < 0) {
       knife.position.z = Math.min(knife.position.z, zMin - bladeExtZ - margin);
@@ -3795,7 +3851,7 @@ function flipKnife(): void {
   knife.previousPosition.copy(knife.position);
   knife.previousRotation = knife.rotation;
   if (wasAirborne) {
-    knife.velocity.y = Math.min(MAX_TAP_UPWARD_SPEED, Math.max(0, knife.velocity.y) + AIR_TAP_Y);
+    knife.velocity.y = Math.min(BASE_FLIP_Y, Math.max(0, knife.velocity.y) + AIR_TAP_LIFT);
     knife.velocity.z = Math.max(BASE_FLIP_Z, knife.velocity.z);
   } else if (knife.stuckFace === "bottom") {
     const bottomCoeff = knife.flipSourcePlatform?.kind === "roof" ? 0.25 : 0.1;
@@ -3809,7 +3865,7 @@ function flipKnife(): void {
   knife.stuckFace = "top";
   knife.angularVelocity = ROTATION_SPEED;
   knife.rotationTarget = wasAirborne
-    ? Math.min(knife.rotation + Math.PI * 2, Math.max(knife.rotation + Math.PI, knife.rotationTarget + TAP_ROTATION_ADD))
+    ? knife.rotation + TAP_ROTATION_ANGLE
     : nextRotationTarget(knife.rotation);
   knife.lastPlatformId = "";
   knife.landingPunch = 0;
@@ -3822,8 +3878,8 @@ function flipKnife(): void {
 
 function nextRotationTarget(rotation: number): number {
   const minTarget = rotation + Math.PI;
-  const n = Math.ceil((minTarget - INITIAL_KNIFE_ROTATION) / (2 * Math.PI));
-  return n * (2 * Math.PI) + INITIAL_KNIFE_ROTATION;
+  const n = Math.ceil((minTarget - activeKnifeGeometry.readyAngle) / (2 * Math.PI));
+  return n * (2 * Math.PI) + activeKnifeGeometry.readyAngle;
 }
 
 function resetTrajectoryTrail(): void {
@@ -3877,23 +3933,46 @@ function knifeAxis(): THREE.Vector3 {
 }
 
 function knifeBladeTip(): THREE.Vector3 {
-  return knife.position.clone().addScaledVector(knifeAxis(), KNIFE_BLADE_TIP_OFFSET);
+  return knife.position.clone().addScaledVector(knifeAxis(), activeKnifeGeometry.bladeReach);
 }
 
-function knifeHiltPoint(): THREE.Vector3 {
-  return knife.position.clone().addScaledVector(knifeAxis(), -KNIFE_HILT_OFFSET);
+function knifeHandleEnd(): THREE.Vector3 {
+  return knife.position.clone().addScaledVector(knifeAxis(), -activeKnifeGeometry.handleReach);
+}
+
+function knifeGeometryProof(): {
+  bladeReach: number;
+  handleReach: number;
+  tipError: number;
+  handleEndError: number;
+  physicsTip: { x: number; y: number; z: number };
+  visualTip: { x: number; y: number; z: number };
+} {
+  knifeGroup.updateMatrixWorld(true);
+  const visualTip = knifeGroup.localToWorld(activeKnifeGeometry.tipLocal.clone());
+  const visualHandleEnd = knifeGroup.localToWorld(activeKnifeGeometry.handleEndLocal.clone());
+  const physicsTip = knifeBladeTip();
+  const physicsHandleEnd = knifeHandleEnd();
+  return {
+    bladeReach: activeKnifeGeometry.bladeReach,
+    handleReach: activeKnifeGeometry.handleReach,
+    tipError: visualTip.distanceTo(physicsTip),
+    handleEndError: visualHandleEnd.distanceTo(physicsHandleEnd),
+    physicsTip: { x: physicsTip.x, y: physicsTip.y, z: physicsTip.z },
+    visualTip: { x: visualTip.x, y: visualTip.y, z: visualTip.z },
+  };
 }
 
 function getBladeOBBAt(y: number, z: number, rot: number): KnifeOBB {
   const cosR = Math.cos(rot);
   const sinR = Math.sin(rot);
   return {
-    cY: y + (BLADE_REACH / 2) * cosR + (-sinR) * BLADE_EDGE_OFFSET,
-    cZ: z + (BLADE_REACH / 2) * sinR + cosR * BLADE_EDGE_OFFSET,
+    cY: y + (activeKnifeGeometry.bladeReach / 2) * cosR + (-sinR) * BLADE_EDGE_OFFSET,
+    cZ: z + (activeKnifeGeometry.bladeReach / 2) * sinR + cosR * BLADE_EDGE_OFFSET,
     axisY: cosR,
     axisZ: sinR,
-    halfLen: BLADE_OBB_HALF_LEN,
-    halfWid: BLADE_HALF_WID,
+    halfLen: activeKnifeGeometry.bladeReach / 2,
+    halfWid: activeKnifeGeometry.bladeHalfWidth,
   };
 }
 
@@ -3901,12 +3980,12 @@ function getHandleOBBAt(y: number, z: number, rot: number): KnifeOBB {
   const cosR = Math.cos(rot);
   const sinR = Math.sin(rot);
   return {
-    cY: y - (HANDLE_REACH / 2) * cosR,
-    cZ: z - (HANDLE_REACH / 2) * sinR,
+    cY: y - (activeKnifeGeometry.handleReach / 2) * cosR,
+    cZ: z - (activeKnifeGeometry.handleReach / 2) * sinR,
     axisY: cosR,
     axisZ: sinR,
-    halfLen: HANDLE_OBB_HALF_LEN,
-    halfWid: HANDLE_HALF_WID,
+    halfLen: activeKnifeGeometry.handleReach / 2,
+    halfWid: activeKnifeGeometry.handleHalfWidth,
   };
 }
 
@@ -4001,19 +4080,19 @@ function stickToFace(faceAxis: CollisionAxis, faceDir: CollisionDir, faceCoord: 
   if (faceAxis === "y") {
     if (faceDir > 0) {
       knife.stuckFace = "top";
-      const lowestDrop = cosR < 0 ? -BLADE_REACH * cosR : HANDLE_REACH * cosR;
+      const lowestDrop = cosR < 0 ? -activeKnifeGeometry.bladeReach * cosR : activeKnifeGeometry.handleReach * cosR;
       const embedDepth = BLADE_EMBED_DEPTH * Math.max(0, -cosR);
       knife.position.y = faceCoord - embedDepth + lowestDrop;
     } else {
       knife.stuckFace = "bottom";
-      const highestRise = cosR > 0 ? BLADE_REACH * cosR : -HANDLE_REACH * cosR;
+      const highestRise = cosR > 0 ? activeKnifeGeometry.bladeReach * cosR : -activeKnifeGeometry.handleReach * cosR;
       const embedDepth = BLADE_EMBED_DEPTH * Math.max(0, cosR);
       knife.position.y = faceCoord + embedDepth - highestRise;
     }
   } else {
     knife.stuckFace = "side";
     knife.stuckSideDir = faceDir;
-    const zOffset = BLADE_REACH * sinR;
+    const zOffset = activeKnifeGeometry.bladeReach * sinR;
     const embedDepth = SIDE_EMBED_DEPTH * Math.abs(sinR);
     knife.position.z = faceCoord - zOffset + Math.sign(sinR || faceDir) * embedDepth;
   }
@@ -4063,7 +4142,7 @@ function bounceKnife(source: SliceEntity | null): void {
 }
 
 function sliceObject(slice: SliceEntity): void {
-  if (!currentRun || slice.sliced) return;
+  if (!currentRun || slice.sliced || !slice.collisionEnabled) return;
   const points = scoreForSlice(slice.type);
   const position = slice.group.position.clone();
   const randomWindow = window as Window & { __rngCount?: number };
@@ -4080,6 +4159,7 @@ function sliceObject(slice: SliceEntity): void {
     }
     : null;
   slice.sliced = true;
+  slice.collisionEnabled = false;
   currentRun.score += points;
   currentRun.coinsAwarded += 1;
   currentRun.combo += 1;
@@ -4139,7 +4219,7 @@ function checkObstacleOBBs(obbs: KnifeOBB[]): boolean {
 }
 
 function sliceablesHitByBlade(bladeOBB: KnifeOBB, midBladeOBB: KnifeOBB): SliceEntity[] {
-  return sliceEntities.filter((slice) => !slice.sliced && (obbObjectOverlap(bladeOBB, slice.group.position, slice.collision) || obbObjectOverlap(midBladeOBB, slice.group.position, slice.collision)));
+  return sliceEntities.filter((slice) => slice.collisionEnabled && !slice.sliced && (obbObjectOverlap(bladeOBB, slice.group.position, slice.collision) || obbObjectOverlap(midBladeOBB, slice.group.position, slice.collision)));
 }
 
 function referenceFilteredSliceHits(hits: SliceEntity[]): SliceEntity[] {
@@ -4170,7 +4250,7 @@ function cutContactProgress(slice: SliceEntity): number {
 function qualifiesInitialCut(slice: SliceEntity, angleDiff: number): boolean {
   const inSliceRange = angleDiff >= THREE.MathUtils.degToRad(-150) && angleDiff <= THREE.MathUtils.degToRad(85);
   const linearSpeed = Math.hypot(knife.velocity.y, knife.velocity.z);
-  const tipForwardSpeed = knife.velocity.z + knife.angularVelocity * KNIFE_BLADE_TIP_OFFSET * Math.cos(knife.rotation);
+  const tipForwardSpeed = knife.velocity.z + knife.angularVelocity * activeKnifeGeometry.bladeReach * Math.cos(knife.rotation);
   const bladeProgress = cutContactProgress(slice);
   return inSliceRange
     && linearSpeed >= MIN_CUT_SPEED
@@ -4178,11 +4258,21 @@ function qualifiesInitialCut(slice: SliceEntity, angleDiff: number): boolean {
     && bladeProgress >= MIN_CUT_BLADE_PROGRESS;
 }
 
+function collapseCutStackRemainder(stack: SliceEntity[], scoredPieces: SliceEntity[]): void {
+  const scoredIds = new Set(scoredPieces.map((slice) => slice.id));
+  for (const slice of stack) {
+    if (scoredIds.has(slice.id) || slice.sliced || !slice.collisionEnabled) continue;
+    slice.collisionEnabled = false;
+    spawnSlicePieces(slice);
+    slice.group.visible = false;
+  }
+}
+
 function handleSliceableCollisions(bladeOBB: KnifeOBB, handleOBB: KnifeOBB, midBladeOBB: KnifeOBB, midHandleOBB: KnifeOBB): boolean {
   if (knife.lastBounceEntity) {
     const last = knife.lastBounceEntity;
     if (
-      last.sliced ||
+      last.sliced || !last.collisionEnabled ||
       (!obbObjectOverlap(bladeOBB, last.group.position, last.collision)
         && !obbObjectOverlap(handleOBB, last.group.position, last.collision)
         && !obbObjectOverlap(midBladeOBB, last.group.position, last.collision)
@@ -4215,7 +4305,7 @@ function handleSliceableCollisions(bladeOBB: KnifeOBB, handleOBB: KnifeOBB, midB
         return Math.abs(centerA - knife.position.y) - Math.abs(centerB - knife.position.y);
       })[0];
   if (bladeHit) {
-    const targetRotation = Math.round((knife.rotation - INITIAL_KNIFE_ROTATION) / (2 * Math.PI)) * (2 * Math.PI) + INITIAL_KNIFE_ROTATION;
+    const targetRotation = Math.round((knife.rotation - activeKnifeGeometry.readyAngle) / (2 * Math.PI)) * (2 * Math.PI) + activeKnifeGeometry.readyAngle;
     const angleDiff = knife.rotation - targetRotation;
     if (!qualifiesInitialCut(bladeHit, angleDiff)) {
       bounceKnife(bladeHit);
@@ -4224,7 +4314,7 @@ function handleSliceableCollisions(bladeOBB: KnifeOBB, handleOBB: KnifeOBB, midB
 
     const brickSiblings = bladeHit.type === "brick"
       ? sliceEntities
-        .filter((slice) => slice.configIndex === bladeHit.configIndex && !slice.sliced)
+        .filter((slice) => slice.configIndex === bladeHit.configIndex && slice.collisionEnabled && !slice.sliced)
         .sort((a, b) => a.stackIndex - b.stackIndex)
       : [];
     const brickCutFloor = brickSiblings.length > 0
@@ -4234,6 +4324,8 @@ function handleSliceableCollisions(bladeOBB: KnifeOBB, handleOBB: KnifeOBB, midB
       ? brickSiblings.filter((slice) => slice.stackIndex >= brickCutFloor)
       : [bladeHit];
     for (const acceptedHit of acceptedHits) sliceObject(acceptedHit);
+    if (bladeHit.type === "brick") collapseCutStackRemainder(brickSiblings, acceptedHits);
+    hitStopTime = Math.max(hitStopTime, bladeHit.type === "brick" ? 0.055 : 0.035);
     knife.slicing = true;
     knife.slicingStackConfigIndex = bladeHit.type === "brick" ? bladeHit.configIndex : null;
     knife.slicingStackMinIndex = bladeHit.type === "brick" ? brickCutFloor : 0;
@@ -4248,7 +4340,7 @@ function handleSliceableCollisions(bladeOBB: KnifeOBB, handleOBB: KnifeOBB, midB
   }
 
   for (const slice of sliceEntities) {
-    if (slice.sliced || slice === knife.lastBounceEntity) continue;
+    if (slice.sliced || !slice.collisionEnabled || slice === knife.lastBounceEntity) continue;
     if (!obbObjectOverlap(handleOBB, slice.group.position, slice.collision) && !obbObjectOverlap(midHandleOBB, slice.group.position, slice.collision)) continue;
     bounceKnife(slice);
     return true;
@@ -4263,6 +4355,19 @@ function platformExtents(platformEntity: PlatformEntity): { yMin: number; yMax: 
     zMin: platformEntity.mesh.position.z - platformEntity.depth / 2,
     zMax: platformEntity.mesh.position.z + platformEntity.depth / 2,
   };
+}
+
+function clearFlipSourcePlatformGuardIfSafe(): void {
+  const source = knife.flipSourcePlatform;
+  if (!source) return;
+  const { yMin, yMax, zMin, zMax } = platformExtents(source);
+  const reach = Math.max(activeKnifeGeometry.bladeReach, activeKnifeGeometry.handleReach) + 0.1;
+  const pivotClearY = knife.position.y > yMax + reach || knife.position.y < yMin - reach;
+  const pivotClearZ = knife.position.z < zMin - reach || knife.position.z > zMax + reach;
+  if (!pivotClearY && !pivotClearZ) return;
+  knife.flipSourcePlatform = null;
+  knife.flipSourceFaceY = null;
+  knife.flipSourceFaceType = null;
 }
 
 function checkRotatingStick(bladeOBB: KnifeOBB, midBladeOBB: KnifeOBB): boolean {
@@ -4301,7 +4406,7 @@ function checkRotatingStick(bladeOBB: KnifeOBB, midBladeOBB: KnifeOBB): boolean 
       ? face.dir > 0 ? face.coord - bladeOBB.cY : bladeOBB.cY - face.coord
       : face.dir > 0 ? face.coord - bladeOBB.cZ : bladeOBB.cZ - face.coord;
     const wrongOrientation = face.axis === "y" ? cosR * face.dir > 0.3 : sinR * face.dir > 0.3;
-    if (distToFace <= BLADE_REACH && !(face.axis === "z" && Math.abs(sinR) < 0.5) && !wrongOrientation) {
+    if (distToFace <= activeKnifeGeometry.bladeReach && !(face.axis === "z" && Math.abs(sinR) < 0.5) && !wrongOrientation) {
       stickToFace(face.axis, face.dir, face.coord, platformEntity);
       return true;
     }
@@ -4337,11 +4442,14 @@ function checkPlatformCollisions(bladeOBB: KnifeOBB, handleOBB: KnifeOBB, midBla
       hitBladeOBB = midBladeOBB;
     }
 
-    let handleHit = obbAABBOverlap(handleOBB, yMin, yMax, zMin, zMax);
+    let handleHit = false;
     let hitHandleOBB = handleOBB;
-    if (!handleHit) {
-      handleHit = obbAABBOverlap(midHandleOBB, yMin, yMax, zMin, zMax);
-      hitHandleOBB = midHandleOBB;
+    if (!bladeHit) {
+      handleHit = obbAABBOverlap(handleOBB, yMin, yMax, zMin, zMax);
+      if (!handleHit) {
+        handleHit = obbAABBOverlap(midHandleOBB, yMin, yMax, zMin, zMax);
+        hitHandleOBB = midHandleOBB;
+      }
     }
 
     if (bladeHit) {
@@ -4350,23 +4458,19 @@ function checkPlatformCollisions(bladeOBB: KnifeOBB, handleOBB: KnifeOBB, midBla
         stickToFace(face.axis, face.dir, face.coord, platformEntity);
         return;
       }
-      if (handleHit) {
-        failRun();
-        return;
-      }
       if ((face.axis === "y" && (hitBladeOBB.cZ < zMin || hitBladeOBB.cZ > zMax)) || (face.axis === "z" && (hitBladeOBB.cY < yMin || hitBladeOBB.cY > yMax))) {
-        failRun();
+        enterRotatingStick(platformEntity);
         return;
       }
       if (face.axis === "z" && Math.abs(sinR) < 0.5) {
-        failRun();
+        enterRotatingStick(platformEntity);
         return;
       }
       const wrongOrientation = face.axis === "y"
-        ? cosR * face.dir > -MIN_STICK_ALIGNMENT
-        : sinR * face.dir > -MIN_STICK_ALIGNMENT;
+        ? cosR * face.dir > MIN_STICK_ALIGNMENT
+        : sinR * face.dir > MIN_STICK_ALIGNMENT;
       if (wrongOrientation) {
-        failRun();
+        enterRotatingStick(platformEntity);
         return;
       }
       stickToFace(face.axis, face.dir, face.coord, platformEntity);
@@ -4374,7 +4478,14 @@ function checkPlatformCollisions(bladeOBB: KnifeOBB, handleOBB: KnifeOBB, midBla
     }
 
     if (handleHit) {
-      failRun();
+      const face = determineFace(hitHandleOBB.cY, hitHandleOBB.cZ, yMin, yMax, zMin, zMax);
+      const bottomContact = (face.axis === "y" && face.dir === -1)
+        || (hitHandleOBB.cY < (yMin + yMax) / 2 && knife.velocity.y > 0);
+      if (bottomContact && knife.velocity.y > 0) {
+        knife.velocity.y = -knife.velocity.y * 0.3;
+      } else {
+        enterRotatingStick(platformEntity);
+      }
       return;
     }
   }
@@ -4382,6 +4493,7 @@ function checkPlatformCollisions(bladeOBB: KnifeOBB, handleOBB: KnifeOBB, midBla
 
 function checkCollisions(): void {
   if (!currentRun || currentRun.outcome || knife.state === "dead") return;
+  clearFlipSourcePlatformGuardIfSafe();
   const bladeOBB = getBladeOBBAt(knife.position.y, knife.position.z, knife.rotation);
   const handleOBB = getHandleOBBAt(knife.position.y, knife.position.z, knife.rotation);
   const midY = (knife.previousPosition.y + knife.position.y) / 2;
@@ -4406,6 +4518,9 @@ function colorForSlice(type: string): number {
   if (type === "brick") return 0xf28b5f;
   if (type === "watermelon") return 0xff776e;
   if (type === "apple") return 0xe83f46;
+  if (type === "orange") return 0xffa52f;
+  if (type === "emoji") return 0xffdc54;
+  if (type === "camera") return 0x626873;
   if (type === "book") return 0x45c7e7;
   if (type === "donut") return 0xce61f2;
   if (type === "wooden_stake") return 0xc78345;
@@ -4469,20 +4584,39 @@ function buildSliceHalf(type: string, dir: -1 | 1, stackIndex = 0): THREE.Group 
       stem.castShadow = true;
       group.add(stem);
     }
-  } else if (type === "sphere") {
+  } else if (type === "sphere" || type === "orange" || type === "emoji") {
     const colors = [0x4caf50, 0xe91e63, 0xffeb3b, 0xff9800, 0x2196f3];
-    const color = colors[(stackIndex + 4) % colors.length] ?? 0x2196f3;
+    const color = type === "orange"
+      ? 0xff8617
+      : type === "emoji"
+        ? 0xffd43b
+        : colors[(stackIndex + 4) % colors.length] ?? 0x2196f3;
+    const radius = type === "orange" ? 0.42 : type === "emoji" ? 0.5 : 0.75;
     const material = new THREE.MeshPhongMaterial({ color });
-    const half = new THREE.Mesh(new THREE.SphereGeometry(0.75, 16, 16, 0, Math.PI), material);
+    const half = new THREE.Mesh(new THREE.SphereGeometry(radius, 16, 16, 0, Math.PI), material);
     half.rotation.y = dir > 0 ? Math.PI / 2 : -Math.PI / 2;
-    half.position.y = 0.75;
+    half.position.y = radius;
     half.castShadow = true;
     group.add(half);
-    const face = new THREE.Mesh(new THREE.CircleGeometry(0.75, 16), new THREE.MeshPhongMaterial({ color, side: THREE.DoubleSide }));
+    const face = new THREE.Mesh(new THREE.CircleGeometry(radius, 16), new THREE.MeshPhongMaterial({ color: type === "orange" ? 0xffb347 : color, side: THREE.DoubleSide }));
     face.rotation.y = dir > 0 ? -Math.PI / 2 : Math.PI / 2;
-    face.position.y = 0.75;
+    face.position.y = radius;
     face.castShadow = true;
     group.add(face);
+  } else if (type === "camera") {
+    const half = new THREE.Mesh(new THREE.BoxGeometry(0.275, 0.45, 0.78), materials.cameraBody);
+    half.position.set(dir * 0.1375, 1.02, 0);
+    half.castShadow = true;
+    group.add(half);
+    const cap = new THREE.Mesh(new THREE.PlaneGeometry(0.78, 0.45), materials.cameraDark);
+    cap.position.y = 1.02;
+    cap.rotation.y = Math.PI / 2;
+    group.add(cap);
+    const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.045, 0.82, 7), materials.cameraDark);
+    leg.position.set(dir * 0.08, 0.42, 0);
+    leg.rotation.z = dir * 0.1;
+    leg.castShadow = true;
+    group.add(leg);
   } else if (type === "donut") {
     const ringRadius = 0.38;
     const tubeRadius = 0.12;
@@ -4655,32 +4789,46 @@ function spawnSlicePieces(slice: SliceEntity): void {
       }
     });
     particleGroup.add(piece);
+    const velocity = new THREE.Vector3(
+      direction * (SLICE_HALF_LAUNCH_MIN_X + Math.random() * SLICE_HALF_LAUNCH_SPAN_X),
+      3 + Math.random() * 2.2,
+      direction * (2.8 + Math.random() * 2.4),
+    );
+    const angularVelocity = new THREE.Vector3(
+      (Math.random() - 0.5) * 3.5,
+      direction * (1.2 + Math.random() * 2.2),
+      direction * -(2.2 + Math.random() * 2.6),
+    );
+    const localBounds = slicePieceLocalBounds(slice.type, direction);
+    const bodyHandle = fragmentPhysics.addFragment({
+      position: piece.position,
+      velocity,
+      angularVelocity,
+      bounds: localBounds,
+      density: fragmentDensity(slice.type),
+    });
     const slicePiece: SlicePiece = {
       mesh: piece,
       sourceId: slice.id,
       spawnPosition: piece.position.clone(),
       phase: "sliding",
       objectType: slice.type,
-      velocity: new THREE.Vector3(
-        direction * (SLICE_HALF_LAUNCH_MIN_X + Math.random() * SLICE_HALF_LAUNCH_SPAN_X),
-        3 + Math.random() * 2.2,
-        direction * (2.8 + Math.random() * 2.4),
-      ),
-      angularVelocity: new THREE.Vector3(
-        (Math.random() - 0.5) * 3.5,
-        direction * (1.2 + Math.random() * 2.2),
-        direction * -(2.2 + Math.random() * 2.6),
-      ),
-      surfaceY: slice.group.position.y,
-      platformEdgeX: 1.5,
+      velocity,
       direction,
-      groundY: GROUND_Y,
-      localBounds: slicePieceLocalBounds(slice.type, direction),
-      surfaceBounces: 0,
+      localBounds,
+      bodyHandle,
     };
     piece.userData.slicePiece = slicePiece;
     slicePieces.push(slicePiece);
   }
+}
+
+function fragmentDensity(type: string): number {
+  if (type === "brick") return 2.2;
+  if (type === "camera") return 1.8;
+  if (type === "wooden_stake" || type === "book") return 1.15;
+  if (type === "baguette" || type === "donut") return 0.7;
+  return 0.9;
 }
 
 function slicePieceLocalBounds(type: string, direction: -1 | 1): SlicePiece["localBounds"] {
@@ -4695,6 +4843,9 @@ function slicePieceLocalBounds(type: string, direction: -1 | 1): SlicePiece["loc
   if (type === "brick") return sided(0.5, 0, 0.2 * s, -0.24, 0.24);
   if (type === "watermelon") return { xMin: -0.5 * s, xMax: 0.5 * s, yMin: 0, yMax: 1.0 * s };
   if (type === "apple") return { xMin: -0.4 * s, xMax: 0.4 * s, yMin: 0, yMax: 0.95 * s };
+  if (type === "orange") return { xMin: -0.42 * s, xMax: 0.42 * s, yMin: 0, yMax: 0.9 * s };
+  if (type === "emoji") return { xMin: -0.5 * s, xMax: 0.5 * s, yMin: 0, yMax: 1.0 * s };
+  if (type === "camera") return sided(0.42, 0, 1.55 * s, -0.42, 0.42);
   if (type === "donut") return sided(0.5, -0.5 * s, 0.5 * s, -0.12, 0.12);
   if (type === "wooden_stake") return sided(0.25, 0, 1.5 * s);
   if (type === "cheese") return sided(0.27, 0, 0.6 * s, -0.375, 0.375);
@@ -4776,128 +4927,38 @@ function updateParticles(dt: number): void {
 }
 
 function updateSlicePieces(dt: number): void {
+  if (slicePieces.length === 0) return;
+  fragmentPhysics.step(dt);
+
   for (let i = slicePieces.length - 1; i >= 0; i -= 1) {
     const piece = slicePieces[i];
     if (!piece) continue;
-    const mesh = piece.mesh;
-    if (piece.phase === "sliding") {
-      piece.velocity.y -= 16 * dt;
-      mesh.position.addScaledVector(piece.velocity, dt);
-      piece.velocity.x *= 1 - 0.8 * dt;
-      piece.velocity.z *= 1 - 0.8 * dt;
-      mesh.rotation.x += piece.angularVelocity.x * dt;
-      mesh.rotation.y += piece.angularVelocity.y * dt;
-      mesh.rotation.z += piece.angularVelocity.z * dt;
-      const surfaceLowestY = mesh.position.y + rotatedLowestLocalY(piece.localBounds, mesh.rotation.z);
-      if (surfaceLowestY <= piece.surfaceY && piece.velocity.y < 0) {
-        mesh.position.y += piece.surfaceY - surfaceLowestY;
-        if (piece.surfaceBounces === 0 && Math.abs(piece.velocity.y) > 2) {
-          piece.velocity.y = Math.abs(piece.velocity.y) * 0.24;
-          piece.surfaceBounces += 1;
-        } else {
-          piece.velocity.y = 0;
-        }
-      }
-      if (Math.abs(mesh.position.x) >= piece.platformEdgeX) {
-        piece.phase = "falling";
-        piece.velocity.y = Math.min(piece.velocity.y, -0.6);
-        piece.velocity.x = piece.direction * SLICE_HALF_FALL_X_SPEED;
-        piece.angularVelocity.z = piece.direction * -3;
-      }
-    } else if (piece.phase === "falling") {
-      piece.velocity.y -= 15 * dt;
-      mesh.position.addScaledVector(piece.velocity, dt);
-      mesh.rotation.x += piece.angularVelocity.x * dt;
-      mesh.rotation.y += piece.angularVelocity.y * dt;
-      mesh.rotation.z += piece.angularVelocity.z * dt;
-      const lowestY = mesh.position.y + rotatedLowestLocalY(piece.localBounds, mesh.rotation.z);
-      if (lowestY <= piece.groundY) {
-        mesh.position.y += piece.groundY - lowestY;
-        piece.velocity.y = 0;
-        piece.phase = "grounded";
-        const halfPi = Math.PI / 2;
-        const xSpan = piece.localBounds.xMax - piece.localBounds.xMin;
-        const ySpan = piece.localBounds.yMax - piece.localBounds.yMin;
-        const nearest = Math.abs(mesh.rotation.z) < 0.1
-          ? 0
-          : mesh.rotation.z > 0
-            ? Math.ceil(mesh.rotation.z / halfPi) * halfPi
-            : Math.floor(mesh.rotation.z / halfPi) * halfPi;
-        if (xSpan > ySpan) {
-          piece.restAngle = nearest;
-        } else {
-          const nRatio = Math.round(nearest / halfPi);
-          piece.restAngle = nRatio % 2 === 0 ? (nRatio + (piece.direction < 0 ? -1 : 1)) * halfPi : nearest;
-        }
-        if (piece.objectType === "donut") {
-          piece.restAngle = piece.direction * -halfPi;
-          piece.restAngleX = -halfPi;
-          piece.angularVelocity.x = (piece.restAngleX - mesh.rotation.x) * 3;
-        }
-        if (piece.objectType === "baguette" || piece.objectType === "sausage") {
-          piece.restAngle = Math.round(mesh.rotation.z / Math.PI) * Math.PI;
-        }
-        if (piece.objectType === "cheese") {
-          piece.restAngle = piece.direction * -halfPi;
-          piece.restAngleX = -Math.atan2(0.27, 0.75);
-          piece.angularVelocity.x = (piece.restAngleX - mesh.rotation.x) * 3;
-        }
-        piece.angularVelocity.z = ((piece.restAngle ?? mesh.rotation.z) - mesh.rotation.z) * 6;
-      }
+    const transform = fragmentPhysics.fragmentTransform(piece.bodyHandle);
+    if (!transform) {
+      removeAndDispose(particleGroup, piece.mesh);
+      slicePieces.splice(i, 1);
+      continue;
+    }
+
+    piece.mesh.position.set(transform.position.x, transform.position.y, transform.position.z);
+    piece.mesh.quaternion.set(transform.rotation.x, transform.rotation.y, transform.rotation.z, transform.rotation.w);
+    piece.velocity.set(transform.velocity.x, transform.velocity.y, transform.velocity.z);
+
+    const speed = Math.hypot(transform.velocity.x, transform.velocity.y, transform.velocity.z);
+    if (transform.sleeping || speed < 0.16) {
+      piece.phase = "grounded";
+    } else if (transform.position.y < piece.spawnPosition.y - 0.3 || transform.velocity.y < -1.2) {
+      piece.phase = "falling";
     } else {
-      mesh.position.x += piece.velocity.x * dt;
-      mesh.position.z += piece.velocity.z * dt;
-      piece.velocity.x *= 1 - 4 * dt;
-      piece.velocity.z *= 1 - 4 * dt;
-      if (Math.abs(piece.velocity.x) < 0.05) piece.velocity.x = 0;
-      if (Math.abs(piece.velocity.z) < 0.05) piece.velocity.z = 0;
+      piece.phase = "sliding";
+    }
 
-      const springK = 40;
-      const damping = 4;
-      if (piece.restAngleX !== undefined) {
-        const diffX = piece.restAngleX - mesh.rotation.x;
-        piece.angularVelocity.x += diffX * springK * dt;
-        piece.angularVelocity.x *= 1 - damping * dt;
-        mesh.rotation.x += piece.angularVelocity.x * dt;
-        if (Math.abs(diffX) < 0.01 && Math.abs(piece.angularVelocity.x) < 0.01) {
-          mesh.rotation.x = piece.restAngleX;
-          piece.angularVelocity.x = 0;
-        }
-      }
-      if (piece.restAngleX === undefined || piece.objectType === "cheese") {
-        const restAngle = piece.restAngle ?? mesh.rotation.z;
-        const diff = restAngle - mesh.rotation.z;
-        piece.angularVelocity.z += diff * springK * dt;
-        piece.angularVelocity.z *= 1 - damping * dt;
-        mesh.rotation.z += piece.angularVelocity.z * dt;
-        if (Math.abs(diff) < 0.01 && Math.abs(piece.angularVelocity.z) < 0.01) {
-          mesh.rotation.z = restAngle;
-          piece.angularVelocity.z = 0;
-        }
-      }
-
-      if (piece.objectType === "donut") {
-        const restHeight = piece.groundY + Math.max(Math.abs(piece.localBounds.zMin ?? 0), Math.abs(piece.localBounds.zMax ?? 0));
-        mesh.position.y += (restHeight - mesh.position.y) * Math.min(1, 8 * dt);
-      } else if (piece.objectType === "cheese") {
-        const restHeight = piece.groundY + 0.127 * SLICEABLE_VISUAL_SCALE;
-        mesh.position.y += (restHeight - mesh.position.y) * Math.min(1, 8 * dt);
-      } else {
-        mesh.position.y = piece.groundY - rotatedLowestLocalY(piece.localBounds, mesh.rotation.z);
-      }
-
-      if (camera.position.z - mesh.position.z > 15) {
-        removeAndDispose(particleGroup, mesh);
-        slicePieces.splice(i, 1);
-      }
+    if (camera.position.z - piece.mesh.position.z > 15 || piece.mesh.position.y < -10) {
+      fragmentPhysics.removeFragment(piece.bodyHandle);
+      removeAndDispose(particleGroup, piece.mesh);
+      slicePieces.splice(i, 1);
     }
   }
-}
-
-function rotatedLowestLocalY(bounds: SlicePiece["localBounds"], rotationZ: number): number {
-  const sin = Math.sin(rotationZ);
-  const cos = Math.cos(rotationZ);
-  return (sin > 0 ? bounds.xMin : bounds.xMax) * sin + (cos > 0 ? bounds.yMin : bounds.yMax) * cos;
 }
 
 function checkFinish(): void {
@@ -5085,19 +5146,18 @@ function failRun(): void {
 function recoverPreviewRun(): void {
   if (!currentRun) return;
   const nearest = findNearestPlatformBehind() ?? platformEntities[0] ?? null;
-  const top = nearest ? getPlatformTop(nearest) : 2.2;
-  const z = nearest ? Math.max(nearest.mesh.position.z, knife.position.z - 1.5) : Math.max(0, knife.position.z);
-  knife.position.set(0, top + KNIFE_STUCK_Y_OFFSET, z);
+  const readyAngle = activeKnifeGeometry.readyAngle;
+  knife.position.copy(nearest ? plantedPivotOnTop(nearest, readyAngle) : new THREE.Vector3(KNIFE_VISUAL_X, 2.2, Math.max(0, knife.position.z)));
   knife.previousPosition.copy(knife.position);
   knife.velocity.set(0, 0, 0);
-  knife.rotation = INITIAL_KNIFE_ROTATION;
+  knife.rotation = readyAngle;
   knife.previousRotation = knife.rotation;
   knife.angularVelocity = 0;
   knife.state = "stuck";
   knife.stuckFace = "top";
   knife.stuckPlatform = nearest;
   knife.stuckSideDir = 1;
-  knife.rotationTarget = INITIAL_KNIFE_ROTATION;
+  knife.rotationTarget = readyAngle;
   knife.slicing = false;
   restoreWidenedObjects();
   knife.flipSourcePlatform = null;
@@ -5140,17 +5200,18 @@ function reviveRun(): void {
   currentRun.outcome = null;
   currentRun.reviveUsed = true;
   const nearest = findNearestPlatformBehind();
-  knife.position.set(0, nearest ? getPlatformTop(nearest) + KNIFE_STUCK_Y_OFFSET : 3, nearest ? nearest.mesh.position.z : Math.max(0, knife.position.z - 2));
+  const readyAngle = activeKnifeGeometry.readyAngle;
+  knife.position.copy(nearest ? plantedPivotOnTop(nearest, readyAngle) : new THREE.Vector3(KNIFE_VISUAL_X, 3, Math.max(0, knife.position.z - 2)));
   knife.previousPosition.copy(knife.position);
   knife.velocity.set(0, 0, 0);
-  knife.rotation = INITIAL_KNIFE_ROTATION;
+  knife.rotation = readyAngle;
   knife.previousRotation = knife.rotation;
   knife.angularVelocity = 0;
   knife.state = "stuck";
   knife.stuckFace = "top";
   knife.stuckPlatform = nearest;
   knife.stuckSideDir = 1;
-  knife.rotationTarget = INITIAL_KNIFE_ROTATION;
+  knife.rotationTarget = readyAngle;
   knife.slicing = false;
   restoreWidenedObjects();
   knife.flipSourcePlatform = null;
@@ -5447,15 +5508,13 @@ window.addEventListener("keydown", (event) => {
 function resize(): void {
   const hostWidth = window.innerWidth || 720;
   const hostHeight = window.innerHeight || 1280;
-  const gameAspect = REFERENCE_PORTRAIT_ASPECT;
   let width = hostWidth;
   let height = hostHeight;
-  if (hostWidth / hostHeight > gameAspect) {
+  let gameAspect = hostWidth / hostHeight;
+  if (hostWidth > hostHeight) {
+    gameAspect = REFERENCE_PORTRAIT_ASPECT;
     height = hostHeight;
     width = height * gameAspect;
-  } else {
-    width = hostWidth;
-    height = width / gameAspect;
   }
   root.style.setProperty("--game-width", `${width}px`);
   root.style.setProperty("--game-height", `${height}px`);
@@ -5505,8 +5564,8 @@ function stageLandingProof(): void {
   if (!platformEntity) throw new Error("[chopline-rush] No platform available for landing proof");
   const top = getPlatformTop(platformEntity);
   const z = platformEntity.mesh.position.z - platformEntity.depth / 2 + Math.min(5, platformEntity.depth * 0.45);
-  knife.position.set(0, top + 1.05, z);
-  knife.previousPosition.set(0, top + 1.2, z - 0.08);
+  knife.position.set(KNIFE_VISUAL_X, top + 1.05, z);
+  knife.previousPosition.set(KNIFE_VISUAL_X, top + 1.2, z - 0.08);
   knife.rotation = Math.PI;
   knife.previousRotation = Math.PI;
   knife.velocity.set(0, -1.4, 0.2);
@@ -5536,8 +5595,8 @@ function stageFlatLandingProof(): void {
   const platformEntity = platformEntities[0];
   if (!platformEntity) throw new Error("[chopline-rush] No platform available for flat landing proof");
   const top = getPlatformTop(platformEntity);
-  knife.position.set(0, top + 0.11, platformEntity.mesh.position.z);
-  knife.previousPosition.set(0, top + 0.22, platformEntity.mesh.position.z - 0.04);
+  knife.position.set(KNIFE_VISUAL_X, top + 0.11, platformEntity.mesh.position.z);
+  knife.previousPosition.set(KNIFE_VISUAL_X, top + 0.22, platformEntity.mesh.position.z - 0.04);
   knife.rotation = -Math.PI / 2;
   knife.previousRotation = knife.rotation;
   knife.velocity.set(0, -1.2, 0.15);
@@ -5567,7 +5626,7 @@ function stageSideLandingProof(): void {
   const platformEntity = platformEntities[1] ?? platformEntities[0];
   if (!platformEntity) throw new Error("[chopline-rush] No platform available for side landing proof");
   const { zMin } = platformExtents(platformEntity);
-  knife.position.set(0, getPlatformTop(platformEntity) + 1.2, zMin - BLADE_REACH);
+  knife.position.set(KNIFE_VISUAL_X, getPlatformTop(platformEntity) + 1.2, zMin - activeKnifeGeometry.bladeReach);
   knife.previousPosition.copy(knife.position);
   knife.rotation = Math.PI / 2;
   knife.previousRotation = knife.rotation;
@@ -5595,8 +5654,8 @@ function stageHandleLandingProof(): void {
   const platformEntity = platformEntities[0];
   if (!platformEntity) throw new Error("[chopline-rush] No platform available for handle landing proof");
   const top = getPlatformTop(platformEntity);
-  knife.position.set(0, top + HANDLE_REACH - 0.02, platformEntity.mesh.position.z);
-  knife.previousPosition.set(0, top + HANDLE_REACH + 0.08, platformEntity.mesh.position.z - 0.04);
+  knife.position.set(KNIFE_VISUAL_X, top + activeKnifeGeometry.handleReach - 0.02, platformEntity.mesh.position.z);
+  knife.previousPosition.set(KNIFE_VISUAL_X, top + activeKnifeGeometry.handleReach + 0.08, platformEntity.mesh.position.z - 0.04);
   knife.rotation = 0;
   knife.previousRotation = 0;
   knife.velocity.set(0, -1.5, 0.2);
@@ -5622,9 +5681,9 @@ function stageHandleLandingProof(): void {
 function stageCutContact(slice: SliceEntity, rotation: number): void {
   const centerY = slice.group.position.y + (slice.collision.bottomY + slice.collision.topY) / 2;
   const centerZ = slice.group.position.z + (slice.collision.centerZ ?? 0);
-  const contactDepth = BLADE_REACH * 0.58;
+  const contactDepth = activeKnifeGeometry.bladeReach * 0.58;
   knife.position.set(
-    0,
+    KNIFE_VISUAL_X,
     centerY - Math.cos(rotation) * contactDepth,
     centerZ - Math.sin(rotation) * contactDepth,
   );
@@ -5862,6 +5921,7 @@ function setupTestHooks(): void {
         rotation: knife.rotation,
         landingPunch: knife.landingPunch,
       },
+      knifeGeometry: knifeGeometryProof(),
       sliceables: {
         total: sliceEntities.length,
         sliced: sliceEntities.filter((slice) => slice.sliced).length,
@@ -5880,18 +5940,18 @@ function setupTestHooks(): void {
             depth: platformEntity.depth,
             height: platformEntity.height,
             moving: Boolean(platformEntity.moving),
-            sliceableCount: sliceEntities.filter((slice) => slice.platformId === platformEntity.id && !slice.sliced).length,
+            sliceableCount: sliceEntities.filter((slice) => slice.platformId === platformEntity.id && slice.collisionEnabled && !slice.sliced).length,
             obstacleCount: obstacleEntities.filter((obstacle) => obstacle.platformId === platformEntity.id && !obstacle.cleared).length,
-            objectCount: sliceEntities.filter((slice) => slice.platformId === platformEntity.id && !slice.sliced).length
+            objectCount: sliceEntities.filter((slice) => slice.platformId === platformEntity.id && slice.collisionEnabled && !slice.sliced).length
               + obstacleEntities.filter((obstacle) => obstacle.platformId === platformEntity.id && !obstacle.cleared).length,
             objectTypes: [
               ...new Set([
-                ...sliceEntities.filter((slice) => slice.platformId === platformEntity.id && !slice.sliced).map((slice) => slice.type),
+                ...sliceEntities.filter((slice) => slice.platformId === platformEntity.id && slice.collisionEnabled && !slice.sliced).map((slice) => slice.type),
                 ...obstacleEntities.filter((obstacle) => obstacle.platformId === platformEntity.id && !obstacle.cleared).map(() => "obstacle"),
               ]),
             ].sort(),
           })),
-        nearObjectCount: sliceEntities.filter((slice) => Math.abs(slice.group.position.z - knife.position.z) < 12 && !slice.sliced).length
+        nearObjectCount: sliceEntities.filter((slice) => Math.abs(slice.group.position.z - knife.position.z) < 12 && slice.collisionEnabled && !slice.sliced).length
           + obstacleEntities.filter((obstacle) => Math.abs(obstacle.group.position.z - knife.position.z) < 12 && !obstacle.cleared).length,
         unattachedObjectCount: sliceEntities.filter((slice) => !slice.platformId).length
           + obstacleEntities.filter((obstacle) => !obstacle.platformId).length,
