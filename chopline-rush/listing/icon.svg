@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0d2430"/>
+      <stop offset="1" stop-color="#4c2458"/>
+    </linearGradient>
+    <filter id="shadow" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="28" stdDeviation="28" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <rect width="1024" height="1024" rx="192" fill="url(#bg)"/>
+  <circle cx="194" cy="164" r="184" fill="#68d7ff" opacity="0.22"/>
+  <circle cx="820" cy="812" r="270" fill="#ffe36d" opacity="0.18"/>
+  <rect x="152" y="516" width="720" height="156" rx="36" fill="#fff6db" filter="url(#shadow)"/>
+  <path d="M300 548h424" stroke="#0f172a" stroke-opacity="0.12" stroke-width="34" stroke-dasharray="40 44"/>
+  <circle cx="314" cy="594" r="72" fill="#ff6f59" stroke="#ffffff" stroke-width="12"/>
+  <path d="M590 514 710 634 590 754 470 634Z" fill="#fb6fb3" stroke="#ffffff" stroke-width="12"/>
+  <path d="M316 358 716 214l58 74-350 222-170 20 62-172Z" fill="#edf7ff" filter="url(#shadow)"/>
+  <path d="M720 212 820 328 764 378 664 262Z" fill="#ffe36d"/>
+  <text x="512" y="886" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="116" font-weight="900" fill="#ffffff">CHOP</text>
+</svg>
