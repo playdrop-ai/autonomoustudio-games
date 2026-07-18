@@ -1,6 +1,5 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { FragmentPhysics } from "./game/fragmentPhysics";
 import { normalizeKnifeModel, type KnifeGeometry, type KnifeModelDefinition } from "./game/knifeModel";
 import { REFERENCE_CONFIG } from "./referenceLevels";
 
@@ -344,7 +343,11 @@ interface SlicePiece {
   phase: SlicePiecePhase;
   objectType: string;
   velocity: THREE.Vector3;
+  angularVelocity: { x: number; z: number };
   direction: -1 | 1;
+  platformEdgeX: number;
+  restAngle: number;
+  restAngleX: number | null;
   localBounds: {
     xMin: number;
     xMax: number;
@@ -353,7 +356,6 @@ interface SlicePiece {
     zMin?: number;
     zMax?: number;
   };
-  bodyHandle: number;
 }
 
 interface SlicePieceProofSummary {
@@ -449,45 +451,6 @@ const REVIVE_COST = 100;
 const ENDLESS_GENERATE_AHEAD = 120;
 const ENDLESS_CLEANUP_BEHIND = 60;
 const ENDLESS_FLIP_DISTANCE = 4;
-const ENDLESS_REFERENCE_STARTUP_RANDOM_DRAWS = 4096;
-const ENDLESS_REFERENCE_POST_BUILD_RANDOM_DRAWS = 8;
-const ENDLESS_REFERENCE_EXTRA_RANDOM_BUDGET_BY_TEMPLATE = new Map<number, number>([
-  [0, 64],
-  [10, 40],
-  [36, 128],
-  [298, 1024],
-  [38, 93],
-  [89, 249],
-  [205, 240],
-  [42, 36],
-  [60, 24],
-  [211, 352],
-  [75, 128],
-  [87, 188],
-  [115, 168],
-  [188, 264],
-  [197, 232],
-  [213, 256],
-  [246, 176],
-  [255, 592],
-  [260, 232],
-  [268, 176],
-  [316, 824],
-  [283, 440],
-  [172, 296],
-  [261, 480],
-  [184, 144],
-  [79, 732],
-  [68, 96],
-  [128, 276],
-  [82, 36],
-  [288, 625],
-  [98, 259],
-  [301, 280],
-  [228, 520],
-  [162, 388],
-]);
-
 const AUDIO = {
   music: "assets/audio/background-music.mp3",
   sliceSoft: "assets/audio/slice-soft.mp3",
@@ -506,7 +469,7 @@ const KNIVES: KnifeSkin[] = [
   {
     id: "utensil",
     displayName: "Utensil Knife",
-    price: 0,
+    price: 180,
     sourceRef: "asset:playdrop/food-kit-utensil-knife@r1",
     image: "assets/knives/utensil-knife.png",
     model: "assets/knives/utensil-knife.glb",
@@ -526,7 +489,7 @@ const KNIVES: KnifeSkin[] = [
   {
     id: "cooking",
     displayName: "Cooking Knife",
-    price: 180,
+    price: 0,
     sourceRef: "asset:playdrop/food-kit-cooking-knife@r1",
     image: "assets/knives/cooking-knife.png",
     model: "assets/knives/cooking-knife.glb",
@@ -624,7 +587,7 @@ const KNIVES: KnifeSkin[] = [
     },
   },
 ];
-const STARTER_KNIFE_ID = "chopping";
+const STARTER_KNIFE_ID = "cooking";
 
 const THEMES: WorldTheme[] = [
   {
@@ -1470,7 +1433,7 @@ root.innerHTML = `
   <div class="screen visible" id="menu-screen">
     <div class="card">
       <div class="brand-knife"></div>
-      <h1 class="title">Slice Rush</h1>
+      <h1 class="title">Chopline Rush</h1>
       <div class="subtitle">Flip · Slice · Conquer</div>
       <div class="menu-line"></div>
       <div class="menu-buttons">
@@ -1600,8 +1563,7 @@ function sanitizeProfile(value: unknown): Profile {
   const owned = Array.isArray(source.ownedKnives) ? source.ownedKnives.filter((item): item is string => typeof item === "string") : [];
   const ownedThemes = Array.isArray(source.ownedThemes) ? source.ownedThemes.filter((item): item is string => typeof item === "string") : [];
   const achievements = Array.isArray(source.achievements) ? source.achievements.filter((item): item is string => typeof item === "string") : [];
-  let equipped = typeof source.equippedKnife === "string" && KNIVES.some((knife) => knife.id === source.equippedKnife) ? source.equippedKnife : STARTER_KNIFE_ID;
-  if (equipped === "utensil" && !owned.includes(STARTER_KNIFE_ID)) equipped = STARTER_KNIFE_ID;
+  const equipped = typeof source.equippedKnife === "string" && KNIVES.some((knife) => knife.id === source.equippedKnife) ? source.equippedKnife : STARTER_KNIFE_ID;
   const equippedThemeCandidate = typeof source.equippedTheme === "string" && THEMES.some((theme) => theme.id === source.equippedTheme)
     ? source.equippedTheme
     : STARTER_THEME_ID;
@@ -1971,8 +1933,8 @@ function choosePreviewLevel(payload?: PreviewPayload): number {
 }
 
 const scene = new THREE.Scene();
-const REFERENCE_PORTRAIT_ASPECT = 720 / 1280;
-const camera = new THREE.PerspectiveCamera(56, REFERENCE_PORTRAIT_ASPECT, 0.1, 1000);
+const PORTRAIT_ASPECT = 720 / 1280;
+const camera = new THREE.PerspectiveCamera(60, PORTRAIT_ASPECT, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -2022,7 +1984,6 @@ const sliceEntities: SliceEntity[] = [];
 const obstacleEntities: ObstacleEntity[] = [];
 const particles: Particle[] = [];
 const slicePieces: SlicePiece[] = [];
-const fragmentPhysics = new FragmentPhysics();
 const tempBox = new THREE.Box3();
 const tempVector = new THREE.Vector3();
 const cameraShakeVector = new THREE.Vector3();
@@ -2133,11 +2094,6 @@ const knife = {
   stuckSideDir: 1 as CollisionDir,
   rotationTarget: (Math.PI * 2) / 3,
   slicing: false,
-  slicingStackConfigIndex: null as number | null,
-  slicingStackType: null as string | null,
-  slicingCutCount: 0,
-  slicingPraiseShown: false,
-  slicingExitZ: Number.NEGATIVE_INFINITY,
   flipSourcePlatform: null as PlatformEntity | null,
   flipSourceFaceY: null as number | null,
   flipSourceFaceType: null as StuckFace | null,
@@ -2145,6 +2101,7 @@ const knife = {
   lastBounceEntity: null as SliceEntity | null,
   rotatingStickPlatform: null as PlatformEntity | null,
   rotatingStickAccumAngle: 0,
+  rotatingStickExhaustedPlatform: null as PlatformEntity | null,
   lastPlatformId: "",
   landingPunch: 0,
 };
@@ -2195,21 +2152,19 @@ const knifeModelCrossSection = 0.58;
 const KNIFE_TIP_EMBED = 0.08;
 const BASE_FLIP_Y = 10;
 const BASE_FLIP_Z = 8;
-const AIR_TAP_LIFT = 4;
-const TAP_ROTATION_ANGLE = Math.PI * 1.5;
 const GRAVITY = -20;
 const ROTATION_SPEED = 7;
-const FLIP_COOLDOWN = 0.28;
-const MIN_STICK_ALIGNMENT = 0.28;
-const CUT_CONTACT_TIME_EPSILON = 0.01;
-const REFERENCE_WALL_CUT_COURSES = 7;
-const SLICE_EXIT_MARGIN = 0.45;
-const SLICE_FORWARD_SPEED_MIN = BASE_FLIP_Z * 0.72;
+const FLIP_COOLDOWN = 0.4;
+const MIN_STICK_ALIGNMENT = 0.3;
+const SLICE_ROT_SPEED = 8;
+const SLICE_HALFZ_BONUS = 0.3;
+const SLICE_LOCK_MIN_ANGLE = (-130 * Math.PI) / 180;
+const SLICE_LOCK_MAX_ANGLE = (45 * Math.PI) / 180;
+const FRAGMENT_GRAVITY = -15;
 const MAX_SUB_STEP = 1 / 120;
 const KNIFE_CEILING_DEFAULT = 30;
 const KNIFE_LYING_OFFSET = 0.21;
 const BLADE_EDGE_OFFSET = 0;
-const BLADE_CUT_START_RATIO = 0.08;
 const BLADE_EMBED_DEPTH = 0.15;
 const SIDE_EMBED_DEPTH = 0.4;
 const GROUND_Y = 0;
@@ -2292,7 +2247,6 @@ function saveProfile(): void {
 }
 
 async function init(): Promise<void> {
-  await fragmentPhysics.init();
   await platform.init();
   try {
     const remote = await platform.loadRemoteProfile();
@@ -2426,6 +2380,8 @@ function polishKnifeMaterial(source: THREE.Material, skin: KnifeSkin): THREE.Mat
   if (readable.color) readable.color.setHex(0xffffff);
   if (readable.emissive) readable.emissive.setHex(0x000000);
   readable.emissiveIntensity = 0;
+  if (readable.metalness !== undefined) readable.metalness = 0.3;
+  if (readable.roughness !== undefined) readable.roughness = 0.45;
   material.needsUpdate = true;
   return material;
 }
@@ -2467,7 +2423,6 @@ async function buildKnife(): Promise<void> {
 }
 
 function clearWorld(): void {
-  fragmentPhysics.reset();
   hitStopTime = 0;
   for (const group of [platformGroup, sliceGroup, obstacleGroup, particleGroup]) {
     while (group.children.length) {
@@ -2571,6 +2526,7 @@ function resetKnife(): void {
   knife.lastFlipAt = Number.NEGATIVE_INFINITY;
   knife.rotatingStickPlatform = null;
   knife.rotatingStickAccumAngle = 0;
+  knife.rotatingStickExhaustedPlatform = null;
   knife.lastPlatformId = start?.id ?? "";
   knife.landingPunch = 0;
   resetTrajectoryTrail();
@@ -2617,109 +2573,9 @@ function buildLevelWorld(level: RefLevel): void {
   buildBackground();
 }
 
-function copyEndlessThing(def: RefThing): Omit<RefThing, "platformId"> {
-  const entry: Omit<RefThing, "platformId"> = {
-    type: def.type,
-    y: def.y ?? 0,
-    z: def.z ?? 0,
-  };
-  if ((def.count ?? 1) > 1 && def.count !== undefined) entry.count = def.count;
-  if (def.rotation) entry.rotation = { ...def.rotation };
-  if (def.moving) {
-    entry.moving = true;
-    if (def.moveDistance !== undefined) entry.moveDistance = def.moveDistance;
-    if (def.moveSpeed !== undefined) entry.moveSpeed = def.moveSpeed;
-    if (def.moveDelay !== undefined) entry.moveDelay = def.moveDelay;
-    if (def.moveAxis !== undefined) entry.moveAxis = def.moveAxis;
-  }
-  return entry;
-}
-
-function buildEndlessTemplatePool(): EndlessTemplate[] {
-  const pool: EndlessTemplate[] = [];
-  const seen = new Set<string>();
-
-  for (const level of LEVELS) {
-    const sliceablesByPlatform = new Map<string, RefThing[]>();
-    const obstaclesByPlatform = new Map<string, RefThing[]>();
-
-    for (const slice of level.sliceables ?? []) {
-      if (!slice.platformId) continue;
-      const entries = sliceablesByPlatform.get(slice.platformId) ?? [];
-      entries.push(slice);
-      sliceablesByPlatform.set(slice.platformId, entries);
-    }
-
-    for (const obstacle of level.obstacles ?? []) {
-      if (!obstacle.platformId) continue;
-      const entries = obstaclesByPlatform.get(obstacle.platformId) ?? [];
-      entries.push(obstacle);
-      obstaclesByPlatform.set(obstacle.platformId, entries);
-    }
-
-    for (const platformDef of level.platforms) {
-      const sliceables = sliceablesByPlatform.get(platformDef.id) ?? [];
-      const obstacles = obstaclesByPlatform.get(platformDef.id) ?? [];
-      if (sliceables.length === 0 && obstacles.length === 0) continue;
-
-      const signatureParts = [`${(platformDef.depth || 3).toFixed(1)}_${(platformDef.height || 1).toFixed(1)}`];
-      for (const slice of [...sliceables].sort((a, b) => a.type.localeCompare(b.type) || (a.z ?? 0) - (b.z ?? 0))) {
-        signatureParts.push(`s:${slice.type}:${slice.y ?? 0}:${slice.z ?? 0}:${slice.count ?? 1}`);
-      }
-      for (const obstacle of [...obstacles].sort((a, b) => (a.z ?? 0) - (b.z ?? 0))) {
-        signatureParts.push(`o:${obstacle.y ?? 0}:${obstacle.z ?? 0}`);
-      }
-
-      const signature = signatureParts.join("|");
-      if (seen.has(signature)) continue;
-      seen.add(signature);
-
-      const platformTemplate: EndlessTemplate["platform"] = {
-        y: platformDef.y ?? 0,
-        depth: platformDef.depth || 3,
-        height: platformDef.height || 1,
-      };
-      if (platformDef.moving) {
-        platformTemplate.moving = true;
-        if (platformDef.moveAxis !== undefined) platformTemplate.moveAxis = platformDef.moveAxis;
-        if (platformDef.moveDistance !== undefined) platformTemplate.moveDistance = platformDef.moveDistance;
-        if (platformDef.moveSpeed !== undefined) platformTemplate.moveSpeed = platformDef.moveSpeed;
-        if (platformDef.moveDelay !== undefined) platformTemplate.moveDelay = platformDef.moveDelay;
-      }
-
-      const template: EndlessTemplate = { platform: platformTemplate };
-      if (sliceables.length > 0) template.sliceables = sliceables.map(copyEndlessThing);
-      if (obstacles.length > 0) template.obstacles = obstacles.map(copyEndlessThing);
-      pool.push(template);
-    }
-  }
-
-  if (pool.length === 0) throw new Error("[chopline-rush] Reference levels did not produce any endless templates");
-  return pool;
-}
-
 function expandedEndlessObjectCount(template: EndlessTemplate): number {
   const sliceableCount = (template.sliceables ?? []).reduce((sum, slice) => sum + (slice.count ?? 1), 0);
   return sliceableCount + (template.obstacles ?? []).length;
-}
-
-function estimateReferenceExtraRandomBudget(templateIndex: number, template: EndlessTemplate): number {
-  const measured = ENDLESS_REFERENCE_EXTRA_RANDOM_BUDGET_BY_TEMPLATE.get(templateIndex);
-  if (measured !== undefined) return measured;
-
-  const objectCount = expandedEndlessObjectCount(template);
-  const bookCount = (template.sliceables ?? [])
-    .filter((slice) => slice.type === "book")
-    .reduce((sum, slice) => sum + (slice.count ?? 1), 0);
-  const obstacleCount = (template.obstacles ?? []).length;
-
-  return Math.max(0, 24 + objectCount * 48 + bookCount * 9 + obstacleCount * 18);
-}
-
-function consumeEndlessReferenceRandomDraws(count: number): void {
-  for (let i = 0; i < count; i += 1) {
-    Math.random();
-  }
 }
 
 function withIsolatedVisualRandom<T>(work: () => T): T {
@@ -2753,13 +2609,12 @@ function prepareEndlessSpawnPlans(targetCursorZ: number): void {
     endlessPlanCount += 1;
     endlessLastTemplateIndex = templateIndex;
     endlessPlanCursorZ += gap + template.platform.depth;
-    const budget = 0;
     const randomWindow = window as Window & { __rngCount?: number };
     const beforeRandom = randomWindow.__rngCount ?? null;
     if (isChoplineTestMode) {
       endlessPlanProofEvents.push({
         templateIndex,
-        budget,
+        budget: 0,
         beforeRandom,
         afterRandom: randomWindow.__rngCount ?? null,
         targetCursorZ,
@@ -2926,7 +2781,6 @@ function updateEndlessWorld(): void {
   for (let i = platformEntities.length - 1; i >= 0; i -= 1) {
     const platformEntity = platformEntities[i]!;
     if (platformEntity.mesh.position.z + platformEntity.depth / 2 < cleanupZ) {
-      fragmentPhysics.removePlatform(platformEntity.id);
       removeAndDispose(platformGroup, platformEntity.mesh);
       platformEntities.splice(i, 1);
     }
@@ -2998,7 +2852,6 @@ function createPlatform(def: RefPlatform, index: number): PlatformEntity {
     bounds: new THREE.Box3(),
   };
   updatePlatformBounds(entity);
-  fragmentPhysics.addPlatform(entity.id, entity.mesh.position, { x: width, y: height, z: depth }, entity.moving);
   return entity;
 }
 
@@ -3041,7 +2894,6 @@ function createRoof(def: RefPlatform, index: number): PlatformEntity {
     bounds: new THREE.Box3(),
   };
   updatePlatformBounds(entity);
-  fragmentPhysics.addPlatform(entity.id, entity.mesh.position, { x: width, y: height, z: depth }, false);
   return entity;
 }
 
@@ -3643,7 +3495,6 @@ function updateMovingWorld(dt: number): void {
       platformEntity.mesh.position[platformEntity.moveAxis] += offset;
     }
     updatePlatformBounds(platformEntity);
-    fragmentPhysics.updatePlatform(platformEntity.id, platformEntity.mesh.position);
   }
 
   if (stuckPlatform && stuckOldY !== undefined && stuckOldZ !== undefined) {
@@ -3771,6 +3622,18 @@ function updateKnifePhysics(dt: number): void {
     return;
   }
 
+  if (knife.slicing) {
+    knife.velocity.z = 0;
+    const rotDiff = knife.rotationTarget - knife.rotation;
+    if (Math.abs(rotDiff) > 0.01) {
+      const step = SLICE_ROT_SPEED * dt;
+      knife.rotation += Math.abs(rotDiff) <= step ? rotDiff : Math.sign(rotDiff) * step;
+    } else {
+      knife.rotation = knife.rotationTarget;
+    }
+    knife.angularVelocity = 0;
+  }
+
   knife.velocity.y += GRAVITY * dt;
   knife.position.addScaledVector(knife.velocity, dt);
   if (knife.position.y > KNIFE_CEILING_DEFAULT) {
@@ -3838,25 +3701,23 @@ function flipKnife(): void {
   restoreWidenedObjects();
   knife.rotatingStickPlatform = null;
   knife.rotatingStickAccumAngle = 0;
+  knife.rotatingStickExhaustedPlatform = null;
   knife.previousPosition.copy(knife.position);
   knife.previousRotation = knife.rotation;
   if (wasAirborne) {
-    knife.velocity.y = Math.min(BASE_FLIP_Y, Math.max(0, knife.velocity.y) + AIR_TAP_LIFT);
-    knife.velocity.z = BASE_FLIP_Z;
+    knife.velocity.set(0, BASE_FLIP_Y, BASE_FLIP_Z);
   } else if (knife.stuckFace === "bottom") {
     const bottomCoeff = knife.flipSourcePlatform?.kind === "roof" ? 0.25 : 0.1;
     knife.velocity.set(0, -BASE_FLIP_Y * bottomCoeff, BASE_FLIP_Z);
   } else if (knife.stuckFace === "side") {
-    const sideZScale = knife.stuckSideDir < 0 ? 0.72 : 1;
-    knife.velocity.set(0, BASE_FLIP_Y, BASE_FLIP_Z * sideZScale);
+    const sideZScale = knife.stuckSideDir < 0 ? 0.5 : 1;
+    knife.velocity.set(0, BASE_FLIP_Y, BASE_FLIP_Z * knife.stuckSideDir * sideZScale);
   } else {
     knife.velocity.set(0, BASE_FLIP_Y, BASE_FLIP_Z);
   }
   knife.stuckFace = "top";
   knife.angularVelocity = ROTATION_SPEED;
-  knife.rotationTarget = wasAirborne
-    ? knife.rotation + TAP_ROTATION_ANGLE
-    : nextRotationTarget(knife.rotation);
+  knife.rotationTarget = nextRotationTarget(knife.rotation);
   knife.lastPlatformId = "";
   knife.landingPunch = 0;
   trajectoryPoints = [knifeBladeTip()];
@@ -3867,7 +3728,15 @@ function flipKnife(): void {
 }
 
 function nextRotationTarget(rotation: number): number {
-  return rotation + TAP_ROTATION_ANGLE;
+  const ready = activeKnifeGeometry.readyAngle;
+  const minTarget = rotation + Math.PI;
+  const n = Math.ceil((minTarget - ready) / (Math.PI * 2));
+  return n * Math.PI * 2 + ready;
+}
+
+function nearestCanonicalAngle(rotation: number): number {
+  const ready = activeKnifeGeometry.readyAngle;
+  return Math.round((rotation - ready) / (Math.PI * 2)) * Math.PI * 2 + ready;
 }
 
 function resetTrajectoryTrail(): void {
@@ -3964,21 +3833,6 @@ function getBladeOBBAt(y: number, z: number, rot: number): KnifeOBB {
   };
 }
 
-function getCuttingBladeOBBAt(y: number, z: number, rot: number): KnifeOBB {
-  const cosR = Math.cos(rot);
-  const sinR = Math.sin(rot);
-  const cutStart = activeKnifeGeometry.bladeReach * BLADE_CUT_START_RATIO;
-  const cutLength = activeKnifeGeometry.bladeReach - cutStart;
-  return {
-    cY: y + (cutStart + cutLength / 2) * cosR + (-sinR) * BLADE_EDGE_OFFSET,
-    cZ: z + (cutStart + cutLength / 2) * sinR + cosR * BLADE_EDGE_OFFSET,
-    axisY: cosR,
-    axisZ: sinR,
-    halfLen: cutLength / 2,
-    halfWid: activeKnifeGeometry.bladeHalfWidth,
-  };
-}
-
 function getHandleOBBAt(y: number, z: number, rot: number): KnifeOBB {
   const cosR = Math.cos(rot);
   const sinR = Math.sin(rot);
@@ -4065,6 +3919,7 @@ function stickToFace(faceAxis: CollisionAxis, faceDir: CollisionDir, faceCoord: 
   knife.stuckPlatform = platformEntity;
   knife.rotatingStickPlatform = null;
   knife.rotatingStickAccumAngle = 0;
+  knife.rotatingStickExhaustedPlatform = null;
   knife.lastBounceEntity = null;
   knife.lastPlatformId = platformEntity.id;
 
@@ -4125,8 +3980,7 @@ function enterRotatingStick(platformEntity: PlatformEntity): void {
 function bounceKnife(source: SliceEntity | null): void {
   knife.slicing = false;
   restoreWidenedObjects();
-  knife.velocity.y = Math.max(6, Math.abs(knife.velocity.y) * 0.45);
-  knife.velocity.z = -Math.max(3.5, Math.abs(knife.velocity.z) * 0.55);
+  knife.velocity.z = -knife.velocity.z * 0.5;
   knife.angularVelocity = ROTATION_SPEED;
   knife.rotationTarget = nextRotationTarget(knife.rotation);
   knife.state = "bouncing";
@@ -4222,70 +4076,13 @@ function sliceablesHitByBlade(bladeOBB: KnifeOBB, midBladeOBB: KnifeOBB): SliceE
   return sliceEntities.filter((slice) => slice.collisionEnabled && !slice.sliced && (obbObjectOverlap(bladeOBB, slice.group.position, slice.collision) || obbObjectOverlap(midBladeOBB, slice.group.position, slice.collision)));
 }
 
-function referenceFilteredSliceHits(hits: SliceEntity[]): SliceEntity[] {
-  if (hits.length <= 1 || !hits.some((slice) => slice.type === "book")) return hits;
-  const firstBookByStack = new Map<number, SliceEntity>();
-  const filtered: SliceEntity[] = [];
-  for (const slice of [...hits].sort((a, b) => a.group.position.y - b.group.position.y)) {
-    if (slice.type !== "book") {
-      filtered.push(slice);
-      continue;
-    }
-    if (!firstBookByStack.has(slice.configIndex)) {
-      firstBookByStack.set(slice.configIndex, slice);
-      filtered.push(slice);
-    }
-  }
-  return filtered;
-}
-
-function overlapSampleTime(slice: SliceEntity, previousOBB: KnifeOBB, midOBB: KnifeOBB, currentOBB: KnifeOBB): number | null {
-  if (obbObjectOverlap(previousOBB, slice.group.position, slice.collision)) return 0;
-  if (obbObjectOverlap(midOBB, slice.group.position, slice.collision)) return 0.5;
-  if (obbObjectOverlap(currentOBB, slice.group.position, slice.collision)) return 1;
-  return null;
-}
-
-function contactTimesById(
-  slices: SliceEntity[],
-  previousOBB: KnifeOBB,
-  midOBB: KnifeOBB,
-  currentOBB: KnifeOBB,
-): Map<string, number> {
-  const contacts = new Map<string, number>();
-  for (const slice of slices) {
-    const time = overlapSampleTime(slice, previousOBB, midOBB, currentOBB);
-    if (time === null) continue;
-    contacts.set(slice.id, time);
-  }
-  return contacts;
-}
-
-function stopSlicing(): void {
-  knife.slicing = false;
-  knife.slicingStackConfigIndex = null;
-  knife.slicingStackType = null;
-  knife.slicingCutCount = 0;
-  knife.slicingPraiseShown = false;
-  knife.slicingExitZ = Number.NEGATIVE_INFINITY;
+function widenStackSiblings(target: SliceEntity): void {
   restoreWidenedObjects();
-}
-
-function playWallCutImpact(): void {
-  flashFeedback("slice");
-  startCameraShake(0.075, 0.1);
-  pulseHaptic(14);
-  audio.play("sliceSoft", 0.72);
-  hitStopTime = Math.max(hitStopTime, 0.04);
-}
-
-function finishWallCutPraise(position: THREE.Vector3): void {
-  if (knife.slicingPraiseShown || knife.slicingCutCount < REFERENCE_WALL_CUT_COURSES) return;
-  knife.slicingPraiseShown = true;
-  const praisePosition = position.clone();
-  window.setTimeout(() => {
-    if (currentRun && screen === "playing") spawnPraise(praisePosition, "NICE");
-  }, 180);
+  for (const slice of sliceEntities) {
+    if (slice.configIndex !== target.configIndex || slice === target || slice.sliced) continue;
+    slice.collision.originalHalfZ = slice.collision.halfZ;
+    slice.collision.halfZ += SLICE_HALFZ_BONUS;
+  }
 }
 
 function handleSliceableCollisions(
@@ -4293,8 +4090,6 @@ function handleSliceableCollisions(
   handleOBB: KnifeOBB,
   midBladeOBB: KnifeOBB,
   midHandleOBB: KnifeOBB,
-  previousBladeOBB: KnifeOBB,
-  previousHandleOBB: KnifeOBB,
 ): boolean {
   if (knife.lastBounceEntity) {
     const last = knife.lastBounceEntity;
@@ -4310,93 +4105,61 @@ function handleSliceableCollisions(
   }
 
   if (knife.slicing) {
-    const hits = referenceFilteredSliceHits(sliceablesHitByBlade(bladeOBB, midBladeOBB))
-      .filter((slice) => knife.slicingStackConfigIndex === null || slice.configIndex === knife.slicingStackConfigIndex);
-    const remainingWallCourses = knife.slicingStackType === "brick"
-      ? Math.max(0, REFERENCE_WALL_CUT_COURSES - knife.slicingCutCount)
-      : hits.length;
-    const acceptedHits = hits.slice(0, remainingWallCourses);
-    for (const slice of acceptedHits) sliceObject(slice, slice.type !== "brick");
-    knife.slicingCutCount += acceptedHits.length;
-    const lastAcceptedHit = acceptedHits[acceptedHits.length - 1];
-    if (lastAcceptedHit?.type === "brick") finishWallCutPraise(lastAcceptedHit.group.position);
-    if (acceptedHits.length > 0) {
-      knife.velocity.y *= 0.94;
-      knife.velocity.z = Math.max(SLICE_FORWARD_SPEED_MIN, knife.velocity.z * 0.985);
-    } else if (knife.position.z > knife.slicingExitZ) {
-      stopSlicing();
+    const hits = sliceablesHitByBlade(bladeOBB, midBladeOBB);
+    for (const slice of hits) sliceObject(slice);
+    if (hits.length > 0) knife.velocity.y *= 0.85;
+    return false;
+  }
+
+  const bladeHit = sliceablesHitByBlade(bladeOBB, midBladeOBB)[0] ?? null;
+  if (bladeHit) {
+    sliceObject(bladeHit);
+    hitStopTime = Math.max(hitStopTime, 0.04);
+    const targetRot = nearestCanonicalAngle(knife.rotation);
+    const angleDiff = knife.rotation - targetRot;
+    if (angleDiff >= SLICE_LOCK_MIN_ANGLE && angleDiff <= SLICE_LOCK_MAX_ANGLE) {
+      knife.slicing = true;
+      knife.flipSourcePlatform = null;
+      knife.flipSourceFaceY = null;
+      knife.flipSourceFaceType = null;
+      widenStackSiblings(bladeHit);
+      knife.rotationTarget = targetRot;
+      const hasSiblingBelow = sliceEntities.some((slice) =>
+        slice.configIndex === bladeHit.configIndex && !slice.sliced
+        && slice.group.position.y < bladeHit.group.position.y);
+      knife.velocity.z = hasSiblingBelow ? 0 : knife.velocity.z * 0.3;
+      if (knife.velocity.y > 0) knife.velocity.y = 0;
+      knife.velocity.y *= 0.7;
+    } else {
+      knife.velocity.y *= 0.7;
+      knife.velocity.z *= 0.7;
+      knife.angularVelocity *= 0.5;
     }
     return false;
   }
 
-  const bouncedConfigIndex = knife.lastBounceEntity?.configIndex ?? null;
-  const rawBladeCandidates = sliceablesHitByBlade(bladeOBB, midBladeOBB)
-    .filter((slice) => bouncedConfigIndex === null || slice.configIndex !== bouncedConfigIndex);
-  const handleCandidates = sliceEntities.filter((slice) => {
-    if (slice.sliced || !slice.collisionEnabled || slice === knife.lastBounceEntity) return false;
-    return obbObjectOverlap(handleOBB, slice.group.position, slice.collision)
-      || obbObjectOverlap(midHandleOBB, slice.group.position, slice.collision);
-  });
-
-  const bladeContactTimes = contactTimesById(rawBladeCandidates, previousBladeOBB, midBladeOBB, bladeOBB);
-  const handleContactTimes = contactTimesById(handleCandidates, previousHandleOBB, midHandleOBB, handleOBB);
-  const validBladeContacts = rawBladeCandidates
-    .map((slice) => ({ slice, time: bladeContactTimes.get(slice.id) ?? Number.POSITIVE_INFINITY }))
-    .filter(({ slice, time }) => time <= (handleContactTimes.get(slice.id) ?? Number.POSITIVE_INFINITY) + CUT_CONTACT_TIME_EPSILON)
-    .sort((a, b) => a.time - b.time);
-  const firstBladeContact = validBladeContacts[0] ?? null;
-  const blockingHandle = handleCandidates
-    .map((slice) => ({ slice, time: handleContactTimes.get(slice.id) ?? Number.POSITIVE_INFINITY }))
-    .filter(({ slice, time }) => time + CUT_CONTACT_TIME_EPSILON < (bladeContactTimes.get(slice.id) ?? Number.POSITIVE_INFINITY))
-    .sort((a, b) => a.time - b.time)[0];
-
-  const bladeCandidates = firstBladeContact
-    ? validBladeContacts
-      .filter(({ slice }) => slice.configIndex === firstBladeContact.slice.configIndex)
-      .map(({ slice }) => slice)
-    : [];
-  const brickCandidates = bladeCandidates
-    .filter((slice) => slice.type === "brick")
-    .sort((a, b) => a.stackIndex - b.stackIndex);
-  const bladeHit = brickCandidates.length > 0
-    ? brickCandidates[Math.floor(brickCandidates.length / 2)]
-    : bladeCandidates
-      .sort((a, b) => {
-        const centerA = a.group.position.y + (a.collision.bottomY + a.collision.topY) / 2;
-        const centerB = b.group.position.y + (b.collision.bottomY + b.collision.topY) / 2;
-        return Math.abs(centerA - knife.position.y) - Math.abs(centerB - knife.position.y);
-      })[0];
-  if (bladeHit) {
-    const acceptedHits = referenceFilteredSliceHits(bladeCandidates)
-      .sort((a, b) => a.stackIndex - b.stackIndex);
-    const initialHits = bladeHit.type === "brick"
-      ? acceptedHits.slice(0, REFERENCE_WALL_CUT_COURSES)
-      : acceptedHits;
-    for (const acceptedHit of initialHits) sliceObject(acceptedHit, acceptedHit.type !== "brick");
-    if (bladeHit.type === "brick") playWallCutImpact();
-    hitStopTime = Math.max(hitStopTime, bladeHit.type === "brick" ? 0.055 : 0.035);
-    knife.slicing = true;
-    knife.slicingStackConfigIndex = bladeHit.configIndex;
-    knife.slicingStackType = bladeHit.type;
-    knife.slicingCutCount = initialHits.length;
-    knife.slicingPraiseShown = false;
-    if (bladeHit.type === "brick") finishWallCutPraise(initialHits[initialHits.length - 1]?.group.position ?? bladeHit.group.position);
-    knife.slicingExitZ = bladeHit.group.position.z
-      + (bladeHit.collision.centerZ ?? 0)
-      + bladeHit.collision.halfZ
-      + activeKnifeGeometry.handleReach
-      + SLICE_EXIT_MARGIN;
-    knife.flipSourcePlatform = null;
-    knife.flipSourceFaceY = null;
-    knife.flipSourceFaceType = null;
-    knife.velocity.z = Math.max(SLICE_FORWARD_SPEED_MIN, knife.velocity.z * 0.9);
-    knife.velocity.y *= 0.92;
-    knife.angularVelocity = Math.max(knife.angularVelocity, ROTATION_SPEED * 0.85);
-    return false;
-  }
-
-  if (blockingHandle) {
-    bounceKnife(blockingHandle.slice);
+  for (const slice of sliceEntities) {
+    if (slice.sliced || !slice.collisionEnabled || slice === knife.lastBounceEntity) continue;
+    if (
+      !obbObjectOverlap(handleOBB, slice.group.position, slice.collision)
+      && !obbObjectOverlap(midHandleOBB, slice.group.position, slice.collision)
+    ) {
+      continue;
+    }
+    let bladeWillHit = false;
+    for (let da = Math.PI / 4; da <= Math.PI; da += Math.PI / 4) {
+      const aheadOBB = getBladeOBBAt(knife.position.y, knife.position.z, knife.rotation + da);
+      if (obbObjectOverlap(aheadOBB, slice.group.position, slice.collision)) {
+        bladeWillHit = true;
+        break;
+      }
+    }
+    if (bladeWillHit) {
+      sliceObject(slice);
+      knife.velocity.y *= 0.85;
+      break;
+    }
+    bounceKnife(slice);
     return true;
   }
 
@@ -4414,20 +4177,30 @@ function platformExtents(platformEntity: PlatformEntity): { yMin: number; yMax: 
 
 function clearFlipSourcePlatformGuardIfSafe(): void {
   const source = knife.flipSourcePlatform;
-  if (!source) return;
-  const { yMin, yMax, zMin, zMax } = platformExtents(source);
-  const reach = Math.max(activeKnifeGeometry.bladeReach, activeKnifeGeometry.handleReach) + 0.1;
-  const pivotClearY = knife.position.y > yMax + reach || knife.position.y < yMin - reach;
-  const pivotClearZ = knife.position.z < zMin - reach || knife.position.z > zMax + reach;
-  if (!pivotClearY && !pivotClearZ) return;
-  knife.flipSourcePlatform = null;
-  knife.flipSourceFaceY = null;
-  knife.flipSourceFaceType = null;
+  if (source) {
+    const { yMin, yMax, zMin, zMax } = platformExtents(source);
+    const reach = Math.max(activeKnifeGeometry.bladeReach, activeKnifeGeometry.handleReach) + 0.1;
+    const pivotClearY = knife.position.y > yMax + reach || knife.position.y < yMin - reach;
+    const pivotClearZ = knife.position.z < zMin - reach || knife.position.z > zMax + reach;
+    if (pivotClearY || pivotClearZ) {
+      knife.flipSourcePlatform = null;
+      knife.flipSourceFaceY = null;
+      knife.flipSourceFaceType = null;
+    }
+  }
+  const exhausted = knife.rotatingStickExhaustedPlatform;
+  if (exhausted) {
+    const { yMin, yMax, zMin, zMax } = platformExtents(exhausted);
+    const reach = activeKnifeGeometry.bladeReach + 0.1;
+    const pivotClearY = knife.position.y > yMax + reach || knife.position.y < yMin - reach;
+    const pivotClearZ = knife.position.z < zMin - reach || knife.position.z > zMax + reach;
+    if (pivotClearY || pivotClearZ) knife.rotatingStickExhaustedPlatform = null;
+  }
 }
 
 function checkRotatingStick(bladeOBB: KnifeOBB, midBladeOBB: KnifeOBB): boolean {
   if (knife.state !== "rotating-stick" || !knife.rotatingStickPlatform) return false;
-  for (const slice of referenceFilteredSliceHits(sliceablesHitByBlade(bladeOBB, midBladeOBB))) sliceObject(slice);
+  for (const slice of sliceablesHitByBlade(bladeOBB, midBladeOBB)) sliceObject(slice);
   const platformEntity = knife.rotatingStickPlatform;
   const { yMin, yMax, zMin, zMax } = platformExtents(platformEntity);
   const narrowBladeOBB = { ...bladeOBB, halfWid: 0.05 };
@@ -4469,6 +4242,7 @@ function checkRotatingStick(bladeOBB: KnifeOBB, midBladeOBB: KnifeOBB): boolean 
 
   if (knife.rotatingStickAccumAngle > 4 * Math.PI) {
     knife.state = "flying";
+    knife.rotatingStickExhaustedPlatform = knife.rotatingStickPlatform;
     knife.rotatingStickPlatform = null;
     knife.angularVelocity = ROTATION_SPEED;
     knife.rotationTarget = nextRotationTarget(knife.rotation);
@@ -4484,6 +4258,7 @@ function checkPlatformCollisions(bladeOBB: KnifeOBB, handleOBB: KnifeOBB, midBla
 
   for (const platformEntity of platformEntities) {
     if (platformEntity === knife.flipSourcePlatform) continue;
+    if (platformEntity === knife.rotatingStickExhaustedPlatform) continue;
     const { yMin, yMax, zMin, zMax } = platformExtents(platformEntity);
     if (inFlipGuardWindow && knife.flipSourceFaceY !== null) {
       if (knife.flipSourceFaceType === "top" && Math.abs(yMax - knife.flipSourceFaceY) < 0.1) continue;
@@ -4550,28 +4325,17 @@ function checkCollisions(): void {
   if (!currentRun || currentRun.outcome || knife.state === "dead") return;
   clearFlipSourcePlatformGuardIfSafe();
   const bladeOBB = getBladeOBBAt(knife.position.y, knife.position.z, knife.rotation);
-  const cuttingBladeOBB = getCuttingBladeOBBAt(knife.position.y, knife.position.z, knife.rotation);
   const handleOBB = getHandleOBBAt(knife.position.y, knife.position.z, knife.rotation);
-  const previousCuttingBladeOBB = getCuttingBladeOBBAt(knife.previousPosition.y, knife.previousPosition.z, knife.previousRotation);
-  const previousHandleOBB = getHandleOBBAt(knife.previousPosition.y, knife.previousPosition.z, knife.previousRotation);
   const midY = (knife.previousPosition.y + knife.position.y) / 2;
   const midZ = (knife.previousPosition.z + knife.position.z) / 2;
   const midRot = (knife.previousRotation + knife.rotation) / 2;
   const midBladeOBB = getBladeOBBAt(midY, midZ, midRot);
-  const midCuttingBladeOBB = getCuttingBladeOBBAt(midY, midZ, midRot);
   const midHandleOBB = getHandleOBBAt(midY, midZ, midRot);
 
   if (checkObstacleOBBs([bladeOBB, handleOBB, midBladeOBB, midHandleOBB])) return;
   if (knife.state === "stuck") return;
-  if (checkRotatingStick(cuttingBladeOBB, midCuttingBladeOBB)) return;
-  if (handleSliceableCollisions(
-    cuttingBladeOBB,
-    handleOBB,
-    midCuttingBladeOBB,
-    midHandleOBB,
-    previousCuttingBladeOBB,
-    previousHandleOBB,
-  )) return;
+  if (checkRotatingStick(bladeOBB, midBladeOBB)) return;
+  if (handleSliceableCollisions(bladeOBB, handleOBB, midBladeOBB, midHandleOBB)) return;
   checkPlatformCollisions(bladeOBB, handleOBB, midBladeOBB, midHandleOBB);
 }
 
@@ -4889,10 +4653,13 @@ function buildSliceHalf(type: string, dir: -1 | 1, stackIndex = 0): THREE.Group 
 }
 
 function spawnSlicePieces(slice: SliceEntity): void {
+  const supportingPlatform = findSurfaceBelow(slice.group.position.z, slice.group.position.y + 0.05).platform;
+  const platformEdgeX = (supportingPlatform?.width ?? 3) / 2;
   for (const dir of [-1, 1]) {
     const direction = dir as -1 | 1;
     const piece = buildSliceHalf(slice.type, direction, slice.stackIndex);
     piece.position.copy(slice.group.position);
+    if (slice.type === "donut") piece.position.y += 0.5 * SLICEABLE_VISUAL_SCALE;
     piece.traverse((node) => {
       if (node instanceof THREE.Mesh) {
         node.castShadow = true;
@@ -4901,23 +4668,10 @@ function spawnSlicePieces(slice: SliceEntity): void {
     });
     particleGroup.add(piece);
     const velocity = new THREE.Vector3(
-      direction * (2.5 + Math.random() * 1.4),
-      0.6 + Math.random() * 1.1,
-      1.1 + Math.random() * 0.9,
+      direction * (5 + Math.random() * 4),
+      0,
+      (Math.random() - 0.5) * 4,
     );
-    const angularVelocity = new THREE.Vector3(
-      (Math.random() - 0.5) * 1.1,
-      direction * (0.35 + Math.random() * 0.55),
-      direction * -(0.8 + Math.random() * 0.8),
-    );
-    const localBounds = slicePieceLocalBounds(slice.type, direction);
-    const bodyHandle = fragmentPhysics.addFragment({
-      position: piece.position,
-      velocity,
-      angularVelocity,
-      bounds: localBounds,
-      density: fragmentDensity(slice.type),
-    });
     const slicePiece: SlicePiece = {
       mesh: piece,
       sourceId: slice.id,
@@ -4925,21 +4679,16 @@ function spawnSlicePieces(slice: SliceEntity): void {
       phase: "sliding",
       objectType: slice.type,
       velocity,
+      angularVelocity: { x: 0, z: direction * -(0.5 + Math.random() * 0.8) },
       direction,
-      localBounds,
-      bodyHandle,
+      platformEdgeX,
+      restAngle: 0,
+      restAngleX: null,
+      localBounds: slicePieceLocalBounds(slice.type, direction),
     };
     piece.userData.slicePiece = slicePiece;
     slicePieces.push(slicePiece);
   }
-}
-
-function fragmentDensity(type: string): number {
-  if (type === "brick") return 2.2;
-  if (type === "camera") return 1.8;
-  if (type === "wooden_stake" || type === "book") return 1.15;
-  if (type === "baguette" || type === "donut") return 0.7;
-  return 0.9;
 }
 
 function slicePieceLocalBounds(type: string, direction: -1 | 1): SlicePiece["localBounds"] {
@@ -5037,36 +4786,129 @@ function updateParticles(dt: number): void {
   }
 }
 
-function updateSlicePieces(dt: number): void {
-  if (slicePieces.length === 0) return;
-  fragmentPhysics.step(dt);
+function pieceLowestLocalY(piece: SlicePiece): number {
+  const bounds = piece.localBounds;
+  const sinR = Math.sin(piece.mesh.rotation.z);
+  const cosR = Math.cos(piece.mesh.rotation.z);
+  return (sinR > 0 ? bounds.xMin : bounds.xMax) * sinR + (cosR > 0 ? bounds.yMin : bounds.yMax) * cosR;
+}
 
+function settleGroundedPiece(piece: SlicePiece, dt: number): void {
+  const mesh = piece.mesh;
+  mesh.position.x += piece.velocity.x * dt;
+  mesh.position.z += piece.velocity.z * dt;
+  piece.velocity.x *= 1 - 4 * dt;
+  piece.velocity.z *= 1 - 4 * dt;
+  if (Math.abs(piece.velocity.x) < 0.05) piece.velocity.x = 0;
+  if (Math.abs(piece.velocity.z) < 0.05) piece.velocity.z = 0;
+
+  const springK = 40;
+  const damping = 4;
+  if (piece.restAngleX !== null) {
+    const diffX = piece.restAngleX - mesh.rotation.x;
+    piece.angularVelocity.x += diffX * springK * dt;
+    piece.angularVelocity.x *= 1 - damping * dt;
+    mesh.rotation.x += piece.angularVelocity.x * dt;
+    if (Math.abs(diffX) < 0.01 && Math.abs(piece.angularVelocity.x) < 0.01) {
+      mesh.rotation.x = piece.restAngleX;
+      piece.angularVelocity.x = 0;
+    }
+  }
+  if (piece.restAngleX === null || piece.objectType === "cheese") {
+    const diff = piece.restAngle - mesh.rotation.z;
+    piece.angularVelocity.z += diff * springK * dt;
+    piece.angularVelocity.z *= 1 - damping * dt;
+    mesh.rotation.z += piece.angularVelocity.z * dt;
+    if (Math.abs(diff) < 0.01 && Math.abs(piece.angularVelocity.z) < 0.01) {
+      mesh.rotation.z = piece.restAngle;
+      piece.angularVelocity.z = 0;
+    }
+  }
+
+  const bounds = piece.localBounds;
+  if (piece.objectType === "donut") {
+    const restHeight = GROUND_Y + Math.max(Math.abs(bounds.zMin ?? 0), Math.abs(bounds.zMax ?? 0));
+    mesh.position.y += (restHeight - mesh.position.y) * Math.min(1, 8 * dt);
+  } else if (piece.objectType === "cheese") {
+    const restHeight = GROUND_Y + 0.127 * SLICEABLE_VISUAL_SCALE;
+    mesh.position.y += (restHeight - mesh.position.y) * Math.min(1, 8 * dt);
+  } else {
+    mesh.position.y = GROUND_Y - pieceLowestLocalY(piece);
+  }
+}
+
+function lockPieceRestAngle(piece: SlicePiece): void {
+  const mesh = piece.mesh;
+  const halfPi = Math.PI / 2;
+  const bounds = piece.localBounds;
+  const isFlat = bounds.xMax - bounds.xMin > bounds.yMax - bounds.yMin;
+
+  let nearest: number;
+  if (Math.abs(mesh.rotation.z) < 0.1) {
+    nearest = 0;
+  } else if (mesh.rotation.z > 0) {
+    nearest = Math.ceil(mesh.rotation.z / halfPi) * halfPi;
+  } else {
+    nearest = Math.floor(mesh.rotation.z / halfPi) * halfPi;
+  }
+
+  if (isFlat) {
+    piece.restAngle = nearest;
+  } else {
+    const nRatio = Math.round(nearest / halfPi);
+    piece.restAngle = nRatio % 2 === 0 ? (nRatio + (piece.direction < 0 ? -1 : 1)) * halfPi : nearest;
+  }
+  if (piece.objectType === "donut") {
+    piece.restAngle = piece.direction * -halfPi;
+    piece.restAngleX = -halfPi;
+    piece.angularVelocity.x = (piece.restAngleX - mesh.rotation.x) * 3;
+  }
+  if (piece.objectType === "baguette" || piece.objectType === "sausage") {
+    piece.restAngle = Math.round(mesh.rotation.z / Math.PI) * Math.PI;
+  }
+  if (piece.objectType === "cheese") {
+    piece.restAngle = piece.direction * -halfPi;
+    piece.restAngleX = -Math.atan2(0.27, 0.75);
+    piece.angularVelocity.x = (piece.restAngleX - mesh.rotation.x) * 3;
+  }
+  piece.angularVelocity.z = (piece.restAngle - mesh.rotation.z) * 6;
+}
+
+function updateSlicePieces(dt: number): void {
   for (let i = slicePieces.length - 1; i >= 0; i -= 1) {
     const piece = slicePieces[i];
     if (!piece) continue;
-    const transform = fragmentPhysics.fragmentTransform(piece.bodyHandle);
-    if (!transform) {
-      removeAndDispose(particleGroup, piece.mesh);
-      slicePieces.splice(i, 1);
-      continue;
-    }
+    const mesh = piece.mesh;
 
-    piece.mesh.position.set(transform.position.x, transform.position.y, transform.position.z);
-    piece.mesh.quaternion.set(transform.rotation.x, transform.rotation.y, transform.rotation.z, transform.rotation.w);
-    piece.velocity.set(transform.velocity.x, transform.velocity.y, transform.velocity.z);
-
-    const speed = Math.hypot(transform.velocity.x, transform.velocity.y, transform.velocity.z);
-    if (transform.sleeping || speed < 0.16) {
-      piece.phase = "grounded";
-    } else if (transform.position.y < piece.spawnPosition.y - 0.3 || transform.velocity.y < -1.2) {
-      piece.phase = "falling";
+    if (piece.phase === "sliding") {
+      mesh.position.x += piece.velocity.x * dt;
+      mesh.position.z += piece.velocity.z * dt;
+      piece.velocity.x *= 1 - 1.0 * dt;
+      piece.velocity.z *= 1 - 1.0 * dt;
+      mesh.rotation.z += piece.angularVelocity.z * dt;
+      if (Math.abs(mesh.position.x) >= piece.platformEdgeX) {
+        piece.phase = "falling";
+        piece.velocity.y = -1;
+        piece.velocity.x = piece.direction * 2;
+        piece.angularVelocity.z = piece.direction * -2;
+      }
+    } else if (piece.phase === "falling") {
+      piece.velocity.y += FRAGMENT_GRAVITY * dt;
+      mesh.position.addScaledVector(piece.velocity, dt);
+      mesh.rotation.z += piece.angularVelocity.z * dt;
+      const lowestY = mesh.position.y + pieceLowestLocalY(piece);
+      if (lowestY <= GROUND_Y) {
+        mesh.position.y += GROUND_Y - lowestY;
+        piece.velocity.y = 0;
+        piece.phase = "grounded";
+        lockPieceRestAngle(piece);
+      }
     } else {
-      piece.phase = "sliding";
+      settleGroundedPiece(piece, dt);
     }
 
-    if (camera.position.z - piece.mesh.position.z > 15 || piece.mesh.position.y < -10) {
-      fragmentPhysics.removeFragment(piece.bodyHandle);
-      removeAndDispose(particleGroup, piece.mesh);
+    if (camera.position.z - mesh.position.z > 15) {
+      removeAndDispose(particleGroup, mesh);
       slicePieces.splice(i, 1);
     }
   }
@@ -5093,9 +4935,9 @@ function getFinishPlatform(run: RunState): PlatformEntity | undefined {
 
 function updateCamera(dt: number): void {
   tempVector.copy(knife.position).add(CAM_OFFSET);
-  camera.position.x += (tempVector.x - camera.position.x) * 3 * dt;
-  camera.position.y += (tempVector.y - camera.position.y) * 3 * dt;
-  camera.position.z += (tempVector.z - camera.position.z) * 3 * dt;
+  camera.position.x += (tempVector.x - camera.position.x) * 5 * dt;
+  camera.position.y += (tempVector.y - camera.position.y) * 5 * dt;
+  camera.position.z += (tempVector.z - camera.position.z) * 5 * dt;
   cameraTarget.set(
     camera.position.x - CAM_OFFSET.x,
     camera.position.y - CAM_OFFSET.y,
@@ -5149,6 +4991,7 @@ function startGameOverTumble(): void {
   knife.stuckPlatform = null;
   knife.rotatingStickPlatform = null;
   knife.rotatingStickAccumAngle = 0;
+  knife.rotatingStickExhaustedPlatform = null;
   resetTrajectoryTrail();
 
   knife.position.copy(knifeGroup.position);
@@ -5278,6 +5121,7 @@ function recoverPreviewRun(): void {
   knife.lastFlipAt = Number.NEGATIVE_INFINITY;
   knife.rotatingStickPlatform = null;
   knife.rotatingStickAccumAngle = 0;
+  knife.rotatingStickExhaustedPlatform = null;
   knife.lastPlatformId = nearest?.id ?? "";
   resetTrajectoryTrail();
   syncKnifeTransform();
@@ -5332,6 +5176,7 @@ function reviveRun(): void {
   knife.lastFlipAt = Number.NEGATIVE_INFINITY;
   knife.rotatingStickPlatform = null;
   knife.rotatingStickAccumAngle = 0;
+  knife.rotatingStickExhaustedPlatform = null;
   resetTrajectoryTrail();
   syncKnifeTransform();
   showScreen("playing");
@@ -5623,7 +5468,7 @@ function resize(): void {
   let height = hostHeight;
   let gameAspect = hostWidth / hostHeight;
   if (hostWidth > hostHeight) {
-    gameAspect = REFERENCE_PORTRAIT_ASPECT;
+    gameAspect = PORTRAIT_ASPECT;
     height = hostHeight;
     width = height * gameAspect;
   }
@@ -5692,6 +5537,7 @@ function stageLandingProof(): void {
   knife.lastBounceEntity = null;
   knife.rotatingStickPlatform = null;
   knife.rotatingStickAccumAngle = 0;
+  knife.rotatingStickExhaustedPlatform = null;
   knife.landingPunch = 0;
   resetTrajectoryTrail();
   syncKnifeTransform();
@@ -5723,6 +5569,7 @@ function stageFlatLandingProof(): void {
   knife.lastBounceEntity = null;
   knife.rotatingStickPlatform = null;
   knife.rotatingStickAccumAngle = 0;
+  knife.rotatingStickExhaustedPlatform = null;
   knife.landingPunch = 0;
   resetTrajectoryTrail();
   syncKnifeTransform();
@@ -5752,6 +5599,7 @@ function stageSideLandingProof(): void {
   knife.lastBounceEntity = null;
   knife.rotatingStickPlatform = null;
   knife.rotatingStickAccumAngle = 0;
+  knife.rotatingStickExhaustedPlatform = null;
   knife.landingPunch = 0;
   stickToFace("z", -1, zMin, platformEntity);
   snapCameraToKnife();
@@ -5782,6 +5630,7 @@ function stageHandleLandingProof(): void {
   knife.lastBounceEntity = null;
   knife.rotatingStickPlatform = null;
   knife.rotatingStickAccumAngle = 0;
+  knife.rotatingStickExhaustedPlatform = null;
   knife.landingPunch = 0;
   resetTrajectoryTrail();
   syncKnifeTransform();
@@ -5817,6 +5666,7 @@ function stageHandleSliceProof(): void {
   knife.lastBounceEntity = null;
   knife.rotatingStickPlatform = null;
   knife.rotatingStickAccumAngle = 0;
+  knife.rotatingStickExhaustedPlatform = null;
   knife.landingPunch = 0;
   resetTrajectoryTrail();
   syncKnifeTransform();
@@ -5850,6 +5700,7 @@ function stageCutContact(slice: SliceEntity, rotation: number): void {
   knife.lastBounceEntity = null;
   knife.rotatingStickPlatform = null;
   knife.rotatingStickAccumAngle = 0;
+  knife.rotatingStickExhaustedPlatform = null;
   knife.landingPunch = 0;
   resetTrajectoryTrail();
   syncKnifeTransform();

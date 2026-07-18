@@ -18,7 +18,6 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json}\""
   },
   "devDependencies": {
-    "@dimforge/rapier3d-compat": "^0.18.2",
     "@playdrop/ai-client": "file:vendor/playdrop/ai-client.tgz",
     "@playdrop/api-client": "file:vendor/playdrop/api-client.tgz",
     "@playdrop/assets-client": "file:vendor/playdrop/assets-client.tgz",

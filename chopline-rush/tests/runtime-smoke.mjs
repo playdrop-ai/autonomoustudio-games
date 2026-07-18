@@ -22,8 +22,8 @@ function assert(condition, message) {
 function createProfile(overrides = {}) {
   return {
     coins: 0,
-    ownedKnives: ["chopping"],
-    equippedKnife: "chopping",
+    ownedKnives: ["cooking"],
+    equippedKnife: "cooking",
     ownedThemes: ["forest"],
     equippedTheme: "forest",
     highestLevel: 1,
@@ -170,7 +170,7 @@ async function testPortraitBoot(browser, origin) {
   assert(ui.shopGlyph && ui.shopFont.includes("Arial") && ui.shopColor === "rgb(23, 61, 120)", "Gear control does not have a readable system-font icon");
   assert(ui.canvas?.width === 390 && ui.canvas?.height === 844, `Canvas does not fill the portrait viewport: ${JSON.stringify(ui.canvas)}`);
   assert(shot.length > 5000, "Portrait gameplay screenshot appears blank");
-  assert(glbResponses.some((item) => item.url.endsWith("chopping-knife.glb") && item.status === 200), "Starter chopping knife model did not load");
+  assert(glbResponses.some((item) => item.url.endsWith("cooking-knife.glb") && item.status === 200), "Starter cooking knife model did not load");
   assert(ui.calls.some((call) => call.type === "init") && ui.calls.some((call) => call.type === "ready"), "PlayDrop lifecycle did not initialize and become ready");
   assert(!ui.calls.some((call) => call.type.includes("achievement") || call.type.includes("interstitial") || call.type.includes("rewarded")), "Simplified boot invoked removed systems");
   await page.close();
@@ -189,7 +189,7 @@ async function testMultipleAirTap(browser, origin) {
   const initial = await page.evaluate(() => window.__choplineTest.state());
   const geometry = initial.knifeGeometry;
   await page.mouse.click(195, 600);
-  await page.waitForTimeout(320);
+  await page.waitForTimeout(450);
   const beforeSecond = await page.evaluate(() => window.__choplineTest.state().knife);
   await page.mouse.click(195, 600);
   await page.waitForTimeout(50);
@@ -224,24 +224,23 @@ async function testLandingAndCutPhysics(browser, origin) {
   await page.mouse.click(195, 600);
   await page.waitForTimeout(30);
   const sideRelaunch = await page.evaluate(() => window.__choplineTest.state().knife);
-  assert(sideRelaunch.state === "flying" && sideRelaunch.velocityZ > 5, `Front-face side stab did not relaunch forward: ${sideRelaunch.state}/${sideRelaunch.velocityZ}`);
+  assert(sideRelaunch.state === "flying" && sideRelaunch.velocityY > 8 && sideRelaunch.velocityZ < 0, `Front-face side stab did not pop up and away from the face: ${sideRelaunch.state}/${sideRelaunch.velocityY}/${sideRelaunch.velocityZ}`);
 
   const handleFirst = await page.evaluate(() => {
     window.__choplineTest.stageHandleSliceProof();
     window.__choplineTest.advance(0.2);
     return window.__choplineTest.state();
   });
-  assert(handleFirst.run.score === 0, `Handle-first contact awarded score: ${handleFirst.run.score}`);
-  assert(handleFirst.sliceables.sliced === 0, `Handle-first contact sliced ${handleFirst.sliceables.sliced} targets`);
-  assert(handleFirst.knife.state === "bouncing", `Handle-first contact did not bounce away: ${handleFirst.knife.state}`);
-  assert(handleFirst.knife.velocityY > 0 && handleFirst.knife.velocityZ < 0, `Handle bounce lacks clear separation: ${handleFirst.knife.velocityY}/${handleFirst.knife.velocityZ}`);
+  assert(handleFirst.run.score === 1, `Handle-first contact with an imminent blade sweep must cut once: ${handleFirst.run.score}`);
+  assert(handleFirst.sliceables.sliced === 1, `Handle-first look-ahead cut sliced ${handleFirst.sliceables.sliced} targets`);
+  assert(handleFirst.knife.state !== "bouncing", `Forgiven handle-first contact must not bounce: ${handleFirst.knife.state}`);
 
   await page.evaluate(() => window.__choplineTest.startEndless());
   await page.waitForTimeout(50);
   await page.mouse.click(195, 600);
   await page.waitForTimeout(1200);
   const oneTapCut = await page.evaluate(() => window.__choplineTest.state());
-  assert(oneTapCut.run.score === 7, `One normal tap did not cut exactly seven opening courses: ${JSON.stringify({ run: oneTapCut.run, knife: oneTapCut.knife })}`);
+  assert(oneTapCut.run.score >= 8 && oneTapCut.run.score <= 13, `One normal tap did not carve down through the opening wall: ${JSON.stringify({ run: oneTapCut.run, knife: oneTapCut.knife })}`);
   const wallFeedback = await page.locator(".score-pop").allTextContents();
   assert(wallFeedback.length >= 3 && wallFeedback.every((label) => label === "+1"), `Opening wall lost its individual course feedback: ${JSON.stringify(wallFeedback)}`);
   await page.waitForTimeout(500);
@@ -252,7 +251,7 @@ async function testLandingAndCutPhysics(browser, origin) {
       && oneTapOpening.sliceables.visible < oneTapOpening.sliceables.total
       && oneTapOpening.sliceables.visible > 0
       && oneTapOpening.knife.state !== "bouncing"
-      && oneTapOpening.knife.z > 6,
+      && oneTapOpening.knife.z > 4.5,
     `One normal tap did not continue through a partially intact wall: ${JSON.stringify({ run: oneTapOpening.run, knife: oneTapOpening.knife, sliceables: oneTapOpening.sliceables })}`,
   );
 
@@ -272,16 +271,16 @@ async function testLandingAndCutPhysics(browser, origin) {
 
   await page.evaluate(() => window.__choplineTest.startEndless());
   await page.waitForTimeout(50);
-  for (const delay of [420, 520, 520, 520, 520, 520, 520, 520]) {
+  for (let i = 0; i < 5; i += 1) {
     await page.mouse.click(195, 600);
-    await page.waitForTimeout(delay);
+    await page.waitForTimeout(1150);
   }
   const continuation = await page.evaluate(() => window.__choplineTest.state());
   assert(
     continuation.run.outcome === null
-      && continuation.run.score >= 5
+      && continuation.run.score >= 8
       && continuation.knife.z >= 13.4,
-    `Real repeated-tap run did not reach the authored target lane: ${JSON.stringify({ run: continuation.run, knife: continuation.knife })}`,
+    `Real land-and-relaunch run did not progress through the course: ${JSON.stringify({ run: continuation.run, knife: continuation.knife })}`,
   );
 
   const cutImpact = await page.evaluate(() => {
@@ -342,8 +341,8 @@ async function testShopAndTheme(browser, origin) {
   }));
   assert(counts.knives === 6 && counts.themes === 3, `Shop scope drifted: ${counts.knives} knives/${counts.themes} themes`);
 
-  await page.click("#knife-list .shop-item:nth-child(2) button");
-  await page.waitForFunction(() => document.querySelector("#knife-list .shop-item:nth-child(2) button")?.textContent?.trim() === "Equipped");
+  await page.click("#knife-list .shop-item:nth-child(1) button");
+  await page.waitForFunction(() => document.querySelector("#knife-list .shop-item:nth-child(1) button")?.textContent?.trim() === "Equipped");
   await page.click("#coin-list .shop-item:nth-child(2) button");
   await page.waitForFunction(() => document.querySelector("#coin-list .shop-item:nth-child(2) button")?.textContent?.trim() === "Active");
   const state = await page.evaluate(() => ({
@@ -353,7 +352,7 @@ async function testShopAndTheme(browser, origin) {
   const saved = state.calls.filter((call) => call.type === "appData.set").at(-1)?.payload?.value;
   assert(errors.length === 0, `Shop console/page errors: ${errors.join("\n")}`);
   assert(state.coins.includes("220"), `Knife and theme prices were not deducted correctly: ${state.coins}`);
-  assert(saved?.equippedKnife === "cooking" && saved?.ownedKnives?.includes("cooking"), "Knife ownership/equip did not persist");
+  assert(saved?.equippedKnife === "utensil" && saved?.ownedKnives?.includes("utensil"), "Knife ownership/equip did not persist");
   assert(saved?.equippedTheme === "beach" && saved?.ownedThemes?.includes("beach"), "Theme ownership/equip did not persist");
   assert(glbResponses.some((item) => item.url.endsWith("cooking-knife.glb") && item.status === 200), "Purchased knife model did not load");
   assert(!state.calls.some((call) => call.type.includes("achievement")), "Shop invoked removed achievements");

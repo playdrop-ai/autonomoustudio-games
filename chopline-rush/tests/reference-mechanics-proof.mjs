@@ -27,8 +27,8 @@ function assert(condition, message) {
 function createProfile() {
   return {
     coins: 0,
-    ownedKnives: ["utensil"],
-    equippedKnife: "utensil",
+    ownedKnives: ["cooking"],
+    equippedKnife: "cooking",
     highestLevel: 1,
     highestLevelCompleted: 0,
     endlessBest: 0,
@@ -291,7 +291,7 @@ async function main() {
     await page.waitForFunction(() => window.__choplineTest.state().screen === "playing", null, { timeout: 10000 });
     const beforeJump = await page.evaluate(() => window.__choplineTest.state().knife);
     await page.mouse.click(360, 900);
-    await page.waitForTimeout(320);
+    await page.waitForTimeout(450);
     const beforeSecondTap = await page.evaluate(() => window.__choplineTest.state().knife);
     await page.mouse.click(360, 900);
     await page.waitForTimeout(20);
@@ -393,13 +393,13 @@ async function main() {
       window.__choplineTest.setProofFrozen(true);
     });
     const handleTarget = await page.evaluate(() => window.__choplineTest.state());
-    assert(handleTarget.run.score === 0, `Handle-only target contact awarded ${handleTarget.run.score} points`);
-    assert(handleTarget.sliceables.sliced === 0, `Handle-only target contact split ${handleTarget.sliceables.sliced} targets`);
-    assert(handleTarget.knife.state === "bouncing", `Handle-only target contact did not bounce, got ${handleTarget.knife.state}`);
+    assert(handleTarget.run.score === 1, `Handle-first contact with an imminent blade sweep must cut once, got ${handleTarget.run.score}`);
+    assert(handleTarget.sliceables.sliced === 1, `Handle-first look-ahead must split exactly one target, got ${handleTarget.sliceables.sliced}`);
+    assert(handleTarget.knife.state !== "bouncing", `Forgiven handle-first contact must not bounce, got ${handleTarget.knife.state}`);
     captures.push(await capture(
       page,
       "04b-handle-target-bounce.png",
-      "4b. Handle Contact Cannot Cut (Mobile Portrait)",
+      "4b. Handle Contact Forgiven by Blade Look-Ahead (Mobile Portrait)",
       [
         `state=${handleTarget.knife.state} score=${handleTarget.run.score}`,
         `sliced=${handleTarget.sliceables.sliced}`,

@@ -72,7 +72,7 @@ function auditOwnedAssets(source) {
   const sourceRefs = Array.from(knifeSection.matchAll(/sourceRef: "([^"]+)"/g), (match) => match[1]);
   assert(modelPaths.length === 6 && imagePaths.length === 6 && sourceRefs.length === 6, "Every knife must have a model, preview, and PlayDrop source ref");
   for (const filePath of [...modelPaths, ...imagePaths]) assertFile(filePath);
-  assert(source.includes('const STARTER_KNIFE_ID = "chopping";'), "The supplied chopping knife must remain the starter model");
+  assert(source.includes('const STARTER_KNIFE_ID = "cooking";'), "The two-tone cooking knife must be the starter model for silhouette readability");
   assert(source.includes('sourceAxis: "x"') && source.includes("bladeDirection: -1"), "Knife models must declare explicit visual axes and blade direction");
 }
 
@@ -94,28 +94,30 @@ function auditEndlessContract(source) {
 }
 
 function auditGameplayParity(source) {
-  assert(source.includes("const FLIP_COOLDOWN = 0.28;"), "Repeated taps must reject accidental sub-280ms double taps");
-  assert(source.includes("const TAP_ROTATION_ANGLE = Math.PI * 1.5;"), "Each controlled flip must target the reference 270-degree contact pose");
-  assert(source.includes("Math.max(0, knife.velocity.y) + AIR_TAP_LIFT"), "Air taps must add bounded lift without stair-stepping above the course");
-  assert(source.includes("knife.rotation + TAP_ROTATION_ANGLE"), "Air taps must add another visible rotation");
+  assert(source.includes("const FLIP_COOLDOWN = 0.4;"), "Taps must respect the 0.4s cooldown of the verified feel model");
+  assert(source.includes("const BASE_FLIP_Y = 10;") && source.includes("const BASE_FLIP_Z = 8;"), "Launch impulse must stay 10 up / 8 forward");
+  assert(source.includes("const GRAVITY = -20;") && source.includes("const ROTATION_SPEED = 7;"), "Gravity and rotation speed must stay -20 / 7");
+  assert(source.includes("knife.velocity.set(0, BASE_FLIP_Y, BASE_FLIP_Z);"), "Every accepted tap must refresh launch velocity absolutely, never add partial lift");
+  assert(source.includes("const minTarget = rotation + Math.PI;"), "Rotation targets must advance at least half a turn per tap");
+  assert(source.includes("return n * Math.PI * 2 + ready;"), "Rotation targets must always land on the canonical blade-down angle");
+  assert(source.includes("function nearestCanonicalAngle"), "Slice-lock must ease toward the nearest canonical angle");
+  assert(source.includes("const SLICE_LOCK_MIN_ANGLE"), "Slice-lock entry must be gated by blade angle");
+  assert(source.includes("knife.velocity.z = hasSiblingBelow ? 0 : knife.velocity.z * 0.3;"), "Slice-lock must stop forward travel and carve down through stacks");
+  assert(source.includes("const SLICE_ROT_SPEED = 8;"), "Slice-lock rotation must ease at 8 rad/s");
+  assert(source.includes("bladeWillHit"), "Handle-first contact must forgive cuts the blade would complete within a half turn");
+  assert(source.includes("knife.velocity.z = -knife.velocity.z * 0.5;"), "Handle bounces must reverse and halve forward speed while preserving fall");
+  assert(source.includes("function enterRotatingStick(platformEntity: PlatformEntity): void"), "Bad-angle blade landings must rotate into a stick");
+  assert(source.includes("const MIN_STICK_ALIGNMENT = 0.3;"), "Stick alignment must reject blades pointing away from the face");
   assert(source.includes("const KNIFE_VISUAL_X = 0;"), "The knife must stay on the course centerline");
   assert(source.includes("readyAngle: (Math.PI * 2) / 3"), "Knife skins must use the blade-forward planted angle");
-  assert(!source.includes("qualifiesInitialCut"), "Blade contact must not be rejected by hidden speed or progress gates");
-  assert(source.includes("function getCuttingBladeOBBAt"), "Sliceables must use a cutting region that excludes the hilt");
-  assert(source.includes("function contactTimesById("), "Blade and handle collisions must be resolved per physical target by contact order");
-  assert(source.includes("CUT_CONTACT_TIME_EPSILON"), "Simultaneous blade and handle overlap needs a deterministic blade-first tolerance");
-  assert(source.includes("function stageHandleSliceProof(): void"), "Handle-only target contact must have a deterministic regression fixture");
-  assert(!source.includes("bladeWillHit"), "Handle overlap must never predictively award a future blade cut");
-  assert(source.includes("function enterRotatingStick(platformEntity: PlatformEntity): void"), "Bad-angle blade landings must rotate into a stick");
   assert(source.includes("knife.landingPunch = 0.75 + impactSpeed * 0.25;"), "Blade landings must have impact squash");
   assert(source.includes("spawnSlicePieces(slice);"), "A cut must spawn persistent physical halves");
-  assert(!source.includes("collapseCutStackRemainder"), "Untouched wall courses must remain intact");
-  assert(source.includes("const REFERENCE_WALL_CUT_COURSES = 7;"), "The reference wall payoff must stop after seven physical course cuts");
+  assert(source.includes("const FRAGMENT_GRAVITY = -15;"), "Cut halves must use the scripted slide/fall/settle fragment model");
+  assert(source.includes('piece.phase = "falling";') && source.includes("lockPieceRestAngle(piece);"), "Fragments must slide off the edge, tumble, and settle");
   assert(source.includes('if (type === "brick") {'), "Brick walls need dedicated intact and split geometry");
   assert(source.includes("interiorColorForSlice(type, stackIndex)"), "Cut brick courses must expose authored interior colors");
   assert(source.includes("spawnScorePopup(position, points);"), "Cuts must show immediate +1 feedback");
-  assert(!source.includes("spawnScorePopup(bladeHit.group.position, acceptedHits.length);"), "Wall courses must keep individual +1 feedback");
-  assert(source.includes("knife.velocity.z = Math.max(SLICE_FORWARD_SPEED_MIN"), "Cutting must preserve forward travel through the target");
+  assert(source.includes("hitStopTime = Math.max(hitStopTime, 0.04);"), "Cut contact must hold a brief hit stop");
   assert(source.includes("startCameraShake("), "Cuts and landings must drive camera impact");
 }
 
