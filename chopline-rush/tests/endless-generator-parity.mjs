@@ -68,7 +68,8 @@ assert(source.includes("function spawnZoneGate"), "Zone boundaries must spawn ga
 
 // Same-platform obstacles must leave a landing pocket wider than the blade's kill reach
 for (const chunkMatch of zonesSource.matchAll(/obstacles: \[([\s\S]*?)\]/g)) {
-  const zs = [...chunkMatch[1].matchAll(/z: ([\d.]+)/g)].map((m) => Number(m[1])).sort((a, b) => a - b);
+  const positionsOnly = chunkMatch[1].replace(/rotation: \{[^}]*\}/g, "");
+  const zs = [...positionsOnly.matchAll(/z: ([\d.]+)/g)].map((m) => Number(m[1])).sort((a, b) => a - b);
   for (let i = 1; i < zs.length; i += 1) {
     assert(zs[i] - zs[i - 1] >= 7, `Same-chunk spikes only ${(zs[i] - zs[i - 1]).toFixed(1)} apart; minimum spacing is 7 to avoid trap pockets`);
   }
