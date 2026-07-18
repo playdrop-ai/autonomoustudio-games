@@ -136,12 +136,17 @@ async function main() {
             const bouncedBackward = s.knife.state === "flying" && !s.knife.slicing && s.knife.velocityZ < 0;
             const sinkingLow = s.knife.state === "flying" && !s.knife.slicing && s.knife.velocityY < 0 && s.knife.y < 2.6;
             const nextObstacle = hooks.obstaclesAhead()[0];
-            const obstacleClose = Boolean(nextObstacle)
+            const obstacleClose = Boolean(nextObstacle) && !nextObstacle.moving
               && s.knife.state === "flying" && !s.knife.slicing
               && nextObstacle.z - s.knife.z < 4.4
               && s.knife.y < nextObstacle.y + 3.4
               && s.knife.velocityY < 0.5;
-            if (s.knife.state === "stuck" || (canTap && (bouncedBackward || sinkingLow || obstacleClose))) {
+            const gateDist = nextObstacle ? nextObstacle.z - s.knife.z : Infinity;
+            const gateBlocking = Boolean(nextObstacle) && nextObstacle.moving
+              && s.knife.state === "stuck"
+              && gateDist < 13
+              && nextObstacle.y < s.knife.y + 2.8;
+            if ((s.knife.state === "stuck" && !gateBlocking) || (canTap && (bouncedBackward || sinkingLow || obstacleClose))) {
               hooks.tap();
               taps += 1;
               lastTapStep = step;

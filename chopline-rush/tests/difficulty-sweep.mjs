@@ -76,13 +76,21 @@ async function main() {
           if (s.knife.state === "stuck") {
             if (stuckSince < 0) stuckSince = step;
             if (step - stuckSince >= delaySteps) tap = true;
+            if (policy === "sharp") {
+              const gate = hooks.obstaclesAhead()[0];
+              const gateDist = gate ? gate.z - s.knife.z : Infinity;
+              const gateBlocking = Boolean(gate) && gate.moving
+                && gateDist < 13
+                && gate.y < s.knife.y + 2.8;
+              if (gateBlocking) tap = false;
+            }
           } else {
             stuckSince = -1;
             if (policy === "sharp" && canTap && !s.knife.slicing && s.knife.state === "flying") {
               const bounced = s.knife.velocityZ < 0;
               const sinking = s.knife.velocityY < 0 && s.knife.y < 2.6;
               const obstacle = hooks.obstaclesAhead()[0];
-              const hop = Boolean(obstacle) && obstacle.z - s.knife.z < 4.4 && s.knife.y < obstacle.y + 3.4 && s.knife.velocityY < 0.5;
+              const hop = Boolean(obstacle) && !obstacle.moving && obstacle.z - s.knife.z < 4.4 && s.knife.y < obstacle.y + 3.4 && s.knife.velocityY < 0.5;
               tap = bounced || sinking || hop;
             }
           }

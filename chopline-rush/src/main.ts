@@ -1814,6 +1814,14 @@ function buildEndlessZones(): ZoneDef[] {
         {
           platform: { y: 0, depth: 5, height: 1 },
         },
+        {
+          platform: { y: 0, depth: 12, height: 1.2 },
+          obstacles: [
+            { type: "spikes", y: 0.5, z: 2.4 },
+            { type: "spikes", y: 0.5, z: 9.9 },
+          ],
+          sliceables: [{ type: "watermelon", y: 0.5, z: 6.2, count: 3 }],
+        },
       ],
     },
     {
@@ -1868,6 +1876,14 @@ function buildEndlessZones(): ZoneDef[] {
             { type: "sausage", y: 0.5, z: 6, count: 3 },
           ],
           obstacles: [{ type: "spikes", y: 0.5, z: 9.4 }],
+        },
+        {
+          platform: { y: 0, depth: 12, height: 1.3 },
+          obstacles: [
+            { type: "spikes", y: 0.5, z: 2.2 },
+            { type: "spikes", y: 0.5, z: 9.9 },
+          ],
+          sliceables: [{ type: "book", y: 0.5, z: 6, count: 6 }],
         },
       ],
     },
@@ -4974,7 +4990,7 @@ function setupTestHooks(): void {
       .filter((obstacle) => !obstacle.cleared && obstacle.group.position.z > knife.position.z)
       .sort((a, b) => a.group.position.z - b.group.position.z)
       .slice(0, 4)
-      .map((obstacle) => ({ y: obstacle.group.position.y, z: obstacle.group.position.z })),
+      .map((obstacle) => ({ y: obstacle.group.position.y, z: obstacle.group.position.z, moving: obstacle.moving })),
     seedRandom: (seed) => {
       let state = seed >>> 0;
       Math.random = () => {
