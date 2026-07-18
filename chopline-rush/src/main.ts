@@ -216,6 +216,7 @@ interface EndlessSpawnPlan {
 }
 
 type KnifeState = "stuck" | "flying" | "bouncing" | "rotating-stick" | "tumbling" | "dead";
+type RunFailCause = "fall" | "spikes" | "timeout" | "crash";
 type StuckFace = "top" | "bottom" | "side";
 type PlatformKind = "platform" | "roof";
 type CollisionAxis = "y" | "z";
@@ -389,6 +390,7 @@ interface RunState {
   mode: Mode;
   score: number;
   zoneReached: number;
+  failCause: RunFailCause | null;
   combo: number;
   bestCombo: number;
   targetScore: number;
@@ -1476,6 +1478,7 @@ function newRun(makeActive = true): void {
     mode: "endless",
     score: 0,
     zoneReached: 1,
+    failCause: null,
     combo: 0,
     bestCombo: 0,
     targetScore: 0,
@@ -2141,7 +2144,7 @@ function updateEndlessTimer(dt: number): void {
     showToast("Hurry! Cut something!");
   }
   if (currentRun.endlessTimerActive && currentRun.endlessScoreTimer <= 0) {
-    failRun();
+    failRun("timeout");
   }
 }
 
@@ -2938,11 +2941,17 @@ function updateKnife(dt: number): void {
     if (stateAfterCollision === "stuck" || stateAfterCollision === "dead" || currentRun.outcome) break;
   }
 
-  if (knife.position.y < GROUND_Y - 5 && !currentRun.outcome) {
+  const lowestReach = Math.max(
+    activeKnifeGeometry.bladeReach * Math.max(0, -Math.cos(knife.rotation)),
+    activeKnifeGeometry.handleReach * Math.max(0, Math.cos(knife.rotation)),
+  );
+  const knifeState = knife.state as KnifeState;
+  if (knifeState !== "stuck" && knife.position.y - lowestReach <= GROUND_Y + 0.02 && !currentRun.outcome) {
     if (previewMode) {
       recoverPreviewRun();
     } else {
-      failRun();
+      spawnParticles(new THREE.Vector3(0, GROUND_Y + 0.1, knife.position.z), 0x8a6f47, 8);
+      failRun("fall");
     }
   }
 }
@@ -3391,6 +3400,7 @@ function sliceObject(slice: SliceEntity, playJuice = true): void {
 }
 
 function handleObstacleHit(obstacle: ObstacleEntity): void {
+  void obstacle;
   if (previewMode) {
     obstacle.cleared = true;
     obstacle.group.visible = false;
@@ -3400,7 +3410,7 @@ function handleObstacleHit(obstacle: ObstacleEntity): void {
     updateHud();
     return;
   }
-  failRun();
+  failRun("spikes");
 }
 
 function checkObstacleOBBs(obbs: KnifeOBB[]): boolean {
@@ -4415,8 +4425,9 @@ function updateGameOverTumble(dt: number): void {
   }
 }
 
-function failRun(): void {
+function failRun(cause: RunFailCause = "crash"): void {
   if (!currentRun || currentRun.outcome) return;
+  currentRun.failCause = cause;
   if (previewMode) {
     audio.play("gameOver", 0.65);
     recoverPreviewRun();
@@ -4490,10 +4501,19 @@ function finishRun(): void {
   showScreen("result");
 }
 
+const FAIL_CAUSE_LABELS: Record<RunFailCause, string> = {
+  fall: "Fell off the course!",
+  spikes: "Spiked!",
+  timeout: "Too slow, chef!",
+  crash: "Run over!",
+};
+
 function renderResult(run: RunState): void {
   resultScreen.classList.toggle("endless-game-over", true);
-  resultTitle.textContent = run.score >= profile.endlessBest && run.score > 0 ? "New Best!" : "Run Over";
-  resultSubtitle.innerHTML = `Zone ${run.zoneReached} · Score <span>${formatNumber(run.score)}</span> · Best ${formatNumber(profile.endlessBest)}`;
+  const newBest = run.score >= profile.endlessBest && run.score > 0;
+  resultTitle.textContent = newBest ? "New Best!" : FAIL_CAUSE_LABELS[run.failCause ?? "crash"];
+  const causeLine = newBest && run.failCause ? `${FAIL_CAUSE_LABELS[run.failCause]} ` : "";
+  resultSubtitle.innerHTML = `${causeLine}Zone ${run.zoneReached} · Score <span>${formatNumber(run.score)}</span> · Best ${formatNumber(profile.endlessBest)}`;
   resultContinue.textContent = "Try Again";
   resultScore.textContent = formatNumber(run.score);
   resultCoins.textContent = `+${formatNumber(run.coinsAwarded)}`;
