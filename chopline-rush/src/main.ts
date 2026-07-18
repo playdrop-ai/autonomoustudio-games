@@ -2027,8 +2027,8 @@ function buildEndlessZones(): ZoneDef[] {
         {
           platform: { y: 0, depth: 12, height: 1.3 },
           obstacles: [
-            { type: "spikes", y: 0.5, z: 3, rotation: { z: 90 } },
-            { type: "spikes", y: 0.5, z: 10, rotation: { z: 90 } },
+            { type: "spikes", y: 0.5, z: 3, rotation: { x: -90 } },
+            { type: "spikes", y: 0.5, z: 10, rotation: { x: -90 } },
           ],
           sliceables: [{ type: "donut", y: 0.5, z: 6.5, count: 2 }],
         },
