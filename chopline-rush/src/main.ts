@@ -1726,6 +1726,13 @@ function buildEndlessZones(): ZoneDef[] {
             { type: "apple", y: 0.5, z: 9, count: 2 },
           ],
         },
+        {
+          platform: { y: 0, depth: 9, height: 1.4 },
+          sliceables: [
+            { type: "book", y: 0.5, z: 4.5, count: 9 },
+            { type: "orange", y: 0.5, z: 7.6, count: 2 },
+          ],
+        },
       ],
     },
     {
