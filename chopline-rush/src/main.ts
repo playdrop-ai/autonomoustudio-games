@@ -3346,6 +3346,9 @@ function buildSliceHalf(type: string, dir: -1 | 1, stackIndex = 0): THREE.Group 
         emissiveIntensity: 0.08,
         roughness: 0.6,
         side: THREE.DoubleSide,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+        polygonOffsetUnits: -1,
       }),
     );
     cap.position.set(0, 0.1, 0);
@@ -3422,7 +3425,17 @@ function buildSliceHalf(type: string, dir: -1 | 1, stackIndex = 0): THREE.Group 
     half.position.set(dir * 0.1375, 1.02, 0);
     half.castShadow = true;
     group.add(half);
-    const cap = new THREE.Mesh(new THREE.PlaneGeometry(0.78, 0.45), materials.cameraDark);
+    const cap = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.78, 0.45),
+      new THREE.MeshStandardMaterial({
+        color: materials.cameraDark.color.getHex(),
+        roughness: 0.7,
+        side: THREE.DoubleSide,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+        polygonOffsetUnits: -1,
+      }),
+    );
     cap.position.y = 1.02;
     cap.rotation.y = Math.PI / 2;
     group.add(cap);
@@ -3576,7 +3589,7 @@ function buildSliceHalf(type: string, dir: -1 | 1, stackIndex = 0): THREE.Group 
     group.add(half);
     const face = new THREE.Mesh(
       new THREE.PlaneGeometry(0.75, 0.75),
-      new THREE.MeshPhongMaterial({ color: interiorColorForSlice(type), shininess: 30, side: THREE.DoubleSide }),
+      new THREE.MeshPhongMaterial({ color: interiorColorForSlice(type), shininess: 30, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }),
     );
     face.position.y = 0.375;
     face.rotation.y = Math.PI / 2;
@@ -3588,7 +3601,7 @@ function buildSliceHalf(type: string, dir: -1 | 1, stackIndex = 0): THREE.Group 
     half.position.set(dir * 0.1875, 0.375, 0);
     half.castShadow = true;
     group.add(half);
-    const cutMaterial = new THREE.MeshPhongMaterial({ color: colorForSlice(type), shininess: 36, side: THREE.DoubleSide });
+    const cutMaterial = new THREE.MeshPhongMaterial({ color: colorForSlice(type), shininess: 36, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
     const face = new THREE.Mesh(new THREE.PlaneGeometry(0.75, 0.75), cutMaterial);
     face.position.set(0, 0.375, 0);
     face.rotation.y = Math.PI / 2;
@@ -4179,6 +4192,9 @@ root.addEventListener("click", (event) => {
   if (actionElement) {
     handleAction(actionElement.dataset.action ?? "", actionElement);
     return;
+  }
+  if (target.id === "shop-screen") {
+    handleAction("close-shop", target);
   }
 });
 
