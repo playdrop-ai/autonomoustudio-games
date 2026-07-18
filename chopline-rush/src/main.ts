@@ -195,6 +195,7 @@ interface ThingDef {
 
 interface EndlessTemplate {
   platform: Omit<PlatformDef, "id" | "z">;
+  roof?: { clearance: number; z: number; depth: number };
   sliceables?: Array<Omit<ThingDef, "platformId">>;
   obstacles?: Array<Omit<ThingDef, "platformId">>;
 }
@@ -1770,6 +1771,11 @@ function buildEndlessZones(): ZoneDef[] {
           platform: { y: 0, depth: 8, height: 1.4 },
           sliceables: [{ type: "brick", y: 0.5, z: 4, count: 13 }],
         },
+        {
+          platform: { y: 0, depth: 10, height: 1.2 },
+          roof: { clearance: 3.4, z: 3, depth: 5 },
+          sliceables: [{ type: "orange", y: 0.5, z: 5.4, count: 3 }],
+        },
       ],
     },
     {
@@ -1821,6 +1827,14 @@ function buildEndlessZones(): ZoneDef[] {
             { type: "spikes", y: 0.5, z: 9.9 },
           ],
           sliceables: [{ type: "watermelon", y: 0.5, z: 6.2, count: 3 }],
+        },
+        {
+          platform: { y: 0, depth: 11, height: 1.2 },
+          roof: { clearance: 3.2, z: 2.5, depth: 6.5 },
+          sliceables: [
+            { type: "book", y: 0.5, z: 4.4, count: 4 },
+            { type: "cheese", y: 0.5, z: 7.6, count: 2 },
+          ],
         },
       ],
     },
@@ -1924,8 +1938,9 @@ function chooseZoneChunkIndex(zoneIndex: number): number {
   if (forcedEndlessChunk && forcedEndlessChunk.zoneIndex === zoneIndex) {
     const zone = endlessZones[zoneIndex]!;
     const forcedTemplate = zone.chunks[forcedEndlessChunk.chunkIndex]!;
-    if (chunkHasObstacles(forcedTemplate) && endlessLastHadObstacle) {
-      const fallback = zone.chunks.findIndex((chunk) => !chunkHasObstacles(chunk) && (chunk.sliceables?.length ?? 0) > 0);
+    const special = chunkHasObstacles(forcedTemplate) || Boolean(forcedTemplate.roof);
+    if (special && endlessLastChunkKey === `${zoneIndex}:${forcedEndlessChunk.chunkIndex}`) {
+      const fallback = zone.chunks.findIndex((chunk) => !chunkHasObstacles(chunk) && !chunk.roof && (chunk.sliceables?.length ?? 0) > 0);
       if (fallback >= 0) return fallback;
     }
     return forcedEndlessChunk.chunkIndex;
@@ -1966,6 +1981,17 @@ function spawnNextEndlessPlatform(): void {
   };
   const platformEntity = withIsolatedVisualRandom(() => createPlatform(platformDef, platformEntities.length));
   platformEntities.push(platformEntity);
+
+  if (template.roof) {
+    const roofEntity = withIsolatedVisualRandom(() => createRoof({
+      id: `${platformId}_roof`,
+      y: getPlatformTop(platformEntity) + template.roof!.clearance,
+      z: platformDef.z + template.roof!.z,
+      depth: template.roof!.depth,
+      height: 2.2,
+    }, platformEntities.length));
+    platformEntities.push(roofEntity);
+  }
 
   const platformById = new Map<string, PlatformEntity>([[platformId, platformEntity]]);
   withIsolatedVisualRandom(() => {
@@ -2150,7 +2176,7 @@ function getPlatformTop(platform: PlatformEntity): number {
 function createRoof(def: PlatformDef, index: number): PlatformEntity {
   const width = 3;
   const depth = Math.max(2, def.depth);
-  const height = 20;
+  const height = Math.max(1, Math.min(def.height, 4));
   const roof = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), [
     materials.platformSide,
     materials.platformSide,
