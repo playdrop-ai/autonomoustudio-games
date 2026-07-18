@@ -1,5 +1,8 @@
 import RAPIER from "@dimforge/rapier3d-compat";
 
+const PLATFORM_COLLISION_GROUPS = (0x0001 << 16) | 0x0002;
+const FRAGMENT_COLLISION_GROUPS = (0x0002 << 16) | 0x0001;
+
 export interface PhysicsVector {
   x: number;
   y: number;
@@ -49,7 +52,10 @@ export class FragmentPhysics {
 
     const groundBody = this.world.createRigidBody(RAPIER.RigidBodyDesc.fixed().setTranslation(0, -0.3, 80));
     this.world.createCollider(
-      RAPIER.ColliderDesc.cuboid(40, 0.3, 160).setFriction(0.92).setRestitution(0.08),
+      RAPIER.ColliderDesc.cuboid(40, 0.3, 160)
+        .setFriction(0.92)
+        .setRestitution(0.08)
+        .setCollisionGroups(PLATFORM_COLLISION_GROUPS),
       groundBody,
     );
   }
@@ -61,7 +67,8 @@ export class FragmentPhysics {
     world.createCollider(
       RAPIER.ColliderDesc.cuboid(size.x / 2, size.y / 2, size.z / 2)
         .setFriction(0.82)
-        .setRestitution(0.12),
+        .setRestitution(0.12)
+        .setCollisionGroups(PLATFORM_COLLISION_GROUPS),
       body,
     );
     this.platforms.set(id, body);
@@ -88,8 +95,8 @@ export class FragmentPhysics {
         .setTranslation(spec.position.x, spec.position.y, spec.position.z)
         .setLinvel(spec.velocity.x, spec.velocity.y, spec.velocity.z)
         .setAngvel(spec.angularVelocity)
-        .setLinearDamping(0.36)
-        .setAngularDamping(0.52)
+        .setLinearDamping(0.48)
+        .setAngularDamping(0.62)
         .setCcdEnabled(true),
     );
 
@@ -106,7 +113,8 @@ export class FragmentPhysics {
         .setTranslation(centerX, centerY, centerZ)
         .setDensity(spec.density)
         .setFriction(0.74)
-        .setRestitution(0.18),
+        .setRestitution(0.12)
+        .setCollisionGroups(FRAGMENT_COLLISION_GROUPS),
       body,
     );
     this.fragments.set(body.handle, body);

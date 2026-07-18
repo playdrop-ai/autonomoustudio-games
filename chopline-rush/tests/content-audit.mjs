@@ -95,14 +95,27 @@ function auditEndlessContract(source) {
 
 function auditGameplayParity(source) {
   assert(source.includes("const FLIP_COOLDOWN = 0.28;"), "Repeated taps must reject accidental sub-280ms double taps");
-  assert(source.includes("Math.max(0, knife.velocity.y) + AIR_TAP_LIFT"), "Air taps must add bounded upward velocity");
+  assert(source.includes("const TAP_ROTATION_ANGLE = Math.PI * 1.5;"), "Each controlled flip must target the reference 270-degree contact pose");
+  assert(source.includes("Math.max(0, knife.velocity.y) + AIR_TAP_LIFT"), "Air taps must add bounded lift without stair-stepping above the course");
   assert(source.includes("knife.rotation + TAP_ROTATION_ANGLE"), "Air taps must add another visible rotation");
+  assert(source.includes("const KNIFE_VISUAL_X = 0;"), "The knife must stay on the course centerline");
+  assert(source.includes("readyAngle: (Math.PI * 2) / 3"), "Knife skins must use the blade-forward planted angle");
+  assert(!source.includes("qualifiesInitialCut"), "Blade contact must not be rejected by hidden speed or progress gates");
+  assert(source.includes("function getCuttingBladeOBBAt"), "Sliceables must use a cutting region that excludes the hilt");
+  assert(source.includes("function contactTimesById("), "Blade and handle collisions must be resolved per physical target by contact order");
+  assert(source.includes("CUT_CONTACT_TIME_EPSILON"), "Simultaneous blade and handle overlap needs a deterministic blade-first tolerance");
+  assert(source.includes("function stageHandleSliceProof(): void"), "Handle-only target contact must have a deterministic regression fixture");
+  assert(!source.includes("bladeWillHit"), "Handle overlap must never predictively award a future blade cut");
   assert(source.includes("function enterRotatingStick(platformEntity: PlatformEntity): void"), "Bad-angle blade landings must rotate into a stick");
   assert(source.includes("knife.landingPunch = 0.75 + impactSpeed * 0.25;"), "Blade landings must have impact squash");
   assert(source.includes("spawnSlicePieces(slice);"), "A cut must spawn persistent physical halves");
-  assert(source.includes("collapseCutStackRemainder(brickSiblings, acceptedHits);"), "A scored wall cut must convert the remaining stack into non-scoring rubble");
+  assert(!source.includes("collapseCutStackRemainder"), "Untouched wall courses must remain intact");
+  assert(source.includes("const REFERENCE_WALL_CUT_COURSES = 7;"), "The reference wall payoff must stop after seven physical course cuts");
   assert(source.includes('if (type === "brick") {'), "Brick walls need dedicated intact and split geometry");
+  assert(source.includes("interiorColorForSlice(type, stackIndex)"), "Cut brick courses must expose authored interior colors");
   assert(source.includes("spawnScorePopup(position, points);"), "Cuts must show immediate +1 feedback");
+  assert(!source.includes("spawnScorePopup(bladeHit.group.position, acceptedHits.length);"), "Wall courses must keep individual +1 feedback");
+  assert(source.includes("knife.velocity.z = Math.max(SLICE_FORWARD_SPEED_MIN"), "Cutting must preserve forward travel through the target");
   assert(source.includes("startCameraShake("), "Cuts and landings must drive camera impact");
 }
 

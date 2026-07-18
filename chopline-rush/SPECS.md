@@ -16,10 +16,12 @@
 - Reproduce observed behavior with original code and licensed PlayDrop assets; do not redistribute extracted proprietary code or assets.
 - Taps launch the planted knife and remain responsive while it is airborne.
 - Each airborne tap adds bounded lift and rotation while preserving forward momentum.
-- Blade-region, angle, and motion determine a successful cut or landing. Handle and bad-angle contacts knock back or rotate into a recoverable stick.
+- Contact order determines the result: blade-first target contact cuts, while handle-first contact never scores or splits a target and produces a readable upward/backward bounce.
+- The knife and target course share the same centerline. A normal opening strike must keep its forward momentum and controlled rotation while the blade cuts each course it physically reaches.
 - Tip-first platform contact plants the blade with a short impact squash, sound, haptic pulse, shadow response, and restrained camera kick.
 - Successful cuts replace the intact target with two persistent physical halves with visible interior caps; chips are secondary feedback only.
-- Cut halves separate clearly in the portrait side view, tumble, fall, contact the ground, and settle.
+- Untouched target courses remain intact. Each accepted course shows its own +1 and two exposed halves with a bright target-specific interior cap.
+- Cut halves separate clearly in the portrait side view, tumble, fall forward, contact the ground, and settle without colliding explosively with other fresh fragments.
 - The authored endless opening is pedestal, thirteen-course wall, orange stacks, yellow face target, camera props, then reviewed reusable chunks.
 
 ## Visual Target

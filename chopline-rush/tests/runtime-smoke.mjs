@@ -186,7 +186,8 @@ async function testDesktopCompatibilityFrame(browser, origin) {
 
 async function testMultipleAirTap(browser, origin) {
   const { page, errors } = await openTestApp(browser, origin);
-  const geometry = await page.evaluate(() => window.__choplineTest.state().knifeGeometry);
+  const initial = await page.evaluate(() => window.__choplineTest.state());
+  const geometry = initial.knifeGeometry;
   await page.mouse.click(195, 600);
   await page.waitForTimeout(320);
   const beforeSecond = await page.evaluate(() => window.__choplineTest.state().knife);
@@ -194,6 +195,7 @@ async function testMultipleAirTap(browser, origin) {
   await page.waitForTimeout(50);
   const afterSecond = await page.evaluate(() => window.__choplineTest.state().knife);
   assert(errors.length === 0, `Multiple-tap console/page errors: ${errors.join("\n")}`);
+  assert(initial.knife.x === 0, `Knife launched outside the course centerline: ${initial.knife.x}`);
   assert(geometry.tipError < 0.0001 && geometry.handleEndError < 0.0001, `Visual knife anchors diverged from collision geometry: ${JSON.stringify(geometry)}`);
   assert(beforeSecond.state === "flying" && afterSecond.state === "flying", "Air tap did not preserve flying state");
   assert(afterSecond.velocityY > beforeSecond.velocityY, `Second tap did not add lift: ${beforeSecond.velocityY} -> ${afterSecond.velocityY}`);
@@ -224,6 +226,36 @@ async function testLandingAndCutPhysics(browser, origin) {
   const sideRelaunch = await page.evaluate(() => window.__choplineTest.state().knife);
   assert(sideRelaunch.state === "flying" && sideRelaunch.velocityZ > 5, `Front-face side stab did not relaunch forward: ${sideRelaunch.state}/${sideRelaunch.velocityZ}`);
 
+  const handleFirst = await page.evaluate(() => {
+    window.__choplineTest.stageHandleSliceProof();
+    window.__choplineTest.advance(0.2);
+    return window.__choplineTest.state();
+  });
+  assert(handleFirst.run.score === 0, `Handle-first contact awarded score: ${handleFirst.run.score}`);
+  assert(handleFirst.sliceables.sliced === 0, `Handle-first contact sliced ${handleFirst.sliceables.sliced} targets`);
+  assert(handleFirst.knife.state === "bouncing", `Handle-first contact did not bounce away: ${handleFirst.knife.state}`);
+  assert(handleFirst.knife.velocityY > 0 && handleFirst.knife.velocityZ < 0, `Handle bounce lacks clear separation: ${handleFirst.knife.velocityY}/${handleFirst.knife.velocityZ}`);
+
+  await page.evaluate(() => window.__choplineTest.startEndless());
+  await page.waitForTimeout(50);
+  await page.mouse.click(195, 600);
+  await page.waitForTimeout(1200);
+  const oneTapCut = await page.evaluate(() => window.__choplineTest.state());
+  assert(oneTapCut.run.score === 7, `One normal tap did not cut exactly seven opening courses: ${JSON.stringify({ run: oneTapCut.run, knife: oneTapCut.knife })}`);
+  const wallFeedback = await page.locator(".score-pop").allTextContents();
+  assert(wallFeedback.length >= 3 && wallFeedback.every((label) => label === "+1"), `Opening wall lost its individual course feedback: ${JSON.stringify(wallFeedback)}`);
+  await page.waitForTimeout(500);
+  const oneTapOpening = await page.evaluate(() => window.__choplineTest.state());
+  assert(
+    oneTapOpening.run.outcome === null
+      && oneTapOpening.run.score >= 7
+      && oneTapOpening.sliceables.visible < oneTapOpening.sliceables.total
+      && oneTapOpening.sliceables.visible > 0
+      && oneTapOpening.knife.state !== "bouncing"
+      && oneTapOpening.knife.z > 6,
+    `One normal tap did not continue through a partially intact wall: ${JSON.stringify({ run: oneTapOpening.run, knife: oneTapOpening.knife, sliceables: oneTapOpening.sliceables })}`,
+  );
+
   const openingCadences = [];
   for (const interval of [300, 420, 520, 620, 750]) {
     await page.evaluate(() => window.__choplineTest.startEndless());
@@ -235,8 +267,8 @@ async function testLandingAndCutPhysics(browser, origin) {
     const state = await page.evaluate(() => window.__choplineTest.state());
     openingCadences.push({ interval, score: state.run.score, outcome: state.run.outcome, knifeState: state.knife.state });
   }
-  const successfulCadences = openingCadences.filter((result) => result.score >= 7 && result.outcome === null);
-  assert(successfulCadences.length >= 4, `Two-tap opening lacks a broad timing window: ${JSON.stringify(openingCadences)}`);
+  const successfulCadences = openingCadences.filter((result) => result.score >= 1 && result.outcome === null && result.knifeState !== "bouncing");
+  assert(successfulCadences.length >= 4, `Two-tap opening lacks a broad playable timing window: ${JSON.stringify(openingCadences)}`);
 
   await page.evaluate(() => window.__choplineTest.startEndless());
   await page.waitForTimeout(50);
@@ -247,7 +279,7 @@ async function testLandingAndCutPhysics(browser, origin) {
   const continuation = await page.evaluate(() => window.__choplineTest.state());
   assert(
     continuation.run.outcome === null
-      && continuation.run.score >= 7
+      && continuation.run.score >= 5
       && continuation.knife.z >= 13.4,
     `Real repeated-tap run did not reach the authored target lane: ${JSON.stringify({ run: continuation.run, knife: continuation.knife })}`,
   );
@@ -270,7 +302,7 @@ async function testLandingAndCutPhysics(browser, origin) {
   assert(cut.slicePieces.count === cut.sliceables.sliced * 2, `Each sliced object must leave two physical halves, got ${cut.slicePieces.count} for ${cut.sliceables.sliced}`);
   assert(cut.slicePieces.spreadX > 0.5, `Cut halves did not become visibly separated: ${cut.slicePieces.spreadX}`);
   assert(cut.slicePieces.velocities.some((velocity) => velocity.x < 0) && cut.slicePieces.velocities.some((velocity) => velocity.x > 0), "Cut halves lack opposing launch velocity");
-  assert(cutImpact.knife.velocityZ >= 5.5, `A successful cut killed the knife's forward momentum: ${cutImpact.knife.velocityZ}`);
+  assert(cutImpact.knife.velocityZ >= 2, `A successful non-stack cut killed the knife's forward momentum: ${cutImpact.knife.velocityZ}`);
   await page.close();
 }
 

@@ -6,6 +6,7 @@
   "scripts": {
     "build": "node build.mjs",
     "dev": "node build.mjs --watch",
+    "dev:standalone": "npm run build && node scripts/local-dev-server.mjs",
     "validate": "tsc --noEmit && npm run build",
     "validate:local": "npm run validate && npm run test:content && npm run test:endless-generator && npm run test:runtime",
     "validate:release": "npm run validate:local && playdrop project validate .",

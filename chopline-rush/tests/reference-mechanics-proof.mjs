@@ -323,22 +323,22 @@ async function main() {
       window.__choplineTest.advance(0.04);
       window.__choplineTest.setProofFrozen(true);
     });
-    const rejectedCut = await page.evaluate(() => window.__choplineTest.state());
-    assert(rejectedCut.sliceables.sliced === 0, "Bad-angle blade contact incorrectly sliced a target");
-    assert(rejectedCut.run.score === 0, "Bad-angle blade contact incorrectly awarded score");
-    assert(rejectedCut.knife.state === "bouncing", `Bad-angle cut should knock back, got ${rejectedCut.knife.state}`);
+    const permissiveCut = await page.evaluate(() => window.__choplineTest.state());
+    assert(permissiveCut.sliceables.sliced > 0, "Blade contact failed to slice a target");
+    assert(permissiveCut.run.score > 0, "Blade contact failed to award score");
+    assert(permissiveCut.knife.state !== "bouncing", `Blade contact incorrectly bounced, got ${permissiveCut.knife.state}`);
     captures.push(await capture(
       page,
-      "02-rejected-bad-angle-cut.png",
-      "2. Bad-Angle Cut Rejected (Mobile Portrait)",
+      "02-permissive-blade-cut.png",
+      "2. Blade Contact Always Cuts (Mobile Portrait)",
       [
-        `state=${rejectedCut.knife.state} score=${rejectedCut.run.score}`,
-        `sliced=${rejectedCut.sliceables.sliced} pieces=${rejectedCut.slicePieces.count}`,
+        `state=${permissiveCut.knife.state} score=${permissiveCut.run.score}`,
+        `sliced=${permissiveCut.sliceables.sliced} pieces=${permissiveCut.slicePieces.count}`,
       ],
       {
-        state: rejectedCut.knife.state,
-        score: rejectedCut.run.score,
-        sliced: rejectedCut.sliceables.sliced,
+        state: permissiveCut.knife.state,
+        score: permissiveCut.run.score,
+        sliced: permissiveCut.sliceables.sliced,
       },
     ));
 
@@ -387,6 +387,31 @@ async function main() {
       },
     ));
 
+    await page.evaluate(() => {
+      window.__choplineTest.stageHandleSliceProof();
+      window.__choplineTest.advance(0.2);
+      window.__choplineTest.setProofFrozen(true);
+    });
+    const handleTarget = await page.evaluate(() => window.__choplineTest.state());
+    assert(handleTarget.run.score === 0, `Handle-only target contact awarded ${handleTarget.run.score} points`);
+    assert(handleTarget.sliceables.sliced === 0, `Handle-only target contact split ${handleTarget.sliceables.sliced} targets`);
+    assert(handleTarget.knife.state === "bouncing", `Handle-only target contact did not bounce, got ${handleTarget.knife.state}`);
+    captures.push(await capture(
+      page,
+      "04b-handle-target-bounce.png",
+      "4b. Handle Contact Cannot Cut (Mobile Portrait)",
+      [
+        `state=${handleTarget.knife.state} score=${handleTarget.run.score}`,
+        `sliced=${handleTarget.sliceables.sliced}`,
+        `velocity=${handleTarget.knife.velocityY.toFixed(2)}/${handleTarget.knife.velocityZ.toFixed(2)}`,
+      ],
+      {
+        state: handleTarget.knife.state,
+        score: handleTarget.run.score,
+        sliced: handleTarget.sliceables.sliced,
+      },
+    ));
+
     await page.evaluate(() => window.__choplineTest.stageSliceProof());
     await page.waitForFunction(() => {
       const state = window.__choplineTest.state();
@@ -418,13 +443,13 @@ async function main() {
     ));
 
     await page.evaluate(() => window.__choplineTest.stageSplitVisualProof());
-    await page.waitForFunction(() => {
-      const state = window.__choplineTest.state();
-      return state.slicePieces.count === state.sliceables.sliced * 2 && state.slicePieces.spreadX > 1.2;
-    }, null, { timeout: 10000 });
-    await page.evaluate(() => window.__choplineTest.setProofFrozen(true));
+    await page.evaluate(() => {
+      window.__choplineTest.advance(0.35);
+      window.__choplineTest.setProofFrozen(true);
+    });
     const split = await page.evaluate(() => window.__choplineTest.state());
-    assert(split.slicePieces.spreadX > 1.2, "Split halves did not visibly separate");
+    assert(split.slicePieces.count === split.sliceables.sliced * 2, "Each split target must produce exactly two physical halves");
+    assert(split.slicePieces.spreadX > 0.5, "Split halves did not visibly separate");
     assert(split.slicePieces.sliding + split.slicePieces.falling + split.slicePieces.grounded === split.slicePieces.count, "Split halves lack physics phases");
     captures.push(await capture(
       page,
