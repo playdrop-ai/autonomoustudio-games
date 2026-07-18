@@ -394,7 +394,7 @@ async function testListingPreview(browser, origin) {
 async function main() {
   assert(fs.existsSync(path.join(root, "index.html")), "dist/index.html missing; run npm run build first");
   const { server, origin } = await startServer();
-  const browser = await chromium.launch({ headless: true, args: ["--use-gl=swiftshader"] });
+  const browser = await chromium.launch({ headless: true, channel: "chromium" });
   try {
     await testPortraitBoot(browser, origin);
     await testDesktopCompatibilityFrame(browser, origin);

@@ -64,6 +64,10 @@ declare global {
       stageInvalidSliceProof: () => void;
       stageSplitVisualProof: (preferredType?: string) => void;
       stageEndlessSplitVisualProof: (preferredType?: string) => void;
+      frames: () => number;
+      renderInfo: () => { calls: number; triangles: number; geometries: number; textures: number };
+      gpu: () => string;
+      seedRandom: (seed: number) => void;
       tap: () => void;
       advance: (seconds: number) => void;
       makeNextFlipReady: () => void;
@@ -934,6 +938,9 @@ let endlessObstacleCounter = 0;
 let previewMode = false;
 let autoFlipTimer = 0;
 let previewAudioPolicy: PreviewAudioPolicy = "music-and-sfx";
+let frameCounter = 0;
+let endlessTimerWarned = false;
+let gameTime = 0;
 
 function setPreviewMode(active: boolean): void {
   previewMode = active;
@@ -1176,6 +1183,8 @@ const SLICE_HALFZ_BONUS = 0.3;
 const SLICE_LOCK_MIN_ANGLE = (-130 * Math.PI) / 180;
 const SLICE_LOCK_MAX_ANGLE = (45 * Math.PI) / 180;
 const FRAGMENT_GRAVITY = -15;
+const CAMERA_TRAUMA_DECAY = 2.4;
+const CAMERA_SHAKE_MAX = 0.3;
 const MAX_SUB_STEP = 1 / 120;
 const KNIFE_CEILING_DEFAULT = 30;
 const KNIFE_LYING_OFFSET = 0.21;
@@ -1235,16 +1244,12 @@ let trajectoryPoints: THREE.Vector3[] = [];
 
 let cameraTarget = new THREE.Vector3(0, 7.5, 4);
 let lastTime = 0;
-let cameraShakeTime = 0;
-let cameraShakeDuration = 0;
-let cameraShakeStrength = 0;
+let cameraTrauma = 0;
 let hitStopTime = 0;
 let proofFrozen = false;
 
-function startCameraShake(strength: number, duration: number): void {
-  cameraShakeTime = Math.max(cameraShakeTime, duration);
-  cameraShakeDuration = duration;
-  cameraShakeStrength = Math.max(cameraShakeStrength, strength);
+function startCameraShake(trauma: number): void {
+  cameraTrauma = Math.min(1, cameraTrauma + trauma);
 }
 
 function loadLocalProfile(): Profile {
@@ -1440,6 +1445,7 @@ function clearWorld(): void {
 
 function newRun(makeActive = true): void {
   selectedMode = "endless";
+  gameTime = 0;
   currentRun = {
     mode: "endless",
     score: 0,
@@ -1769,7 +1775,7 @@ function updateEndlessWorld(): void {
 
 function updateEndlessTimer(dt: number): void {
   if (!currentRun || currentRun.mode !== "endless" || currentRun.outcome) return;
-  if (screen !== "playing") return;
+  if (screen !== "playing" || previewMode) return;
   if (currentRun.endlessTimerActive) {
     currentRun.endlessScoreTimer = Math.max(0, currentRun.endlessScoreTimer - dt);
   }
@@ -1777,6 +1783,10 @@ function updateEndlessTimer(dt: number): void {
   endlessTimerBar.style.width = `${ratio * 100}%`;
   endlessTimerBar.className = currentRun.endlessScoreTimer > 3 ? "" : currentRun.endlessScoreTimer > 2 ? "warn" : "danger";
   endlessTimerText.textContent = `${currentRun.endlessScoreTimer.toFixed(1)}s`;
+  if (currentRun.endlessTimerActive && !endlessTimerWarned && currentRun.endlessScoreTimer <= 3) {
+    endlessTimerWarned = true;
+    showToast("Hurry! Cut something!");
+  }
   if (currentRun.endlessTimerActive && currentRun.endlessScoreTimer <= 0) {
     failRun();
   }
@@ -2472,6 +2482,7 @@ function updatePlatformBounds(platform: PlatformEntity): void {
 }
 
 function frame(timestamp: number): void {
+  frameCounter += 1;
   const dtRaw = lastTime ? (timestamp - lastTime) / 1000 : 0.016;
   lastTime = timestamp;
   const dt = Math.min(0.033, Math.max(0.001, dtRaw));
@@ -2484,8 +2495,10 @@ function frame(timestamp: number): void {
 function update(dt: number, elapsed: number): void {
   void elapsed;
   if (proofFrozen) return;
+  gameTime += dt;
   if (hitStopTime > 0) {
     hitStopTime = Math.max(0, hitStopTime - dt);
+    updateParticles(dt);
     updateCamera(dt);
     return;
   }
@@ -2494,6 +2507,7 @@ function update(dt: number, elapsed: number): void {
   updateKnife(dt);
   updateGameOverTumble(dt);
   updateEndlessWorld();
+  updateEndlessTimer(dt);
   updateTrajectoryTrail();
   updateParticles(dt);
   updateSlicePieces(dt);
@@ -2596,9 +2610,8 @@ function syncKnifeTransform(): void {
 function flipKnife(): void {
   if (screen !== "playing" || knife.state === "dead" || currentRun?.outcome) return;
   const wasAirborne = knife.state !== "stuck";
-  const now = performance.now();
-  if (now - knife.lastFlipAt < FLIP_COOLDOWN * 1000) return;
-  knife.lastFlipAt = now;
+  if (gameTime - knife.lastFlipAt < FLIP_COOLDOWN) return;
+  knife.lastFlipAt = gameTime;
   if (currentRun) currentRun.tapHintConsumed = true;
   tapHint.classList.add("hidden");
 
@@ -2631,6 +2644,11 @@ function flipKnife(): void {
   knife.stuckPlatform = null;
   knife.slicing = false;
   restoreWidenedObjects();
+  if (currentRun && !currentRun.endlessTimerActive) {
+    currentRun.endlessTimerActive = true;
+    currentRun.endlessScoreTimer = ENDLESS_SCORE_TIMEOUT;
+    endlessTimerWarned = false;
+  }
   knife.rotatingStickPlatform = null;
   knife.rotatingStickAccumAngle = 0;
   knife.rotatingStickExhaustedPlatform = null;
@@ -2890,7 +2908,7 @@ function stickToFace(faceAxis: CollisionAxis, faceDir: CollisionDir, faceCoord: 
   resetTrajectoryTrail();
   audio.play("knifeStick", 0.7);
   spawnParticles(knifeBladeTip(), 0xfff5d6, 3);
-  startCameraShake(0.065 + impactSpeed * 0.07, 0.1 + impactSpeed * 0.06);
+  startCameraShake(0.28 + impactSpeed * 0.22);
   pulseHaptic(Math.round(10 + impactSpeed * 14));
   syncKnifeTransform();
   updateHud();
@@ -2905,7 +2923,7 @@ function enterRotatingStick(platformEntity: PlatformEntity): void {
   knife.rotatingStickPlatform = platformEntity;
   knife.rotatingStickAccumAngle = 0;
   audio.play("knifeBounce", 0.6);
-  startCameraShake(0.04, 0.07);
+  startCameraShake(0.16);
   pulseHaptic(7);
 }
 
@@ -2920,7 +2938,7 @@ function bounceKnife(source: SliceEntity | null): void {
   currentRun!.combo = 0;
   audio.play("knifeBounce", 0.6);
   spawnParticles(knifeHandleEnd(), 0xffe4ba, 4);
-  startCameraShake(0.05, 0.08);
+  startCameraShake(0.2);
   pulseHaptic(8);
   updateHud();
 }
@@ -2945,6 +2963,8 @@ function sliceObject(slice: SliceEntity, playJuice = true): void {
   slice.sliced = true;
   slice.collisionEnabled = false;
   currentRun.score += points;
+  currentRun.endlessScoreTimer = ENDLESS_SCORE_TIMEOUT;
+  endlessTimerWarned = false;
   currentRun.coinsAwarded += 1;
   currentRun.combo += 1;
   currentRun.bestCombo = Math.max(currentRun.bestCombo, currentRun.combo);
@@ -2961,7 +2981,7 @@ function sliceObject(slice: SliceEntity, playJuice = true): void {
       spawnPraise(position, currentRun.combo >= 16 ? "PERFECT" : currentRun.combo >= 8 ? "GREAT" : "NICE");
     }
     flashFeedback("slice");
-    startCameraShake(0.055, 0.09);
+    startCameraShake(0.16);
     pulseHaptic(12);
     audio.play(slice.type === "wooden_stake" ? "sliceWood" : "sliceSoft", 0.7);
   }
@@ -3180,7 +3200,7 @@ function checkRotatingStick(bladeOBB: KnifeOBB, midBladeOBB: KnifeOBB): boolean 
 function checkPlatformCollisions(bladeOBB: KnifeOBB, handleOBB: KnifeOBB, midBladeOBB: KnifeOBB, midHandleOBB: KnifeOBB): void {
   const cosR = Math.cos(knife.rotation);
   const sinR = Math.sin(knife.rotation);
-  const inFlipGuardWindow = knife.flipSourcePlatform !== null && performance.now() - knife.lastFlipAt <= 200;
+  const inFlipGuardWindow = knife.flipSourcePlatform !== null && gameTime - knife.lastFlipAt <= 0.2;
 
   for (const platformEntity of platformEntities) {
     if (platformEntity === knife.flipSourcePlatform) continue;
@@ -3643,20 +3663,18 @@ function slicePieceLocalBounds(type: string, direction: -1 | 1): SlicePiece["loc
 }
 
 function spawnParticles(position: THREE.Vector3, color: number, count = 10): void {
-  const meshes = withIsolatedVisualRandom(() => {
+  const spawned = withIsolatedVisualRandom(() => {
     const geo = new THREE.BoxGeometry(0.12, 0.12, 0.12);
     const mat = new THREE.MeshBasicMaterial({ color, transparent: true });
-    return Array.from({ length: count }, () => new THREE.Mesh(geo, mat.clone()));
+    return Array.from({ length: count }, () => ({
+      mesh: new THREE.Mesh(geo, mat.clone()),
+      velocity: new THREE.Vector3((Math.random() - 0.5) * 5, Math.random() * 5 + 2, (Math.random() - 0.5) * 5),
+    }));
   });
-  for (const mesh of meshes) {
+  for (const { mesh, velocity } of spawned) {
     mesh.position.copy(position);
     particleGroup.add(mesh);
-    particles.push({
-      mesh,
-      velocity: new THREE.Vector3((Math.random() - 0.5) * 5, Math.random() * 5 + 2, (Math.random() - 0.5) * 5),
-      life: 1,
-      maxLife: 1,
-    });
+    particles.push({ mesh, velocity, life: 1, maxLife: 1 });
   }
 }
 
@@ -3850,18 +3868,16 @@ function updateCamera(dt: number): void {
     camera.position.y - CAM_OFFSET.y,
     camera.position.z - CAM_OFFSET.z + CAM_LOOK_AHEAD,
   );
-  if (cameraShakeTime > 0) {
-    const clock = performance.now() * 0.001;
-    const t = cameraShakeTime / Math.max(0.001, cameraShakeDuration);
-    const strength = cameraShakeStrength * t * t;
+  if (cameraTrauma > 0) {
+    const clock = gameTime;
+    const strength = cameraTrauma * cameraTrauma * CAMERA_SHAKE_MAX;
     cameraShakeVector.set(
       Math.sin(clock * 91.7) * strength,
       Math.cos(clock * 83.1) * strength * 0.72,
       Math.sin(clock * 67.3) * strength,
     );
     camera.position.add(cameraShakeVector);
-    cameraShakeTime = Math.max(0, cameraShakeTime - dt);
-    if (cameraShakeTime === 0) cameraShakeStrength = 0;
+    cameraTrauma = Math.max(0, cameraTrauma - CAMERA_TRAUMA_DECAY * dt);
   }
   camera.lookAt(cameraTarget);
   dirLight.position.set(knife.position.x - 8, knife.position.y + 12, knife.position.z - 4);
@@ -3981,7 +3997,7 @@ function failRun(): void {
   knife.state = "dead";
   currentRun.outcome = "lost";
   currentRun.combo = 0;
-  startCameraShake(0.28, 0.22);
+  startCameraShake(0.6);
   flashFeedback("danger");
   pulseHaptic(28);
   audio.play("gameOver", 0.65);
@@ -4565,6 +4581,25 @@ function setupTestHooks(): void {
     stageInvalidSliceProof,
     stageSplitVisualProof: (preferredType) => stageSplitVisualProof(false, preferredType),
     stageEndlessSplitVisualProof,
+    frames: () => frameCounter,
+    seedRandom: (seed) => {
+      let state = seed >>> 0;
+      Math.random = () => {
+        state = (state * 1664525 + 1013904223) >>> 0;
+        return state / 4294967296;
+      };
+    },
+    renderInfo: () => ({
+      calls: renderer.info.render.calls,
+      triangles: renderer.info.render.triangles,
+      geometries: renderer.info.memory.geometries,
+      textures: renderer.info.memory.textures,
+    }),
+    gpu: () => {
+      const gl = renderer.getContext();
+      const debugInfo = gl.getExtension("WEBGL_debug_renderer_info");
+      return debugInfo ? String(gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)) : "unknown";
+    },
     tap: () => {
       flipKnife();
     },
