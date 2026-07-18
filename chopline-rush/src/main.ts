@@ -19,6 +19,24 @@ interface PreviewPayload {
   audioPolicy?: PreviewAudioPolicy;
 }
 
+type AdLoadStatus = "ready" | "no_fill" | "rate_limited" | "blocked";
+type InterstitialShowStatus = "dismissed" | "not_ready" | "expired";
+type RewardedShowStatus = "completed" | "dismissed" | "not_ready" | "expired";
+type AdLoad = { status: AdLoadStatus };
+type InterstitialResult = { status: InterstitialShowStatus };
+type RewardedResult = { status: RewardedShowStatus };
+type AdPlacement = {
+  load?: () => Promise<AdLoad>;
+  show?: () => Promise<InterstitialResult | RewardedResult>;
+};
+type ShopReceipt = { id: string | number; status?: string };
+type ShopPurchasePayload = {
+  kind?: "consumable" | "entitlement";
+  sku: string;
+  displayName: string;
+  priceCredits: number;
+  previewImage?: string | null;
+};
 type HostLoadingState = { status: "loading"; message?: string; progress?: number } | { status: "ready" } | { status: "error"; message?: string };
 type PlaydropSdk = {
   init?: () => Promise<PlaydropSdk>;
@@ -38,6 +56,16 @@ type PlaydropSdk = {
     } | null;
     updateAppData?: (data: Record<string, unknown>) => Promise<unknown>;
     promptLogin?: () => Promise<unknown>;
+  };
+  ads?: {
+    interstitial?: AdPlacement;
+    rewarded?: AdPlacement;
+  };
+  shop?: {
+    purchase?: (payload: ShopPurchasePayload | string) => Promise<ShopReceipt>;
+    listProducts?: () => Promise<Array<{ key: string }>>;
+    grant?: (receiptId: string | number) => Promise<ShopReceipt>;
+    consume?: (receiptId: string | number) => Promise<unknown>;
   };
   leaderboards?: {
     submitScore?: (key: string, score: number) => Promise<unknown>;
@@ -346,6 +374,13 @@ interface SlicePieceProofSummary {
   objectTypes: string[];
 }
 
+interface CoinProduct {
+  sku: string;
+  displayName: string;
+  coins: number;
+  priceCredits: number;
+}
+
 interface KnifeSkin {
   id: string;
   displayName: string;
@@ -391,6 +426,7 @@ interface RunState {
   score: number;
   zoneReached: number;
   failCause: RunFailCause | null;
+  doubled: boolean;
   combo: number;
   bestCombo: number;
   targetScore: number;
@@ -588,6 +624,12 @@ const THEMES: WorldTheme[] = [
   },
 ];
 const STARTER_THEME_ID = "forest";
+
+const COIN_PRODUCTS: CoinProduct[] = [
+  { sku: "coins_500", displayName: "500 Coins", coins: 500, priceCredits: 25 },
+  { sku: "coins_1500", displayName: "1,500 Coins", coins: 1500, priceCredits: 70 },
+  { sku: "coins_4000", displayName: "4,000 Coins", coins: 4000, priceCredits: 160 },
+];
 
 const DEFAULT_PROFILE: Profile = {
   coins: 0,
@@ -813,6 +855,52 @@ class Platform {
     this.loggedIn = true;
   }
 
+  canUseRewardedAds(): boolean {
+    const rewarded = this.sdk?.ads?.rewarded;
+    return Boolean(rewarded?.load && rewarded.show);
+  }
+
+  async showRewarded(): Promise<boolean> {
+    const rewarded = this.sdk?.ads?.rewarded;
+    if (!rewarded?.load || !rewarded.show) throw new Error("[chopline-rush] Rewarded ad API unavailable");
+    const loaded = await rewarded.load();
+    if (loaded.status !== "ready") return false;
+    const result = await rewarded.show();
+    return result.status === "completed";
+  }
+
+  async showInterstitial(): Promise<void> {
+    const interstitial = this.sdk?.ads?.interstitial;
+    if (!interstitial?.load || !interstitial.show) return;
+    const loaded = await interstitial.load();
+    if (loaded.status === "ready") await interstitial.show();
+  }
+
+  async purchaseCoins(product: CoinProduct): Promise<void> {
+    const shop = this.sdk?.shop;
+    if (!shop?.purchase) throw new Error("[chopline-rush] Shop purchase API unavailable");
+    const products = await shop.listProducts?.();
+    let receipt: ShopReceipt;
+    if (products) {
+      const listedProduct = products.find((item) => item.key === product.sku);
+      if (!listedProduct) throw new Error(`[chopline-rush] Coin product not listed: ${product.sku}`);
+      receipt = await shop.purchase(listedProduct.key);
+    } else {
+      receipt = await shop.purchase({
+        kind: "consumable",
+        sku: product.sku,
+        displayName: product.displayName,
+        priceCredits: product.priceCredits,
+      });
+    }
+    if (receipt.status === "CANCELLED") throw new Error("[chopline-rush] Purchase was cancelled");
+    const granted = shop.grant && receipt.status !== "GRANTED" ? await shop.grant(receipt.id) : receipt;
+    if (granted.status && granted.status !== "GRANTED" && granted.status !== "CONSUMED") {
+      throw new Error(`[chopline-rush] Purchase receipt not grantable: ${granted.status}`);
+    }
+    await shop.consume?.(receipt.id);
+  }
+
   async submitLeaderboard(key: string, score: number): Promise<void> {
     if (score > 0) await this.sdk?.leaderboards?.submitScore?.(key, Math.floor(score));
   }
@@ -967,6 +1055,8 @@ let autoFlipTimer = 0;
 let previewAudioPolicy: PreviewAudioPolicy = "music-and-sfx";
 let frameCounter = 0;
 let endlessTimerLastCount = 0;
+let sessionDeaths = 0;
+let lastInterstitialAt = Number.NEGATIVE_INFINITY;
 let gameTime = 0;
 
 function setPreviewMode(active: boolean): void {
@@ -1211,6 +1301,8 @@ const SLICE_HALFZ_BONUS = 0.3;
 const SLICE_LOCK_MIN_ANGLE = (-130 * Math.PI) / 180;
 const SLICE_LOCK_MAX_ANGLE = (45 * Math.PI) / 180;
 const FRAGMENT_GRAVITY = -15;
+const INTERSTITIAL_EVERY_N_DEATHS = 3;
+const INTERSTITIAL_MIN_INTERVAL_S = 90;
 const CAMERA_TRAUMA_DECAY = 2.4;
 const CAMERA_SHAKE_MAX = 0.3;
 const MAX_SUB_STEP = 1 / 120;
@@ -1327,7 +1419,29 @@ function showScreen(next: Screen): void {
   updateHud();
 }
 
+function renderIapList(): void {
+  const container = document.getElementById("iap-list");
+  if (!container) throw new Error("[chopline-rush] Missing #iap-list container");
+  container.innerHTML = "";
+  for (const product of COIN_PRODUCTS) {
+    const item = document.createElement("div");
+    item.className = "shop-item";
+    item.innerHTML = `
+      <div class="coin-thumb" style="width:54px;height:42px;margin-left:5px;"><span class="coin-icon" style="display:inline-block;"></span></div>
+      <div><strong>${product.displayName}</strong><span>Instant top-up</span></div>
+      <button class="small-button">${product.priceCredits} cr</button>
+    `;
+    const button = item.querySelector("button");
+    button?.addEventListener("click", () => {
+      button.setAttribute("disabled", "true");
+      void buyCoins(product).finally(() => button.removeAttribute("disabled"));
+    });
+    container.append(item);
+  }
+}
+
 function renderShop(): void {
+  renderIapList();
   shopCoins.innerHTML = `<span class="coin-icon" style="display:inline-block; vertical-align:-4px;"></span> ${formatNumber(profile.coins)}`;
   knifeList.innerHTML = "";
   for (const knifeSkin of KNIVES) {
@@ -1479,6 +1593,7 @@ function newRun(makeActive = true): void {
     score: 0,
     zoneReached: 1,
     failCause: null,
+    doubled: false,
     combo: 0,
     bestCombo: 0,
     targetScore: 0,
@@ -4514,6 +4629,21 @@ function finishRun(): void {
   renderResult(run);
   void submitMeta(run);
   showScreen("result");
+  sessionDeaths += 1;
+  maybeShowInterstitial();
+}
+
+function maybeShowInterstitial(): void {
+  if (previewMode) return;
+  if (sessionDeaths < 2) return;
+  if (sessionDeaths % INTERSTITIAL_EVERY_N_DEATHS !== 0) return;
+  const now = performance.now() / 1000;
+  if (now - lastInterstitialAt < INTERSTITIAL_MIN_INTERVAL_S) return;
+  lastInterstitialAt = now;
+  window.setTimeout(() => {
+    if (screen !== "result") return;
+    void platform.showInterstitial().catch(() => undefined);
+  }, 700);
 }
 
 const FAIL_CAUSE_LABELS: Record<RunFailCause, string> = {
@@ -4532,6 +4662,13 @@ function renderResult(run: RunState): void {
   resultContinue.textContent = "Try Again";
   resultScore.textContent = formatNumber(run.score);
   resultCoins.textContent = `+${formatNumber(run.coinsAwarded)}`;
+  const doubleButton = resultScreen.querySelector<HTMLButtonElement>('[data-action="double-coins"]');
+  if (doubleButton) {
+    const usable = !run.doubled && run.coinsAwarded > 0 && platform.canUseRewardedAds();
+    doubleButton.style.display = usable ? "" : "none";
+    doubleButton.disabled = !usable;
+    doubleButton.textContent = `Double Coins (+${formatNumber(run.coinsAwarded)})`;
+  }
 }
 
 async function submitMeta(run: RunState): Promise<void> {
@@ -4595,6 +4732,37 @@ function buyOrEquipTheme(theme: WorldTheme): void {
   showToast(`${theme.displayName} theme active`);
 }
 
+async function doubleCoins(): Promise<void> {
+  if (!currentRun || screen !== "result" || currentRun.doubled || currentRun.coinsAwarded <= 0) return;
+  try {
+    const ok = await platform.showRewarded();
+    if (!ok) return;
+    profile.coins += currentRun.coinsAwarded;
+    profile.totalCoinsEarned += currentRun.coinsAwarded;
+    currentRun.coinsAwarded *= 2;
+    currentRun.doubled = true;
+    saveProfile();
+    renderResult(currentRun);
+    audio.play("coin", 0.75);
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : "Ad unavailable");
+  }
+}
+
+async function buyCoins(product: CoinProduct): Promise<void> {
+  try {
+    await platform.purchaseCoins(product);
+    profile.coins += product.coins;
+    profile.totalCoinsEarned += product.coins;
+    saveProfile();
+    renderShop();
+    updateHud();
+    showToast(`${product.displayName} added`);
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : "Purchase unavailable");
+  }
+}
+
 function nextRun(): void {
   void startRun();
 }
@@ -4631,6 +4799,9 @@ function handleAction(action: string, button: HTMLElement): void {
     showScreen("playing");
   } else if (action === "finish-run") {
     finishRun();
+  } else if (action === "double-coins") {
+    button.setAttribute("disabled", "true");
+    void doubleCoins();
   } else if (action === "next-run") {
     nextRun();
   }

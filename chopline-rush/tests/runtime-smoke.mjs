@@ -105,6 +105,28 @@ async function installFakePlaydrop(page, remoteProfile = null) {
         },
         promptLogin: async () => record("promptLogin"),
       },
+      ads: {
+        interstitial: {
+          load: async () => ({ status: "ready" }),
+          show: async () => {
+            record("interstitial.show");
+            return { status: "dismissed" };
+          },
+        },
+        rewarded: {
+          load: async () => ({ status: "ready" }),
+          show: async () => {
+            record("rewarded.show");
+            return { status: "completed" };
+          },
+        },
+      },
+      shop: {
+        listProducts: async () => [{ key: "coins_500" }, { key: "coins_1500" }, { key: "coins_4000" }],
+        purchase: async (payload) => ({ id: 1001, status: "GRANTED", sku: typeof payload === "string" ? payload : payload.sku }),
+        grant: async (receiptId) => ({ id: receiptId, status: "GRANTED" }),
+        consume: async () => undefined,
+      },
       leaderboards: {
         submitScore: async (key, score) => record("leaderboard.submit", { key, score }),
       },
@@ -372,7 +394,53 @@ async function testEndlessResultAndLeaderboard(browser, origin) {
   assert(state.test.profile.endlessBest === 42, `Best score did not persist: ${state.test.profile.endlessBest}`);
   assert(state.test.resultTitle === "New Best!" && state.test.resultContinue === "Try Again", "Endless result copy drifted");
   assert(state.calls.some((call) => call.type === "leaderboard.submit" && call.payload.key === "endless_score" && call.payload.score === 42), "Best score was not submitted to PlayDrop");
-  assert(!state.calls.some((call) => call.type.includes("achievement") || call.type.includes("interstitial") || call.type.includes("rewarded")), "Result invoked a removed meta system");
+  assert(!state.calls.some((call) => call.type.includes("achievement")), "Result invoked removed achievements");
+  assert(!state.calls.some((call) => call.type.includes("interstitial")), "First session death must never show an interstitial");
+
+  for (let death = 0; death < 5; death += 1) {
+    await page.evaluate(() => {
+      window.__choplineTest.startEndless();
+      window.__choplineTest.forceLoss(4);
+    });
+    await page.waitForSelector("#result-screen.visible", { timeout: 8000 });
+    await page.waitForTimeout(900);
+  }
+  const cadence = await page.evaluate(() => window.__pdCalls.filter((call) => call.type.includes("interstitial")).length);
+  assert(cadence >= 1 && cadence <= 2, `Interstitial cadence drifted: ${cadence} shows across six deaths`);
+
+  const carried = await page.evaluate(() => {
+    const hooks = window.__choplineTest;
+    hooks.setProfile({ coins: 0 });
+    hooks.seedRandom(4242);
+    hooks.startEndless();
+    hooks.makeNextFlipReady();
+    hooks.tap();
+    for (let i = 0; i < 30; i += 1) {
+      hooks.advance(0.1);
+      if (hooks.state().knife.state === "stuck") break;
+    }
+    const earned = hooks.state().run.coinsAwarded;
+    hooks.forceLoss(hooks.state().run.score);
+    return earned;
+  });
+  assert(carried >= 8, `Staged carve earned too few coins for the double test: ${carried}`);
+  await page.waitForSelector("#result-screen.visible", { timeout: 8000 });
+  await page.click('[data-action="double-coins"]');
+  await page.waitForTimeout(500);
+  const doubled = await page.evaluate(() => ({
+    coins: window.__choplineTest.state().profile.coins,
+    awarded: window.__choplineTest.state().run.coinsAwarded,
+  }));
+  assert(doubled.coins === carried * 2 && doubled.awarded === carried * 2, `Rewarded double-coins flow broken: earned ${carried}, ${JSON.stringify(doubled)}`);
+
+  const iap = await page.evaluate(async () => {
+    window.__choplineTest.setProfile({ coins: 10 });
+    document.querySelector('[data-action="open-shop"]').click();
+    document.querySelector("#iap-list .shop-item button").click();
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    return window.__choplineTest.state().profile.coins;
+  });
+  assert(iap === 510, `Coin pack purchase did not credit the wallet: ${iap}`);
   await page.close();
 }
 
