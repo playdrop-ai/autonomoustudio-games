@@ -733,8 +733,8 @@ function pulseHaptic(duration: number): void {
   navigator.vibrate?.(duration);
 }
 
-function flashFeedback(kind: "success" | "danger" | "slice"): void {
-  feedbackFlash.classList.remove("success", "danger", "slice");
+function flashFeedback(kind: "success" | "danger" | "slice" | "warning"): void {
+  feedbackFlash.classList.remove("success", "danger", "slice", "warning");
   void feedbackFlash.offsetWidth;
   feedbackFlash.classList.add(kind);
   window.setTimeout(() => feedbackFlash.classList.remove(kind), 560);
@@ -966,7 +966,7 @@ let previewMode = false;
 let autoFlipTimer = 0;
 let previewAudioPolicy: PreviewAudioPolicy = "music-and-sfx";
 let frameCounter = 0;
-let endlessTimerWarned = false;
+let endlessTimerLastCount = 0;
 let gameTime = 0;
 
 function setPreviewMode(active: boolean): void {
@@ -2139,9 +2139,16 @@ function updateEndlessTimer(dt: number): void {
   endlessTimerBar.style.width = `${ratio * 100}%`;
   endlessTimerBar.className = currentRun.endlessScoreTimer > 3 ? "" : currentRun.endlessScoreTimer > 2 ? "warn" : "danger";
   endlessTimerText.textContent = `${currentRun.endlessScoreTimer.toFixed(1)}s`;
-  if (currentRun.endlessTimerActive && !endlessTimerWarned && currentRun.endlessScoreTimer <= 3) {
-    endlessTimerWarned = true;
-    showToast("Hurry! Cut something!");
+  if (currentRun.endlessTimerActive && currentRun.endlessScoreTimer <= 3.05 && currentRun.endlessScoreTimer > 0) {
+    const count = Math.max(1, Math.ceil(currentRun.endlessScoreTimer));
+    if (count !== endlessTimerLastCount) {
+      endlessTimerLastCount = count;
+      spawnCountdownPop(count);
+      flashFeedback("warning");
+      pulseHaptic(9);
+    }
+  } else {
+    endlessTimerLastCount = 0;
   }
   if (currentRun.endlessTimerActive && currentRun.endlessScoreTimer <= 0) {
     failRun("timeout");
@@ -3052,7 +3059,7 @@ function flipKnife(): void {
   if (currentRun && !currentRun.endlessTimerActive) {
     currentRun.endlessTimerActive = true;
     currentRun.endlessScoreTimer = ENDLESS_SCORE_TIMEOUT;
-    endlessTimerWarned = false;
+    endlessTimerLastCount = 0;
   }
   knife.rotatingStickPlatform = null;
   knife.rotatingStickAccumAngle = 0;
@@ -3369,7 +3376,7 @@ function sliceObject(slice: SliceEntity, playJuice = true): void {
   slice.collisionEnabled = false;
   currentRun.score += points;
   currentRun.endlessScoreTimer = ENDLESS_SCORE_TIMEOUT;
-  endlessTimerWarned = false;
+  endlessTimerLastCount = 0;
   currentRun.coinsAwarded += 1;
   currentRun.combo += 1;
   currentRun.bestCombo = Math.max(currentRun.bestCombo, currentRun.combo);
@@ -4120,6 +4127,14 @@ function celebrateZone(zoneNumber: number): void {
   startCameraShake(0.3);
   audio.play("victory", 0.42);
   pulseHaptic(18);
+}
+
+function spawnCountdownPop(count: number): void {
+  const node = document.createElement("div");
+  node.className = "count-pop";
+  node.textContent = String(count);
+  root.append(node);
+  window.setTimeout(() => node.remove(), 850);
 }
 
 function spawnZoneCallout(title: string, subtitle: string, accent: number): void {

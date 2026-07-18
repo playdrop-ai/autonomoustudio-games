@@ -543,6 +543,14 @@
   #feedback-flash.danger {
     animation: danger-flash 520ms ease-out;
   }
+  #feedback-flash.warning {
+    animation: warning-flash 460ms ease-out;
+  }
+  @keyframes warning-flash {
+    0% { opacity: 0; }
+    25% { opacity: 1; background: radial-gradient(ellipse at center, rgba(255,93,115,0) 55%, rgba(255,93,115,0.38) 100%); }
+    100% { opacity: 0; background: radial-gradient(ellipse at center, rgba(255,93,115,0) 55%, rgba(255,93,115,0.38) 100%); }
+  }
   #feedback-flash.slice {
     animation: slice-flash 260ms ease-out;
   }
@@ -718,6 +726,25 @@
   }
   .screen.endless-game-over [data-action="open-shop"] {
     display: block;
+  }
+  .count-pop {
+    position: absolute;
+    left: 50%;
+    top: 30%;
+    transform: translate(-50%, -50%);
+    font-size: 88px;
+    font-weight: 800;
+    color: #ff5d73;
+    text-shadow: 0 4px 0 rgba(80, 10, 30, 0.35), 0 12px 30px rgba(80, 10, 30, 0.4);
+    z-index: 13;
+    pointer-events: none;
+    animation: count-pop 850ms ease-out forwards;
+  }
+  @keyframes count-pop {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(1.7); }
+    18% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    70% { opacity: 1; }
+    100% { opacity: 0; transform: translate(-50%, -46%) scale(0.92); }
   }
   .zone-pop {
     position: absolute;
