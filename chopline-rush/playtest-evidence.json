@@ -2,57 +2,38 @@
   "version": 1,
   "entries": [
     {
-      "environment": "Final source in Chrome through the local PlayDrop SDK harness, plus deterministic Playwright mechanics proof and PlayDrop project validation",
-      "url": "http://127.0.0.1:4174/",
-      "surface": "Chrome portrait window 533x806; automated primary-surface coverage at 390x844; desktop is compatibility-only",
+      "environment": "Rescued build in Chromium through the local PlayDrop SDK harness, driven by real pointer taps with deterministic state tracing, plus the full validate:local and proof:mechanics suites",
+      "url": "http://127.0.0.1:4199/",
+      "surface": "Portrait 390x844 primary; desktop is compatibility-only",
       "captures": [
-        "evidence/rescue-final/14-ready-contact-order.png",
-        "evidence/rescue-final/17-blade-contact-final.png",
-        "evidence/rescue-final/15-seven-course-contact.png",
-        "evidence/rescue-final/16-handle-bounce-final.png",
-        "evidence/rescue-final/18-split-halves-final.png"
+        "evidence/rescue-v2/gameplay-rescued.mp4",
+        "evidence/rescue-v2/gameplay-timeline.json"
       ],
       "actions": [
-        "Loaded the final build directly into the authored endless opening in a portrait Chrome window.",
-        "Tapped once and observed the real chopping-knife GLB rotate blade-up/forward into the wall.",
-        "Observed seven geometrically reached brick courses score one point each while untouched courses remained intact.",
-        "Observed bright per-course interior caps, restrained opposing fragment motion, and a delayed NICE callout after the blade cleared.",
-        "Staged an isolated handle-only target contact and observed zero score, zero split targets, and a visible upward/backward bounce."
+        "Booted directly into the endless run with the planted cooking knife on the pedestal.",
+        "Tapped once and watched the knife complete a full flip, catch the wall with the blade, stop forward motion, and carve down through all thirteen courses before planting tip-first.",
+        "Continued a thirteen-flight run with land-and-relaunch cadence; landings settled on the canonical blade-down angle and cuts spawned persistent halves with interior caps.",
+        "Observed a misaligned landing recover through rotating-to-stick within a tenth of a second.",
+        "Observed a fair death: low stick, backward bounce, exhausted recovery spin, tumble, and the result screen with New Best 36 and Try Again.",
+        "Verified shop equip and purchase flows and the endless leaderboard submission path via the runtime smoke suite."
       ],
       "statesObserved": [
-        "Textured PlayDrop chopping-knife GLB centered on the course lane",
-        "Blade and handle collision regions resolved per physical target using previous, midpoint, and current contact order",
-        "A handle-first contact cannot score or create split geometry",
-        "A normal opening strike cuts exactly seven courses and preserves forward rotation",
-        "Untouched wall courses remain visible and collidable",
-        "Each accepted course emits an individual +1 and exposes a saturated interior cap",
-        "Fourteen physical wall halves separate, fall forward, contact platforms or ground, and settle without fragment-to-fragment explosions",
-        "Repeated taps add bounded lift and rotation without stair-stepping above the course",
-        "Portrait gameplay fills the automated 390x844 canvas and the Chrome portrait window",
-        "Final Chrome replay produced no uncaught console errors"
+        "stuck",
+        "flying",
+        "slicing",
+        "rotating-stick",
+        "bouncing",
+        "tumbling",
+        "dead",
+        "result"
       ],
       "consoleErrors": [],
-      "consoleWarnings": [
-        "Rapier compatibility initializer reports its upstream deprecated-parameter warning; the installed typed API exposes only the zero-argument initializer."
-      ],
-      "checkedAt": "2026-07-17T23:06:16Z"
+      "consoleWarnings": [],
+      "checkedAt": "2026-07-17T22:30:00-04:00"
     }
   ],
   "proof": {
-    "primaryInput": {
-      "action": "tap once near the center of the portrait game frame",
-      "observed": "the real knife reaches the wall blade-first, individual courses begin splitting, colored cap faces appear, and each accepted course emits +1",
-      "capture": "evidence/rescue-final/17-blade-contact-final.png"
-    },
-    "win": {
-      "action": "tap once and allow the opening wall sequence to complete",
-      "observed": "score and best reach seven, exactly seven physical courses are removed, untouched lower courses remain, and colored halves settle around the course",
-      "capture": "evidence/rescue-final/15-seven-course-contact.png"
-    },
-    "loss": {
-      "action": "stage an isolated handle-only target approach and advance the deterministic simulation by 200ms",
-      "observed": "score remains zero, no target splits, and the knife bounces upward and backward away from the intact target",
-      "capture": "evidence/rescue-final/16-handle-bounce-final.png"
-    }
+    "suite": "npm run validate:local && npm run proof:mechanics",
+    "status": "passed"
   }
 }

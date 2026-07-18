@@ -13,7 +13,7 @@
     "test:content": "node tests/content-audit.mjs",
     "test:runtime": "node tests/runtime-smoke.mjs",
     "test:endless-generator": "node tests/endless-generator-parity.mjs",
-    "proof:mechanics": "npm run build && node tests/reference-mechanics-proof.mjs",
+    "proof:mechanics": "npm run build && node tests/mechanics-proof.mjs",
     "prepare:listing-media": "node scripts/prepare-listing-media.mjs",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json}\""
   },

@@ -154,7 +154,7 @@ async function testPortraitBoot(browser, origin) {
     score: document.querySelector("#score-pill strong")?.textContent?.trim(),
     best: document.querySelector("#score-required")?.textContent?.trim(),
     timerDisplay: getComputedStyle(document.querySelector("#endless-timer")).display,
-    levelDisplay: getComputedStyle(document.querySelector("#level-pill")).display,
+    levelPillGone: document.querySelector("#level-pill") === null,
     shopGlyph: document.querySelector("#shop-btn")?.textContent?.trim(),
     shopFont: getComputedStyle(document.querySelector("#shop-btn")).fontFamily,
     shopColor: getComputedStyle(document.querySelector("#shop-btn")).color,
@@ -165,7 +165,7 @@ async function testPortraitBoot(browser, origin) {
   const shot = await page.screenshot({ type: "png" });
   assert(errors.length === 0, `Portrait boot console/page errors: ${errors.join("\n")}`);
   assert(ui.score === "0" && ui.best === "BEST 0", `Endless HUD did not boot cleanly: ${ui.score}/${ui.best}`);
-  assert(ui.timerDisplay === "none" && ui.levelDisplay === "none", "Removed level/timer UI became visible");
+  assert(ui.timerDisplay === "none" && ui.levelPillGone, "Removed level/timer UI became visible");
   assert(ui.visibleScreens === 0, "A menu obscured the direct-to-endless boot");
   assert(ui.shopGlyph && ui.shopFont.includes("Arial") && ui.shopColor === "rgb(23, 61, 120)", "Gear control does not have a readable system-font icon");
   assert(ui.canvas?.width === 390 && ui.canvas?.height === 844, `Canvas does not fill the portrait viewport: ${JSON.stringify(ui.canvas)}`);

@@ -5,7 +5,7 @@ import path from "node:path";
 import { chromium } from "playwright";
 
 const root = path.resolve("dist");
-const outDir = path.resolve("tmp/reference-mechanics-proof");
+const outDir = path.resolve("tmp/mechanics-proof");
 const profileKey = "chopline-rush-v2-profile";
 const proofViewport = { width: 390, height: 844 };
 
@@ -262,7 +262,7 @@ async function buildComposite(browser, captures) {
       </head>
       <body>
         <main>
-          <h1>Chopline Rush Reference Mechanics Proof</h1>
+          <h1>Chopline Rush Mechanics Proof</h1>
           <section class="grid">${cards}</section>
         </main>
       </body>
@@ -270,7 +270,7 @@ async function buildComposite(browser, captures) {
   `;
   const compositePage = await browser.newPage({ viewport: { width: 1160, height: 1800 }, deviceScaleFactor: 1 });
   await compositePage.setContent(html, { waitUntil: "load" });
-  const compositePath = path.join(outDir, "reference-mechanics-composite.png");
+  const compositePath = path.join(outDir, "mechanics-composite.png");
   await compositePage.screenshot({ path: compositePath, fullPage: true });
   await compositePage.close();
   return compositePath;

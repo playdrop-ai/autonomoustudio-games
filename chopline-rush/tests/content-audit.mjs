@@ -78,7 +78,7 @@ function auditOwnedAssets(source) {
 
 function auditEndlessContract(source) {
   assert(source.includes('let selectedMode: Mode = "endless";'), "The app must boot into endless mode");
-  assert(source.includes('newRun("endless", 0, true);'), "Endless must be the direct playable route");
+  assert(source.includes("async function startRun(): Promise<void>") && source.includes("newRun(true);"), "Endless must be the only playable route");
   assert(source.includes('const openingSequence = [0, 1, 2, 3];'), "The curated opening sequence must remain deterministic");
   assert(source.includes("const openingGaps = [1.55, 1.1, 1.4, 1.6];"), "The learned opening cadence must remain deterministic");
   assert(source.includes(": 1.4 + Math.random() * 2.4;"), "Post-opening endless gaps must stay dense and inside the playable flip range");

@@ -1,12 +1,12 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { normalizeKnifeModel, type KnifeGeometry, type KnifeModelDefinition } from "./game/knifeModel";
-import { REFERENCE_CONFIG } from "./referenceLevels";
 
 export {};
 
-type Mode = "level" | "endless";
-type Screen = "boot" | "menu" | "levels" | "shop" | "playing" | "paused" | "revive" | "result";
+type Mode = "endless";
+type Screen = "boot" | "menu" | "shop" | "playing" | "paused" | "result";
 type RunOutcome = "won" | "lost";
 type PreviewSurface = "desktop" | "mobile-landscape" | "mobile-portrait";
 type PreviewAudioPolicy = "music-and-sfx" | "sfx-only" | "silent";
@@ -19,25 +19,7 @@ interface PreviewPayload {
   audioPolicy?: PreviewAudioPolicy;
 }
 
-type AdLoadStatus = "ready" | "no_fill" | "rate_limited" | "blocked";
-type InterstitialShowStatus = "dismissed" | "not_ready" | "expired";
-type RewardedShowStatus = "completed" | "dismissed" | "not_ready" | "expired";
-type AdLoad = { status: AdLoadStatus };
-type InterstitialResult = { status: InterstitialShowStatus };
-type RewardedResult = { status: RewardedShowStatus };
-type AdPlacement = {
-  load?: () => Promise<AdLoad>;
-  show?: () => Promise<InterstitialResult | RewardedResult>;
-};
 type HostLoadingState = { status: "loading"; message?: string; progress?: number } | { status: "ready" } | { status: "error"; message?: string };
-type ShopReceipt = { id: string | number; status?: string };
-type ShopPurchasePayload = {
-  kind?: "consumable" | "entitlement";
-  sku: string;
-  displayName: string;
-  priceCredits: number;
-  previewImage?: string | null;
-};
 type PlaydropSdk = {
   init?: () => Promise<PlaydropSdk>;
   host?: {
@@ -57,20 +39,6 @@ type PlaydropSdk = {
     updateAppData?: (data: Record<string, unknown>) => Promise<unknown>;
     promptLogin?: () => Promise<unknown>;
   };
-  ads?: {
-    interstitial?: AdPlacement;
-    rewarded?: AdPlacement;
-  };
-  shop?: {
-    purchase?: (payload: ShopPurchasePayload | string) => Promise<ShopReceipt>;
-    listProducts?: () => Promise<Array<{ key: string }>>;
-    grant?: (receiptId: string | number) => Promise<ShopReceipt>;
-    consume?: (receiptId: string | number) => Promise<unknown>;
-  };
-  achievements?: {
-    unlock?: (key: string) => Promise<unknown>;
-    setProgressAtLeast?: (key: string, progress: number) => Promise<unknown>;
-  };
   leaderboards?: {
     submitScore?: (key: string, score: number) => Promise<unknown>;
   };
@@ -85,13 +53,8 @@ declare global {
     };
     __choplineTest?: {
       setProfile: (overrides: Partial<Profile>) => void;
-      startLevel: (level: number) => void;
       startEndless: () => void;
-      forceWin: (score?: number) => void;
       forceLoss: (score?: number) => void;
-      useCoinRevive: () => void;
-      useRewardedRevive: () => Promise<void>;
-      doubleCoins: () => Promise<void>;
       stageLandingProof: () => void;
       stageSideLandingProof: () => void;
       stageFlatLandingProof: () => void;
@@ -193,7 +156,7 @@ function markHostReady(sdk: PlaydropSdk | null): void {
   sdk.host.setLoadingState?.({ status: "ready" });
 }
 
-interface RefPlatform {
+interface PlatformDef {
   id: string;
   y?: number;
   z: number;
@@ -206,7 +169,7 @@ interface RefPlatform {
   moveDelay?: number;
 }
 
-interface RefThing {
+interface ThingDef {
   type: string;
   platformId?: string;
   y?: number;
@@ -220,20 +183,10 @@ interface RefThing {
   rotation?: { x?: number | null; y?: number | null; z?: number | null };
 }
 
-interface RefLevel {
-  platforms: RefPlatform[];
-  roofs?: RefPlatform[];
-  sliceables?: RefThing[];
-  obstacles?: RefThing[];
-  requiredScore?: number;
-  reward?: number;
-  finishLinePlatformId?: string;
-}
-
 interface EndlessTemplate {
-  platform: Omit<RefPlatform, "id" | "z">;
-  sliceables?: Array<Omit<RefThing, "platformId">>;
-  obstacles?: Array<Omit<RefThing, "platformId">>;
+  platform: Omit<PlatformDef, "id" | "z">;
+  sliceables?: Array<Omit<ThingDef, "platformId">>;
+  obstacles?: Array<Omit<ThingDef, "platformId">>;
 }
 
 interface EndlessSpawnPlan {
@@ -372,13 +325,6 @@ interface SlicePieceProofSummary {
   objectTypes: string[];
 }
 
-interface CoinProduct {
-  sku: string;
-  displayName: string;
-  coins: number;
-  priceCredits: number;
-}
-
 interface KnifeSkin {
   id: string;
   displayName: string;
@@ -411,8 +357,6 @@ interface Profile {
   equippedKnife: string;
   ownedThemes: string[];
   equippedTheme: string;
-  highestLevel: number;
-  highestLevelCompleted: number;
   endlessBest: number;
   totalRuns: number;
   totalSlices: number;
@@ -422,7 +366,6 @@ interface Profile {
 
 interface RunState {
   mode: Mode;
-  levelIndex: number;
   score: number;
   combo: number;
   bestCombo: number;
@@ -433,21 +376,14 @@ interface RunState {
   reward: number;
   startedAt: number;
   outcome: RunOutcome | null;
-  reviveUsed: boolean;
   coinsAwarded: number;
-  doubled: boolean;
-  interstitialShown: boolean;
-  goalAnnounced: boolean;
 }
 
-const LEVELS = REFERENCE_CONFIG.levels as unknown as RefLevel[];
-const LEVEL_COUNT = Math.min(30, LEVELS.length);
 const PROFILE_KEY = "chopline-rush-v2-profile";
 const REMOTE_PROFILE_KEY = "chopline-rush-profile";
 const LEADERBOARD_LEVEL = "max_level";
 const LEADERBOARD_ENDLESS = "endless_score";
 const ENDLESS_SCORE_TIMEOUT = 10;
-const REVIVE_COST = 100;
 const ENDLESS_GENERATE_AHEAD = 120;
 const ENDLESS_CLEANUP_BEHIND = 60;
 const ENDLESS_FLIP_DISTANCE = 4;
@@ -629,20 +565,12 @@ const THEMES: WorldTheme[] = [
 ];
 const STARTER_THEME_ID = "forest";
 
-const COIN_PRODUCTS: CoinProduct[] = [
-  { sku: "coins_500", displayName: "500 Coins", coins: 500, priceCredits: 25 },
-  { sku: "coins_1500", displayName: "1,500 Coins", coins: 1500, priceCredits: 70 },
-  { sku: "coins_4000", displayName: "4,000 Coins", coins: 4000, priceCredits: 160 },
-];
-
 const DEFAULT_PROFILE: Profile = {
   coins: 0,
   ownedKnives: [STARTER_KNIFE_ID],
   equippedKnife: STARTER_KNIFE_ID,
   ownedThemes: [STARTER_THEME_ID],
   equippedTheme: STARTER_THEME_ID,
-  highestLevel: 1,
-  highestLevelCompleted: 0,
   endlessBest: 0,
   totalRuns: 0,
   totalSlices: 0,
@@ -650,856 +578,14 @@ const DEFAULT_PROFILE: Profile = {
   achievements: [],
 };
 
-const root = document.createElement("div");
-root.id = "app";
-document.body.append(root);
 
-const style = document.createElement("style");
-style.textContent = `
-  @import url("https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap");
-  :root {
-    color-scheme: dark;
-    --pink: #f6a8bd;
-    --magenta: #d946ef;
-    --blue: #2597e9;
-    --purple: #271b52;
-    --panel: rgba(42, 30, 80, 0.9);
-    --space-sm: 16px;
-    --space-md: 24px;
-  }
-  html, body, #app {
-    margin: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    touch-action: none;
-    background: #140722;
-    font-family: "Fredoka", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  }
-  #app {
-    position: fixed;
-    inset: 0;
-    --game-width: 100vw;
-    --game-height: 100vh;
-  }
-  button {
-    font: inherit;
-    border: 0;
-    cursor: pointer;
-  }
-  #stage {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: var(--game-width);
-    height: var(--game-height);
-    transform: translate(-50%, -50%);
-    overflow: hidden;
-    background: linear-gradient(180deg, #f6a8bd 0%, #ee69d7 100%);
-  }
-  canvas {
-    display: block;
-    width: 100%;
-    height: 100%;
-  }
-  .hud, .screen, .toast {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: var(--game-width);
-    height: var(--game-height);
-    transform: translate(-50%, -50%);
-    pointer-events: none;
-    z-index: 5;
-    overflow: hidden;
-  }
-  .hud > *, .screen > *, .toast > * {
-    pointer-events: auto;
-  }
-  .pill {
-    color: white;
-    text-shadow: 0 2px 5px rgba(61, 22, 60, 0.55);
-    background: rgba(112, 62, 92, 0.58);
-    border-radius: 999px;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), 0 7px 20px rgba(74, 27, 69, 0.24);
-    backdrop-filter: blur(8px);
-  }
-  #level-pill {
-    position: absolute;
-    top: 18px;
-    left: 18px;
-    padding: 10px 17px;
-    font-weight: 700;
-    font-size: 18px;
-  }
-  #score-pill {
-    position: absolute;
-    top: var(--space-sm);
-    left: 50%;
-    min-width: 140px;
-    transform: translateX(-50%);
-    padding: 12px 32px;
-    text-align: center;
-    pointer-events: none;
-    background: rgba(0,0,0,0.35);
-    border-radius: 50px;
-    backdrop-filter: blur(4px);
-    box-shadow: none;
-    text-shadow: 0 2px 8px rgba(0,0,0,0.4);
-  }
-  #score-pill strong {
-    display: block;
-    font-size: 36px;
-    line-height: 1.08;
-    font-weight: 700;
-  }
-  #score-pill span {
-    display: block;
-    margin-top: 2px;
-    color: rgba(255,255,255,0.6);
-    font-size: 16px;
-    font-weight: 400;
-  }
-  #score-pill .goal-ready {
-    color: #6f6;
-  }
-  #endless-timer {
-    display: none;
-    margin-top: 6px;
-  }
-  #endless-timer-bar-wrap {
-    width: 80%;
-    height: 4px;
-    margin: 0 auto;
-    background: rgba(255,255,255,0.15);
-    border-radius: 2px;
-    overflow: hidden;
-    position: relative;
-  }
-  #endless-timer-bar {
-    width: 100%;
-    height: 100%;
-    background: #4CAF50;
-    border-radius: 2px;
-    transition: background 0.3s;
-  }
-  #endless-timer-bar.warn {
-    background: #FFB300;
-  }
-  #endless-timer-bar.danger {
-    background: #FF4444;
-    animation: timer-pulse 0.5s ease-in-out infinite;
-  }
-  @keyframes timer-pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
-  }
-  #endless-timer-text,
-  #endless-timer-hint {
-    display: block;
-    color: rgba(255,255,255,0.5);
-    font-size: 16px;
-    margin-top: 3px;
-  }
-  #endless-timer-hint {
-    margin-top: 2px;
-  }
-  #app.preview-capture #pause-btn,
-  #app.preview-capture #shop-btn {
-    display: none;
-  }
-  #coin-pill {
-    position: absolute;
-    top: calc(var(--space-sm) + 64px);
-    left: var(--space-sm);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    pointer-events: none;
-    z-index: 20;
-    color: #FFD700;
-    font-weight: 700;
-    font-size: 24px;
-    text-shadow: 0 2px 6px rgba(0,0,0,0.5);
-  }
-  .coin-icon {
-    width: 30px;
-    height: 30px;
-    min-width: 30px;
-    flex-shrink: 0;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FFD700 100%);
-    border: 2.5px solid #DAA520;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.3),
-      inset 0 -2px 4px rgba(0,0,0,0.2),
-      inset 0 2px 4px rgba(255,255,255,0.3);
-  }
-  .top-button {
-    position: absolute;
-    right: var(--space-sm);
-    width: 64px;
-    height: 64px;
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: 700;
-    font-size: 26px;
-    border: 2px solid rgba(255,255,255,0.25);
-    background: #6057f0;
-    box-shadow: none;
-    z-index: 20;
-    backdrop-filter: blur(6px);
-    transition: transform 0.15s ease-out;
-    -webkit-tap-highlight-color: transparent;
-  }
-  #pause-btn { top: var(--space-sm); }
-  #shop-btn {
-    top: calc(var(--space-sm) + 72px);
-    color: #fff;
-    background: #ffb302;
-  }
-  .top-button:hover { transform: scale(1.1); }
-  .top-button:active { transform: scale(0.93); }
-  #tap-hint {
-    position: absolute;
-    left: 50%;
-    bottom: 140px;
-    transform: translateX(-50%);
-    display: block;
-    text-align: center;
-    color: white;
-    pointer-events: none;
-  }
-  #tap-hint .tap-circle {
-    width: 72px;
-    height: 72px;
-    border: 4px solid rgba(255,255,255,0.9);
-    border-radius: 50%;
-    background: rgba(255,255,255,0.15);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    animation: tap-pulse 1.2s ease-in-out infinite;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-    margin: 0 auto 12px;
-  }
-  #tap-hint .tap-circle::after {
-    content: "";
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.9);
-  }
-  #tap-hint div:last-child {
-    font-size: 26px;
-    font-weight: 600;
-    color: #fff;
-    text-shadow: 0 2px 8px rgba(0,0,0,0.5);
-    letter-spacing: 1px;
-  }
-  @keyframes tap-pulse {
-    0%, 100% { transform: scale(1); opacity: 0.8; }
-    50% { transform: scale(1.12); opacity: 1; }
-  }
-  .screen {
-    display: none;
-    align-items: center;
-    justify-content: center;
-    background: radial-gradient(circle at 50% 20%, rgba(89,55,146,0.35), rgba(18,7,33,0.22) 55%, rgba(18,7,33,0.7));
-  }
-  .screen.visible {
-    display: flex;
-  }
-  #menu-screen {
-    background: linear-gradient(180deg, #1d1a44 0%, #351d55 46%, #571f55 100%);
-  }
-  #menu-screen .card {
-    width: min(372px, 100vw);
-    min-height: 100vh;
-    max-height: none;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-    box-shadow: none;
-    padding: 0 24px;
-  }
-  .card {
-    width: min(440px, calc(100vw - 32px));
-    max-height: calc(100vh - 30px);
-    overflow: auto;
-    border-radius: 30px;
-    background: linear-gradient(180deg, rgba(54,38,104,0.97), rgba(83,28,88,0.97));
-    box-shadow: 0 28px 70px rgba(18, 7, 33, 0.45);
-    border: 1px solid rgba(255,255,255,0.13);
-    color: white;
-    padding: 28px;
-    text-align: center;
-  }
-  .brand-knife {
-    width: 94px;
-    height: 56px;
-    margin: 0 auto 8px;
-    position: relative;
-    filter: drop-shadow(0 9px 18px rgba(0,0,0,0.35));
-    animation: float-knife 2.5s ease-in-out infinite;
-  }
-  .brand-knife::before {
-    content: "";
-    position: absolute;
-    left: 35px;
-    top: 22px;
-    width: 55px;
-    height: 17px;
-    background: linear-gradient(90deg, #ffffff, #a7c2ff 65%, #6f8cdb);
-    clip-path: polygon(0 20%, 84% 0, 100% 50%, 84% 100%, 0 80%);
-    transform: rotate(25deg);
-    border-radius: 12px;
-  }
-  .brand-knife::after {
-    content: "";
-    position: absolute;
-    left: 8px;
-    top: 19px;
-    width: 43px;
-    height: 20px;
-    border-radius: 14px;
-    background: linear-gradient(180deg, #ef58ff, #8d35e9);
-    transform: rotate(25deg);
-  }
-  @keyframes float-knife {
-    0%, 100% { transform: translateY(0) rotate(-5deg); }
-    50% { transform: translateY(-9px) rotate(7deg); }
-  }
-  .title {
-    margin: 0;
-    font-size: 42px;
-    line-height: 0.94;
-    text-shadow: 0 5px 14px rgba(0,0,0,0.35);
-  }
-  .subtitle {
-    margin: 8px 0 22px;
-    color: rgba(255,255,255,0.58);
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-  }
-  .menu-line {
-    width: 140px;
-    height: 4px;
-    border-radius: 99px;
-    margin: 0 auto 31px;
-    background: linear-gradient(90deg, #ff64ff, #8c6bff);
-  }
-  .primary-button, .secondary-button, .danger-button {
-    min-height: 52px;
-    border-radius: 999px;
-    padding: 0 28px;
-    color: white;
-    font-weight: 700;
-    box-shadow: 0 9px 23px rgba(32, 16, 66, 0.26);
-  }
-  .primary-button {
-    background: linear-gradient(180deg, #ef65ff, #a948ef);
-  }
-  .secondary-button {
-    background: linear-gradient(180deg, #45bfff, #238ee8);
-  }
-  .danger-button {
-    background: linear-gradient(180deg, #ff6b7c, #d91d4a);
-  }
-  .menu-buttons {
-    display: grid;
-    gap: 14px;
-    width: 220px;
-    margin: 0 auto;
-  }
-  .level-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 10px;
-    margin-top: 18px;
-  }
-  .level-card {
-    aspect-ratio: 1;
-    border-radius: 17px;
-    background: rgba(255,255,255,0.12);
-    color: rgba(255,255,255,0.45);
-    font-size: 21px;
-    font-weight: 700;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
-  }
-  .level-card.unlocked {
-    color: white;
-    background: linear-gradient(180deg, #ff75ea, #814cff);
-  }
-  .toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 12px;
-  }
-  .icon-button {
-    width: 46px;
-    height: 46px;
-    border-radius: 14px;
-    color: white;
-    background: rgba(255,255,255,0.14);
-    font-size: 24px;
-  }
-  .shop-list {
-    display: grid;
-    gap: 10px;
-    margin-top: 16px;
-  }
-  .shop-item {
-    display: grid;
-    grid-template-columns: 68px 1fr auto;
-    align-items: center;
-    gap: 12px;
-    padding: 10px;
-    border-radius: 18px;
-    background: rgba(255,255,255,0.1);
-    text-align: left;
-  }
-  .shop-item img {
-    width: 64px;
-    height: 42px;
-    object-fit: contain;
-    filter: drop-shadow(0 4px 7px rgba(0,0,0,0.35));
-  }
-  .shop-item strong {
-    display: block;
-    font-size: 16px;
-  }
-  .shop-item span {
-    display: block;
-    margin-top: 2px;
-    font-size: 12px;
-    color: rgba(255,255,255,0.62);
-  }
-  .small-button {
-    height: 38px;
-    min-width: 80px;
-    border-radius: 999px;
-    padding: 0 14px;
-    background: rgba(255,255,255,0.16);
-    color: white;
-    font-weight: 700;
-  }
-  #coin-pill.endless-pos {
-    top: var(--space-sm);
-  }
-  .small-button.active {
-    background: linear-gradient(180deg, #ffdc43, #ffad00);
-    color: #553700;
-  }
-  .result-stats {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-    margin: 22px 0;
-  }
-  .stat-tile {
-    border-radius: 18px;
-    background: rgba(255,255,255,0.11);
-    padding: 13px;
-  }
-  .stat-tile strong {
-    display: block;
-    font-size: 28px;
-  }
-  .stat-tile span {
-    color: rgba(255,255,255,0.62);
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-  }
-  .result-subtitle {
-    margin: 8px auto 0;
-    max-width: 270px;
-    min-height: 38px;
-    color: rgba(255,255,255,0.72);
-    font-size: 15px;
-    line-height: 1.25;
-  }
-  .screen.reference-game-over {
-    background: linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.75) 100%);
-  }
-  .screen.reference-game-over .card {
-    box-sizing: border-box;
-    width: min(320px, calc(100vw - 48px));
-    min-width: 280px;
-    max-width: 320px;
-    padding: 36px 40px 28px;
-    border-radius: 28px;
-    border: 2px solid rgba(255,255,255,0.12);
-    background: rgba(30,30,60,0.95);
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-  }
-  .screen.reference-game-over #result-title {
-    margin-bottom: 6px;
-    color: #fff;
-    font-size: 40px !important;
-    letter-spacing: 1px;
-    text-shadow: 0 3px 16px rgba(217, 70, 239, 0.4);
-  }
-  .screen.reference-game-over .result-subtitle {
-    margin: 0 0 8px;
-    min-height: 0;
-    color: rgba(255,255,255,0.85);
-    font-size: 24px;
-  }
-  .screen.reference-game-over .result-subtitle span {
-    color: #FFD700;
-    font-size: 36px;
-    font-weight: 700;
-    text-shadow: 0 2px 8px rgba(255,215,0,0.4);
-  }
-  .screen.reference-game-over .result-stats,
-  .screen.reference-game-over [data-action="double-coins"],
-  .screen.reference-game-over [data-action="show-menu"] {
-    display: none;
-  }
-  .screen.reference-game-over .menu-buttons {
-    width: 100% !important;
-    gap: 12px;
-  }
-  .screen.reference-game-over #result-continue {
-    background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
-    box-shadow: 0 6px 22px rgba(245, 158, 11, 0.35);
-  }
-  .toast {
-    inset: auto 18px 26px 18px;
-    display: flex;
-    justify-content: center;
-    z-index: 20;
-  }
-  #toast-message {
-    opacity: 0;
-    transform: translateY(10px);
-    transition: opacity 150ms ease, transform 150ms ease;
-    background: rgba(29, 18, 51, 0.88);
-    border: 1px solid rgba(255,255,255,0.14);
-    color: white;
-    border-radius: 999px;
-    padding: 11px 18px;
-    box-shadow: 0 14px 32px rgba(0,0,0,0.3);
-  }
-  #toast-message.visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  #feedback-flash {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 4;
-    opacity: 0;
-  }
-  #feedback-flash.success {
-    animation: success-flash 520ms ease-out;
-  }
-  #feedback-flash.danger {
-    animation: danger-flash 520ms ease-out;
-  }
-  #feedback-flash.slice {
-    animation: slice-flash 260ms ease-out;
-  }
-  .score-pop {
-    position: fixed;
-    z-index: 9;
-    pointer-events: none;
-    color: #fffce1;
-    font-size: 28px;
-    font-weight: 800;
-    text-shadow: 0 3px 0 rgba(118, 63, 94, 0.72), 0 8px 16px rgba(78, 24, 86, 0.55);
-    transform: translate(-50%, -50%);
-    animation: score-pop 780ms ease-out forwards;
-  }
-  @keyframes score-pop {
-    0% { opacity: 0; transform: translate(-50%, -20%) scale(0.78); }
-    18% { opacity: 1; transform: translate(-50%, -58%) scale(1.14); }
-    100% { opacity: 0; transform: translate(-50%, -115%) scale(0.92); }
-  }
-  @keyframes success-flash {
-    0% { opacity: 0.5; background: rgba(108, 255, 134, 0.18); }
-    100% { opacity: 0; background: rgba(108, 255, 134, 0); }
-  }
-  @keyframes slice-flash {
-    0% { opacity: 0.34; background: rgba(255, 252, 225, 0.18); }
-    100% { opacity: 0; background: rgba(255, 252, 225, 0); }
-  }
-  @keyframes danger-flash {
-    0% { opacity: 0.58; background: rgba(255, 60, 112, 0.25); }
-    100% { opacity: 0; background: rgba(255, 60, 112, 0); }
-  }
-  .hidden {
-    display: none !important;
-  }
-  /* Endless-only presentation: gameplay stays visible behind every lightweight overlay. */
-  #stage {
-    background: #78dce7;
-  }
-  #level-pill,
-  #endless-timer,
-  #levels-screen,
-  #revive-screen,
-  #menu-screen,
-  #coin-list + h3 {
-    display: none !important;
-  }
-  #score-pill {
-    top: 18px;
-    min-width: 96px;
-    padding: 8px 20px;
-    color: #173d78;
-    background: rgba(255,255,255,0.94);
-    border: 4px solid rgba(255,255,255,0.72);
-    box-shadow: 0 5px 0 rgba(37, 102, 141, 0.16);
-    text-shadow: none;
-    backdrop-filter: none;
-  }
-  #score-pill strong {
-    font-size: 30px;
-    line-height: 1;
-  }
-  #score-required {
-    display: block !important;
-    margin-top: 4px;
-    color: #7390b9 !important;
-    font-size: 12px !important;
-  }
-  #coin-pill,
-  #coin-pill.endless-pos {
-    top: 18px;
-    right: 18px;
-    left: auto;
-    min-width: 82px;
-    justify-content: flex-end;
-    padding: 6px 10px;
-    color: #173d78;
-    font-size: 22px;
-    text-shadow: none;
-    background: rgba(255,255,255,0.94);
-    border-radius: 999px;
-    box-shadow: 0 5px 0 rgba(37, 102, 141, 0.16);
-  }
-  #coin-pill .coin-icon,
-  #shop-coins .coin-icon {
-    width: 27px;
-    height: 27px;
-    min-width: 27px;
-    border-width: 2px;
-  }
-  .top-button {
-    width: 50px;
-    height: 50px;
-    border-radius: 8px;
-    border: 3px solid white;
-    color: #173d78;
-    background: rgba(255,255,255,0.92);
-    box-shadow: 0 5px 0 rgba(37, 102, 141, 0.16);
-    font-size: 22px;
-  }
-  #pause-btn { top: 18px; right: auto; left: 18px; }
-  #shop-btn {
-    top: 78px;
-    right: auto;
-    left: 18px;
-    color: #173d78;
-    background: rgba(255,255,255,0.92);
-    font-family: Arial, sans-serif;
-    font-size: 28px;
-    font-weight: 400;
-  }
-  #tap-hint {
-    bottom: 84px;
-  }
-  #tap-hint .tap-circle {
-    width: 62px;
-    height: 62px;
-    border-width: 5px;
-    background: rgba(255,255,255,0.18);
-    box-shadow: 0 5px 0 rgba(33, 92, 91, 0.18);
-  }
-  #tap-hint div:last-child {
-    font-size: 30px;
-    font-weight: 700;
-    letter-spacing: 0;
-    text-shadow: 0 3px 0 rgba(48, 104, 78, 0.28);
-  }
-  .screen {
-    background: rgba(15, 51, 73, 0.34);
-    backdrop-filter: blur(4px);
-  }
-  .card,
-  #shop-screen .card,
-  #pause-screen .card,
-  #result-screen .card,
-  .screen.reference-game-over .card {
-    box-sizing: border-box;
-    width: min(390px, calc(100vw - 28px));
-    max-height: calc(100vh - 44px);
-    border: 4px solid rgba(255,255,255,0.95);
-    border-radius: 8px;
-    color: #173d78;
-    background: rgba(248, 252, 250, 0.97);
-    box-shadow: 0 12px 0 rgba(24, 83, 99, 0.2);
-  }
-  .primary-button, .secondary-button, .danger-button, .small-button {
-    border-radius: 8px;
-    box-shadow: 0 5px 0 rgba(19, 77, 119, 0.2);
-  }
-  .primary-button { background: #168df0; }
-  .secondary-button { background: #63b96b; }
-  .danger-button { background: #ef655f; }
-  .shop-item {
-    border-radius: 6px;
-    color: #173d78;
-    background: #e7f2ef;
-    border: 2px solid #c9dfda;
-  }
-  .shop-item span { color: #64809a; }
-  .small-button { color: white; background: #168df0; }
-  .small-button.active { color: #173d78; background: #ffd74d; }
-  .stat-tile {
-    border-radius: 6px;
-    background: #e7f2ef;
-  }
-  .stat-tile span,
-  .result-subtitle,
-  .screen.reference-game-over .result-subtitle {
-    color: #64809a;
-  }
-  .screen.reference-game-over #result-title {
-    color: #173d78;
-    text-shadow: none;
-  }
-  .screen.reference-game-over .result-stats {
-    display: grid;
-  }
-  .screen.reference-game-over [data-action="open-shop"] {
-    display: block;
-  }
-  .praise-pop {
-    position: fixed;
-    z-index: 10;
-    pointer-events: none;
-    color: white;
-    font-size: 44px;
-    font-weight: 800;
-    text-shadow: 0 4px 0 rgba(29, 104, 128, 0.35);
-    transform: translate(-50%, -50%);
-    animation: praise-pop 850ms ease-out forwards;
-  }
-  @keyframes praise-pop {
-    0% { opacity: 0; transform: translate(-50%, -20%) scale(0.7); }
-    22% { opacity: 1; transform: translate(-50%, -50%) scale(1.12); }
-    100% { opacity: 0; transform: translate(-50%, -95%) scale(0.94); }
-  }
-  @media (max-width: 760px) {
-    #level-pill { font-size: 15px; }
-    .card { padding: 22px; }
-  }
-`;
-document.head.append(style);
 
-root.innerHTML = `
-  <div id="stage"></div>
-  <div id="feedback-flash"></div>
-  <div class="hud hidden" id="hud">
-    <button class="pill" id="level-pill">Endless</button>
-    <div class="pill" id="score-pill">
-      <strong>0</strong>
-      <span id="score-required">BEST 0</span>
-      <div id="endless-timer">
-        <div id="endless-timer-bar-wrap"><div id="endless-timer-bar"></div></div>
-        <span id="endless-timer-text">10.0s</span>
-        <span id="endless-timer-hint">Score to survive!</span>
-      </div>
-    </div>
-    <div id="coin-pill"><span class="coin-icon"></span><span id="coin-count">0</span></div>
-    <button class="top-button" id="pause-btn" aria-label="Pause">&#10074;&#10074;</button>
-    <button class="top-button" id="shop-btn" aria-label="Knives and themes" title="Knives and themes">&#9881;&#xfe0e;</button>
-    <div id="tap-hint"><div class="tap-circle"></div><div>TAP TO FLIP</div></div>
-  </div>
-  <div class="screen visible" id="menu-screen">
-    <div class="card">
-      <div class="brand-knife"></div>
-      <h1 class="title">Chopline Rush</h1>
-      <div class="subtitle">Flip · Slice · Conquer</div>
-      <div class="menu-line"></div>
-      <div class="menu-buttons">
-        <button class="primary-button" data-action="start-endless">Play</button>
-      </div>
-    </div>
-  </div>
-  <div class="screen" id="levels-screen">
-    <div class="card">
-      <div class="toolbar">
-        <button class="icon-button" data-action="show-menu" aria-label="Back">&lt;</button>
-        <h2 class="title" style="font-size: 32px;">Select Level</h2>
-        <button class="icon-button" data-action="open-shop" aria-label="Shop">$</button>
-      </div>
-      <div class="level-grid" id="level-grid"></div>
-    </div>
-  </div>
-  <div class="screen" id="shop-screen">
-    <div class="card">
-      <div class="toolbar">
-        <button class="icon-button" data-action="close-shop" aria-label="Back">&lt;</button>
-        <h2 class="title" style="font-size: 31px;">Gear</h2>
-        <div id="shop-coins" style="font-size: 19px; font-weight: 700;"></div>
-      </div>
-      <div class="shop-list" id="knife-list"></div>
-      <h3 style="margin: 22px 0 8px;">Themes</h3>
-      <div class="shop-list" id="coin-list"></div>
-    </div>
-  </div>
-  <div class="screen" id="pause-screen">
-    <div class="card">
-      <h2 class="title" style="font-size: 38px;">Paused</h2>
-      <div class="menu-buttons" style="margin-top: 24px;">
-        <button class="primary-button" data-action="resume">Continue</button>
-        <button class="secondary-button" data-action="restart">Retry</button>
-        <button class="secondary-button" data-action="open-shop">Gear</button>
-      </div>
-    </div>
-  </div>
-  <div class="screen" id="revive-screen">
-    <div class="card">
-      <h2 class="title" style="font-size: 38px;">Game Over!</h2>
-      <p style="color: rgba(255,255,255,0.72);">Use one revive to keep the run alive.</p>
-      <div class="menu-buttons" style="width: 260px; margin-top: 20px;">
-        <button class="primary-button" data-action="revive-coins">Use 100 coins</button>
-        <button class="secondary-button" data-action="revive-ad">Rewarded revive</button>
-        <button class="danger-button" data-action="finish-run">End run</button>
-      </div>
-    </div>
-  </div>
-  <div class="screen" id="result-screen">
-    <div class="card">
-      <h2 class="title" id="result-title" style="font-size: 40px;">Victory!</h2>
-      <p class="result-subtitle" id="result-subtitle">Level cleared.</p>
-      <div class="result-stats">
-        <div class="stat-tile"><strong id="result-score">0</strong><span>Score</span></div>
-        <div class="stat-tile"><strong id="result-coins">0</strong><span>Coins</span></div>
-      </div>
-      <div class="menu-buttons" style="width: 260px;">
-        <button class="primary-button" id="result-continue" data-action="next-run">Try Again</button>
-        <button class="secondary-button" data-action="open-shop">Gear</button>
-      </div>
-    </div>
-  </div>
-  <div class="toast"><div id="toast-message"></div></div>
-`;
+function requireAppRoot(): HTMLDivElement {
+  const node = document.getElementById("app");
+  if (!(node instanceof HTMLDivElement)) throw new Error("[chopline-rush] Missing #app root in template.html");
+  return node;
+}
+const root = requireAppRoot();
 
 function requireElement<T extends HTMLElement>(id: string, type: { new(): T }): T {
   const element = document.getElementById(id);
@@ -1514,16 +600,12 @@ const isChoplineTestMode = new URLSearchParams(window.location.search).has("chop
 const feedbackFlash = requireElement("feedback-flash", HTMLDivElement);
 const hud = requireElement("hud", HTMLDivElement);
 const menuScreen = requireElement("menu-screen", HTMLDivElement);
-const levelsScreen = requireElement("levels-screen", HTMLDivElement);
 const shopScreen = requireElement("shop-screen", HTMLDivElement);
 const pauseScreen = requireElement("pause-screen", HTMLDivElement);
-const reviveScreen = requireElement("revive-screen", HTMLDivElement);
 const resultScreen = requireElement("result-screen", HTMLDivElement);
-const levelGrid = requireElement("level-grid", HTMLDivElement);
 const knifeList = requireElement("knife-list", HTMLDivElement);
 const coinList = requireElement("coin-list", HTMLDivElement);
 const toastMessage = requireElement("toast-message", HTMLDivElement);
-const levelPill = requireElement("level-pill", HTMLButtonElement);
 const scorePill = requireElement("score-pill", HTMLDivElement);
 const scoreRequired = requireElement("score-required", HTMLSpanElement);
 const endlessTimer = requireElement("endless-timer", HTMLDivElement);
@@ -1547,8 +629,6 @@ function cloneProfile(input: Profile): Profile {
     equippedKnife: input.equippedKnife,
     ownedThemes: [...input.ownedThemes],
     equippedTheme: input.equippedTheme,
-    highestLevel: input.highestLevel,
-    highestLevelCompleted: input.highestLevelCompleted,
     endlessBest: input.endlessBest,
     totalRuns: input.totalRuns,
     totalSlices: input.totalSlices,
@@ -1575,8 +655,6 @@ function sanitizeProfile(value: unknown): Profile {
     equippedKnife: equipped,
     ownedThemes: sanitizedOwnedThemes,
     equippedTheme,
-    highestLevel: safeInt(source.highestLevel, 1, LEVEL_COUNT),
-    highestLevelCompleted: safeInt(source.highestLevelCompleted, 0, LEVEL_COUNT),
     endlessBest: safeInt(source.endlessBest, 0, 999999999),
     totalRuns: safeInt(source.totalRuns, 0, 999999999),
     totalSlices: safeInt(source.totalSlices, 0, 999999999),
@@ -1589,15 +667,12 @@ function mergeProfile(a: Profile, b: Profile): Profile {
   const owned = Array.from(new Set([...a.ownedKnives, ...b.ownedKnives]));
   const ownedThemes = Array.from(new Set([...a.ownedThemes, ...b.ownedThemes]));
   const achievements = Array.from(new Set([...a.achievements, ...b.achievements]));
-  const highestLevelCompleted = Math.max(a.highestLevelCompleted, b.highestLevelCompleted);
   return {
     coins: Math.max(a.coins, b.coins),
     ownedKnives: owned,
     equippedKnife: owned.includes(b.equippedKnife) ? b.equippedKnife : a.equippedKnife,
     ownedThemes,
     equippedTheme: ownedThemes.includes(b.equippedTheme) ? b.equippedTheme : a.equippedTheme,
-    highestLevel: Math.max(a.highestLevel, b.highestLevel, highestLevelCompleted + 1),
-    highestLevelCompleted,
     endlessBest: Math.max(a.endlessBest, b.endlessBest),
     totalRuns: Math.max(a.totalRuns, b.totalRuns),
     totalSlices: Math.max(a.totalSlices, b.totalSlices),
@@ -1708,64 +783,6 @@ class Platform {
       throw new Error("[chopline-rush] Login API unavailable");
     }
     this.loggedIn = true;
-  }
-
-  canUseRewardedAds(): boolean {
-    const rewarded = this.sdk?.ads?.rewarded;
-    return Boolean(rewarded?.load && rewarded.show);
-  }
-
-  async showRewarded(): Promise<boolean> {
-    const rewarded = this.sdk?.ads?.rewarded;
-    if (!rewarded?.load || !rewarded.show) throw new Error("[chopline-rush] Rewarded ad API unavailable");
-    const loaded = await rewarded.load();
-    if (loaded.status !== "ready") return false;
-    const result = await rewarded.show();
-    return result.status === "completed";
-  }
-
-  async showInterstitial(): Promise<void> {
-    const interstitial = this.sdk?.ads?.interstitial;
-    if (!interstitial?.load || !interstitial.show) return;
-    const loaded = await interstitial.load();
-    if (loaded.status === "ready") await interstitial.show();
-  }
-
-  async purchaseCoins(product: CoinProduct): Promise<void> {
-    const shop = this.sdk?.shop;
-    if (!shop?.purchase) throw new Error("[chopline-rush] Shop purchase API unavailable");
-    const products = await shop.listProducts?.();
-    let receipt: ShopReceipt;
-    if (products) {
-      const listedProduct = products.find((item) => item.key === product.sku);
-      if (!listedProduct) throw new Error(`[chopline-rush] Coin product not listed: ${product.sku}`);
-      receipt = await shop.purchase(listedProduct.key);
-    } else {
-      receipt = await shop.purchase({
-        kind: "consumable",
-        sku: product.sku,
-        displayName: product.displayName,
-        priceCredits: product.priceCredits,
-      });
-    }
-    if (receipt.status === "CANCELLED") throw new Error("[chopline-rush] Purchase was cancelled");
-    const granted = shop.grant && receipt.status !== "GRANTED" ? await shop.grant(receipt.id) : receipt;
-    if (granted.status && granted.status !== "GRANTED" && granted.status !== "CONSUMED") {
-      throw new Error(`[chopline-rush] Purchase receipt not grantable: ${granted.status}`);
-    }
-    await shop.consume?.(receipt.id);
-  }
-
-  async unlockAchievements(keys: string[]): Promise<void> {
-    const unique = Array.from(new Set(keys.filter((key) => !profile.achievements.includes(key))));
-    if (unique.length === 0) return;
-    profile.achievements.push(...unique);
-    saveProfile();
-    await Promise.all(unique.map(async (key) => this.sdk?.achievements?.unlock?.(key)));
-  }
-
-  async setAchievementProgress(key: string, progress: number): Promise<void> {
-    await this.sdk?.achievements?.setProgressAtLeast?.(key, progress);
   }
 
   async submitLeaderboard(key: string, score: number): Promise<void> {
@@ -1902,7 +919,6 @@ const audio = new GameAudio();
 let profile = loadLocalProfile();
 let screen: Screen = "boot";
 let previousScreen: Screen = "menu";
-let selectedLevel = Math.max(1, Math.min(profile.highestLevel, LEVEL_COUNT));
 let selectedMode: Mode = "endless";
 let currentRun: RunState | null = null;
 let isolatedVisualRandomSeed = 0x9e3779b9;
@@ -1924,18 +940,13 @@ function setPreviewMode(active: boolean): void {
   root.classList.toggle("preview-capture", active);
 }
 
-function choosePreviewLevel(payload?: PreviewPayload): number {
-  const sceneId = payload?.sceneId ?? "";
-  const levelMatch = sceneId.match(/level-(\d+)/);
-  if (levelMatch) return Math.max(1, Math.min(LEVEL_COUNT, Number(levelMatch[1])));
-  if (sceneId.includes("hazard") || payload?.surface === "mobile-portrait") return 8;
-  return 12;
-}
 
 const scene = new THREE.Scene();
 const PORTRAIT_ASPECT = 720 / 1280;
 const camera = new THREE.PerspectiveCamera(60, PORTRAIT_ASPECT, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+const pmremGenerator = new THREE.PMREMGenerator(renderer);
+const knifeEnvMap = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -2149,6 +1160,10 @@ const knifeModelCache = new Map<string, Promise<THREE.Object3D>>();
 const knifeModelLength = 2.05;
 const knifeModelCrossSection = 0.58;
 
+// ============================================================================
+// TUNING - the gameplay feel lives here. SPECS.md documents this motion model;
+// keep the two in sync. Everything below the tuning block is implementation.
+// ============================================================================
 const KNIFE_TIP_EMBED = 0.08;
 const BASE_FLIP_Y = 10;
 const BASE_FLIP_Z = 8;
@@ -2196,7 +1211,7 @@ let activeKnifeGeometry: KnifeGeometry = {
   yawOffset: 0,
 };
 const TRAJECTORY_POINT_LIMIT = 42;
-const TRAJECTORY_WIDTH = 0.11;
+const TRAJECTORY_WIDTH = 0.065;
 const trajectoryGeometry = new THREE.BufferGeometry();
 const trajectoryPositionAttribute = new THREE.BufferAttribute(new Float32Array(TRAJECTORY_POINT_LIMIT * 2 * 3), 3);
 const trajectoryColorAttribute = new THREE.BufferAttribute(new Float32Array(TRAJECTORY_POINT_LIMIT * 2 * 3), 3);
@@ -2260,7 +1275,7 @@ async function init(): Promise<void> {
   await buildKnife();
   buildBackground();
   resize();
-  newRun("endless", 0, true);
+  newRun(true);
   setupPreviewHooks();
   setupTestHooks();
   requestAnimationFrame(frame);
@@ -2268,32 +1283,15 @@ async function init(): Promise<void> {
 
 function showScreen(next: Screen): void {
   screen = next;
-  for (const node of [menuScreen, levelsScreen, shopScreen, pauseScreen, reviveScreen, resultScreen]) {
+  for (const node of [menuScreen, shopScreen, pauseScreen, resultScreen]) {
     node.classList.remove("visible");
   }
-  hud.classList.toggle("hidden", next === "menu" || next === "levels" || next === "shop" || next === "boot");
+  hud.classList.toggle("hidden", next === "menu" || next === "shop" || next === "boot");
   if (next === "menu") menuScreen.classList.add("visible");
-  if (next === "levels") levelsScreen.classList.add("visible");
   if (next === "shop") shopScreen.classList.add("visible");
   if (next === "paused") pauseScreen.classList.add("visible");
-  if (next === "revive") reviveScreen.classList.add("visible");
   if (next === "result") resultScreen.classList.add("visible");
   updateHud();
-}
-
-function renderLevelGrid(): void {
-  levelGrid.innerHTML = "";
-  for (let index = 0; index < LEVEL_COUNT; index += 1) {
-    const button = document.createElement("button");
-    button.className = `level-card ${index + 1 <= profile.highestLevel ? "unlocked" : "locked"}`;
-    button.textContent = index + 1 <= profile.highestLevel ? String(index + 1) : "LOCK";
-    button.disabled = index + 1 > profile.highestLevel;
-    button.addEventListener("click", () => {
-      selectedLevel = index + 1;
-      void startRun("level");
-    });
-    levelGrid.append(button);
-  }
 }
 
 function renderShop(): void {
@@ -2338,11 +1336,8 @@ function renderShop(): void {
 
 function updateHud(): void {
   const run = currentRun;
-  levelPill.textContent = "Endless";
-  levelPill.style.display = "none";
   coinPill.classList.add("endless-pos");
   const score = run?.score ?? 0;
-  const target = run?.targetScore ?? (LEVELS[selectedLevel - 1]?.requiredScore ?? 10);
   const scoreStrong = scorePill.querySelector("strong");
   if (scoreStrong) scoreStrong.textContent = formatNumber(score);
   scoreRequired.style.display = "block";
@@ -2382,6 +1377,9 @@ function polishKnifeMaterial(source: THREE.Material, skin: KnifeSkin): THREE.Mat
   readable.emissiveIntensity = 0;
   if (readable.metalness !== undefined) readable.metalness = 0.3;
   if (readable.roughness !== undefined) readable.roughness = 0.45;
+  const withEnv = readable as THREE.Material & { envMap?: THREE.Texture | null; envMapIntensity?: number };
+  withEnv.envMap = knifeEnvMap;
+  withEnv.envMapIntensity = 0.9;
   material.needsUpdate = true;
   return material;
 }
@@ -2440,34 +1438,24 @@ function clearWorld(): void {
   stickProofEvents.length = 0;
 }
 
-function newRun(mode: Mode, levelIndex = selectedLevel - 1, makeActive = true): void {
-  const level = LEVELS[Math.max(0, Math.min(LEVEL_COUNT - 1, levelIndex))] ?? LEVELS[0]!;
-  selectedMode = mode;
+function newRun(makeActive = true): void {
+  selectedMode = "endless";
   currentRun = {
-    mode,
-    levelIndex: Math.max(0, Math.min(LEVEL_COUNT - 1, levelIndex)),
+    mode: "endless",
     score: 0,
     combo: 0,
     bestCombo: 0,
-    targetScore: mode === "endless" ? 0 : level.requiredScore ?? 10,
+    targetScore: 0,
     endlessScoreTimer: ENDLESS_SCORE_TIMEOUT,
     endlessTimerActive: false,
     tapHintConsumed: false,
-    reward: mode === "endless" ? 30 : level.reward ?? 5,
+    reward: 30,
     startedAt: performance.now(),
     outcome: null,
-    reviveUsed: false,
     coinsAwarded: 0,
-    doubled: false,
-    interstitialShown: false,
-    goalAnnounced: false,
   };
   clearWorld();
-  if (mode === "endless") {
-    buildEndlessWorld();
-  } else {
-    buildLevelWorld(level);
-  }
+  buildEndlessWorld();
   resetKnife();
   updateHud();
   if (makeActive) {
@@ -2549,28 +1537,6 @@ function snapCameraToKnife(): void {
   rimLight.position.set(knife.position.x + 6, knife.position.y + 8, knife.position.z - 4);
   rimLight.target.position.copy(knife.position);
   updateBackgroundChunks(knife.position.z);
-}
-
-function buildLevelWorld(level: RefLevel): void {
-  const platformById = new Map<string, PlatformEntity>();
-  level.platforms.forEach((def, index) => {
-    const platformEntity = createPlatform(def, index);
-    platformEntities.push(platformEntity);
-    platformById.set(platformEntity.id, platformEntity);
-  });
-  (level.roofs ?? []).forEach((def, index) => {
-    const roofEntity = createRoof(def, index);
-    platformEntities.push(roofEntity);
-    platformById.set(roofEntity.id, roofEntity);
-  });
-  (level.sliceables ?? []).forEach((def, index) => {
-    createSliceable(def, index, platformById);
-  });
-  (level.obstacles ?? []).forEach((def, index) => {
-    createObstacle(def, index, platformById);
-  });
-  createFinishMarker(level);
-  buildBackground();
 }
 
 function expandedEndlessObjectCount(template: EndlessTemplate): number {
@@ -2721,7 +1687,7 @@ function spawnNextEndlessPlatform(): void {
   const previousTop = previousPlatform ? getPlatformTop(previousPlatform) : 1;
   const authoredTop = (template.platform.y ?? 0) + template.platform.height;
   const reachableTop = THREE.MathUtils.clamp(authoredTop, previousTop - 1.5, previousTop + 3.8);
-  const platformDef: RefPlatform = {
+  const platformDef: PlatformDef = {
     ...template.platform,
     id: platformId,
     y: reachableTop - template.platform.height,
@@ -2816,7 +1782,7 @@ function updateEndlessTimer(dt: number): void {
   }
 }
 
-function createPlatform(def: RefPlatform, index: number): PlatformEntity {
+function createPlatform(def: PlatformDef, index: number): PlatformEntity {
   const width = 3;
   const depth = Math.max(2, def.depth);
   const height = Math.max(0.6, def.height);
@@ -2859,7 +1825,7 @@ function getPlatformTop(platform: PlatformEntity): number {
   return platform.mesh.position.y + platform.height / 2;
 }
 
-function createRoof(def: RefPlatform, index: number): PlatformEntity {
+function createRoof(def: PlatformDef, index: number): PlatformEntity {
   const width = 3;
   const depth = Math.max(2, def.depth);
   const height = 20;
@@ -2897,7 +1863,7 @@ function createRoof(def: RefPlatform, index: number): PlatformEntity {
   return entity;
 }
 
-function getThingPlacement(def: RefThing, platformById: Map<string, PlatformEntity>): { position: THREE.Vector3; localPosition: THREE.Vector3; platformId: string | null } {
+function getThingPlacement(def: ThingDef, platformById: Map<string, PlatformEntity>): { position: THREE.Vector3; localPosition: THREE.Vector3; platformId: string | null } {
   const platform = def.platformId ? platformById.get(def.platformId) : undefined;
   if (!platform) {
     const position = new THREE.Vector3(0, def.y ?? 1.5, def.z ?? 0);
@@ -2908,7 +1874,7 @@ function getThingPlacement(def: RefThing, platformById: Map<string, PlatformEnti
   return { position, localPosition, platformId: platform.id };
 }
 
-function createSliceable(def: RefThing, index: number, platformById: Map<string, PlatformEntity>): void {
+function createSliceable(def: ThingDef, index: number, platformById: Map<string, PlatformEntity>): void {
   const count = Math.max(1, Math.min(25, def.count ?? 1));
   const placement = getThingPlacement(def, platformById);
   const stackGap = getStackGap(def.type) * SLICEABLE_VISUAL_SCALE;
@@ -3101,7 +2067,7 @@ function buildSliceMesh(type: string, index: number): THREE.Group {
       group.add(leg);
     }
   } else if (type === "donut") {
-    buildReferenceDonut(group);
+    buildDonutMesh(group);
   } else if (type === "cheese") {
     const shape = new THREE.Shape();
     shape.moveTo(-0.27, -0.375);
@@ -3189,7 +2155,7 @@ function buildSliceMesh(type: string, index: number): THREE.Group {
   return group;
 }
 
-function buildReferenceDonut(group: THREE.Group): void {
+function buildDonutMesh(group: THREE.Group): void {
   const ringRadius = 0.38;
   const tubeRadius = 0.12;
   const centerY = ringRadius + tubeRadius;
@@ -3222,7 +2188,7 @@ function buildReferenceDonut(group: THREE.Group): void {
   inner.add(bottom);
 }
 
-function createObstacle(def: RefThing, index: number, platformById: Map<string, PlatformEntity>): void {
+function createObstacle(def: ThingDef, index: number, platformById: Map<string, PlatformEntity>): void {
   const group = new THREE.Group();
   const placement = getThingPlacement(def, platformById);
   const slab = new THREE.Mesh(new THREE.BoxGeometry(2, 0.3, 2), materials.hazard);
@@ -3304,38 +2270,6 @@ function toRadians(value: number | null): number {
   return Math.abs(value) > Math.PI * 2 ? THREE.MathUtils.degToRad(value) : value;
 }
 
-function createFinishMarker(level: RefLevel): void {
-  const targetId = level.finishLinePlatformId;
-  const fallback = [...platformEntities].reverse().find((item) => item.kind === "platform");
-  const platform = (targetId ? platformEntities.find((item) => item.id === targetId && item.kind === "platform") : undefined) ?? fallback;
-  if (!platform) return;
-  const z = platform.mesh.position.z + platform.depth / 2 - 0.3;
-  const y = getPlatformTop(platform);
-  const poleHeight = 3;
-  const poleMat = new THREE.MeshPhongMaterial({ color: 0xffd700, shininess: 30 });
-  const bannerMat = new THREE.MeshPhongMaterial({ color: 0xff4444, shininess: 25 });
-  const blackMat = new THREE.MeshPhongMaterial({ color: 0x000000, shininess: 8 });
-  const whiteMat = new THREE.MeshPhongMaterial({ color: 0xffffff, shininess: 8 });
-  const poleGeo = new THREE.CylinderGeometry(0.1, 0.1, poleHeight, 8);
-  const left = new THREE.Mesh(poleGeo, poleMat);
-  left.position.set(-1.4, y + poleHeight / 2, z);
-  const right = left.clone();
-  right.position.x = 1.4;
-  const banner = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.5, 0.1), bannerMat);
-  banner.position.set(0, y + poleHeight - 0.25, z);
-  const finishMeshes: THREE.Mesh[] = [left, right, banner];
-  const checkGeo = new THREE.BoxGeometry(0.3, 0.12, 0.5);
-  for (let i = 0; i < 10; i += 1) {
-    const check = new THREE.Mesh(checkGeo, i % 2 === 0 ? whiteMat : blackMat);
-    check.position.set(-1.35 + i * 0.3, y + 0.06, z - 0.5);
-    finishMeshes.push(check);
-  }
-  for (const mesh of finishMeshes) {
-    mesh.castShadow = true;
-    platformGroup.add(mesh);
-  }
-}
-
 function buildBackground(): void {
   while (background.children.length) {
     const child = background.children[0];
@@ -3357,8 +2291,8 @@ function buildBackground(): void {
   updateBackgroundChunks(knife.position.z);
 }
 
-function updateBackgroundChunks(referenceZ: number): void {
-  const currentChunk = Math.floor(referenceZ / 100);
+function updateBackgroundChunks(focusZ: number): void {
+  const currentChunk = Math.floor(focusZ / 100);
   const minChunk = currentChunk - 1;
   const maxChunk = currentChunk + 2;
   for (let chunk = minChunk; chunk <= maxChunk; chunk += 1) {
@@ -3579,7 +2513,6 @@ function updateKnife(dt: number): void {
   if (knife.state === "stuck") {
     syncKnifeTransform();
     checkCollisions();
-    checkFinish();
     return;
   }
 
@@ -3602,7 +2535,6 @@ function updateKnife(dt: number): void {
       failRun();
     }
   }
-  checkFinish();
 }
 
 function updateKnifePhysics(dt: number): void {
@@ -4033,12 +2965,6 @@ function sliceObject(slice: SliceEntity, playJuice = true): void {
     pulseHaptic(12);
     audio.play(slice.type === "wooden_stake" ? "sliceWood" : "sliceSoft", 0.7);
   }
-  if (currentRun.mode === "level" && !currentRun.goalAnnounced && currentRun.score >= currentRun.targetScore) {
-    currentRun.goalAnnounced = true;
-    startCameraShake(0.16, 0.18);
-    flashFeedback("success");
-    showToast("Goal reached - reach the finish");
-  }
   if (proofEvent) {
     proofEvent.afterRandom = randomWindow.__rngCount ?? null;
     proofEvent.afterPieces = slicePieces.length;
@@ -4240,7 +3166,7 @@ function checkRotatingStick(bladeOBB: KnifeOBB, midBladeOBB: KnifeOBB): boolean 
     }
   }
 
-  if (knife.rotatingStickAccumAngle > 4 * Math.PI) {
+  if (knife.rotatingStickAccumAngle > 2.25 * Math.PI) {
     knife.state = "flying";
     knife.rotatingStickExhaustedPlatform = knife.rotatingStickPlatform;
     knife.rotatingStickPlatform = null;
@@ -4914,25 +3840,6 @@ function updateSlicePieces(dt: number): void {
   }
 }
 
-function checkFinish(): void {
-  if (!currentRun || currentRun.outcome) return;
-  if (previewMode) return;
-  const final = getFinishPlatform(currentRun);
-  if (!final) return;
-  const finishZ = final.mesh.position.z + final.depth / 2 - 0.8;
-  if (knife.position.z >= finishZ && currentRun.score >= currentRun.targetScore) {
-    winRun();
-  }
-}
-
-function getFinishPlatform(run: RunState): PlatformEntity | undefined {
-  if (run.mode !== "level") return undefined;
-  const fallback = [...platformEntities].reverse().find((item) => item.kind === "platform");
-  const level = LEVELS[run.levelIndex];
-  const targetId = level?.finishLinePlatformId;
-  return (targetId ? platformEntities.find((item) => item.id === targetId && item.kind === "platform") : undefined) ?? fallback;
-}
-
 function updateCamera(dt: number): void {
   tempVector.copy(knife.position).add(CAM_OFFSET);
   camera.position.x += (tempVector.x - camera.position.x) * 5 * dt;
@@ -5064,14 +3971,6 @@ function updateGameOverTumble(dt: number): void {
   }
 }
 
-function winRun(): void {
-  if (!currentRun || currentRun.outcome) return;
-  currentRun.outcome = "won";
-  flashFeedback("success");
-  audio.play("victory", 0.7);
-  finishRun();
-}
-
 function failRun(): void {
   if (!currentRun || currentRun.outcome) return;
   if (previewMode) {
@@ -5086,15 +3985,7 @@ function failRun(): void {
   flashFeedback("danger");
   pulseHaptic(28);
   audio.play("gameOver", 0.65);
-  if (currentRun.mode === "endless") {
-    startGameOverTumble();
-    return;
-  }
-  if (!currentRun.reviveUsed) {
-    showScreen("revive");
-  } else {
-    finishRun();
-  }
+  startGameOverTumble();
 }
 
 function recoverPreviewRun(): void {
@@ -5129,60 +4020,6 @@ function recoverPreviewRun(): void {
   showScreen("playing");
 }
 
-function reviveWithCoins(): void {
-  if (!currentRun || screen !== "revive") return;
-  if (profile.coins < REVIVE_COST) {
-    showToast("Not enough coins");
-    return;
-  }
-  profile.coins -= REVIVE_COST;
-  saveProfile();
-  reviveRun();
-}
-
-async function reviveWithRewarded(): Promise<void> {
-  if (!currentRun || screen !== "revive") return;
-  try {
-    const ok = await platform.showRewarded();
-    if (ok) reviveRun();
-  } catch (error) {
-    showToast(error instanceof Error ? error.message : "Rewarded ad unavailable");
-  }
-}
-
-function reviveRun(): void {
-  if (!currentRun) return;
-  currentRun.outcome = null;
-  currentRun.reviveUsed = true;
-  const nearest = findNearestPlatformBehind();
-  const readyAngle = activeKnifeGeometry.readyAngle;
-  knife.position.copy(nearest ? plantedPivotOnTop(nearest, readyAngle) : new THREE.Vector3(KNIFE_VISUAL_X, 3, Math.max(0, knife.position.z - 2)));
-  knife.previousPosition.copy(knife.position);
-  knife.velocity.set(0, 0, 0);
-  knife.rotation = readyAngle;
-  knife.previousRotation = knife.rotation;
-  knife.angularVelocity = 0;
-  knife.state = "stuck";
-  knife.stuckFace = "top";
-  knife.stuckPlatform = nearest;
-  knife.stuckSideDir = 1;
-  knife.rotationTarget = readyAngle;
-  knife.slicing = false;
-  restoreWidenedObjects();
-  knife.flipSourcePlatform = null;
-  knife.flipSourceFaceY = null;
-  knife.flipSourceFaceType = null;
-  knife.lastBounceEntity = null;
-  knife.lastFlipAt = Number.NEGATIVE_INFINITY;
-  knife.rotatingStickPlatform = null;
-  knife.rotatingStickAccumAngle = 0;
-  knife.rotatingStickExhaustedPlatform = null;
-  resetTrajectoryTrail();
-  syncKnifeTransform();
-  showScreen("playing");
-  void platform.unlockAchievements(["first_revive"]).catch(() => undefined);
-}
-
 function findNearestPlatformBehind(): PlatformEntity | null {
   let best: PlatformEntity | null = null;
   let bestDistance = Number.POSITIVE_INFINITY;
@@ -5200,15 +4037,8 @@ function findNearestPlatformBehind(): PlatformEntity | null {
 function finishRun(): void {
   if (!currentRun) return;
   const run = currentRun;
-  const won = run.outcome === "won";
   profile.totalRuns += 1;
-  if (run.mode === "level" && won) {
-    profile.highestLevelCompleted = Math.max(profile.highestLevelCompleted, run.levelIndex + 1);
-    profile.highestLevel = Math.max(profile.highestLevel, Math.min(LEVEL_COUNT, run.levelIndex + 2));
-  }
-  if (run.mode === "endless") {
-    profile.endlessBest = Math.max(profile.endlessBest, run.score);
-  }
+  profile.endlessBest = Math.max(profile.endlessBest, run.score);
   saveProfile();
   renderResult(run);
   void submitMeta(run);
@@ -5216,88 +4046,20 @@ function finishRun(): void {
 }
 
 function renderResult(run: RunState): void {
-  const levelNumber = run.levelIndex + 1;
-  const won = run.outcome === "won";
-  const isReferenceEndlessGameOver = run.mode === "endless" && !won;
-  resultScreen.classList.toggle("reference-game-over", isReferenceEndlessGameOver);
-  if (run.mode === "level" && won) {
-    resultTitle.textContent = levelNumber >= LEVEL_COUNT ? "All Levels Cleared!" : "Level Complete!";
-    resultSubtitle.textContent = levelNumber >= LEVEL_COUNT
-      ? "You cleared all 30 reference boards."
-      : `Level ${levelNumber} cleared. Level ${levelNumber + 1} is next.`;
-    resultContinue.textContent = levelNumber >= LEVEL_COUNT ? "Replay Level 30" : "Next Level";
-  } else if (run.mode === "level") {
-    resultTitle.textContent = "Game Over!";
-    resultSubtitle.textContent = `Level ${levelNumber} ended. Retry this board.`;
-    resultContinue.textContent = "Retry Level";
-  } else {
-    resultTitle.textContent = run.score >= profile.endlessBest && run.score > 0 ? "New Best!" : "Run Over";
-    resultSubtitle.innerHTML = `Score <span>${formatNumber(run.score)}</span> · Best ${formatNumber(profile.endlessBest)}`;
-    resultContinue.textContent = "Try Again";
-  }
+  resultScreen.classList.toggle("endless-game-over", true);
+  resultTitle.textContent = run.score >= profile.endlessBest && run.score > 0 ? "New Best!" : "Run Over";
+  resultSubtitle.innerHTML = `Score <span>${formatNumber(run.score)}</span> · Best ${formatNumber(profile.endlessBest)}`;
+  resultContinue.textContent = "Try Again";
   resultScore.textContent = formatNumber(run.score);
   resultCoins.textContent = `+${formatNumber(run.coinsAwarded)}`;
-  const doubleButton = resultScreen.querySelector<HTMLButtonElement>('[data-action="double-coins"]');
-  if (doubleButton) doubleButton.disabled = run.doubled || !platform.canUseRewardedAds();
-}
-
-async function doubleCoins(): Promise<void> {
-  if (!currentRun || screen !== "result" || currentRun.doubled || currentRun.coinsAwarded <= 0) return;
-  try {
-    const ok = await platform.showRewarded();
-    if (!ok) return;
-    profile.coins += currentRun.coinsAwarded;
-    profile.totalCoinsEarned += currentRun.coinsAwarded;
-    currentRun.coinsAwarded *= 2;
-    currentRun.doubled = true;
-    saveProfile();
-    renderResult(currentRun);
-    audio.play("coin", 0.75);
-  } catch (error) {
-    showToast(error instanceof Error ? error.message : "Rewarded ad unavailable");
-  }
-}
-
-async function maybeShowInterstitial(run: RunState): Promise<void> {
-  if (run.interstitialShown || previewMode) return;
-  run.interstitialShown = true;
-  try {
-    await platform.showInterstitial();
-  } catch {
-    // Interstitial failures should not interrupt the result screen.
-  }
 }
 
 async function submitMeta(run: RunState): Promise<void> {
   try {
-    if (run.mode === "endless") await platform.submitLeaderboard(LEADERBOARD_ENDLESS, profile.endlessBest);
+    await platform.submitLeaderboard(LEADERBOARD_ENDLESS, profile.endlessBest);
   } catch {
     // The run remains valid if network meta submission fails.
   }
-}
-
-function collectInstantAchievements(): string[] {
-  const keys = ["first_slice"];
-  if (currentRun && currentRun.bestCombo >= 12) keys.push("combo_twelve");
-  if (currentRun && currentRun.bestCombo >= 25) keys.push("combo_twentyfive");
-  return keys;
-}
-
-function collectRunAchievements(run: RunState): string[] {
-  const keys = collectInstantAchievements();
-  if (run.mode === "level") {
-    if (profile.highestLevelCompleted >= 5) keys.push("level_five");
-    if (profile.highestLevelCompleted >= 15) keys.push("level_fifteen");
-    if (profile.highestLevelCompleted >= 30) keys.push("level_thirty");
-  }
-  if (run.mode === "endless") {
-    if (run.score >= 1000) keys.push("endless_1000");
-    if (run.score >= 2500) keys.push("endless_2500");
-  }
-  if (profile.totalRuns >= 10) keys.push("ten_runs");
-  if (profile.ownedKnives.length > 1) keys.push("first_upgrade");
-  if (profile.ownedKnives.length >= KNIVES.length) keys.push("all_knives");
-  return keys;
 }
 
 async function buyOrEquipKnife(knifeSkin: KnifeSkin): Promise<void> {
@@ -5353,34 +4115,14 @@ function buyOrEquipTheme(theme: WorldTheme): void {
   showToast(`${theme.displayName} theme active`);
 }
 
-async function buyCoins(product: CoinProduct): Promise<void> {
-  try {
-    await platform.purchaseCoins(product);
-    profile.coins += product.coins;
-    profile.totalCoinsEarned += product.coins;
-    saveProfile();
-    renderShop();
-    showToast(`${product.displayName} added`);
-  } catch (error) {
-    showToast(error instanceof Error ? error.message : "Purchase unavailable");
-  }
-}
-
 function nextRun(): void {
-  if (!currentRun) {
-    void startRun(selectedMode);
-    return;
-  }
-  if (currentRun.mode === "level" && currentRun.outcome === "won") {
-    selectedLevel = Math.min(LEVEL_COUNT, currentRun.levelIndex + 2);
-  }
-  void startRun(currentRun.mode);
+  void startRun();
 }
 
-async function startRun(mode: Mode): Promise<void> {
-  selectedMode = mode;
+async function startRun(): Promise<void> {
+  selectedMode = "endless";
   previousScreen = "playing";
-  newRun(mode, mode === "level" ? selectedLevel - 1 : 0, true);
+  newRun(true);
   await audio.startMusic();
 }
 
@@ -5396,14 +4138,9 @@ function closeShop(): void {
 
 function handleAction(action: string, button: HTMLElement): void {
   audio.play("button", 0.28);
-  if (action === "show-menu") {
-    void startRun("endless");
-  } else if (action === "start-level") {
-    void startRun("endless");
-  } else if (action === "show-levels") {
-    showScreen("levels");
-  } else if (action === "start-endless") {
-    void startRun("endless");
+  void button;
+  if (action === "show-menu" || action === "start-endless" || action === "restart") {
+    void startRun();
   } else if (action === "open-shop") {
     showShop();
   } else if (action === "close-shop") {
@@ -5412,19 +4149,8 @@ function handleAction(action: string, button: HTMLElement): void {
     if (screen === "playing") showScreen("paused");
   } else if (action === "resume") {
     showScreen("playing");
-  } else if (action === "restart") {
-    void startRun(selectedMode);
-  } else if (action === "switch-mode") {
-    void startRun(selectedMode === "level" ? "endless" : "level");
-  } else if (action === "revive-coins") {
-    reviveWithCoins();
-  } else if (action === "revive-ad") {
-    void reviveWithRewarded();
   } else if (action === "finish-run") {
     finishRun();
-  } else if (action === "double-coins") {
-    button.setAttribute("disabled", "true");
-    void doubleCoins();
   } else if (action === "next-run") {
     nextRun();
   }
@@ -5442,10 +4168,6 @@ root.addEventListener("click", (event) => {
 
 requireElement("pause-btn", HTMLButtonElement).addEventListener("click", () => handleAction("pause", requireElement("pause-btn", HTMLButtonElement)));
 requireElement("shop-btn", HTMLButtonElement).addEventListener("click", () => handleAction("open-shop", requireElement("shop-btn", HTMLButtonElement)));
-levelPill.addEventListener("click", () => {
-  if (screen === "playing") showScreen("levels");
-});
-
 window.addEventListener("pointerdown", (event) => {
   const target = event.target;
   if (target instanceof HTMLElement && target.closest("button")) return;
@@ -5457,7 +4179,7 @@ window.addEventListener("keydown", (event) => {
     event.preventDefault();
     flipKnife();
   }
-  if (event.code === "KeyR") void startRun(selectedMode);
+  if (event.code === "KeyR") void startRun();
   if (event.code === "Escape" && screen === "playing") showScreen("paused");
 });
 
@@ -5493,9 +4215,7 @@ function setupPreviewHooks(): void {
       setPreviewMode(true);
       previewAudioPolicy = payload?.audioPolicy ?? "music-and-sfx";
       profile.coins = Math.max(profile.coins, 520);
-      const sceneId = payload?.sceneId ?? "";
-      selectedLevel = choosePreviewLevel(payload);
-      newRun("endless", 0, true);
+      newRun(true);
       autoFlipTimer = 0.16;
       if (previewAudioPolicy !== "silent") await audio.startMusic();
     },
@@ -5515,7 +4235,7 @@ function setupPreviewHooks(): void {
 function stageLandingProof(): void {
   proofFrozen = false;
   setPreviewMode(false);
-  newRun("level", 0, true);
+  newRun(true);
   const platformEntity = platformEntities[1] ?? platformEntities[0];
   if (!platformEntity) throw new Error("[chopline-rush] No platform available for landing proof");
   const top = getPlatformTop(platformEntity);
@@ -5548,7 +4268,7 @@ function stageLandingProof(): void {
 function stageFlatLandingProof(): void {
   proofFrozen = false;
   setPreviewMode(false);
-  newRun("endless", 0, true);
+  newRun(true);
   const platformEntity = platformEntities[0];
   if (!platformEntity) throw new Error("[chopline-rush] No platform available for flat landing proof");
   const top = getPlatformTop(platformEntity);
@@ -5580,7 +4300,7 @@ function stageFlatLandingProof(): void {
 function stageSideLandingProof(): void {
   proofFrozen = false;
   setPreviewMode(false);
-  newRun("endless", 0, true);
+  newRun(true);
   const platformEntity = platformEntities[1] ?? platformEntities[0];
   if (!platformEntity) throw new Error("[chopline-rush] No platform available for side landing proof");
   const { zMin } = platformExtents(platformEntity);
@@ -5609,7 +4329,7 @@ function stageSideLandingProof(): void {
 function stageHandleLandingProof(): void {
   proofFrozen = false;
   setPreviewMode(false);
-  newRun("endless", 0, true);
+  newRun(true);
   const platformEntity = platformEntities[0];
   if (!platformEntity) throw new Error("[chopline-rush] No platform available for handle landing proof");
   const top = getPlatformTop(platformEntity);
@@ -5641,7 +4361,7 @@ function stageHandleLandingProof(): void {
 function stageHandleSliceProof(): void {
   proofFrozen = false;
   setPreviewMode(false);
-  newRun("endless", 0, true);
+  newRun(true);
   if (!currentRun) throw new Error("[chopline-rush] No active run for handle slice proof");
   const slice = sliceEntities.find((item) => !item.sliced && item.type === "emoji");
   if (!slice) throw new Error("[chopline-rush] No sliceable available for handle slice proof");
@@ -5711,7 +4431,7 @@ function stageCutContact(slice: SliceEntity, rotation: number): void {
 function stageSliceProof(): void {
   proofFrozen = false;
   setPreviewMode(false);
-  newRun("endless", 0, true);
+  newRun(true);
   if (!currentRun) throw new Error("[chopline-rush] No active run for slice proof");
   const slice = [...sliceEntities]
     .filter((item) => !item.sliced)
@@ -5724,7 +4444,7 @@ function stageSliceProof(): void {
 function stageInvalidSliceProof(): void {
   proofFrozen = false;
   setPreviewMode(false);
-  newRun("endless", 0, true);
+  newRun(true);
   if (!currentRun) throw new Error("[chopline-rush] No active run for invalid slice proof");
   const slice = sliceEntities.find((item) => !item.sliced);
   if (!slice) throw new Error("[chopline-rush] No sliceable available for invalid slice proof");
@@ -5732,11 +4452,11 @@ function stageInvalidSliceProof(): void {
   stageCutContact(slice, 0);
 }
 
-function stageSplitVisualProof(mode: Mode = "level", reuseActiveRun = false, preferredType?: string): void {
+function stageSplitVisualProof(reuseActiveRun = false, preferredType?: string): void {
   proofFrozen = false;
   setPreviewMode(false);
-  if (!reuseActiveRun || !currentRun || currentRun.mode !== mode || screen !== "playing") {
-    newRun(mode, 0, true);
+  if (!reuseActiveRun || !currentRun || screen !== "playing") {
+    newRun(true);
   }
   if (!currentRun) throw new Error("[chopline-rush] No active run for split proof");
   const slice = (preferredType
@@ -5747,18 +4467,16 @@ function stageSplitVisualProof(mode: Mode = "level", reuseActiveRun = false, pre
     ?? sliceEntities.find((item) => !item.sliced);
   if (!slice) throw new Error("[chopline-rush] No sliceable available for split proof");
   currentRun.targetScore = 9999;
-  if (mode === "endless") {
-    currentRun.score = 0;
-    currentRun.endlessScoreTimer = ENDLESS_SCORE_TIMEOUT;
-    currentRun.endlessTimerActive = true;
-    currentRun.tapHintConsumed = true;
-    tapHint.classList.add("hidden");
-  }
+  currentRun.score = 0;
+  currentRun.endlessScoreTimer = ENDLESS_SCORE_TIMEOUT;
+  currentRun.endlessTimerActive = true;
+  currentRun.tapHintConsumed = true;
+  tapHint.classList.add("hidden");
   stageCutContact(slice, THREE.MathUtils.degToRad(125));
 }
 
 function stageEndlessSplitVisualProof(preferredType?: string): void {
-  stageSplitVisualProof("endless", true, preferredType);
+  stageSplitVisualProof(true, preferredType);
 }
 
 function slicePieceSummary(): SlicePieceProofSummary {
@@ -5826,37 +4544,17 @@ function setupTestHooks(): void {
   window.__choplineTest = {
     setProfile: (overrides) => {
       profile = sanitizeProfile({ ...cloneProfile(profile), ...overrides });
-      selectedLevel = Math.max(1, Math.min(profile.highestLevel, LEVEL_COUNT));
       saveProfile();
       renderShop();
     },
-    startLevel: (level) => {
-      setPreviewMode(false);
-      selectedLevel = Math.max(1, Math.min(LEVEL_COUNT, Math.floor(level)));
-      newRun("level", selectedLevel - 1, true);
-    },
     startEndless: () => {
       setPreviewMode(false);
-      newRun("endless", 0, true);
-    },
-    forceWin: (score) => {
-      if (!currentRun) throw new Error("[chopline-rush] No active run to win");
-      currentRun.score = Math.max(currentRun.targetScore, Math.floor(score ?? currentRun.targetScore));
-      winRun();
+      newRun(true);
     },
     forceLoss: (score) => {
       if (!currentRun) throw new Error("[chopline-rush] No active run to fail");
       if (score !== undefined) currentRun.score = Math.max(0, Math.floor(score));
       failRun();
-    },
-    useCoinRevive: () => {
-      reviveWithCoins();
-    },
-    useRewardedRevive: async () => {
-      await reviveWithRewarded();
-    },
-    doubleCoins: async () => {
-      await doubleCoins();
     },
     stageLandingProof,
     stageSideLandingProof,
@@ -5865,7 +4563,7 @@ function setupTestHooks(): void {
     stageHandleSliceProof,
     stageSliceProof,
     stageInvalidSliceProof,
-    stageSplitVisualProof: (preferredType) => stageSplitVisualProof("level", false, preferredType),
+    stageSplitVisualProof: (preferredType) => stageSplitVisualProof(false, preferredType),
     stageEndlessSplitVisualProof,
     tap: () => {
       flipKnife();
