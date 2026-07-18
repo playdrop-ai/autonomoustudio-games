@@ -65,6 +65,10 @@ declare global {
       stageSplitVisualProof: (preferredType?: string) => void;
       stageEndlessSplitVisualProof: (preferredType?: string) => void;
       frames: () => number;
+      forceEndlessChunk: (zoneIndex: number, chunkIndex: number) => void;
+      zoneChunkCounts: () => number[];
+      chunkHasTargets: (zoneIndex: number, chunkIndex: number) => boolean;
+      obstaclesAhead: () => Array<{ y: number; z: number }>;
       renderInfo: () => { calls: number; triangles: number; geometries: number; textures: number };
       gpu: () => string;
       seedRandom: (seed: number) => void;
@@ -105,7 +109,9 @@ declare global {
       };
       endless: {
         cursorZ: number;
-        templates: number;
+        zone: number;
+        zones: number;
+        chunks: number;
         platforms: Array<{
           id: string;
           y: number;
@@ -193,9 +199,18 @@ interface EndlessTemplate {
   obstacles?: Array<Omit<ThingDef, "platformId">>;
 }
 
+interface ZoneDef {
+  name: string;
+  length: number;
+  gap: [number, number];
+  accent: number;
+  chunks: EndlessTemplate[];
+}
+
 interface EndlessSpawnPlan {
   gap: number;
-  templateIndex: number;
+  zoneIndex: number;
+  chunkIndex: number;
   template: EndlessTemplate;
 }
 
@@ -362,6 +377,7 @@ interface Profile {
   ownedThemes: string[];
   equippedTheme: string;
   endlessBest: number;
+  bestZone: number;
   totalRuns: number;
   totalSlices: number;
   totalCoinsEarned: number;
@@ -371,6 +387,7 @@ interface Profile {
 interface RunState {
   mode: Mode;
   score: number;
+  zoneReached: number;
   combo: number;
   bestCombo: number;
   targetScore: number;
@@ -576,6 +593,7 @@ const DEFAULT_PROFILE: Profile = {
   ownedThemes: [STARTER_THEME_ID],
   equippedTheme: STARTER_THEME_ID,
   endlessBest: 0,
+  bestZone: 1,
   totalRuns: 0,
   totalSlices: 0,
   totalCoinsEarned: 0,
@@ -634,6 +652,7 @@ function cloneProfile(input: Profile): Profile {
     ownedThemes: [...input.ownedThemes],
     equippedTheme: input.equippedTheme,
     endlessBest: input.endlessBest,
+    bestZone: input.bestZone,
     totalRuns: input.totalRuns,
     totalSlices: input.totalSlices,
     totalCoinsEarned: input.totalCoinsEarned,
@@ -660,6 +679,7 @@ function sanitizeProfile(value: unknown): Profile {
     ownedThemes: sanitizedOwnedThemes,
     equippedTheme,
     endlessBest: safeInt(source.endlessBest, 0, 999999999),
+    bestZone: safeInt(source.bestZone, 1, 999),
     totalRuns: safeInt(source.totalRuns, 0, 999999999),
     totalSlices: safeInt(source.totalSlices, 0, 999999999),
     totalCoinsEarned: safeInt(source.totalCoinsEarned, 0, 999999999),
@@ -678,6 +698,7 @@ function mergeProfile(a: Profile, b: Profile): Profile {
     ownedThemes,
     equippedTheme: ownedThemes.includes(b.equippedTheme) ? b.equippedTheme : a.equippedTheme,
     endlessBest: Math.max(a.endlessBest, b.endlessBest),
+    bestZone: Math.max(a.bestZone ?? 1, b.bestZone ?? 1),
     totalRuns: Math.max(a.totalRuns, b.totalRuns),
     totalSlices: Math.max(a.totalSlices, b.totalSlices),
     totalCoinsEarned: Math.max(a.totalCoinsEarned, b.totalCoinsEarned),
@@ -926,12 +947,15 @@ let previousScreen: Screen = "menu";
 let selectedMode: Mode = "endless";
 let currentRun: RunState | null = null;
 let isolatedVisualRandomSeed = 0x9e3779b9;
-let endlessTemplates: EndlessTemplate[] = [];
+let endlessZones: ZoneDef[] = [];
 let endlessCursorZ = 0;
 let endlessPlanCursorZ = 0;
 let endlessSpawnPlans: EndlessSpawnPlan[] = [];
 let endlessPlanCount = 0;
-let endlessLastTemplateIndex = -1;
+let endlessLastChunkKey = "";
+let endlessLastHadObstacle = false;
+let endlessGateBoundaryIndex = 0;
+let forcedEndlessChunk: { zoneIndex: number; chunkIndex: number } | null = null;
 let endlessPlatformCounter = 0;
 let endlessSliceableCounter = 0;
 let endlessObstacleCounter = 0;
@@ -995,7 +1019,8 @@ const platformGroup = new THREE.Group();
 const sliceGroup = new THREE.Group();
 const obstacleGroup = new THREE.Group();
 const particleGroup = new THREE.Group();
-world.add(platformGroup, sliceGroup, obstacleGroup, particleGroup);
+const zoneGateGroup = new THREE.Group();
+world.add(platformGroup, sliceGroup, obstacleGroup, particleGroup, zoneGateGroup);
 
 const platformEntities: PlatformEntity[] = [];
 const sliceEntities: SliceEntity[] = [];
@@ -1449,6 +1474,7 @@ function newRun(makeActive = true): void {
   currentRun = {
     mode: "endless",
     score: 0,
+    zoneReached: 1,
     combo: 0,
     bestCombo: 0,
     targetScore: 0,
@@ -1565,27 +1591,30 @@ function withIsolatedVisualRandom<T>(work: () => T): T {
 }
 
 function prepareEndlessSpawnPlans(targetCursorZ: number): void {
-  if (endlessTemplates.length === 0) throw new Error("[chopline-rush] Endless templates are not initialized");
+  if (endlessZones.length === 0) throw new Error("[chopline-rush] Endless zones are not initialized");
   while (endlessPlanCursorZ < targetCursorZ) {
     const openingSequence = [0, 1, 2, 3];
     const openingGaps = [1.55, 1.1, 1.4, 1.6];
-    const gap = endlessPlanCount < openingGaps.length
+    const inOpening = endlessPlanCount < openingSequence.length;
+    const zoneIndex = forcedEndlessChunk && !inOpening ? forcedEndlessChunk.zoneIndex : zoneIndexForZ(endlessPlanCursorZ);
+    const zone = endlessZones[zoneIndex];
+    if (!zone) throw new Error("[chopline-rush] Failed to resolve an endless zone");
+    const gap = inOpening
       ? openingGaps[endlessPlanCount]!
-      : 1.4 + Math.random() * 2.4;
-    const templateIndex = endlessPlanCount < openingSequence.length
-      ? openingSequence[endlessPlanCount]!
-      : chooseEndlessTemplateIndex();
-    const template = endlessTemplates[templateIndex];
-    if (!template) throw new Error("[chopline-rush] Failed to choose an endless template");
-    endlessSpawnPlans.push({ gap, templateIndex, template });
+      : zone.gap[0] + Math.random() * (zone.gap[1] - zone.gap[0]) + endlessTailGapCreep(endlessPlanCursorZ);
+    const chunkIndex = inOpening ? openingSequence[endlessPlanCount]! : chooseZoneChunkIndex(zoneIndex);
+    const template = zone.chunks[chunkIndex] ?? endlessZones[0]!.chunks[chunkIndex];
+    if (!template) throw new Error("[chopline-rush] Failed to choose an endless chunk");
+    endlessSpawnPlans.push({ gap, zoneIndex: inOpening ? 0 : zoneIndex, chunkIndex, template });
     endlessPlanCount += 1;
-    endlessLastTemplateIndex = templateIndex;
+    endlessLastChunkKey = `${inOpening ? 0 : zoneIndex}:${chunkIndex}`;
+    endlessLastHadObstacle = chunkHasObstacles(template);
     endlessPlanCursorZ += gap + template.platform.depth;
     const randomWindow = window as Window & { __rngCount?: number };
     const beforeRandom = randomWindow.__rngCount ?? null;
     if (isChoplineTestMode) {
       endlessPlanProofEvents.push({
-        templateIndex,
+        templateIndex: chunkIndex,
         budget: 0,
         beforeRandom,
         afterRandom: randomWindow.__rngCount ?? null,
@@ -1595,90 +1624,304 @@ function prepareEndlessSpawnPlans(targetCursorZ: number): void {
   }
 }
 
-function buildEndlessCourseTemplates(): EndlessTemplate[] {
-  const curated: EndlessTemplate[] = [
+function buildEndlessZones(): ZoneDef[] {
+  const zones: ZoneDef[] = [
     {
-      platform: { y: 0, depth: 8, height: 1.4 },
-      sliceables: [{ type: "brick", y: 0.5, z: 1.4, count: 13 }],
-    },
-    {
-      platform: { y: 0, depth: 11, height: 1.4 },
-      sliceables: [
-        { type: "orange", y: 0.5, z: 2.4, count: 3 },
-        { type: "emoji", y: 0.5, z: 5.5 },
-        { type: "orange", y: 0.5, z: 8.8, count: 3 },
+      name: "Picnic Meadow",
+      length: 90,
+      gap: [1.4, 2.2],
+      accent: 0xffd166,
+      chunks: [
+        {
+          platform: { y: 0, depth: 8, height: 1.4 },
+          sliceables: [{ type: "brick", y: 0.5, z: 1.4, count: 13 }],
+        },
+        {
+          platform: { y: 0, depth: 11, height: 1.4 },
+          sliceables: [
+            { type: "orange", y: 0.5, z: 2.4, count: 3 },
+            { type: "emoji", y: 0.5, z: 5.5 },
+            { type: "orange", y: 0.5, z: 8.8, count: 3 },
+          ],
+        },
+        {
+          platform: { y: 0.35, depth: 8, height: 2.1 },
+          sliceables: [
+            { type: "camera", y: 0.5, z: 2.2 },
+            { type: "camera", y: 0.5, z: 5.8 },
+          ],
+        },
+        {
+          platform: { y: 0, depth: 6, height: 1.4 },
+          sliceables: [{ type: "orange", y: 0.5, z: 3.3, count: 3 }],
+        },
+        {
+          platform: { y: 0, depth: 5, height: 1 },
+        },
+        {
+          platform: { y: 0, depth: 11, height: 1 },
+          sliceables: [
+            { type: "baguette", y: 0.5, z: 2.5, count: 2 },
+            { type: "sausage", y: 0.5, z: 6, count: 3 },
+            { type: "apple", y: 0.5, z: 9, count: 2 },
+          ],
+        },
+        {
+          platform: { y: 0, depth: 10, height: 1 },
+          sliceables: [
+            { type: "donut", y: 0.5, z: 2.5, count: 2 },
+            { type: "brick", y: 0.5, z: 7.2, count: 5 },
+          ],
+        },
       ],
     },
     {
-      platform: { y: 0.35, depth: 8, height: 2.1 },
-      sliceables: [
-        { type: "camera", y: 0.5, z: 2.2 },
-        { type: "camera", y: 0.5, z: 5.8 },
+      name: "Orchard Steps",
+      length: 110,
+      gap: [1.6, 2.6],
+      accent: 0x74c69d,
+      chunks: [
+        {
+          platform: { y: 0, depth: 10, height: 1.2 },
+          sliceables: [
+            { type: "apple", y: 0.5, z: 2.4, count: 2 },
+            { type: "watermelon", y: 0.5, z: 6.6, count: 3 },
+          ],
+        },
+        {
+          platform: { y: 0, depth: 9, height: 1.2 },
+          sliceables: [
+            { type: "book", y: 0.5, z: 2.6, count: 4 },
+            { type: "wooden_stake", y: 0.5, z: 6.4 },
+          ],
+        },
+        {
+          platform: { y: 0.6, depth: 8, height: 2 },
+          sliceables: [
+            { type: "camera", y: 0.5, z: 2.2 },
+            { type: "orange", y: 0.5, z: 5.6, count: 3 },
+          ],
+        },
+        {
+          platform: { y: 0, depth: 8, height: 1, moving: true, moveAxis: "y", moveDistance: 1.2, moveSpeed: 1.1, moveDelay: 0.3 },
+          sliceables: [{ type: "watermelon", y: 0.5, z: 4.5, count: 3 }],
+        },
+        {
+          platform: { y: 0, depth: 9, height: 1.2 },
+          sliceables: [
+            { type: "cheese", y: 0.5, z: 2.6, count: 2 },
+            { type: "sausage", y: 0.5, z: 6.2, count: 3 },
+          ],
+        },
+        {
+          platform: { y: -0.25, depth: 8, height: 0.75 },
+          sliceables: [{ type: "brick", y: 0.375, z: 4.5, count: 8 }],
+        },
+        {
+          platform: { y: 0, depth: 11, height: 1.2 },
+          sliceables: [
+            { type: "orange", y: 0.5, z: 2.2, count: 3 },
+            { type: "donut", y: 0.5, z: 5.6, count: 2 },
+            { type: "apple", y: 0.5, z: 9, count: 2 },
+          ],
+        },
       ],
     },
     {
-      platform: { y: 0, depth: 6, height: 1.4 },
-      sliceables: [{ type: "orange", y: 0.5, z: 3.3, count: 3 }],
-    },
-    {
-      platform: { y: 0, depth: 10, height: 1 },
-      sliceables: [
-        { type: "donut", y: 0.5, z: 2.5, count: 2 },
-        { type: "brick", y: 0.5, z: 7.2, count: 5 },
+      name: "Brick Alley",
+      length: 130,
+      gap: [1.8, 2.9],
+      accent: 0xe07a5f,
+      chunks: [
+        {
+          platform: { y: 0, depth: 7, height: 1.4 },
+          sliceables: [{ type: "brick", y: 0.5, z: 3.4, count: 10 }],
+        },
+        {
+          platform: { y: 0, depth: 10, height: 1.2 },
+          obstacles: [{ type: "spikes", y: 0.5, z: 2.8 }],
+          sliceables: [{ type: "orange", y: 0.5, z: 6.8, count: 3 }],
+        },
+        {
+          platform: { y: 0, depth: 10, height: 1.3 },
+          sliceables: [
+            { type: "wooden_stake", y: 0.5, z: 2.4 },
+            { type: "brick", y: 0.5, z: 6.6, count: 8 },
+          ],
+        },
+        {
+          platform: { y: 0, depth: 9, height: 1.2 },
+          sliceables: [
+            { type: "cube", y: 0.5, z: 2.8, count: 3 },
+            { type: "book", y: 0.5, z: 6.4, count: 4 },
+          ],
+        },
+        {
+          platform: { y: 0.8, depth: 6, height: 2.6 },
+          sliceables: [{ type: "brick", y: 1.3, z: 3.3, count: 5 }],
+        },
+        {
+          platform: { y: 0, depth: 4.5, height: 1 },
+        },
+        {
+          platform: { y: 0, depth: 8, height: 1.4 },
+          sliceables: [{ type: "brick", y: 0.5, z: 4, count: 13 }],
+        },
       ],
     },
     {
-      platform: { y: 0, depth: 5, height: 1 },
-    },
-    {
-      platform: { y: 0, depth: 11, height: 1 },
-      sliceables: [
-        { type: "baguette", y: 0.5, z: 2.5, count: 2 },
-        { type: "sausage", y: 0.5, z: 6, count: 3 },
-        { type: "apple", y: 0.5, z: 9, count: 2 },
+      name: "Windy Shelves",
+      length: 150,
+      gap: [2.0, 3.1],
+      accent: 0x4cc9f0,
+      chunks: [
+        {
+          platform: { y: 0, depth: 8, height: 1, moving: true, moveAxis: "y", moveDistance: 1.4, moveSpeed: 1.3, moveDelay: 0.2 },
+          sliceables: [{ type: "watermelon", y: 0.5, z: 4.5, count: 3 }],
+        },
+        {
+          platform: { y: 0, depth: 9, height: 1.2, moving: true, moveAxis: "z", moveDistance: 1.2, moveSpeed: 0.9, moveDelay: 0.4 },
+          sliceables: [{ type: "orange", y: 0.5, z: 4.8, count: 3 }],
+        },
+        {
+          platform: { y: 0, depth: 10, height: 1.2, moving: true, moveAxis: "y", moveDistance: 0.9, moveSpeed: 0.9, moveDelay: 0.3 },
+          obstacles: [{ type: "spikes", y: 0.5, z: 3 }],
+          sliceables: [{ type: "apple", y: 0.5, z: 7, count: 2 }],
+        },
+        {
+          platform: { y: 0.4, depth: 10, height: 1.8 },
+          sliceables: [
+            { type: "camera", y: 0.5, z: 2.2 },
+            { type: "brick", y: 0.5, z: 6.6, count: 5 },
+          ],
+        },
+        {
+          platform: { y: 0, depth: 10, height: 1.2 },
+          sliceables: [
+            { type: "book", y: 0.5, z: 2.4, count: 4 },
+            { type: "cheese", y: 0.5, z: 5.6, count: 2 },
+            { type: "wooden_stake", y: 0.5, z: 8.4 },
+          ],
+        },
+        {
+          platform: { y: 0.6, depth: 7, height: 1.8, moving: true, moveAxis: "y", moveDistance: 1.1, moveSpeed: 1, moveDelay: 0.3 },
+          sliceables: [{ type: "brick", y: 0.5, z: 3.6, count: 5 }],
+        },
+        {
+          platform: { y: 0, depth: 5, height: 1 },
+        },
       ],
     },
     {
-      platform: { y: -0.25, depth: 8, height: 0.75 },
-      sliceables: [{ type: "brick", y: 0.375, z: 4.5, count: 8 }],
-    },
-    {
-      platform: { y: 0, depth: 8, height: 1, moving: true, moveAxis: "y", moveDistance: 1.2, moveSpeed: 1.1, moveDelay: 0.3 },
-      sliceables: [{ type: "watermelon", y: 0.5, z: 4.5, count: 3 }],
-    },
-    {
-      platform: { y: 0.8, depth: 6, height: 2.6 },
-      sliceables: [{ type: "brick", y: 1.3, z: 3.3, count: 5 }],
+      name: "Chef's Gauntlet",
+      length: 100000,
+      gap: [2.2, 3.3],
+      accent: 0xb5179e,
+      chunks: [
+        {
+          platform: { y: 0, depth: 11, height: 1.4 },
+          obstacles: [{ type: "spikes", y: 0.5, z: 2 }],
+          sliceables: [{ type: "brick", y: 0.5, z: 6.4, count: 13 }],
+        },
+        {
+          platform: { y: 0, depth: 11, height: 1.2 },
+          sliceables: [
+            { type: "watermelon", y: 0.5, z: 2.2, count: 3 },
+            { type: "orange", y: 0.5, z: 5.8, count: 3 },
+            { type: "apple", y: 0.5, z: 9.2, count: 2 },
+          ],
+        },
+        {
+          platform: { y: 0, depth: 9, height: 1.2, moving: true, moveAxis: "y", moveDistance: 1.3, moveSpeed: 1.2, moveDelay: 0.25 },
+          sliceables: [{ type: "brick", y: 0.5, z: 4.6, count: 8 }],
+        },
+        {
+          platform: { y: 0, depth: 11, height: 1.3 },
+          obstacles: [
+            { type: "spikes", y: 0.5, z: 2.6 },
+            { type: "spikes", y: 0.5, z: 8.6 },
+          ],
+          sliceables: [{ type: "wooden_stake", y: 0.5, z: 5.6, count: 2 }],
+        },
+        {
+          platform: { y: 0, depth: 10, height: 1.2 },
+          sliceables: [
+            { type: "cube", y: 0.5, z: 2.4, count: 3 },
+            { type: "book", y: 0.5, z: 5.4, count: 4 },
+            { type: "cheese", y: 0.5, z: 8.4, count: 2 },
+          ],
+        },
+        {
+          platform: { y: 0.5, depth: 7, height: 1.9 },
+          sliceables: [{ type: "brick", y: 0.5, z: 3.5, count: 10 }],
+        },
+        {
+          platform: { y: 0, depth: 11, height: 1.2 },
+          sliceables: [
+            { type: "donut", y: 0.5, z: 2.4, count: 3 },
+            { type: "sausage", y: 0.5, z: 6, count: 3 },
+          ],
+          obstacles: [{ type: "spikes", y: 0.5, z: 9.4 }],
+        },
+      ],
     },
   ];
-
-  return curated;
+  return zones;
 }
 
-function chooseEndlessTemplateIndex(): number {
-  const phase = endlessPlanCount % 6;
-  if (phase === 5) return 5;
-
-  const previous = endlessTemplates[endlessLastTemplateIndex];
-  const previousHadHazard = (previous?.obstacles?.length ?? 0) > 0;
-  const candidates: number[] = [];
-  for (let index = 0; index < endlessTemplates.length; index += 1) {
-    if (index === endlessLastTemplateIndex) continue;
-    const template = endlessTemplates[index]!;
-    const objectCount = expandedEndlessObjectCount(template);
-    const hasHazard = (template.obstacles?.length ?? 0) > 0;
-    if (previousHadHazard && hasHazard) continue;
-    if (phase <= 1 && !hasHazard && objectCount >= 1 && objectCount <= 8) candidates.push(index);
-    if ((phase === 2 || phase === 3) && !hasHazard && objectCount >= 4) candidates.push(index);
-    if (phase === 4 && objectCount >= 3) candidates.push(index);
+function zoneBoundaries(): number[] {
+  const boundaries: number[] = [];
+  let cumulative = 0;
+  for (const zone of endlessZones) {
+    cumulative += zone.length;
+    boundaries.push(cumulative);
   }
+  return boundaries;
+}
 
-  if (candidates.length === 0) return Math.floor(Math.random() * endlessTemplates.length);
+function zoneIndexForZ(z: number): number {
+  let cumulative = 0;
+  for (let index = 0; index < endlessZones.length; index += 1) {
+    cumulative += endlessZones[index]!.length;
+    if (z < cumulative) return index;
+  }
+  return endlessZones.length - 1;
+}
+
+function endlessTailGapCreep(z: number): number {
+  const lastZoneStart = zoneBoundaries()[endlessZones.length - 2] ?? 0;
+  if (z <= lastZoneStart) return 0;
+  return Math.min(0.6, (z - lastZoneStart) * 0.0015);
+}
+
+function chunkHasObstacles(template: EndlessTemplate): boolean {
+  return (template.obstacles?.length ?? 0) > 0;
+}
+
+function chooseZoneChunkIndex(zoneIndex: number): number {
+  if (forcedEndlessChunk && forcedEndlessChunk.zoneIndex === zoneIndex) {
+    const zone = endlessZones[zoneIndex]!;
+    const forcedTemplate = zone.chunks[forcedEndlessChunk.chunkIndex]!;
+    if (chunkHasObstacles(forcedTemplate) && endlessLastHadObstacle) {
+      const fallback = zone.chunks.findIndex((chunk) => !chunkHasObstacles(chunk) && (chunk.sliceables?.length ?? 0) > 0);
+      if (fallback >= 0) return fallback;
+    }
+    return forcedEndlessChunk.chunkIndex;
+  }
+  const zone = endlessZones[zoneIndex]!;
+  const lastKey = endlessLastChunkKey;
+  const candidates: number[] = [];
+  for (let index = 0; index < zone.chunks.length; index += 1) {
+    if (`${zoneIndex}:${index}` === lastKey) continue;
+    if (endlessLastHadObstacle && chunkHasObstacles(zone.chunks[index]!)) continue;
+    candidates.push(index);
+  }
+  if (candidates.length === 0) return Math.floor(Math.random() * zone.chunks.length);
   return candidates[Math.floor(Math.random() * candidates.length)]!;
 }
 
 function spawnNextEndlessPlatform(): void {
-  if (endlessTemplates.length === 0) throw new Error("[chopline-rush] Endless templates are not initialized");
+  if (endlessZones.length === 0) throw new Error("[chopline-rush] Endless zones are not initialized");
 
   if (endlessSpawnPlans.length === 0) {
     prepareEndlessSpawnPlans(endlessPlanCursorZ + 0.001);
@@ -1715,20 +1958,55 @@ function spawnNextEndlessPlatform(): void {
   });
 
   endlessCursorZ = platformDef.z + platformDef.depth;
+
+  const boundaries = zoneBoundaries();
+  while (endlessGateBoundaryIndex < boundaries.length - 1 && boundaries[endlessGateBoundaryIndex]! <= endlessCursorZ) {
+    spawnZoneGate(boundaries[endlessGateBoundaryIndex]!, endlessGateBoundaryIndex + 1);
+    endlessGateBoundaryIndex += 1;
+  }
+}
+
+function spawnZoneGate(z: number, zoneIndex: number): void {
+  const zone = endlessZones[zoneIndex];
+  if (!zone) return;
+  const gate = new THREE.Group();
+  const accentMaterial = new THREE.MeshPhongMaterial({ color: zone.accent, shininess: 24 });
+  const postMaterial = new THREE.MeshPhongMaterial({ color: 0xfdf6ec, shininess: 12 });
+  for (const side of [-1, 1]) {
+    const post = new THREE.Mesh(new THREE.BoxGeometry(0.4, 4.2, 0.4), postMaterial);
+    post.position.set(side * 2.9, 2.1, 0);
+    post.castShadow = true;
+    gate.add(post);
+    const flag = new THREE.Mesh(new THREE.ConeGeometry(0.34, 0.9, 4), accentMaterial);
+    flag.position.set(side * 2.9, 4.55, 0);
+    flag.castShadow = true;
+    gate.add(flag);
+    const band = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.5, 0.46), accentMaterial);
+    band.position.set(side * 2.9, 3.4, 0);
+    gate.add(band);
+  }
+  gate.position.set(0, 0, z);
+  zoneGateGroup.add(gate);
 }
 
 function buildEndlessWorld(): void {
-  if (endlessTemplates.length === 0) {
-    endlessTemplates = buildEndlessCourseTemplates();
+  if (endlessZones.length === 0) {
+    endlessZones = buildEndlessZones();
   }
   endlessCursorZ = 0;
   endlessPlanCursorZ = 3.6;
   endlessSpawnPlans = [];
   endlessPlanCount = 0;
-  endlessLastTemplateIndex = -1;
+  endlessLastChunkKey = "";
+  endlessLastHadObstacle = false;
+  endlessGateBoundaryIndex = 0;
   endlessPlatformCounter = 0;
   endlessSliceableCounter = 0;
   endlessObstacleCounter = 0;
+  while (zoneGateGroup.children.length) {
+    const child = zoneGateGroup.children[0];
+    if (child) removeAndDispose(zoneGateGroup, child);
+  }
 
   prepareEndlessSpawnPlans(ENDLESS_GENERATE_AHEAD);
 
@@ -1749,7 +2027,19 @@ function updateEndlessWorld(): void {
     spawnNextEndlessPlatform();
   }
 
+  if (currentRun) {
+    const zoneNow = zoneIndexForZ(knife.position.z) + 1;
+    if (zoneNow > currentRun.zoneReached) {
+      currentRun.zoneReached = zoneNow;
+      celebrateZone(zoneNow);
+    }
+  }
+
   const cleanupZ = knife.position.z - ENDLESS_CLEANUP_BEHIND;
+  for (let i = zoneGateGroup.children.length - 1; i >= 0; i -= 1) {
+    const gate = zoneGateGroup.children[i]!;
+    if (gate.position.z < cleanupZ) removeAndDispose(zoneGateGroup, gate);
+  }
   for (let i = platformEntities.length - 1; i >= 0; i -= 1) {
     const platformEntity = platformEntities[i]!;
     if (platformEntity.mesh.position.z + platformEntity.depth / 2 < cleanupZ) {
@@ -1973,6 +2263,28 @@ function sliceRadius(type: string): number {
   return baseRadius * SLICEABLE_VISUAL_SCALE;
 }
 
+function addFruitFace(group: THREE.Group, radius: number, centerY: number): void {
+  const faceDir = new THREE.Vector3(-0.62, 0.05, -0.79).normalize();
+  const lateral = new THREE.Vector3(-faceDir.z, 0, faceDir.x).normalize();
+  const eyeMaterial = materials.cameraDark;
+  for (const side of [-1, 1]) {
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 6), eyeMaterial);
+    eye.position
+      .copy(faceDir)
+      .multiplyScalar(radius * 0.9)
+      .addScaledVector(lateral, side * radius * 0.34)
+      .add(new THREE.Vector3(0, centerY + radius * 0.14, 0));
+    group.add(eye);
+  }
+  const mouth = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 6), eyeMaterial);
+  mouth.scale.set(1.6, 0.5, 0.6);
+  mouth.position
+    .copy(faceDir)
+    .multiplyScalar(radius * 0.94)
+    .add(new THREE.Vector3(0, centerY - radius * 0.18, 0));
+  group.add(mouth);
+}
+
 function buildSliceMesh(type: string, index: number): THREE.Group {
   const group = new THREE.Group();
   if (type === "brick") {
@@ -2008,6 +2320,7 @@ function buildSliceMesh(type: string, index: number): THREE.Group {
       stripe.position.y = 0.5;
       group.add(stripe);
     }
+    if (Math.random() < 0.35) addFruitFace(group, 0.5, 0.5);
   } else if (type === "apple") {
     const apple = new THREE.Mesh(new THREE.SphereGeometry(0.4, 16, 16), materials.apple);
     apple.position.y = 0.4;
@@ -2016,6 +2329,7 @@ function buildSliceMesh(type: string, index: number): THREE.Group {
     const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.2, 6), materials.wood);
     stem.position.y = 0.85;
     group.add(stem);
+    if (Math.random() < 0.35) addFruitFace(group, 0.4, 0.4);
   } else if (type === "orange" || type === "emoji") {
     const radius = type === "orange" ? 0.42 : 0.5;
     const fruit = new THREE.Mesh(new THREE.SphereGeometry(radius, 20, 16), type === "orange" ? materials.orange : materials.emoji);
@@ -2030,6 +2344,7 @@ function buildSliceMesh(type: string, index: number): THREE.Group {
       leaf.scale.set(0.35, 0.18, 1);
       leaf.position.set(0, radius * 2 + 0.07, 0.08);
       group.add(leaf);
+      if (Math.random() < 0.35) addFruitFace(group, radius, radius);
     } else {
       for (const z of [-0.16, 0.16]) {
         const eye = new THREE.Mesh(new THREE.SphereGeometry(0.055, 10, 8), materials.cameraDark);
@@ -2280,6 +2595,24 @@ function toRadians(value: number | null): number {
   return Math.abs(value) > Math.PI * 2 ? THREE.MathUtils.degToRad(value) : value;
 }
 
+function buildSkyGradientTexture(topColor: number, horizonColor: number): THREE.CanvasTexture {
+  const canvas = document.createElement("canvas");
+  canvas.width = 2;
+  canvas.height = 512;
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("[chopline-rush] Could not create the sky gradient context");
+  const gradient = context.createLinearGradient(0, 0, 0, 512);
+  const hex = (value: number) => `#${value.toString(16).padStart(6, "0")}`;
+  gradient.addColorStop(0, hex(topColor));
+  gradient.addColorStop(0.62, hex(topColor));
+  gradient.addColorStop(1, hex(horizonColor));
+  context.fillStyle = gradient;
+  context.fillRect(0, 0, 2, 512);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
 function buildBackground(): void {
   while (background.children.length) {
     const child = background.children[0];
@@ -2296,7 +2629,7 @@ function buildBackground(): void {
   materials.platformDark.color.setHex(theme.platformSide);
   materials.platformDark.emissive.setHex(theme.platformSide);
   materials.platformDark.emissiveIntensity = 0.03;
-  scene.background = new THREE.Color(theme.sky);
+  scene.background = buildSkyGradientTexture(theme.sky, theme.horizon);
   scene.fog = new THREE.Fog(theme.horizon, 46, 155);
   updateBackgroundChunks(knife.position.z);
 }
@@ -3706,6 +4039,25 @@ function spawnScorePopup(position: THREE.Vector3, points: number): void {
   window.setTimeout(() => node.remove(), 820);
 }
 
+function celebrateZone(zoneNumber: number): void {
+  const zone = endlessZones[zoneNumber - 1];
+  if (!zone) return;
+  spawnZoneCallout(`ZONE ${zoneNumber}`, zone.name, zone.accent);
+  flashFeedback("success");
+  startCameraShake(0.3);
+  audio.play("victory", 0.42);
+  pulseHaptic(18);
+}
+
+function spawnZoneCallout(title: string, subtitle: string, accent: number): void {
+  const node = document.createElement("div");
+  node.className = "zone-pop";
+  const accentHex = `#${accent.toString(16).padStart(6, "0")}`;
+  node.innerHTML = `<strong style="color: ${accentHex}">${title}</strong><span>${subtitle}</span>`;
+  root.append(node);
+  window.setTimeout(() => node.remove(), 1600);
+}
+
 function spawnPraise(position: THREE.Vector3, label: string): void {
   const screenPosition = position.clone().project(camera);
   const bounds = renderer.domElement.getBoundingClientRect();
@@ -4068,6 +4420,7 @@ function finishRun(): void {
   const run = currentRun;
   profile.totalRuns += 1;
   profile.endlessBest = Math.max(profile.endlessBest, run.score);
+  profile.bestZone = Math.max(profile.bestZone, run.zoneReached);
   saveProfile();
   renderResult(run);
   void submitMeta(run);
@@ -4077,7 +4430,7 @@ function finishRun(): void {
 function renderResult(run: RunState): void {
   resultScreen.classList.toggle("endless-game-over", true);
   resultTitle.textContent = run.score >= profile.endlessBest && run.score > 0 ? "New Best!" : "Run Over";
-  resultSubtitle.innerHTML = `Score <span>${formatNumber(run.score)}</span> · Best ${formatNumber(profile.endlessBest)}`;
+  resultSubtitle.innerHTML = `Zone ${run.zoneReached} · Score <span>${formatNumber(run.score)}</span> · Best ${formatNumber(profile.endlessBest)}`;
   resultContinue.textContent = "Try Again";
   resultScore.textContent = formatNumber(run.score);
   resultCoins.textContent = `+${formatNumber(run.coinsAwarded)}`;
@@ -4598,6 +4951,24 @@ function setupTestHooks(): void {
     stageSplitVisualProof: (preferredType) => stageSplitVisualProof(false, preferredType),
     stageEndlessSplitVisualProof,
     frames: () => frameCounter,
+    forceEndlessChunk: (zoneIndex, chunkIndex) => {
+      forcedEndlessChunk = { zoneIndex, chunkIndex };
+    },
+    zoneChunkCounts: () => {
+      if (endlessZones.length === 0) endlessZones = buildEndlessZones();
+      return endlessZones.map((zone) => zone.chunks.length);
+    },
+    chunkHasTargets: (zoneIndex, chunkIndex) => {
+      if (endlessZones.length === 0) endlessZones = buildEndlessZones();
+      const chunk = endlessZones[zoneIndex]?.chunks[chunkIndex];
+      if (!chunk) throw new Error(`[chopline-rush] Unknown chunk ${zoneIndex}:${chunkIndex}`);
+      return (chunk.sliceables?.length ?? 0) > 0;
+    },
+    obstaclesAhead: () => obstacleEntities
+      .filter((obstacle) => !obstacle.cleared && obstacle.group.position.z > knife.position.z)
+      .sort((a, b) => a.group.position.z - b.group.position.z)
+      .slice(0, 4)
+      .map((obstacle) => ({ y: obstacle.group.position.y, z: obstacle.group.position.z })),
     seedRandom: (seed) => {
       let state = seed >>> 0;
       Math.random = () => {
@@ -4677,7 +5048,9 @@ function setupTestHooks(): void {
       },
       endless: {
         cursorZ: endlessCursorZ,
-        templates: endlessTemplates.length,
+        zone: currentRun ? currentRun.zoneReached : 1,
+        zones: endlessZones.length,
+        chunks: endlessZones.reduce((total, zone) => total + zone.chunks.length, 0),
         platforms: platformEntities
           .filter((platformEntity) => platformEntity.kind === "platform")
           .slice(0, 14)

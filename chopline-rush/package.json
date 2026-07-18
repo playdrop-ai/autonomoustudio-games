@@ -8,7 +8,7 @@
     "dev": "node build.mjs --watch",
     "dev:standalone": "npm run build && node scripts/local-dev-server.mjs",
     "validate": "tsc --noEmit && npm run build",
-    "validate:local": "npm run validate && npm run test:content && npm run test:endless-generator && npm run test:runtime && npm run test:bot && npm run test:visual",
+    "validate:local": "npm run validate && npm run test:content && npm run test:endless-generator && npm run test:runtime && npm run test:bot && npm run test:chunks && npm run test:visual",
     "validate:release": "npm run validate:local && playdrop project validate .",
     "test:content": "node tests/content-audit.mjs",
     "test:runtime": "node tests/runtime-smoke.mjs",
@@ -17,7 +17,8 @@
     "prepare:listing-media": "node scripts/prepare-listing-media.mjs",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json}\"",
     "test:bot": "node tests/bot-playtest.mjs",
-    "test:visual": "node tests/visual-baselines.mjs"
+    "test:visual": "node tests/visual-baselines.mjs",
+    "test:chunks": "node tests/chunk-validation.mjs"
   },
   "devDependencies": {
     "@playdrop/ai-client": "file:vendor/playdrop/ai-client.tgz",

@@ -81,8 +81,8 @@ function auditEndlessContract(source) {
   assert(source.includes("async function startRun(): Promise<void>") && source.includes("newRun(true);"), "Endless must be the only playable route");
   assert(source.includes('const openingSequence = [0, 1, 2, 3];'), "The curated opening sequence must remain deterministic");
   assert(source.includes("const openingGaps = [1.55, 1.1, 1.4, 1.6];"), "The learned opening cadence must remain deterministic");
-  assert(source.includes(": 1.4 + Math.random() * 2.4;"), "Post-opening endless gaps must stay dense and inside the playable flip range");
-  assert(source.includes("return curated;"), "Endless must use the reviewed authored chunk pool");
+  assert(source.includes("zone.gap[0] + Math.random() * (zone.gap[1] - zone.gap[0])"), "Post-opening gaps must come from the authored zone ranges");
+  assert(source.includes("return zones;"), "Endless must use the reviewed authored zone pool");
   assert(source.includes('sliceables: [{ type: "brick", y: 0.5, z: 1.4, count: 13 }]'), "The close opening brick wall is missing");
   assert(source.includes('{ type: "emoji", y: 0.5, z: 5.5 }') && source.includes('{ type: "camera", y: 0.5, z: 2.2 }'), "The observed orange, emoji, and camera opening beats are missing");
   assert(/function scoreForSlice\([^)]*\): number \{[\s\S]*?return 1;\s*\}/.test(source), "Every cut must be worth exactly one point");

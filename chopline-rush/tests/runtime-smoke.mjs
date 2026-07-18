@@ -311,7 +311,7 @@ async function testEndlessGeneration(browser, origin) {
   const state = await page.evaluate(() => window.__choplineTest.state());
   const platforms = state.endless.platforms;
   assert(errors.length === 0, `Endless generation console/page errors: ${errors.join("\n")}`);
-  assert(state.run.mode === "endless" && state.endless.templates === 10, "Runtime did not load the curated authored endless chunk pool");
+  assert(state.run.mode === "endless" && state.endless.zones === 5 && state.endless.chunks >= 30, "Runtime did not load the authored zone pool");
   assert(state.endless.cursorZ >= 120, `Runtime did not generate far enough ahead: ${state.endless.cursorZ}`);
   assert(state.endless.unattachedObjectCount === 0, "Generated objects must remain attached to platforms");
   assert(platforms[0].id === "endless_start" && platforms[0].objectCount === 0, "Opening platform drifted");
