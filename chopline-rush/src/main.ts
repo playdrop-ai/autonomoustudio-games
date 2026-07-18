@@ -1628,7 +1628,7 @@ function buildEndlessZones(): ZoneDef[] {
   const zones: ZoneDef[] = [
     {
       name: "Picnic Meadow",
-      length: 90,
+      length: 70,
       gap: [1.4, 2.2],
       accent: 0xffd166,
       chunks: [
@@ -1677,8 +1677,8 @@ function buildEndlessZones(): ZoneDef[] {
     },
     {
       name: "Orchard Steps",
-      length: 110,
-      gap: [1.6, 2.6],
+      length: 100,
+      gap: [2.2, 4.2],
       accent: 0x74c69d,
       chunks: [
         {
@@ -1730,7 +1730,7 @@ function buildEndlessZones(): ZoneDef[] {
     {
       name: "Brick Alley",
       length: 130,
-      gap: [1.8, 2.9],
+      gap: [2.8, 5.5],
       accent: 0xe07a5f,
       chunks: [
         {
@@ -1738,9 +1738,12 @@ function buildEndlessZones(): ZoneDef[] {
           sliceables: [{ type: "brick", y: 0.5, z: 3.4, count: 10 }],
         },
         {
-          platform: { y: 0, depth: 10, height: 1.2 },
-          obstacles: [{ type: "spikes", y: 0.5, z: 2.8 }],
-          sliceables: [{ type: "orange", y: 0.5, z: 6.8, count: 3 }],
+          platform: { y: 0, depth: 12, height: 1.2 },
+          obstacles: [
+            { type: "spikes", y: 0.5, z: 2.2 },
+            { type: "spikes", y: 0.5, z: 9.8 },
+          ],
+          sliceables: [{ type: "orange", y: 0.5, z: 6, count: 3 }],
         },
         {
           platform: { y: 0, depth: 10, height: 1.3 },
@@ -1772,7 +1775,7 @@ function buildEndlessZones(): ZoneDef[] {
     {
       name: "Windy Shelves",
       length: 150,
-      gap: [2.0, 3.1],
+      gap: [3.4, 6.5],
       accent: 0x4cc9f0,
       chunks: [
         {
@@ -1790,6 +1793,7 @@ function buildEndlessZones(): ZoneDef[] {
         },
         {
           platform: { y: 0.4, depth: 10, height: 1.8 },
+          obstacles: [{ type: "spikes", y: 0.5, z: 9 }],
           sliceables: [
             { type: "camera", y: 0.5, z: 2.2 },
             { type: "brick", y: 0.5, z: 6.6, count: 5 },
@@ -1815,7 +1819,7 @@ function buildEndlessZones(): ZoneDef[] {
     {
       name: "Chef's Gauntlet",
       length: 100000,
-      gap: [2.2, 3.3],
+      gap: [4.0, 7.5],
       accent: 0xb5179e,
       chunks: [
         {
@@ -1825,23 +1829,24 @@ function buildEndlessZones(): ZoneDef[] {
         },
         {
           platform: { y: 0, depth: 11, height: 1.2 },
+          obstacles: [{ type: "spikes", y: 0.5, z: 7.4 }],
           sliceables: [
             { type: "watermelon", y: 0.5, z: 2.2, count: 3 },
-            { type: "orange", y: 0.5, z: 5.8, count: 3 },
-            { type: "apple", y: 0.5, z: 9.2, count: 2 },
+            { type: "orange", y: 0.5, z: 5, count: 3 },
+            { type: "apple", y: 0.5, z: 9.6, count: 2 },
           ],
         },
         {
-          platform: { y: 0, depth: 9, height: 1.2, moving: true, moveAxis: "y", moveDistance: 1.3, moveSpeed: 1.2, moveDelay: 0.25 },
+          platform: { y: 0, depth: 9, height: 1.2, moving: true, moveAxis: "y", moveDistance: 1.5, moveSpeed: 1.4, moveDelay: 0.2 },
           sliceables: [{ type: "brick", y: 0.5, z: 4.6, count: 8 }],
         },
         {
-          platform: { y: 0, depth: 11, height: 1.3 },
+          platform: { y: 0, depth: 12, height: 1.3 },
           obstacles: [
-            { type: "spikes", y: 0.5, z: 2.6 },
-            { type: "spikes", y: 0.5, z: 8.6 },
+            { type: "spikes", y: 0.5, z: 2.2 },
+            { type: "spikes", y: 0.5, z: 10 },
           ],
-          sliceables: [{ type: "wooden_stake", y: 0.5, z: 5.6, count: 2 }],
+          sliceables: [{ type: "wooden_stake", y: 0.5, z: 6, count: 2 }],
         },
         {
           platform: { y: 0, depth: 10, height: 1.2 },
@@ -1852,8 +1857,9 @@ function buildEndlessZones(): ZoneDef[] {
           ],
         },
         {
-          platform: { y: 0.5, depth: 7, height: 1.9 },
-          sliceables: [{ type: "brick", y: 0.5, z: 3.5, count: 10 }],
+          platform: { y: 0.5, depth: 8, height: 1.9 },
+          obstacles: [{ type: "spikes", y: 0.5, z: 1.6 }],
+          sliceables: [{ type: "brick", y: 0.5, z: 5, count: 10 }],
         },
         {
           platform: { y: 0, depth: 11, height: 1.2 },
@@ -1891,7 +1897,7 @@ function zoneIndexForZ(z: number): number {
 function endlessTailGapCreep(z: number): number {
   const lastZoneStart = zoneBoundaries()[endlessZones.length - 2] ?? 0;
   if (z <= lastZoneStart) return 0;
-  return Math.min(0.6, (z - lastZoneStart) * 0.0015);
+  return Math.min(2.5, (z - lastZoneStart) * 0.0025);
 }
 
 function chunkHasObstacles(template: EndlessTemplate): boolean {

@@ -325,7 +325,7 @@ async function testEndlessGeneration(browser, origin) {
     const gap = current.z - current.depth / 2 - (previous.z + previous.depth / 2);
     const previousTop = previous.y + previous.height / 2;
     const currentTop = current.y + current.height / 2;
-    assert(gap >= 1.09 && gap <= 3.81, `Platform ${index} generated an unplayable gap: ${gap}`);
+    assert(gap >= 1.09 && gap <= 6.6, `Platform ${index} generated a gap outside the early-zone envelope: ${gap}`);
     assert(currentTop - previousTop <= 3.81 && currentTop - previousTop >= -1.51, `Platform ${index} generated an unreachable height change: ${currentTop - previousTop}`);
   }
   await page.close();

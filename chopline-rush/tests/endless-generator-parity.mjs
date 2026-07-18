@@ -65,6 +65,14 @@ assert(source.includes("endlessLastHadObstacle && chunkHasObstacles"), "Obstacle
 assert(source.includes("const ENDLESS_GENERATE_AHEAD = 120;"), "Generate-ahead distance drifted");
 assert(source.includes("const ENDLESS_CLEANUP_BEHIND = 60;"), "Cleanup-behind distance drifted");
 assert(source.includes("function spawnZoneGate"), "Zone boundaries must spawn gates");
+
+// Same-platform obstacles must leave a landing pocket wider than the blade's kill reach
+for (const chunkMatch of zonesSource.matchAll(/obstacles: \[([\s\S]*?)\]/g)) {
+  const zs = [...chunkMatch[1].matchAll(/z: ([\d.]+)/g)].map((m) => Number(m[1])).sort((a, b) => a - b);
+  for (let i = 1; i < zs.length; i += 1) {
+    assert(zs[i] - zs[i - 1] >= 7, `Same-chunk spikes only ${(zs[i] - zs[i - 1]).toFixed(1)} apart; minimum spacing is 7 to avoid trap pockets`);
+  }
+}
 assert(source.includes("function celebrateZone"), "Zone crossings must celebrate");
 
 console.log("[endless-generator-parity] passed");

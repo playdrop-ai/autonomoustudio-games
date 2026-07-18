@@ -18,7 +18,8 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json}\"",
     "test:bot": "node tests/bot-playtest.mjs",
     "test:visual": "node tests/visual-baselines.mjs",
-    "test:chunks": "node tests/chunk-validation.mjs"
+    "test:chunks": "node tests/chunk-validation.mjs",
+    "test:difficulty": "node tests/difficulty-sweep.mjs"
   },
   "devDependencies": {
     "@playdrop/ai-client": "file:vendor/playdrop/ai-client.tgz",
