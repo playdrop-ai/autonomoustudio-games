@@ -56,6 +56,7 @@ export class PlaydropController {
   private achievementProgressLoaded = false;
   private pendingScore: number | null = null;
   private pendingOwnerUserId: PendingOwnerUserId = null;
+  private firstMoveReported = false;
   private unlockFlushPromise: Promise<void> | null = null;
   private pendingMetaFlushPromise: Promise<void> | null = null;
   private readonly changeListeners = new Set<() => void>();
@@ -163,6 +164,14 @@ export class PlaydropController {
     }
     this.hostReady = true;
     this.emitChange();
+  }
+
+  reportFirstMove(): void {
+    if (this.firstMoveReported || !this.sdk || this.phase !== "play") {
+      return;
+    }
+    this.sdk.acquisition.reportFirstMove();
+    this.firstMoveReported = true;
   }
 
   queue(update: MetaUpdate): void {

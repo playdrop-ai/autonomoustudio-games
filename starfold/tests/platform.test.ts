@@ -44,6 +44,7 @@ function createSdkHarness(options: {
   const submitted: Array<{ key: string; score: number }> = [];
   const interstitialLoads: Array<{ status: string }> = [];
   const interstitialShows: Array<{ status: string }> = [];
+  const acquisitionFirstMoves: Array<{ reported: true }> = [];
   let audioPolicyListener: ((state: { enabled: boolean; reason: string }) => void) | null = null;
   let authChangeListener: ((state: { isLoggedIn: boolean; userId: number | null }) => void) | null = null;
   let phaseChangeListener: ((phase: "play" | "preview") => void) | null = null;
@@ -187,6 +188,11 @@ function createSdkHarness(options: {
         show: async () => ({ status: "not_ready" as const }),
       },
     },
+    acquisition: {
+      reportFirstMove: () => {
+        acquisitionFirstMoves.push({ reported: true });
+      },
+    },
   };
 
   return {
@@ -196,6 +202,7 @@ function createSdkHarness(options: {
     submitted,
     interstitialLoads,
     interstitialShows,
+    acquisitionFirstMoves,
     getAudioPolicyListener: () => audioPolicyListener,
     setAuthState: (state: { isLoggedIn: boolean; userId: number | null }) => {
       me.isLoggedIn = state.isLoggedIn;
@@ -247,6 +254,25 @@ test("init skips SDK bootstrap when the page is not running inside a Playdrop ho
 
     assert.equal(initCalled, false);
     assert.equal(controller.getSnapshot().available, false);
+  } finally {
+    restoreWindow();
+  }
+});
+
+test("reportFirstMove sends the acquisition event only once", async () => {
+  const harness = createSdkHarness({
+    isLoggedIn: false,
+    initialRank: null,
+    initialBestScore: null,
+  });
+  const restoreWindow = installWindow(async () => harness.sdk);
+  try {
+    const controller = new PlaydropController("highest_score");
+    await controller.init();
+    controller.reportFirstMove();
+    controller.reportFirstMove();
+
+    assert.deepEqual(harness.acquisitionFirstMoves, [{ reported: true }]);
   } finally {
     restoreWindow();
   }

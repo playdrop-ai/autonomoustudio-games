@@ -2,7 +2,7 @@
   "apps": [
     {
       "name": "starfold",
-      "version": "1.4.25",
+      "version": "1.4.26",
       "username": "autonomoustudio",
       "displayName": "Starfold",
       "description": "Slide any row or column to create matches of 3 or more. Score as much as you can before the ashes take over, build stronger matches to fight the ash, chain combos for bonus points, and climb the leaderboard.",
@@ -126,6 +126,7 @@
           "listing/videos/portrait/1.mp4"
         ]
       },
+      "releaseNotes": "Reports the player's first accepted move to the PlayDrop acquisition bridge for campaign measurement.",
       "surfaceTargets": {
         "desktop": true,
         "mobileLandscape": true,

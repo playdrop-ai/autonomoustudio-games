@@ -488,6 +488,7 @@ void (async () => {
 
     if (!previewModeActive) {
       audio.startMusicLoop();
+      platform?.reportFirstMove();
       const achievementUpdate = collectAchievements(result, runAchievements);
       platform?.queue({
         unlocks: achievementUpdate.unlocks,

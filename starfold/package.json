@@ -1,6 +1,6 @@
 {
   "name": "starfold",
-  "version": "1.4.25",
+  "version": "1.4.26",
   "type": "module",
   "private": true,
   "scripts": {
@@ -26,7 +26,7 @@
     "typescript": "^5.9.2"
   },
   "playdrop": {
-    "platformVersion": "0.7.13",
-    "sdkTypesVersion": "0.7.13"
+    "platformVersion": "0.12.43",
+    "sdkTypesVersion": "0.12.43"
   }
 }
