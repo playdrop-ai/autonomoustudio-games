@@ -126,7 +126,6 @@
           "listing/videos/portrait/1.mp4"
         ]
       },
-      "releaseNotes": "Reports the player's first accepted move to the PlayDrop acquisition bridge for campaign measurement.",
       "surfaceTargets": {
         "desktop": true,
         "mobileLandscape": true,
