@@ -73,6 +73,26 @@ test("initial state starts playable without corruption or matches", () => {
   }
 });
 
+test("preview opening demonstrates a real nine-stage chain", () => {
+  const state = createInitialState(323);
+  const result = applyMove(state, {
+    axis: "row",
+    index: 3,
+    direction: 1,
+  });
+  const clearStages = result.stages.filter((stage) => stage.kind === "clear");
+
+  assert.equal(result.maxCombo, 9);
+  assert.deepEqual(
+    clearStages.map((stage) => stage.matched.length),
+    [7, 11, 6, 10, 4, 6, 10, 15, 7],
+  );
+  assert.deepEqual(
+    clearStages.map((stage) => stage.majorMatchSize),
+    [4, 5, 3, 7, 4, 3, 4, 10, 4],
+  );
+});
+
 test("row shifts wrap the selected line", () => {
   const state = stateFromKinds([
     ["sun", "moon", "wave", "leaf", "ember"],

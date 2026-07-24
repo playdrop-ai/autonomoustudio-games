@@ -12,6 +12,75 @@ export type RestartInterstitialWaitResult<T> =
   | { status: "rejected"; error: unknown }
   | { status: "timeout" };
 
+export interface PreviewGestureFrame {
+  offsetRatio: number;
+  handOpacity: number;
+  complete: boolean;
+}
+
+export function calculatePreviewGestureFrame(options: {
+  elapsedMs: number;
+  fadeInMs: number;
+  swipeMs: number;
+  releaseMs: number;
+  travelRatio: number;
+}): PreviewGestureFrame {
+  const { elapsedMs, fadeInMs, swipeMs, releaseMs, travelRatio } = options;
+  if (!Number.isFinite(elapsedMs)) {
+    throw new Error("preview gesture elapsed time must be finite");
+  }
+  if (!Number.isFinite(fadeInMs) || fadeInMs <= 0) {
+    throw new Error("preview gesture fade-in duration must be positive");
+  }
+  if (!Number.isFinite(swipeMs) || swipeMs <= 0) {
+    throw new Error("preview gesture swipe duration must be positive");
+  }
+  if (!Number.isFinite(releaseMs) || releaseMs <= 0) {
+    throw new Error("preview gesture release duration must be positive");
+  }
+  if (!Number.isFinite(travelRatio) || travelRatio <= 0 || travelRatio >= 1) {
+    throw new Error("preview gesture travel ratio must be between 0 and 1");
+  }
+
+  const clampedElapsedMs = Math.max(0, elapsedMs);
+  if (clampedElapsedMs < fadeInMs) {
+    return {
+      offsetRatio: 0,
+      handOpacity: clampedElapsedMs / fadeInMs,
+      complete: false,
+    };
+  }
+
+  const swipeElapsedMs = clampedElapsedMs - fadeInMs;
+  if (swipeElapsedMs < swipeMs) {
+    const progress = swipeElapsedMs / swipeMs;
+    const easedProgress =
+      progress < 0.5
+        ? 4 * progress * progress * progress
+        : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+    return {
+      offsetRatio: travelRatio * easedProgress,
+      handOpacity: 1,
+      complete: false,
+    };
+  }
+
+  const releaseElapsedMs = swipeElapsedMs - swipeMs;
+  if (releaseElapsedMs < releaseMs) {
+    return {
+      offsetRatio: travelRatio,
+      handOpacity: 1 - releaseElapsedMs / releaseMs,
+      complete: false,
+    };
+  }
+
+  return {
+    offsetRatio: travelRatio,
+    handOpacity: 0,
+    complete: true,
+  };
+}
+
 export function defaultGameOverSubtitle(reason: GameOverReason | null): string {
   if (reason === "no_moves") {
     return "no move possible";

@@ -4,8 +4,8 @@ import { dirname } from 'node:path';
 
 const HTML_TEMPLATE = 'template.html';
 const HTML_TARGET = 'dist/index.html';
-const ASSET_SOURCE = 'assets';
-const ASSET_TARGET = 'dist/assets';
+const RUNTIME_ASSET_SOURCE = 'assets/runtime';
+const RUNTIME_ASSET_TARGET = 'dist/assets/runtime';
 
 const buildOptions = {
   entryPoints: ['src/main.ts'],
@@ -37,11 +37,12 @@ function inlineHtml(result) {
 
   mkdirSync(dirname(HTML_TARGET), { recursive: true });
   writeFileSync(HTML_TARGET, finalHtml, 'utf8');
-  if (existsSync(ASSET_SOURCE)) {
-    rmSync(ASSET_TARGET, { recursive: true, force: true });
-    mkdirSync(ASSET_TARGET, { recursive: true });
-    cpSync(`${ASSET_SOURCE}/.`, ASSET_TARGET, { recursive: true, force: true });
+  if (!existsSync(RUNTIME_ASSET_SOURCE)) {
+    throw new Error(`[starfold] Missing runtime asset directory: ${RUNTIME_ASSET_SOURCE}`);
   }
+  rmSync('dist/assets', { recursive: true, force: true });
+  mkdirSync(dirname(RUNTIME_ASSET_TARGET), { recursive: true });
+  cpSync(RUNTIME_ASSET_SOURCE, RUNTIME_ASSET_TARGET, { recursive: true, force: true });
 
   console.log(`[template-typescript] Wrote ${HTML_TARGET}`);
 }

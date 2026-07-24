@@ -5,7 +5,7 @@ import { applyMove, BOARD_COLS, BOARD_ROWS, boardKinds, boardStateKinds, cloneBo
 import { classifyGameOverResult, freezeHudSnapshot, type GameOverResult } from "./game/results";
 import { CanvasRenderer, type BoardResetTransition, type ComboLabel, type DragPreview, type IdleHint, type RenderQualityTier, type StartupIntroState, type TileInteractionState } from "./game/render";
 import { PlaydropController, type PlatformSnapshot } from "./platform";
-import { buildGameOverSubtitle, calculateComboStageDuration, defaultGameOverSubtitle, shouldAnimatePreviewRestart, shouldShowRestartInterstitial, shouldSnapbackDragOnHudPointerUp, waitForRestartInterstitial } from "./runtime-helpers";
+import { buildGameOverSubtitle, calculateComboStageDuration, calculatePreviewGestureFrame, defaultGameOverSubtitle, shouldAnimatePreviewRestart, shouldShowRestartInterstitial, shouldSnapbackDragOnHudPointerUp, waitForRestartInterstitial } from "./runtime-helpers";
 
 type Screen = "playing" | "losing" | "gameover";
 type StandardAchievementKey =
@@ -83,6 +83,11 @@ declare global {
       };
     };
     render_game_to_text?: () => string;
+    __listingCapture?: {
+      prepare: (
+        request: string | { sceneId: string },
+      ) => void | Promise<void>;
+    };
   }
 }
 
@@ -136,6 +141,10 @@ interface StartupIntroSequence {
 interface PreviewLoopState {
   nextMoveAt: number | null;
   restartAt: number | null;
+  gesture: {
+    move: Move;
+    startedAt: number;
+  } | null;
 }
 
 interface BoardResetSequence {
@@ -180,6 +189,16 @@ const INTRO_TILE_REVEAL_MS = 280;
 const PREVIEW_START_DELAY_MS = 900;
 const PREVIEW_MOVE_DELAY_MS = 1000;
 const PREVIEW_RESTART_DELAY_MS = 1100;
+const PREVIEW_SEED = 323;
+const PREVIEW_OPENING_MOVE: Move = {
+  axis: "row",
+  index: 3,
+  direction: 1,
+};
+const PREVIEW_GESTURE_FADE_IN_MS = 200;
+const PREVIEW_GESTURE_SWIPE_MS = 1000;
+const PREVIEW_GESTURE_RELEASE_MS = 200;
+const PREVIEW_GESTURE_TRAVEL_RATIO = 0.72;
 const BOARD_RESET_OUT_STAGGER_MS = 22;
 const BOARD_RESET_OUT_TILE_MS = 220;
 const BOARD_RESET_EMPTY_HOLD_MS = 500;
@@ -269,6 +288,7 @@ void (async () => {
   const previewLoop: PreviewLoopState = {
     nextMoveAt: null,
     restartAt: null,
+    gesture: null,
   };
   const startupIntro: StartupIntroSequence = {
     assetsReady: false,
@@ -401,9 +421,25 @@ void (async () => {
     completedRunHud = frozenHud;
     if (isPreviewMode(getPlatformSnapshot())) {
       previewModeActive = true;
+      startNewRun();
       skipStartupIntroForPreview(startupIntro);
       schedulePreviewStart(performance.now());
     }
+    window.__listingCapture = {
+      prepare(request) {
+        const sceneId = typeof request === "string" ? request : request.sceneId;
+        if (sceneId !== "listing-landscape" && sceneId !== "listing-portrait") {
+          throw new Error(`[starfold] Unsupported listing scene ${sceneId}`);
+        }
+        if (!previewModeActive) {
+          throw new Error("[starfold] Listing capture requires the hosted preview phase");
+        }
+        startNewRun();
+        skipStartupIntroForPreview(startupIntro);
+        schedulePreviewStart(performance.now());
+        markSceneDirty();
+      },
+    };
     platform?.markReady();
     syncAudioRuntimeState();
     void preloadRestartInterstitial(performance.now());
@@ -448,13 +484,17 @@ void (async () => {
     qualityTier = baseQualityTier;
     previewLoop.nextMoveAt = previewModeActive ? now + PREVIEW_START_DELAY_MS : null;
     previewLoop.restartAt = null;
+    previewLoop.gesture = null;
     syncAudioRuntimeState();
     void preloadRestartInterstitial(now);
     markSceneDirty();
   }
 
   function startNewRun(): void {
-    applyFreshRunState(createRunState(fixedInitialState, forcedSeed), performance.now());
+    applyFreshRunState(
+      createRunState(fixedInitialState, previewModeActive ? PREVIEW_SEED : forcedSeed),
+      performance.now(),
+    );
   }
 
   function startNewRunWithBoardReset(
@@ -463,7 +503,10 @@ void (async () => {
     outgoingAshedAmount: number,
     source: BoardResetSequence["source"] = "restart",
   ): void {
-    const nextState = createRunState(fixedInitialState, forcedSeed);
+    const nextState = createRunState(
+      fixedInitialState,
+      previewModeActive ? PREVIEW_SEED : forcedSeed,
+    );
     applyFreshRunState(nextState, now);
     boardReset = {
       startAt: now,
@@ -476,6 +519,7 @@ void (async () => {
     boardResetSequenceSeed += 1;
     previewLoop.nextMoveAt = null;
     previewLoop.restartAt = null;
+    previewLoop.gesture = null;
   }
 
   function queueMove(move: Move, startOffsetPx = 0): boolean {
@@ -686,6 +730,7 @@ void (async () => {
       settling: false,
       settleStartAt: null,
       settleFromPx: offsetPx,
+      previewHandOpacity: null,
     };
     markSceneDirty();
   }
@@ -719,11 +764,13 @@ void (async () => {
     } else if (!previewModeActive && stage.damaged.length > 0) {
       audio.playAshHit();
     }
-    if (!previewModeActive && hasMajorMatchCue) {
-      audio.playMajorMatch(stage.majorMatchSize);
+    if (hasMajorMatchCue) {
+      if (!previewModeActive) {
+        audio.playMajorMatch(stage.majorMatchSize);
+      }
       majorMatchFlash = createMajorMatchFlash(stage.majorMatchSize, startAt);
     }
-    if (!previewModeActive && stage.combo > 1) {
+    if (stage.combo > 1) {
       const matchKind = getDominantMatchKind(stage);
       if (!matchKind) {
         throw new Error("Combo label requires a dominant match kind");
@@ -892,6 +939,7 @@ void (async () => {
   function schedulePreviewStart(now: number): void {
     previewLoop.nextMoveAt = now + PREVIEW_START_DELAY_MS;
     previewLoop.restartAt = null;
+    previewLoop.gesture = null;
   }
 
   function syncPreviewMode(now: number): void {
@@ -913,6 +961,7 @@ void (async () => {
     startNewRunWithBoardReset(now, getVisibleBoardSnapshot(), getCurrentBoardAshedAmount(now), "preview-exit");
     previewLoop.nextMoveAt = null;
     previewLoop.restartAt = null;
+    previewLoop.gesture = null;
   }
 
   function advanceBoardReset(now: number): void {
@@ -947,6 +996,38 @@ void (async () => {
       return;
     }
 
+    if (previewLoop.gesture) {
+      const frame = calculatePreviewGestureFrame({
+        elapsedMs: now - previewLoop.gesture.startedAt,
+        fadeInMs: PREVIEW_GESTURE_FADE_IN_MS,
+        swipeMs: PREVIEW_GESTURE_SWIPE_MS,
+        releaseMs: PREVIEW_GESTURE_RELEASE_MS,
+        travelRatio: PREVIEW_GESTURE_TRAVEL_RATIO,
+      });
+      const move = previewLoop.gesture.move;
+      const layout = renderer.getLayout();
+      const releaseOffsetPx =
+        (layout.cellSize + layout.gap) * move.direction * frame.offsetRatio;
+      if (frame.complete) {
+        previewLoop.gesture = null;
+        dragPreview = null;
+        if (!queueMove(move, releaseOffsetPx)) {
+          throw new Error("Preview gesture could not commit its playable move");
+        }
+        advanceStages(now);
+        return;
+      }
+      dragPreview = {
+        move,
+        offsetPx: releaseOffsetPx,
+        settling: false,
+        settleStartAt: null,
+        settleFromPx: releaseOffsetPx,
+        previewHandOpacity: frame.handOpacity,
+      };
+      return;
+    }
+
     if (screen !== "playing" || gameState.gameOver || activeStage || queuedStages.length > 0 || drag || dragPreview) {
       return;
     }
@@ -960,14 +1041,26 @@ void (async () => {
       return;
     }
 
-    const move = pickPreviewMove(gameState);
+    const move = pickPreviewMove(
+      gameState,
+      gameState.moves === 0 ? PREVIEW_OPENING_MOVE : undefined,
+    );
     if (!move) {
       throw new Error("Preview autoplay could not find a playable move");
     }
     previewLoop.nextMoveAt = null;
-    if (queueMove(move)) {
-      advanceStages(now);
-    }
+    previewLoop.gesture = {
+      move,
+      startedAt: now,
+    };
+    dragPreview = {
+      move,
+      offsetPx: 0,
+      settling: false,
+      settleStartAt: null,
+      settleFromPx: 0,
+      previewHandOpacity: 0,
+    };
   }
 
   function getVisibleBoardSnapshot(): Board {
@@ -1163,7 +1256,12 @@ void (async () => {
       overlayPendingElapsedMs: restartInterstitialStartedAt === null ? 0 : Math.max(0, now - restartInterstitialStartedAt),
       hudLoginEnabled: !snapshot.isLoggedIn && platform?.canPromptLogin() === true,
       idleHint: previewModeActive ? null : idleHint,
-      dragPreview: boardReset ? null : dragPreview ? { move: dragPreview.move, offsetPx: dragPreview.offsetPx, settling: dragPreview.settling } : null,
+      dragPreview: boardReset ? null : dragPreview ? {
+        move: dragPreview.move,
+        offsetPx: dragPreview.offsetPx,
+        settling: dragPreview.settling,
+        previewHandOpacity: dragPreview.previewHandOpacity,
+      } : null,
       stage: boardReset
         ? null
         : activeStage
@@ -1173,8 +1271,8 @@ void (async () => {
           }
         : null,
       overlay: previewModeActive ? null : showGameOverOverlay ? "gameover" : null,
-      edgeFlash: previewModeActive ? null : getRenderEdgeFlash(now, majorMatchFlash),
-      comboLabel: previewModeActive ? null : comboLabel,
+      edgeFlash: getRenderEdgeFlash(now, majorMatchFlash),
+      comboLabel,
       platform: snapshot,
       interaction: previewModeActive ? null : interaction,
       qualityTier,
@@ -1508,10 +1606,24 @@ function skipStartupIntroForPreview(intro: StartupIntroSequence): void {
   intro.completed = true;
 }
 
-function pickPreviewMove(state: ReturnType<typeof createInitialState>): Move | null {
+function pickPreviewMove(
+  state: ReturnType<typeof createInitialState>,
+  preferredMove?: Move,
+): Move | null {
   const moves = getPlayableMoves(state.board);
   if (moves.length === 0) {
     return null;
+  }
+  if (
+    preferredMove &&
+    moves.some(
+      (move) =>
+        move.axis === preferredMove.axis &&
+        move.index === preferredMove.index &&
+        move.direction === preferredMove.direction,
+    )
+  ) {
+    return preferredMove;
   }
 
   let bestMove = moves[0]!;
@@ -1915,6 +2027,9 @@ function shouldContinueRenderLoop(options: {
     return true;
   }
   if (options.dragPreview?.settling) {
+    return true;
+  }
+  if (options.previewModeActive && typeof options.dragPreview?.previewHandOpacity === "number") {
     return true;
   }
   if (options.previewModeActive) {

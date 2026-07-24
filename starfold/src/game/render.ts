@@ -122,6 +122,7 @@ export interface DragPreview {
   move: Move;
   offsetPx: number;
   settling: boolean;
+  previewHandOpacity: number | null;
 }
 
 export type OverlayAction = "restart";
@@ -151,6 +152,7 @@ interface RuntimeAssets {
   backgroundPortrait: HTMLImageElement;
   heroLandscape: HTMLImageElement;
   heroPortrait: HTMLImageElement;
+  previewHand: HTMLImageElement;
   tiles: Record<TileKind, HTMLImageElement>;
   sigilTilesAshed: Record<SigilKind, HTMLImageElement>;
   sigilTilesHighlight: Record<SigilKind, HTMLImageElement>;
@@ -187,6 +189,7 @@ const ASSET_URLS = {
   backgroundPortrait: "./assets/runtime/starfold-background-portrait-v1.png",
   heroLandscape: "./assets/runtime/starfold-hero-landscape-v1.png",
   heroPortrait: "./assets/runtime/starfold-hero-portrait-v1.png",
+  previewHand: "./assets/runtime/ui/preview-hand.png",
   sigilTilesNormal: {
     sun: "./assets/runtime/tiles/generated-v2/starfold-tile-sun-normal-r1.png",
     moon: "./assets/runtime/tiles/generated-v2/starfold-tile-moon-normal-r1.png",
@@ -305,6 +308,7 @@ export class CanvasRenderer {
       { key: "background-portrait", src: ASSET_URLS.backgroundPortrait },
       { key: "hero-landscape", src: ASSET_URLS.heroLandscape },
       { key: "hero-portrait", src: ASSET_URLS.heroPortrait },
+      { key: "preview-hand", src: ASSET_URLS.previewHand },
       { key: "sun-normal", src: ASSET_URLS.sigilTilesNormal.sun },
       { key: "moon-normal", src: ASSET_URLS.sigilTilesNormal.moon },
       { key: "wave-normal", src: ASSET_URLS.sigilTilesNormal.wave },
@@ -338,6 +342,7 @@ export class CanvasRenderer {
       backgroundPortrait: loaded.get("background-portrait")!,
       heroLandscape: loaded.get("hero-landscape")!,
       heroPortrait: loaded.get("hero-portrait")!,
+      previewHand: loaded.get("preview-hand")!,
       tiles: {
         sun: loaded.get("sun-normal")!,
         moon: loaded.get("moon-normal")!,
@@ -466,6 +471,9 @@ export class CanvasRenderer {
 
     if (this.boardOpacity > 0.001) {
       this.drawFrameOverlay();
+    }
+    if (this.boardOpacity > 0.001 && typeof model.dragPreview?.previewHandOpacity === "number") {
+      this.drawPreviewHand(model.dragPreview);
     }
     this.drawHud(model);
     if (model.intro.heroOpacity > 0.001) {
@@ -1068,6 +1076,48 @@ export class CanvasRenderer {
     });
   }
 
+  private drawPreviewHand(preview: DragPreview): void {
+    if (!this.assets || preview.previewHandOpacity === null || preview.previewHandOpacity <= 0.001) {
+      return;
+    }
+
+    const step = this.layout.cellSize + this.layout.gap;
+    const centerCol = Math.floor((BOARD_COLS - 1) / 2);
+    const centerRow = Math.floor((BOARD_ROWS - 1) / 2);
+    const touchX =
+      preview.move.axis === "row"
+        ? this.layout.boardX + centerCol * step + this.layout.cellSize / 2 + preview.offsetPx
+        : this.layout.boardX + preview.move.index * step + this.layout.cellSize / 2;
+    const touchY =
+      preview.move.axis === "row"
+        ? this.layout.boardY + preview.move.index * step + this.layout.cellSize / 2
+        : this.layout.boardY + centerRow * step + this.layout.cellSize / 2 + preview.offsetPx;
+    const size = this.layout.cellSize * 1.55;
+    const fingertipX = size * 0.37;
+    const fingertipY = size * 0.1;
+    const ringOuterRadius = this.layout.cellSize * 0.15;
+    const ringInnerRadius = ringOuterRadius * 0.68;
+
+    this.ctx.save();
+    this.ctx.globalAlpha = preview.previewHandOpacity;
+    this.ctx.fillStyle = "#25154f";
+    this.ctx.beginPath();
+    this.ctx.arc(touchX, touchY, ringOuterRadius, 0, Math.PI * 2);
+    this.ctx.fill();
+    this.ctx.fillStyle = "#ffffff";
+    this.ctx.beginPath();
+    this.ctx.arc(touchX, touchY, ringInnerRadius, 0, Math.PI * 2);
+    this.ctx.fill();
+    this.ctx.drawImage(
+      this.assets.previewHand,
+      touchX - fingertipX,
+      touchY - fingertipY,
+      size,
+      size,
+    );
+    this.ctx.restore();
+  }
+
   private drawIdleHint(board: Board, hint: IdleHint): void {
     const distance = (this.layout.cellSize + this.layout.gap) * 0.16;
     const pulse = Math.sin(hint.progress * Math.PI);
@@ -1360,18 +1410,16 @@ export class CanvasRenderer {
     if (model.overlay === "gameover" && model.gameOverOverlayProgress > 0) {
       this.drawGameOverModal(model);
     }
-    if (!model.showHud || model.intro.hudOpacity <= 0.001) {
-      return;
+    if (model.showHud && model.intro.hudOpacity > 0.001) {
+      this.ctx.save();
+      this.ctx.globalAlpha = clamp(model.intro.hudOpacity, 0, 1);
+      if (this.layout.portrait) {
+        this.drawPortraitPlaying(model, model.intro.hudOffsetX, model.intro.hudOffsetY);
+      } else {
+        this.drawLandscapePlaying(model, model.intro.hudOffsetX, model.intro.hudOffsetY);
+      }
+      this.ctx.restore();
     }
-
-    this.ctx.save();
-    this.ctx.globalAlpha = clamp(model.intro.hudOpacity, 0, 1);
-    if (this.layout.portrait) {
-      this.drawPortraitPlaying(model, model.intro.hudOffsetX, model.intro.hudOffsetY);
-    } else {
-      this.drawLandscapePlaying(model, model.intro.hudOffsetX, model.intro.hudOffsetY);
-    }
-    this.ctx.restore();
 
     if (model.comboLabel) {
       this.drawComboLabel(model.comboLabel);

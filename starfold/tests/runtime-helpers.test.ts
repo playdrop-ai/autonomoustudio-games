@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import {
   buildGameOverSubtitle,
   calculateComboStageDuration,
+  calculatePreviewGestureFrame,
   shouldAnimatePreviewRestart,
   shouldShowRestartInterstitial,
   shouldSnapbackDragOnHudPointerUp,
@@ -164,6 +165,42 @@ test("calculateComboStageDuration speeds up later combo clears with a readable f
     }),
     124,
   );
+});
+
+test("preview gesture fades in, swipes, then releases before completing", () => {
+  const timing = {
+    fadeInMs: 200,
+    swipeMs: 1000,
+    releaseMs: 200,
+    travelRatio: 0.72,
+  };
+
+  assert.deepEqual(calculatePreviewGestureFrame({ ...timing, elapsedMs: 0 }), {
+    offsetRatio: 0,
+    handOpacity: 0,
+    complete: false,
+  });
+  assert.deepEqual(calculatePreviewGestureFrame({ ...timing, elapsedMs: 100 }), {
+    offsetRatio: 0,
+    handOpacity: 0.5,
+    complete: false,
+  });
+
+  const halfway = calculatePreviewGestureFrame({ ...timing, elapsedMs: 700 });
+  assert.equal(halfway.offsetRatio, 0.36);
+  assert.equal(halfway.handOpacity, 1);
+  assert.equal(halfway.complete, false);
+
+  assert.deepEqual(calculatePreviewGestureFrame({ ...timing, elapsedMs: 1300 }), {
+    offsetRatio: 0.72,
+    handOpacity: 0.5,
+    complete: false,
+  });
+  assert.deepEqual(calculatePreviewGestureFrame({ ...timing, elapsedMs: 1400 }), {
+    offsetRatio: 0.72,
+    handOpacity: 0,
+    complete: true,
+  });
 });
 
 test("waitForRestartInterstitial times out and ignores a late host rejection", async () => {
