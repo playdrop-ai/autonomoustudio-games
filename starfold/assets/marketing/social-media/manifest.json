@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "game": "Starfold",
+  "subtitle": "Swipe Match Puzzle Game",
+  "destinationUrl": "https://www.playdrop.ai/creators/autonomoustudio/apps/game/starfold",
+  "youtube": {
+    "shortVideo": "short/portrait-9x16.mp4",
+    "trailerVideo": "trailer/landscape-16x9.mp4",
+    "trailerThumbnail": "youtube/trailer-thumbnail-1280x720.png",
+    "shortTitle": "One Swipe Can Trigger a Massive Chain | Starfold",
+    "trailerTitle": "Starfold Gameplay Trailer | Swipe, Match, Fight the Ash",
+    "description": "Slide rows and columns, build huge chains, and fight back the Ash in Starfold. Play it in PlayDrop Games."
+  },
+  "tiktok": {
+    "video": "short/portrait-9x16.mp4",
+    "caption": "One swipe. One huge chain. Can you fight back the Ash? #PuzzleGame #Match3 #MobileGames"
+  },
+  "instagram": {
+    "reelVideo": "short/portrait-9x16.mp4",
+    "storyVideo": "short/portrait-9x16.mp4",
+    "reelCover": "instagram/reels-cover-420x654.png",
+    "feedVideo": "instagram/feed/video-3x4.mp4",
+    "carousel": [
+      "instagram/feed/carousel/01-hero.png",
+      "instagram/feed/carousel/02-swipe-to-match.png",
+      "instagram/feed/carousel/03-fight-back-the-ash.png",
+      "instagram/feed/carousel/04-unleash-big-chains.png",
+      "instagram/feed/carousel/05-climb-the-leaderboard.png"
+    ],
+    "caption": "Swipe to match. Fight back the Ash. Unleash huge chains and chase the top score in Starfold. Play it in PlayDrop Games. #PuzzleGame #Match3 #IndieGames"
+  },
+  "pinterest": {
+    "video": "short/pinterest-2x3.mp4",
+    "images": [
+      {
+        "file": "pinterest/static/01-hero.png",
+        "title": "Starfold: Swipe Match Puzzle Game"
+      },
+      {
+        "file": "pinterest/static/02-swipe-to-match.png",
+        "title": "Swipe to Match"
+      },
+      {
+        "file": "pinterest/static/03-fight-back-the-ash.png",
+        "title": "Fight Back the Ash"
+      },
+      {
+        "file": "pinterest/static/04-unleash-big-chains.png",
+        "title": "Unleash Big Chains"
+      },
+      {
+        "file": "pinterest/static/05-climb-the-leaderboard.png",
+        "title": "Climb the Leaderboard"
+      }
+    ],
+    "description": "A colorful swipe-and-match puzzle game where every move can trigger a massive chain. Fight back the Ash and chase a new high score in Starfold."
+  },
+  "x": {
+    "video": "trailer/landscape-16x9.mp4",
+    "copy": "Swipe a row. Trigger a chain. Fight back the Ash. Starfold is playable now in PlayDrop Games."
+  }
+}
