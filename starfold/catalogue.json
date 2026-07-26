@@ -137,21 +137,19 @@
           "assets/marketing/playdrop/screenshots/landscape/01-swipe-to-match.png",
           "assets/marketing/playdrop/screenshots/landscape/02-fight-back-the-ash.png",
           "assets/marketing/playdrop/screenshots/landscape/03-unleash-big-chains.png",
-          "assets/marketing/playdrop/screenshots/landscape/04-climb-the-leaderboard.png",
-          "assets/marketing/playdrop/screenshots/landscape/05-gameplay.png"
+          "assets/marketing/playdrop/screenshots/landscape/04-climb-the-leaderboard.png"
         ],
         "screenshotsPortrait": [
           "assets/marketing/playdrop/screenshots/portrait/01-swipe-to-match.png",
           "assets/marketing/playdrop/screenshots/portrait/02-fight-back-the-ash.png",
           "assets/marketing/playdrop/screenshots/portrait/03-unleash-big-chains.png",
-          "assets/marketing/playdrop/screenshots/portrait/04-climb-the-leaderboard.png",
-          "assets/marketing/playdrop/screenshots/portrait/05-gameplay.png"
+          "assets/marketing/playdrop/screenshots/portrait/04-climb-the-leaderboard.png"
         ],
         "videosLandscape": [
-          "assets/marketing/playdrop/videos/landscape/gameplay-preview.mp4"
+          "assets/marketing/playdrop/capture/landscape.mp4"
         ],
         "videosPortrait": [
-          "assets/marketing/playdrop/videos/portrait/gameplay-preview.mp4"
+          "assets/marketing/playdrop/capture/portrait.mp4"
         ]
       },
       "surfaceTargets": {
