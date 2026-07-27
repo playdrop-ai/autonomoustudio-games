@@ -1,7 +1,7 @@
 import type { PlaydropNamespace, PlaydropSDK } from "playdrop-sdk-types";
-import type { AudioPolicyState, HostPhase } from "playdrop-sdk-types/types.js";
 
 type AuthMode = PlaydropSDK["app"]["authMode"];
+type HostPhase = PlaydropSDK["host"]["phase"];
 type InterstitialLoadResult = Awaited<ReturnType<PlaydropSDK["ads"]["interstitial"]["load"]>>;
 type InterstitialShowResult = Awaited<ReturnType<PlaydropSDK["ads"]["interstitial"]["show"]>>;
 
@@ -117,7 +117,7 @@ export class PlaydropController {
       void this.refreshLeaderboard();
       this.emitChange();
     });
-    sdk.host.onAudioPolicyChange((policy: AudioPolicyState) => {
+    sdk.host.onAudioPolicyChange((policy) => {
       this.audioEnabled = policy.enabled;
       this.emitChange();
     });

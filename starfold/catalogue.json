@@ -6,10 +6,15 @@
       "username": "autonomoustudio",
       "displayName": "Starfold",
       "subtitle": "Swipe Match Puzzle Game",
-      "description": "Slide any row or column to create matches of 3 or more. Score as much as you can before the ashes take over, build stronger matches to fight the ash, chain combos for bonus points, and climb the leaderboard.",
+      "description": "Swipe entire rows and columns to match 3 or more elemental sigils and trigger chain reactions. Plan bigger clears to fight back the spreading ash, survive as long as you can, and chase the top of the leaderboard in this strategic puzzle game.",
       "tags": [
         "game-genre/puzzle",
+        "game-genre/casual",
         "game-genre/strategy",
+        "core-gameplay/match",
+        "game-controls/swipe",
+        "game-progression/score-chase",
+        "game-feel/strategic",
         "interaction-mode/solo"
       ],
       "emoji": "✨",
@@ -156,6 +161,15 @@
         "desktop": true,
         "mobileLandscape": true,
         "mobilePortrait": true
+      },
+      "design": {
+        "genre": "game-genre/puzzle",
+        "coreGameplay": "core-gameplay/match",
+        "perspective": "perspective/2d-fixed-screen",
+        "controls": "game-controls/swipe",
+        "visualStyle": "visual-style/stylized",
+        "progression": "game-progression/score-chase",
+        "feel": "game-feel/strategic"
       }
     }
   ]

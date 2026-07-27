@@ -26,7 +26,7 @@
     "typescript": "^5.9.2"
   },
   "playdrop": {
-    "platformVersion": "0.12.43",
-    "sdkTypesVersion": "0.12.43"
+    "platformVersion": "0.13.12",
+    "sdkTypesVersion": "0.13.12"
   }
 }
