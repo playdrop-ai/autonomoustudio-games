@@ -11,4 +11,4 @@
 | `instagram/reels-cover-420x654.png` | Instagram Reel cover |
 | `youtube/trailer-thumbnail-1280x720.png` | YouTube landscape trailer thumbnail |
 
-Every ratio is a uniform crop or a native composition. No file uses non-uniform scaling, blurred side fill, letterboxing, or pillarboxing. `manifest.json` records the intended ordering and reusable publishing copy.
+Every ratio is a native composition or a validated crop that removes only empty scenery. No file uses non-uniform scaling, blurred side fill, letterboxing, or pillarboxing. `manifest.json` records the intended ordering and reusable publishing copy.
