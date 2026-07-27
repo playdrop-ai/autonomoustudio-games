@@ -6,19 +6,19 @@
 
 ## Output
 
-- Created supported-surface mockups for start, gameplay, and end states in `mockups/`.
+- Created supported-surface mockups for start, gameplay, and end states in `art-direction/mockups/`.
 
 ## Inputs Reviewed
 
 - `/Users/oliviermichon/Documents/autonomoustudio-internal/guidelines/MOCKUP_GUIDELINES.md`
 - `/Users/oliviermichon/Documents/autonomoustudio-internal/checklists/04-mockup.md`
-- `/Users/oliviermichon/Documents/autonomoustudio-games/starfold/SIMPLIFY_v1.md`
-- `/Users/oliviermichon/Documents/autonomoustudio-games/starfold/mockups/portrait-start.svg`
-- `/Users/oliviermichon/Documents/autonomoustudio-games/starfold/mockups/portrait-gameplay.svg`
-- `/Users/oliviermichon/Documents/autonomoustudio-games/starfold/mockups/portrait-gameover.svg`
-- `/Users/oliviermichon/Documents/autonomoustudio-games/starfold/mockups/desktop-start.svg`
-- `/Users/oliviermichon/Documents/autonomoustudio-games/starfold/mockups/desktop-gameplay.svg`
-- `/Users/oliviermichon/Documents/autonomoustudio-games/starfold/mockups/desktop-gameover.svg`
+- `SIMPLIFY_v1.md`
+- `art-direction/mockups/portrait-start.svg`
+- `art-direction/mockups/portrait-gameplay.svg`
+- `art-direction/mockups/portrait-gameover.svg`
+- `art-direction/mockups/desktop-start.svg`
+- `art-direction/mockups/desktop-gameplay.svg`
+- `art-direction/mockups/desktop-gameover.svg`
 
 ## Checklist Results
 
@@ -37,8 +37,8 @@
 
 ## Evidence
 
-- Mockup generator: `/Users/oliviermichon/Documents/autonomoustudio-games/starfold/scripts/render-mockups.mjs`
-- Output folder: `/Users/oliviermichon/Documents/autonomoustudio-games/starfold/mockups`
+- Mockup generator: `scripts/render-mockups.mjs`
+- Output folder: `art-direction/mockups/`
 
 ## Verdict
 

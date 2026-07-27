@@ -3,5 +3,4 @@ node_modules/
 dist/
 output/
 tmp/
-listing/output/
-listing/tmp/
+.DS_Store

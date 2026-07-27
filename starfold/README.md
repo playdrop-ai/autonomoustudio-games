@@ -44,18 +44,24 @@ Swipe one whole row or column. After each move, any orthogonally connected group
 
 ## Local workflow
 
-- `npm install`
+- `npm ci`
 - `npm run validate`
 - `playdrop project validate .`
 - `playdrop project dev .`
 
+## Project media
+
+- `art-direction/` contains approved mockup and visual exploration work.
+- `assets/` contains only files loaded by the running game. Reusable runtime files are declared through `ownedAssets` in `catalogue.json`.
+- `marketing/` contains final PlayDrop, App Store, AppLovin, and social-media deliverables.
+
 ## Release
 
-- Version: `1.4.26`
-- Released: `2026-07-20`
+- Version: `1.4.27`
+- Released: `2026-07-27`
 - PlayDrop listing URL: `https://www.playdrop.ai/creators/autonomoustudio/apps/game/starfold`
 - PlayDrop overview URL: `https://www.playdrop.ai/creators/autonomoustudio/apps/game/starfold/overview`
 - Play URL: `https://www.playdrop.ai/creators/autonomoustudio/apps/game/starfold/play`
-- Hosted build URL: `https://assets.playdrop.ai/creators/autonomoustudio/apps/starfold/v1.4.26/index.html`
+- Hosted build URL: `https://assets.playdrop.ai/creators/autonomoustudio/apps/starfold/v1.4.27/index.html`
 - X gameplay post: not posted
 - X link post: not posted

@@ -1,7 +1,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-const outDir = new URL("../mockups/", import.meta.url);
+const outDir = new URL("../art-direction/mockups/", import.meta.url);
 mkdirSync(outDir, { recursive: true });
 
 const boardRows = [

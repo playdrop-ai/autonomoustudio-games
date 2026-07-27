@@ -4,8 +4,8 @@ import { dirname } from 'node:path';
 
 const HTML_TEMPLATE = 'template.html';
 const HTML_TARGET = 'dist/index.html';
-const RUNTIME_ASSET_SOURCE = 'assets/runtime';
-const RUNTIME_ASSET_TARGET = 'dist/assets/runtime';
+const RUNTIME_ASSET_SOURCE = 'assets';
+const RUNTIME_ASSET_TARGET = 'dist/assets';
 
 const buildOptions = {
   entryPoints: ['src/main.ts'],

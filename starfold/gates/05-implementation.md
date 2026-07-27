@@ -10,13 +10,13 @@
 
 ## Inputs Reviewed
 
-- `/Users/oliviermichon/Documents/autonomoustudio-games/starfold/SIMPLIFY_v1.md`
-- `/Users/oliviermichon/Documents/autonomoustudio-games/starfold/mockups/portrait-gameplay.svg`
-- `/Users/oliviermichon/Documents/autonomoustudio-games/starfold/mockups/desktop-gameplay.svg`
-- `/Users/oliviermichon/Documents/autonomoustudio-games/starfold/src/game/logic.ts`
-- `/Users/oliviermichon/Documents/autonomoustudio-games/starfold/src/game/render.ts`
-- `/Users/oliviermichon/Documents/autonomoustudio-games/starfold/src/main.ts`
-- `/Users/oliviermichon/Documents/autonomoustudio-games/starfold/tests/logic.test.ts`
+- `SIMPLIFY_v1.md`
+- `art-direction/mockups/portrait-gameplay.svg`
+- `art-direction/mockups/desktop-gameplay.svg`
+- `src/game/logic.ts`
+- `src/game/render.ts`
+- `src/main.ts`
+- `tests/logic.test.ts`
 - `npm run test`
 - `npx tsc --noEmit`
 - `playdrop project validate .`

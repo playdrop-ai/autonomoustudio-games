@@ -2,7 +2,7 @@
   "apps": [
     {
       "name": "starfold",
-      "version": "1.4.26",
+      "version": "1.4.27",
       "username": "autonomoustudio",
       "displayName": "Starfold",
       "subtitle": "Swipe Match Puzzle Game",
@@ -33,56 +33,56 @@
           "kind": "STANDARD",
           "displayName": "First Constellation",
           "description": "Trigger your first clear.",
-          "icon": "listing/achievements/first-constellation.png"
+          "icon": "marketing/playdrop/achievements/first-constellation.png"
         },
         {
           "key": "ash_purified",
           "kind": "STANDARD",
           "displayName": "Ash Purified",
           "description": "Finish purging ash with a neighboring clear.",
-          "icon": "listing/achievements/ash-purified.png"
+          "icon": "marketing/playdrop/achievements/ash-purified.png"
         },
         {
           "key": "triple_chain",
           "kind": "STANDARD",
           "displayName": "Triple Chain",
           "description": "Trigger a 3x combo in a single move.",
-          "icon": "listing/achievements/triple-chain.png"
+          "icon": "marketing/playdrop/achievements/triple-chain.png"
         },
         {
           "key": "shrine_sentinel",
           "kind": "STANDARD",
           "displayName": "Shrine Sentinel",
           "description": "Reach 5,000 points in a run.",
-          "icon": "listing/achievements/shrine-sentinel.png"
+          "icon": "marketing/playdrop/achievements/shrine-sentinel.png"
         },
         {
           "key": "cinder_reclaimed",
           "kind": "STANDARD",
           "displayName": "Cinder Reclaimed",
           "description": "Restore a contaminated sigil before it hardens.",
-          "icon": "listing/achievements/cinder-reclaimed.png"
+          "icon": "marketing/playdrop/achievements/cinder-reclaimed.png"
         },
         {
           "key": "shockwave_rite",
           "kind": "STANDARD",
           "displayName": "Shockwave Rite",
           "description": "Trigger a 5-match shockwave.",
-          "icon": "listing/achievements/shockwave-rite.png"
+          "icon": "marketing/playdrop/achievements/shockwave-rite.png"
         },
         {
           "key": "sanctum_reset",
           "kind": "STANDARD",
           "displayName": "Sanctum Reset",
           "description": "Trigger a 6+ match full-board wipe.",
-          "icon": "listing/achievements/sanctum-reset.png"
+          "icon": "marketing/playdrop/achievements/sanctum-reset.png"
         },
         {
           "key": "starfold_legend",
           "kind": "STANDARD",
           "displayName": "Starfold Legend",
           "description": "Reach 100,000 points in a run.",
-          "icon": "listing/achievements/starfold-legend.png"
+          "icon": "marketing/playdrop/achievements/starfold-legend.png"
         },
         {
           "key": "ashbreaker_hundred",
@@ -90,7 +90,7 @@
           "displayName": "Ashbreaker",
           "description": "Destroy 100 ash across all runs.",
           "maxProgress": 100,
-          "icon": "listing/achievements/ashbreaker-hundred.png"
+          "icon": "marketing/playdrop/achievements/ashbreaker-hundred.png"
         },
         {
           "key": "constellation_mason",
@@ -98,7 +98,7 @@
           "displayName": "Constellation Mason",
           "description": "Complete 1,000 match groups across all runs.",
           "maxProgress": 1000,
-          "icon": "listing/achievements/constellation-mason.png"
+          "icon": "marketing/playdrop/achievements/constellation-mason.png"
         },
         {
           "key": "three_hundred_guardians",
@@ -106,7 +106,7 @@
           "displayName": "Three Hundred Guardians",
           "description": "Trigger 300 full-board wipes across all runs.",
           "maxProgress": 300,
-          "icon": "listing/achievements/three-hundred-guardians.png"
+          "icon": "marketing/playdrop/achievements/three-hundred-guardians.png"
         }
       ],
       "leaderboards": [
@@ -130,31 +130,31 @@
           "visibility": "PUBLIC",
           "tags": [],
           "files": {
-            "primary": "assets/runtime/ui/preview-hand.png"
+            "primary": "assets/ui/preview-hand.png"
           }
         }
       ],
       "listing": {
-        "icon": "assets/marketing/playdrop/icon.png",
-        "heroLandscape": "assets/marketing/playdrop/hero/hero-landscape.png",
-        "heroPortrait": "assets/marketing/playdrop/hero/hero-portrait.png",
+        "icon": "marketing/playdrop/icon.png",
+        "heroLandscape": "marketing/playdrop/hero/hero-landscape.png",
+        "heroPortrait": "marketing/playdrop/hero/hero-portrait.png",
         "screenshotsLandscape": [
-          "assets/marketing/playdrop/screenshots/landscape/01-swipe-to-match.png",
-          "assets/marketing/playdrop/screenshots/landscape/02-fight-back-the-ash.png",
-          "assets/marketing/playdrop/screenshots/landscape/03-unleash-big-chains.png",
-          "assets/marketing/playdrop/screenshots/landscape/04-climb-the-leaderboard.png"
+          "marketing/playdrop/screenshots/landscape/01-swipe-to-match.png",
+          "marketing/playdrop/screenshots/landscape/02-fight-back-the-ash.png",
+          "marketing/playdrop/screenshots/landscape/03-unleash-big-chains.png",
+          "marketing/playdrop/screenshots/landscape/04-climb-the-leaderboard.png"
         ],
         "screenshotsPortrait": [
-          "assets/marketing/playdrop/screenshots/portrait/01-swipe-to-match.png",
-          "assets/marketing/playdrop/screenshots/portrait/02-fight-back-the-ash.png",
-          "assets/marketing/playdrop/screenshots/portrait/03-unleash-big-chains.png",
-          "assets/marketing/playdrop/screenshots/portrait/04-climb-the-leaderboard.png"
+          "marketing/playdrop/screenshots/portrait/01-swipe-to-match.png",
+          "marketing/playdrop/screenshots/portrait/02-fight-back-the-ash.png",
+          "marketing/playdrop/screenshots/portrait/03-unleash-big-chains.png",
+          "marketing/playdrop/screenshots/portrait/04-climb-the-leaderboard.png"
         ],
         "videosLandscape": [
-          "assets/marketing/playdrop/capture/landscape.mp4"
+          "marketing/playdrop/capture/landscape.mp4"
         ],
         "videosPortrait": [
-          "assets/marketing/playdrop/capture/portrait.mp4"
+          "marketing/playdrop/capture/portrait.mp4"
         ]
       },
       "surfaceTargets": {

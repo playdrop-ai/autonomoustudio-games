@@ -48,18 +48,18 @@ interface PendingOneShot {
 }
 
 const AUDIO_URLS: Record<SoundKey, string> = {
-  bgm: "./assets/runtime/audio/starfold-bgm-loop-r1.mp3",
-  "match:sun": "./assets/runtime/audio/starfold-match-sun-r1.mp3",
-  "match:moon": "./assets/runtime/audio/starfold-match-moon-r1.mp3",
-  "match:wave": "./assets/runtime/audio/starfold-match-wave-r1.mp3",
-  "match:leaf": "./assets/runtime/audio/starfold-match-leaf-r1.mp3",
-  "match:ember": "./assets/runtime/audio/starfold-match-ember-r1.mp3",
-  "ash-hit": "./assets/runtime/audio/starfold-ash-hit-r1.mp3",
-  "ash-break": "./assets/runtime/audio/starfold-ash-break-r1.mp3",
-  "major-match-4": "./assets/runtime/audio/starfold-match-4-purge-r1.mp3",
-  "major-match-5": "./assets/runtime/audio/starfold-match-5-shockwave-r1.mp3",
-  "major-match-6": "./assets/runtime/audio/starfold-match-6-wipe-r1.mp3",
-  "game-over": "./assets/runtime/audio/starfold-game-over-r1.mp3",
+  bgm: "./assets/audio/starfold-bgm-loop-r1.mp3",
+  "match:sun": "./assets/audio/starfold-match-sun-r1.mp3",
+  "match:moon": "./assets/audio/starfold-match-moon-r1.mp3",
+  "match:wave": "./assets/audio/starfold-match-wave-r1.mp3",
+  "match:leaf": "./assets/audio/starfold-match-leaf-r1.mp3",
+  "match:ember": "./assets/audio/starfold-match-ember-r1.mp3",
+  "ash-hit": "./assets/audio/starfold-ash-hit-r1.mp3",
+  "ash-break": "./assets/audio/starfold-ash-break-r1.mp3",
+  "major-match-4": "./assets/audio/starfold-match-4-purge-r1.mp3",
+  "major-match-5": "./assets/audio/starfold-match-5-shockwave-r1.mp3",
+  "major-match-6": "./assets/audio/starfold-match-6-wipe-r1.mp3",
+  "game-over": "./assets/audio/starfold-game-over-r1.mp3",
 };
 
 const HOT_SFX_KEYS: OneShotSoundKey[] = [

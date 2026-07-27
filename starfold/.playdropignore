@@ -1,6 +1,6 @@
 output/
 tmp/
-mockups/
+art-direction/
 .playwright-cli/
 node_modules/
 tests/
@@ -15,14 +15,7 @@ SIMPLIFY_v1.md
 progress.md
 package-lock.json
 
-# Playdrop source upload exclusions
-listing/
-
-assets/marketing/app-store-custom-product-page/
-assets/marketing/applovin-interstitial/
-assets/marketing/social-media/
-
-assets/runtime/background-shrine-v1.png
-assets/runtime/background-square.jpg
-assets/runtime/frame.png
-assets/runtime/tiles/generated-v2/generated-v2-preview.png
+# Channel-specific marketing exports are not part of the hosted game source.
+marketing/app-store-custom-product-page/
+marketing/applovin-interstitial/
+marketing/social-media/

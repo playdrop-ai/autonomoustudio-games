@@ -6,22 +6,20 @@
 
 ## Output
 
-- Added bespoke icon and hero art, real gameplay screenshots, a real portrait gameplay MP4, and wired the listing block into `catalogue.json`.
+- Added a bespoke icon and hero pair, four approved marketing screenshots per orientation, and one clean gameplay video per orientation.
+- Kept PlayDrop listing media separate from App Store, AppLovin, and social-media exports.
 
 ## Inputs Reviewed
 
-- `/Users/oliviermichon/Documents/autonomoustudio-internal/guidelines/LISTING_GUIDELINES.md`
-- `/Users/oliviermichon/Documents/autonomoustudio-internal/checklists/07-listing-media.md`
-- PlayDrop docs for icon, hero, screenshots, and video recording
-- `/Users/oliviermichon/Documents/autonomoustudio-games/starfold/listing/marketing.html`
-- `/Users/oliviermichon/Documents/autonomoustudio-games/starfold/listing/icon.png`
-- `/Users/oliviermichon/Documents/autonomoustudio-games/starfold/listing/hero-portrait.png`
-- `/Users/oliviermichon/Documents/autonomoustudio-games/starfold/listing/hero-landscape.png`
-- `/Users/oliviermichon/Documents/autonomoustudio-games/starfold/listing/starfold_1280x720-screenshot-1.png`
-- `/Users/oliviermichon/Documents/autonomoustudio-games/starfold/listing/starfold_720x1280-screenshot-1.png`
-- `/Users/oliviermichon/Documents/autonomoustudio-games/starfold/listing/starfold_720x1280-screenshot-2.png`
-- `/Users/oliviermichon/Documents/autonomoustudio-games/starfold/listing/starfold_720x1280-recording.mp4`
-- `/Users/oliviermichon/Documents/autonomoustudio-games/starfold/catalogue.json`
+- `catalogue.json`
+- `marketing/README.md`
+- `marketing/playdrop/icon.png`
+- `marketing/playdrop/hero/hero-portrait.png`
+- `marketing/playdrop/hero/hero-landscape.png`
+- `marketing/playdrop/screenshots/portrait/`
+- `marketing/playdrop/screenshots/landscape/`
+- `marketing/playdrop/capture/portrait.mp4`
+- `marketing/playdrop/capture/landscape.mp4`
 
 ## Checklist Results
 
@@ -36,14 +34,16 @@
 
 ## Feedback Applied Before PASS
 
-- The first local capture path only produced raw gameplay screenshots. I added a separate bespoke `marketing.html` composition so the icon and heroes are purpose-built marketing assets instead of cropped runtime frames.
-- Playwright video capture produced WebM by default. I converted the portrait capture to MP4 with FFmpeg so the listing media conforms to the PlayDrop video requirement.
+- Marketing exports were separated by destination so channel-specific files do not enter the hosted game package.
+- Legacy listing experiments were removed after the approved final assets replaced them.
 
 ## Evidence
 
-- Listing block in `/Users/oliviermichon/Documents/autonomoustudio-games/starfold/catalogue.json`
-- Media sizes confirmed: icon `1024x1024`, portrait hero `720x1280`, landscape hero `1280x720`, portrait screenshots `720x1280`, landscape screenshot `1280x720`
-- Gameplay video confirmed: `/Users/oliviermichon/Documents/autonomoustudio-games/starfold/listing/starfold_720x1280-recording.mp4` (`720x1280`, `14.52s`)
+- Listing block in `catalogue.json`
+- Icon: `1024x1024`
+- PlayDrop heroes: portrait `576x1024`, landscape `1024x576`
+- PlayDrop screenshots: four portrait `1080x1920` and four landscape `1920x1080`
+- PlayDrop gameplay videos: portrait `720x1280` and landscape `1280x720`
 
 ## Verdict
 
