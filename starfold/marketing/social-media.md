@@ -323,17 +323,21 @@ Review most platforms at 24 hours and 72 hours. Review Pinterest again after 30 
 
 Record every public post here instead of scattering campaign records through the game README.
 
+Instagram publishing is paused as of 2026-07-27 because the account was
+flagged and an appeal is pending. Do not publish, edit, or inspect Instagram
+again without the owner's explicit approval.
+
 | Platform | Format | Public URL | Published at | 24-hour result | 72-hour result | 30-day result |
 |---|---|---|---|---|---|---|
-| YouTube | Trailer |  |  |  |  |  |
-| YouTube | Short |  |  |  |  |  |
-| TikTok | Short |  |  |  |  |  |
-| Instagram | Reel |  |  |  |  |  |
-| Instagram | Story |  |  |  |  |  |
-| Instagram | Carousel |  |  |  |  |  |
-| Pinterest | Video Pin |  |  |  |  |  |
-| Pinterest | Static Pins |  |  |  |  |  |
-| X | Trailer |  |  |  |  |  |
+| YouTube | Trailer | https://youtu.be/bojcaKmJRU4 | 2026-07-27 EDT |  |  |  |
+| YouTube | Short | https://youtube.com/shorts/o-yYRxP6bww | 2026-07-27 EDT |  |  |  |
+| TikTok | Short | https://www.tiktok.com/@playdropai/video/7667360728747085069 | 2026-07-27 EDT |  |  |  |
+| Instagram | Reel | https://www.instagram.com/playdropai/reel/DbUM5-MOWf2/ | 2026-07-27 EDT | Account flagged after publishing; appeal pending and Instagram work paused |  |  |
+| Instagram | Story | Not published | Paused | Account appeal pending |  |  |
+| Instagram | Carousel | Not confirmed published | Paused | Account appeal pending |  |  |
+| Pinterest | Video Pin | https://www.pinterest.com/pin/1100778333952488470/ | 2026-07-27 EDT |  |  |  |
+| Pinterest | Static Pins | [Hero](https://www.pinterest.com/pin/1100778333952488892/), [Swipe](https://www.pinterest.com/pin/1100778333952488926/), [Ash](https://www.pinterest.com/pin/1100778333952488945/), [Chains](https://www.pinterest.com/pin/1100778333952488957/), [Leaderboard](https://www.pinterest.com/pin/1100778333952488966/) | 2026-07-27 EDT |  |  |  |
+| X | Trailer | [Post](https://x.com/playdropai/status/2081890533580984349), [tracked-link reply](https://x.com/playdropai/status/2081890654192369671) | 2026-07-27 EDT |  |  |  |
 | Facebook | Optional Reel |  |  |  |  |  |
 
 ## Publishing cadence
