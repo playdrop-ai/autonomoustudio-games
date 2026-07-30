@@ -1,0 +1,134 @@
+{
+  "version": 1,
+  "game": "Flighty Saucer",
+  "subtitle": "One tap. Tiny UFO. Infinite sky.",
+  "approval": {
+    "status": "pending_owner_approval",
+    "scope": "Flighty Saucer organic launch package for YouTube, TikTok, Pinterest, X, and future Instagram use",
+    "preparedAt": "2026-07-30"
+  },
+  "destinationUrl": "https://www.playdrop.ai/creators/autonomoustudio/apps/game/flighty-saucer",
+  "attribution": {
+    "utm_medium": "organic_social",
+    "utm_campaign": "flighty_saucer_launch"
+  },
+  "positioning": {
+    "audience": "Players who enjoy immediate one-touch arcade games, endless score chases, and bright low-poly worlds.",
+    "promise": "Every tap bumps a tiny UFO upward. Dodge the unexpected, cross five vivid worlds, and beat your best.",
+    "storyOrder": [
+      "Flighty Saucer identity",
+      "Tap to fly",
+      "Dodge the unexpected",
+      "Five worlds, one flight",
+      "Beat your best"
+    ]
+  },
+  "creativePolicy": {
+    "gameplay": "Real HUD-free PlayDrop gameplay only, with the cartoon hand synchronized to every real upward tap.",
+    "videoIdentity": "Ratio-native approved hero art opens for 0.8 seconds and closes for 1.5 seconds.",
+    "staticArt": "Native 2:3 and 3:4 ImageGen recompositions based on the approved 9:16 and 16:9 masters.",
+    "barsOrFiller": false
+  },
+  "videoRevision": {
+    "id": "social-launch-v1",
+    "durationSeconds": 11.8,
+    "playerSpeed": 1,
+    "finishesOnHero": true,
+    "cartoonHand": "synchronized_with_every_real_thrust",
+    "mediaSha256": {
+      "short/portrait-9x16.mp4": "d78436ca384654936b1f4ca3a28d10a1dbb5bafc3efc38e3e2b217b2938718ad",
+      "short/pinterest-2x3.mp4": "62999eff9f35315fbef2e9081077f7ecabe124dde80edabc5fec8343932a1911",
+      "trailer/landscape-16x9.mp4": "f34f13e7f9e054cc6e4e4a66afaf8bb248a704b2219fc6861b0d5cfd9f52e9fb",
+      "instagram/feed/video-3x4.mp4": "ad97a3a1362df43a8d8a7214dd70a6b9d0ef513d9009ffd2a1d150e5de505b94"
+    }
+  },
+  "youtube": {
+    "shortVideo": "short/portrait-9x16.mp4",
+    "trailerVideo": "trailer/landscape-16x9.mp4",
+    "trailerThumbnail": "youtube/trailer-thumbnail-1280x720.png",
+    "shortTitle": "Every Tap Lifts the UFO | Flighty Saucer",
+    "shortDescription": "Tap to rise. Gravity pulls you back. Thread monolith gates, dodge crystal surprises, and chase your best run across five vivid skies. Flighty Saucer is free to play in your browser, no download. Watch the full trailer through the linked video. #ArcadeGame #OneTapGame #IndieGame",
+    "shortPinnedComment": "How many gates can you clear? Play Flighty Saucer free in your browser:\nhttps://www.playdrop.ai/creators/autonomoustudio/apps/game/flighty-saucer?utm_source=youtube&utm_medium=organic_social&utm_campaign=flighty_saucer_launch&utm_content=short_comment",
+    "trailerTitle": "Flighty Saucer: One-Tap UFO Arcade Game | Play Free Online",
+    "description": "Play free in your browser, no download:\nhttps://www.playdrop.ai/creators/autonomoustudio/apps/game/flighty-saucer?utm_source=youtube&utm_medium=organic_social&utm_campaign=flighty_saucer_launch&utm_content=trailer\n\nEvery tap bumps a tiny UFO upward. Gravity brings it back down. Thread shifting monolith gates, dodge crystal surprises, and stay airborne as five vivid low-poly environments roll beneath you.\n\nThe run keeps accelerating. Chase your saved high score and climb the leaderboard one gate at a time.\n\nWhat ends your run first: the gates or the crystal shards?\n\n#ArcadeGame #OneTapGame #IndieGame",
+    "trailerPinnedComment": "Play Flighty Saucer free in your browser, no download:\nhttps://www.playdrop.ai/creators/autonomoustudio/apps/game/flighty-saucer?utm_source=youtube&utm_medium=organic_social&utm_campaign=flighty_saucer_launch&utm_content=trailer_comment\n\nWhat ends your run first: the gates or the crystal shards?",
+    "searchTags": "Flighty Saucer, UFO game, one tap game, one touch game, arcade game, endless flying game, endless flyer, casual game, high score game, browser game, no download games, indie game, PlayDrop Games"
+  },
+  "tiktok": {
+    "video": "short/portrait-9x16.mp4",
+    "coverInstruction": "Choose the final FLIGHTY SAUCER hero frame.",
+    "caption": "Every tap bumps the UFO up. Gravity pulls it back down. How far can you fly? Flighty Saucer is free in your browser, no download. #ArcadeGame #OneTapGame #MobileGaming #IndieGame",
+    "pinnedComment": "Gates or crystal shards: what ends your run first? Find Flighty Saucer on playdrop.ai."
+  },
+  "instagram": {
+    "status": "excluded_disabled_account",
+    "reelVideo": "short/portrait-9x16.mp4",
+    "storyVideo": "short/portrait-9x16.mp4",
+    "reelCover": "instagram/reels-cover-420x654.png",
+    "feedVideo": "instagram/feed/video-3x4.mp4",
+    "carousel": [
+      "instagram/feed/carousel/01-hero.png",
+      "instagram/feed/carousel/02-tap-to-fly.png",
+      "instagram/feed/carousel/03-dodge-the-unexpected.png",
+      "instagram/feed/carousel/04-five-worlds-one-flight.png",
+      "instagram/feed/carousel/05-beat-your-best.png"
+    ],
+    "caption": "One tap sends a tiny UFO upward. Gravity does the rest.\n\nThread monolith gates, dodge crystal surprises, cross five vivid worlds, and chase your best run as the pace keeps climbing.\n\nFlighty Saucer is free in your browser. No download.\n\n#ArcadeGame #OneTapGame #MobileGaming #IndieGame #CasualGames",
+    "pinnedComment": "Gates or crystal shards: what ends your run first? Find Flighty Saucer on playdrop.ai."
+  },
+  "pinterest": {
+    "video": "short/pinterest-2x3.mp4",
+    "board": "Arcade and One-Tap Games",
+    "boardDescription": "Free browser arcade games, one-tap flying games, endless high-score games, casual mobile games, indie games, and no-download games you can play instantly.",
+    "relatedTopics": [
+      "Arcade Games",
+      "Mobile Games",
+      "Casual Games",
+      "Indie Games",
+      "Browser Games",
+      "Flying Games"
+    ],
+    "videoTitle": "One-Tap UFO Arcade Game: Flighty Saucer",
+    "videoDescription": "Tap to lift a tiny UFO, thread monolith gates, dodge crystal surprises, and chase your best run across five vivid worlds. Play Flighty Saucer free in your browser, no download.",
+    "videoUtmContent": "video_pin",
+    "images": [
+      {
+        "file": "pinterest/static/01-hero.png",
+        "title": "Flighty Saucer: Free One-Tap UFO Game",
+        "description": "Play a free one-tap UFO arcade game in your browser. Flighty Saucer sends a tiny alien across vivid low-poly skies with no download required.",
+        "utm_content": "hero_pin"
+      },
+      {
+        "file": "pinterest/static/02-tap-to-fly.png",
+        "title": "One-Tap Flying Game: Tap to Fly",
+        "description": "Tap to bump the UFO upward, let gravity pull it back, and thread the next monolith gate. Play this free one-touch arcade game online.",
+        "utm_content": "tap_to_fly_pin"
+      },
+      {
+        "file": "pinterest/static/03-dodge-the-unexpected.png",
+        "title": "Arcade Game: Dodge Crystal Hazards",
+        "description": "Dodge shifting gates and glowing crystal surprises in an endless UFO flight. A fast free arcade game you can play in your browser.",
+        "utm_content": "dodge_unexpected_pin"
+      },
+      {
+        "file": "pinterest/static/04-five-worlds-one-flight.png",
+        "title": "Five-World Endless Flying Game",
+        "description": "Fly through alpine dawn, tropical islands, desert canyons, moonlit forests, and icy auroras in one endless high-score run.",
+        "utm_content": "five_worlds_pin"
+      },
+      {
+        "file": "pinterest/static/05-beat-your-best.png",
+        "title": "High-Score Arcade Game: Beat Your Best",
+        "description": "Stay airborne as the pace climbs, clear more gates, and chase your saved high score in Flighty Saucer. Free online with no download.",
+        "utm_content": "beat_your_best_pin"
+      }
+    ]
+  },
+  "x": {
+    "video": "trailer/landscape-16x9.mp4",
+    "copy": "Every tap bumps the UFO up. Gravity pulls it back down.\n\nDodge gates, crystal surprises, and five vivid skies. Then beat your best.\n\nFlighty Saucer is playable now. Link in the first reply.",
+    "linkReply": "Play Flighty Saucer free in your browser, no download:\nhttps://www.playdrop.ai/creators/autonomoustudio/apps/game/flighty-saucer?utm_source=x&utm_medium=organic_social&utm_campaign=flighty_saucer_launch&utm_content=trailer_reply",
+    "altText": "A tiny turquoise alien pilots a purple UFO between tall monolith gates in a low-poly sky. A white cartoon hand appears in sync with every upward tap, framed by Flighty Saucer hero art.",
+    "pinPost": true
+  }
+}

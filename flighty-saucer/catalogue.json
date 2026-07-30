@@ -16,7 +16,7 @@
       "emoji": "🛸",
       "color": "#FF8355",
       "license": "CLOSED",
-      "visibility": "PRIVATE",
+      "visibility": "PUBLIC",
       "hostingMode": "HOSTED",
       "authMode": "OPTIONAL",
       "controllerMode": "UNSUPPORTED",
