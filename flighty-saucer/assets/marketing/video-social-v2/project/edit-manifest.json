@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "locale": "en-US",
+  "protectedAssets": {
+    "portraitHero": "assets/marketing/playdrop/hero-portrait-9x16-v3.png",
+    "landscapeHero": "assets/marketing/playdrop/hero-landscape-16x9-v3.png"
+  },
+  "forbiddenTreatments": [
+    "generated gameplay",
+    "cropping",
+    "nonuniform scaling",
+    "padding or gutters",
+    "caption overlays",
+    "CTA overlays",
+    "hero retouching or decoration"
+  ],
+  "sources": {
+    "portrait": {
+      "path": "assets/marketing/video-social-v2/source-captures/portrait-final/listing.mp4",
+      "dimensions": "540x960",
+      "timeRangeSeconds": [0, 9.5],
+      "speed": 1,
+      "audio": "captured game audio, synchronized"
+    },
+    "landscape": {
+      "path": "assets/marketing/video-social-v2/source-captures/landscape-final/listing.mp4",
+      "dimensions": "1280x720",
+      "timeRangeSeconds": [0, 9.5],
+      "speed": 1,
+      "audio": "captured game audio, synchronized"
+    }
+  },
+  "segments": [
+    {
+      "kind": "identity",
+      "startSeconds": 0,
+      "endSeconds": 0.8,
+      "speed": 1,
+      "audio": "silent"
+    },
+    {
+      "kind": "player-input-and-gameplay",
+      "startSeconds": 0.8,
+      "endSeconds": 10.3,
+      "speed": 1,
+      "audio": "source"
+    },
+    {
+      "kind": "closing-identity",
+      "startSeconds": 10.3,
+      "endSeconds": 11.8,
+      "speed": 1,
+      "audio": "silent"
+    }
+  ],
+  "interactionCue": {
+    "asset": "assets/ui/preview-tap-hand.png",
+    "source": "rendered live by the preview runtime",
+    "sourceWindowSeconds": [0, 9.5],
+    "finalWindowSeconds": [0.8, 10.3],
+    "behavior": "every real autoplay thrust throughout gameplay; fingertip anchored at the contact point"
+  },
+  "audioMaster": {
+    "targetIntegratedLufs": -16,
+    "truePeakCeilingDbtp": -1.5,
+    "portraitGainDb": 4.2,
+    "landscapeGainDb": 4.4
+  },
+  "outputs": {
+    "portrait": "assets/marketing/video-social-v2/final/flighty-saucer-social-short-portrait-9x16-en-US.mp4",
+    "landscape": "assets/marketing/video-social-v2/final/flighty-saucer-trailer-landscape-16x9-en-US.mp4"
+  }
+}

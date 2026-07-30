@@ -11,6 +11,18 @@
 const SCALE = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21]; // major pentatonic ladder
 const ROOT = 233.08; // Bb3 — warm, sits nicely under the pad
 
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const value = String(reader.result || '');
+      resolve(value.includes(',') ? value.split(',')[1] : value);
+    };
+    reader.onerror = () => reject(new Error('[flighty-saucer] listing audio export failed'));
+    reader.readAsDataURL(blob);
+  });
+}
+
 export class Audio {
   constructor() {
     this.ctx = null;
@@ -22,6 +34,9 @@ export class Audio {
     this.padVoices = [];
     this._speed = 0;
     this._duck = 1;
+    this.captureDestination = null;
+    this.listingAudioRecorder = null;
+    this.listingAudioStopPromise = null;
   }
 
   /** Must be called from a user gesture. Safe to call repeatedly. */
@@ -44,6 +59,8 @@ export class Audio {
     this.comp.attack.value = 0.004;
     this.comp.release.value = 0.22;
     this.comp.connect(ctx.destination);
+    this.captureDestination = ctx.createMediaStreamDestination();
+    this.comp.connect(this.captureDestination);
 
     this.master = ctx.createGain();
     this.master.gain.value = this.enabled ? 0.9 : 0.0;
@@ -77,6 +94,62 @@ export class Audio {
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden && this.ctx && this.ctx.state !== 'running') this.ctx.resume();
     });
+  }
+
+  async startListingCapture() {
+    if (this.listingAudioRecorder || this.listingAudioStopPromise) {
+      throw new Error('[flighty-saucer] listing audio capture is already running');
+    }
+    if (typeof MediaRecorder === 'undefined') {
+      throw new Error('[flighty-saucer] MediaRecorder is unavailable for listing audio capture');
+    }
+    if (!MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+      throw new Error('[flighty-saucer] audio/webm;codecs=opus is unavailable for listing audio capture');
+    }
+
+    this.unlock();
+    if (!this.ctx || !this.captureDestination) {
+      throw new Error('[flighty-saucer] listing audio capture requires an unlocked audio context');
+    }
+    await this.ctx.resume();
+
+    const stream = this.captureDestination.stream.clone();
+    const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
+    const chunks = [];
+    this.listingAudioStopPromise = new Promise((resolve, reject) => {
+      recorder.addEventListener('dataavailable', (event) => {
+        if (event.data.size > 0) chunks.push(event.data);
+      });
+      recorder.addEventListener('error', () => {
+        reject(new Error('[flighty-saucer] listing audio recorder failed'));
+      });
+      recorder.addEventListener('stop', () => {
+        const mimeType = recorder.mimeType || 'audio/webm;codecs=opus';
+        const blob = new Blob(chunks, { type: mimeType });
+        void blobToBase64(blob)
+          .then((base64) => resolve({ mimeType, base64 }))
+          .catch(reject)
+          .finally(() => stream.getTracks().forEach((track) => track.stop()));
+      });
+    });
+    recorder.start(100);
+    this.listingAudioRecorder = recorder;
+  }
+
+  async stopListingCapture() {
+    const recorder = this.listingAudioRecorder;
+    const stopPromise = this.listingAudioStopPromise;
+    if (!recorder || !stopPromise) {
+      throw new Error('[flighty-saucer] listing audio capture is not running');
+    }
+    this.listingAudioRecorder = null;
+    this.listingAudioStopPromise = null;
+    recorder.requestData();
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    recorder.requestData();
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    recorder.stop();
+    return stopPromise;
   }
 
   setEnabled(on) {

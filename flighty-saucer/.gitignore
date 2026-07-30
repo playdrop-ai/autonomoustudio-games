@@ -1,5 +1,11 @@
-# Local verification media and unselected listing concepts.
+# Local capture, review, and rejected creative work.
 assets/marketing/playdrop/capture/
+assets/marketing/proof/
+assets/marketing/video-social-v1/
+assets/marketing/video-social-v2/review/
+assets/marketing/video-social-v2/source-captures/
+
+# Unselected listing concepts.
 assets/marketing/playdrop/hero-portrait.png
 assets/marketing/playdrop/hero-landscape.png
 assets/marketing/playdrop/hero-portrait-v2.png
@@ -12,3 +18,14 @@ assets/marketing/playdrop/hero-portrait-v4b-gate-crest.png
 assets/marketing/playdrop/hero-landscape-v4b-gate-crest.png
 assets/marketing/playdrop/hero-portrait-v4c-cosmic-swoop.png
 assets/marketing/playdrop/hero-landscape-v4c-cosmic-swoop.png
+assets/marketing/playdrop/screenshots/portrait/01-tap-to-fly.png
+assets/marketing/playdrop/screenshots/portrait/02-dodge-shards.png
+assets/marketing/playdrop/screenshots/portrait/03-five-worlds-one-flight.png
+assets/marketing/playdrop/screenshots/portrait/04-beat-your-best.png
+assets/marketing/playdrop/screenshots/portrait/gameplay-v2.png
+assets/marketing/playdrop/screenshots/portrait/gameplay-v3.png
+assets/marketing/playdrop/screenshots/landscape/01-thread-the-gates.png
+assets/marketing/playdrop/screenshots/landscape/mobile-gameplay-v2.png
+assets/marketing/playdrop/screenshots/landscape/mobile-gameplay-v3.png
+assets/marketing/playdrop/screenshots/landscape/desktop-gameplay-v2.png
+assets/marketing/playdrop/screenshots/landscape/desktop-gameplay-v3.png

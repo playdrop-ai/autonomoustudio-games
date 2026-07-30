@@ -33,6 +33,9 @@ export class UI {
       overCard: document.querySelector('.over-card'),
       medal: $('medal'), medalName: $('medalName'),
       nearFlash: $('nearFlash'), edgeGlow: $('edgeGlow'),
+      previewGuide: $('previewGuide'),
+      previewTapHand: $('previewTapHand'),
+      previewTapRing: $('previewTapRing'),
       soundBtn: $('soundBtn'), soundLabel: $('soundLabel'),
       qualityBtn: $('qualityBtn'), qualityLabel: $('qualityLabel'),
       boot: $('boot'), bootNote: $('bootNote'), perf: $('perf'),
@@ -40,6 +43,8 @@ export class UI {
     };
     this.layers = ['hud', 'home', 'ready', 'over', 'pause', 'help'];
     this.helpOpen = false;
+    this.previewMode = false;
+    this._previewTapCount = 0;
     this._lastScore = -1;
     this._reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     this._syncSoundBtn();
@@ -149,6 +154,20 @@ export class UI {
     this.el.bestVal.textContent = best;
   }
 
+  showPreview() {
+    this._only();
+    this.el.hud.classList.remove('dim');
+  }
+
+  setPreviewMode(enabled) {
+    this.previewMode = enabled;
+    this._previewTapCount = 0;
+    clearTimeout(this._previewGuideTimer);
+    this.el.previewGuide.classList.remove('on');
+    this.el.previewTapHand.getAnimations().forEach((animation) => animation.cancel());
+    this.el.previewTapRing.getAnimations().forEach((animation) => animation.cancel());
+  }
+
   showGameOver(score, best, isBest) {
     this._only('hud', 'over');
     this.el.hud.classList.add('dim');
@@ -236,6 +255,39 @@ export class UI {
   }
 
   pulseHint() { /* reserved: the ready layer animates on its own */ }
+
+  previewTap() {
+    if (!this.previewMode) return;
+    this._previewTapCount++;
+    clearTimeout(this._previewGuideTimer);
+    this.el.previewGuide.classList.add('on');
+
+    this.el.previewTapHand.getAnimations().forEach((animation) => animation.cancel());
+    this.el.previewTapRing.getAnimations().forEach((animation) => animation.cancel());
+
+    if (!this._reduced) {
+      this.el.previewTapHand.animate(
+        [
+          { transform: 'translate(-38%, 0) scale(1)' },
+          { transform: 'translate(-38%, 0) scale(0.93)', offset: 0.38 },
+          { transform: 'translate(-38%, 0) scale(1)' },
+        ],
+        { duration: 260, easing: 'cubic-bezier(0.22,1,0.36,1)' },
+      );
+      this.el.previewTapRing.animate(
+        [
+          { opacity: 0.95, transform: 'translate(-50%, -50%) scale(0.35)' },
+          { opacity: 0.5, offset: 0.45 },
+          { opacity: 0, transform: 'translate(-50%, -50%) scale(1.55)' },
+        ],
+        { duration: 430, easing: 'ease-out' },
+      );
+    }
+
+    this._previewGuideTimer = setTimeout(() => {
+      this.el.previewGuide.classList.remove('on');
+    }, 440);
+  }
 
   /* ---------------------------------------------------------------- *
    * perf readout — press F, or load with ?perf=1

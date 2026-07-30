@@ -2,11 +2,16 @@
   "apps": [
     {
       "name": "flighty-saucer",
-      "version": "1.0.2",
-      "releaseNotes": "Selected the centered Gate Crest hero direction for both portrait and landscape listing art.",
+      "username": "autonomoustudio",
+      "version": "1.0.3",
+      "releaseNotes": "Replaced the raw capture carousel with the approved marketing video and four feature screenshots in portrait and landscape.",
       "displayName": "Flighty Saucer",
       "subtitle": "One tap. Tiny UFO. Infinite sky.",
-      "description": "Keep a tiny flying saucer aloft, thread shifting monolith gates, dodge crystal hazards, and chase a new high score across vivid low-poly worlds.",
+      "description": "Tap to keep a tiny saucer airborne, thread shifting monolith gates, dodge crystal hazards, and chase your best run across vivid low-poly skies.",
+      "tags": [
+        "game-genre/arcade",
+        "game-genre/casual"
+      ],
       "type": "GAME",
       "emoji": "🛸",
       "color": "#FF8355",
@@ -16,17 +21,31 @@
       "authMode": "OPTIONAL",
       "controllerMode": "UNSUPPORTED",
       "previewable": true,
-      "file": "flighty-saucer.html",
+      "preview": {
+        "audioPolicy": "music-and-sfx"
+      },
+      "file": "dist/flighty-saucer.html",
       "listing": {
         "icon": "assets/marketing/playdrop/icon.png",
-        "heroPortrait": "assets/art-direction/hero-portrait.png",
-        "heroLandscape": "assets/art-direction/hero-landscape.png",
+        "heroPortrait": "assets/marketing/playdrop/hero-portrait-9x16-v3.png",
+        "heroLandscape": "assets/marketing/playdrop/hero-landscape-16x9-v3.png",
         "screenshotsPortrait": [
-          "assets/marketing/playdrop/screenshots/portrait/gameplay.png"
+          "assets/marketing/playdrop/screenshots/portrait/01-tap-to-fly-9x16.png",
+          "assets/marketing/playdrop/screenshots/portrait/02-dodge-the-unexpected-9x16.png",
+          "assets/marketing/playdrop/screenshots/portrait/03-five-worlds-one-flight-9x16.png",
+          "assets/marketing/playdrop/screenshots/portrait/04-beat-your-best-9x16.png"
         ],
         "screenshotsLandscape": [
-          "assets/marketing/playdrop/screenshots/landscape/mobile-gameplay.png",
-          "assets/marketing/playdrop/screenshots/landscape/desktop-gameplay.png"
+          "assets/marketing/playdrop/screenshots/landscape/01-tap-to-fly-16x9.png",
+          "assets/marketing/playdrop/screenshots/landscape/02-dodge-the-unexpected-16x9.png",
+          "assets/marketing/playdrop/screenshots/landscape/03-five-worlds-one-flight-16x9.png",
+          "assets/marketing/playdrop/screenshots/landscape/04-beat-your-best-16x9.png"
+        ],
+        "videosPortrait": [
+          "assets/marketing/video-social-v2/final/flighty-saucer-social-short-portrait-9x16-en-US.mp4"
+        ],
+        "videosLandscape": [
+          "assets/marketing/video-social-v2/final/flighty-saucer-trailer-landscape-16x9-en-US.mp4"
         ]
       },
       "achievements": [

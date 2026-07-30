@@ -30,6 +30,16 @@ const RENDER_SCALE_MIN = 0.55;
 const RENDER_SCALE_MAX = 1.5;
 const DPR_MAX = 2.0;
 
+function previewSeed(value) {
+  const text = String(value || 'flighty-saucer-preview');
+  let hash = 2166136261;
+  for (let i = 0; i < text.length; i++) {
+    hash ^= text.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
 export class Game {
   constructor(canvas, ui) {
     this.canvas = canvas;
@@ -223,6 +233,8 @@ export class Game {
     this.post.exposure = 0.98;
     this._syncLook();
     this.ui.setAccent(BIOMES[0].ui);
+    this.previewPresentation = false;
+    this.ui.setPreviewMode(false);
     this.ui.showHome(this.best, first);
     this.captureAutopilot = false;
   }
@@ -249,21 +261,31 @@ export class Game {
     this.post.exposure = 0.98;
     this._syncLook();
     this.ui.setAccent(BIOMES[0].ui);
-    this.ui.showReady();
+    if (this.previewPresentation) this.ui.showPreview();
+    else this.ui.showReady();
   }
 
   start() {
     this.state = STATE.PLAY;
-    this.ui.showHud(this.score, this.best);
+    if (this.previewPresentation) this.ui.showPreview();
+    else this.ui.showHud(this.score, this.best);
     this.thrust(true);
     void sdk.achievements.unlock('first-flight')
       .catch((error) => console.info('[flighty-saucer] achievement unavailable in this session', error));
   }
 
-  prepareListingScene() {
+  prepareListingScene(options = {}) {
+    this.previewPresentation = true;
+    this.captureAutopilot = true;
+    this.ui.setPreviewMode(true);
+    this.gates.setSeed(previewSeed(options.seed));
     this.enterReady();
     this.start();
-    this.captureAutopilot = true;
+  }
+
+  rearmPreviewGuideForAudioCapture() {
+    if (!this.previewPresentation) return;
+    this.ui.setPreviewMode(true);
   }
 
   thrust(first = false) {
@@ -276,6 +298,12 @@ export class Game {
     audio.flap(first ? 1.15 : 1);
     Store.bump('flaps');
     if (Store.get('haptics') && navigator.vibrate) navigator.vibrate(8);
+    if (
+      this.previewPresentation
+      && this.captureAutopilot
+    ) {
+      this.ui.previewTap();
+    }
   }
 
   /** Single entry point for every kind of tap/click/keypress. */

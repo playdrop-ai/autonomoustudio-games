@@ -157,14 +157,25 @@ export async function boot() {
   sdk.host.onPause(() => game.pauseFromHost());
   sdk.host.onResume(() => game.resumeFromHost());
   sdk.host.onAudioPolicyChange(({ enabled }) => audio.setHostEnabled(enabled));
-  const prepareListingScene = async () => {
-    game.prepareListingScene();
+  const prepareListingScene = async (options = {}) => {
+    if (options.audioPolicy) {
+      audio.setHostEnabled(options.audioPolicy !== 'silent');
+    }
+    game.prepareListingScene(options);
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
   };
   window.__listingCapture = {
     prepare: prepareListingScene,
-    startAudioCapture: async () => { audio.unlock(); },
-    stopAudioCapture: async () => { audio.setAmbience(0, 0, null, 0); },
+    startAudioCapture: async () => {
+      game.rearmPreviewGuideForAudioCapture();
+      audio.setHostEnabled(true);
+      await audio.startListingCapture();
+    },
+    stopAudioCapture: async () => {
+      const capture = await audio.stopListingCapture();
+      audio.setAmbience(0, 0, null, 0);
+      return capture;
+    },
   };
 
   sdk.host.onPhaseChange((phase) => {
@@ -182,5 +193,30 @@ export async function boot() {
 
   // handy for automated screenshots / debugging
   window.flightySaucer = { game, ui, audio, Store };
+  window.render_game_to_text = () => JSON.stringify({
+    coordinateSystem: 'world x increases toward incoming gates; y increases upward',
+    state: game.state,
+    preview: game.previewPresentation,
+    score: game.score,
+    speed: Number(game.speed.toFixed(2)),
+    flyer: {
+      y: Number(game.flyer.y.toFixed(2)),
+      velocityY: Number(game.flyer.vy.toFixed(2)),
+    },
+    visibleGates: game.gates.pool
+      .filter((gate) => gate.active && gate.x > -3 && gate.x < game.visibleW)
+      .sort((a, b) => a.x - b.x)
+      .slice(0, 4)
+      .map((gate) => ({
+        x: Number(gate.x.toFixed(2)),
+        gapY: Number(gate.gapY.toFixed(2)),
+        gap: Number(gate.gap.toFixed(2)),
+      })),
+  });
+  window.advanceTime = (ms) => {
+    const steps = Math.max(1, Math.ceil(ms / (1000 / 60)));
+    const dt = (ms / 1000) / steps;
+    for (let i = 0; i < steps; i++) game.frame(dt);
+  };
   sdk.host.ready();
 }

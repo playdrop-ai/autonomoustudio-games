@@ -3,33 +3,33 @@
   "prototype": {
     "start": {
       "passed": true,
-      "observation": "An ordinary center tap changed the title screen into the ready prompt; a second center tap launched the saucer and its visible thrust beam."
+      "observation": "An ordinary center-screen tap left the home screen, and a second tap launched the saucer into active flight."
     },
     "agency": {
       "passed": true,
-      "normalInput": "Repeated taps at roughly 350 ms intervals",
-      "controlCondition": "Zero input",
-      "observation": "Repeated taps visibly carried the saucer into the first gate corridor, while zero input remained on the animated home screen."
+      "normalInput": "Repeated center-screen taps at the flight cadence.",
+      "controlCondition": "The same-duration run with zero input.",
+      "observation": "The tapped run repeatedly changed the saucer's vertical velocity and advanced through the gate corridor, while the zero-input run did not reproduce that flight path."
     },
     "restart": {
       "passed": true,
-      "observation": "A gate collision reached the game-over state, and a subsequent ordinary tap returned to ready and launched a second playable run."
+      "observation": "A collision reached the stable end state; an ordinary tap returned to ready, and the next tap launched a second playable run."
     }
   },
   "final": {
     "start": {
       "passed": true,
-      "observation": "The final PlayDrop-hosted build entered gameplay from ordinary tap input on portrait, landscape, and desktop."
+      "observation": "An ordinary center-screen tap left the finished home screen, and a second tap launched the final saucer into active flight."
     },
     "agency": {
       "passed": true,
-      "normalInput": "The declared tap tape",
-      "controlCondition": "Equal-duration zero-input capture",
-      "observation": "All three final tape captures showed the saucer advancing and flapping through the monolith corridor, visibly distinct from their home-screen idle captures."
+      "normalInput": "Repeated center-screen taps at the flight cadence.",
+      "controlCondition": "The same-duration final build with zero input.",
+      "observation": "All three supported-surface tape checks showed visible tap-driven flight that differed from their zero-input controls."
     },
     "restart": {
       "passed": true,
-      "observation": "The final tape reached a stable collision state and completed a second playable run without a runtime crash on all three declared surfaces."
+      "observation": "The final build reached a collision, accepted an ordinary restart tap, and launched a second playable run with the HUD and pause control active."
     }
   }
 }

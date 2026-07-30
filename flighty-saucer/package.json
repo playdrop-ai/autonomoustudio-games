@@ -1,6 +1,6 @@
 {
   "name": "flighty-saucer",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "type": "module",
   "private": true,
   "scripts": {
@@ -24,7 +24,7 @@
   },
   "dependencies": {},
   "playdrop": {
-    "platformVersion": "0.12.41",
-    "sdkTypesVersion": "0.12.41"
+    "platformVersion": "0.13.16",
+    "sdkTypesVersion": "0.13.16"
   }
 }

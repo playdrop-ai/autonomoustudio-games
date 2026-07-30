@@ -327,6 +327,10 @@ export class GateField {
     this.accent = 0xff6b3d;
   }
 
+  setSeed(seed) {
+    this.rng = makeRng(seed);
+  }
+
   setPalette(b) {
     this.mats.body.color.set(b.gateBody);
     this.mats.cap.color.set(b.gateBody);

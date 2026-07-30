@@ -1,3 +1,9 @@
+# Marketing production trees are excluded from runtime and source archives.
+# Explicit catalogue listing files are still uploaded as dedicated media.
+assets/marketing/proof/
+assets/marketing/video-social-v1/
+assets/marketing/video-social-v2/
+
 # Local verification media and unselected listing concepts.
 assets/marketing/playdrop/capture/
 assets/marketing/playdrop/hero-portrait.png
@@ -12,3 +18,27 @@ assets/marketing/playdrop/hero-portrait-v4b-gate-crest.png
 assets/marketing/playdrop/hero-landscape-v4b-gate-crest.png
 assets/marketing/playdrop/hero-portrait-v4c-cosmic-swoop.png
 assets/marketing/playdrop/hero-landscape-v4c-cosmic-swoop.png
+
+# Screenshot masters and alternates are uploaded separately from the app archive.
+assets/marketing/playdrop/screenshots/portrait/01-tap-to-fly.png
+assets/marketing/playdrop/screenshots/portrait/01-tap-to-fly-9x16.png
+assets/marketing/playdrop/screenshots/portrait/02-dodge-shards.png
+assets/marketing/playdrop/screenshots/portrait/02-dodge-the-unexpected-9x16.png
+assets/marketing/playdrop/screenshots/portrait/03-five-worlds-one-flight.png
+assets/marketing/playdrop/screenshots/portrait/03-five-worlds-one-flight-9x16.png
+assets/marketing/playdrop/screenshots/portrait/04-beat-your-best.png
+assets/marketing/playdrop/screenshots/portrait/04-beat-your-best-9x16.png
+assets/marketing/playdrop/screenshots/portrait/gameplay.png
+assets/marketing/playdrop/screenshots/portrait/gameplay-v2.png
+assets/marketing/playdrop/screenshots/portrait/gameplay-v3.png
+assets/marketing/playdrop/screenshots/landscape/01-tap-to-fly-16x9.png
+assets/marketing/playdrop/screenshots/landscape/01-thread-the-gates.png
+assets/marketing/playdrop/screenshots/landscape/02-dodge-the-unexpected-16x9.png
+assets/marketing/playdrop/screenshots/landscape/03-five-worlds-one-flight-16x9.png
+assets/marketing/playdrop/screenshots/landscape/04-beat-your-best-16x9.png
+assets/marketing/playdrop/screenshots/landscape/mobile-gameplay.png
+assets/marketing/playdrop/screenshots/landscape/mobile-gameplay-v2.png
+assets/marketing/playdrop/screenshots/landscape/mobile-gameplay-v3.png
+assets/marketing/playdrop/screenshots/landscape/desktop-gameplay.png
+assets/marketing/playdrop/screenshots/landscape/desktop-gameplay-v2.png
+assets/marketing/playdrop/screenshots/landscape/desktop-gameplay-v3.png

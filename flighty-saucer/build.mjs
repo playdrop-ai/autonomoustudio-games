@@ -3,8 +3,9 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 
 const HTML_TEMPLATE = 'template.html';
-const HTML_TARGET = 'flighty-saucer.html';
+const HTML_TARGETS = ['flighty-saucer.html', 'dist/flighty-saucer.html'];
 const CSS_SOURCE = 'src/style.css';
+const PREVIEW_HAND_SOURCE = 'assets/ui/preview-tap-hand.png';
 
 const buildOptions = {
   entryPoints: ['src/main.ts'],
@@ -23,13 +24,17 @@ function inlineHtml(result) {
   if (!output) throw new Error('[template-three-js] Failed to produce bundle output');
   const template = readFileSync(HTML_TEMPLATE, 'utf8');
   const css = readFileSync(CSS_SOURCE, 'utf8');
+  const previewHand = readFileSync(PREVIEW_HAND_SOURCE).toString('base64');
   const escapedBundle = output.text.replace(/<\/script>/gi, '<\\/script>');
-  mkdirSync(dirname(HTML_TARGET), { recursive: true });
   const html = template
     .replace('/* APP_STYLE */', css)
+    .replace('__PREVIEW_HAND_SRC__', `data:image/png;base64,${previewHand}`)
     .replace('<!-- APP_SCRIPT -->', `<script>\n${escapedBundle}\n</script>`);
-  writeFileSync(HTML_TARGET, html, 'utf8');
-  console.log(`[flighty-saucer] Wrote ${HTML_TARGET}`);
+  for (const htmlTarget of HTML_TARGETS) {
+    mkdirSync(dirname(htmlTarget), { recursive: true });
+    writeFileSync(htmlTarget, html, 'utf8');
+    console.log(`[flighty-saucer] Wrote ${htmlTarget}`);
+  }
 }
 
 buildOptions.plugins = [{

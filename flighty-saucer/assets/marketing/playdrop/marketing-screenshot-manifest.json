@@ -1,0 +1,163 @@
+{
+  "schemaVersion": 1,
+  "channel": "PlayDrop and social campaign",
+  "locale": "en-US",
+  "heroes": {
+    "portrait": {
+      "path": "assets/marketing/playdrop/hero-portrait-9x16-v3.png",
+      "width": 1080,
+      "height": 1920,
+      "orientation": "9:16",
+      "method": "Built-in ImageGen ratio-native composition grounded in the approved art-direction portrait, icon, polished hero, and real portrait gameplay"
+    },
+    "landscape": {
+      "path": "assets/marketing/playdrop/hero-landscape-16x9-v3.png",
+      "width": 1920,
+      "height": 1080,
+      "orientation": "16:9",
+      "method": "Built-in ImageGen ratio-native composition grounded in the approved art-direction landscape, icon, polished hero, and real landscape gameplay"
+    }
+  },
+  "story": {
+    "coreAction": "Tap to keep the saucer airborne and steer its height through each gate.",
+    "tension": "Moving patterns, twin gates, and charged crystal shards make later encounters surprising.",
+    "payoff": "Long runs carry the saucer through five visually distinct environments.",
+    "goal": "Accelerate through an endless run and beat the saved high score."
+  },
+  "research": [
+    {
+      "title": "Flappy Dunk",
+      "url": "https://apps.apple.com/us/app/flappy-dunk/id1235581326",
+      "exactPhrase": "Tap and bounce to a high score",
+      "takeaway": "Lead with the one-tap verb and show the scoring obstacle in active play."
+    },
+    {
+      "title": "Helix Jump",
+      "url": "https://apps.apple.com/us/app/helix-jump/id1345968745",
+      "exactPhrase": "Reach the bottom of the tower!",
+      "takeaway": "Use one clear spatial goal and keep the hazard structure visually dominant."
+    },
+    {
+      "title": "Crossy Road",
+      "url": "https://apps.apple.com/us/app/crossy-road/id924373886",
+      "exactPhrase": "Endless Arcade Hopper",
+      "takeaway": "Let a distinctive low-poly world and a readable player silhouette carry the promise."
+    },
+    {
+      "title": "Stack",
+      "url": "https://apps.apple.com/us/app/stack/id1080487957",
+      "exactPhrase": "The best block-stacking game",
+      "takeaway": "Keep the copy compact and the core obstacle pattern immediately legible."
+    },
+    {
+      "title": "Tiny Wings",
+      "url": "https://apps.apple.com/us/app/tiny-wings/id417817520",
+      "exactPhrase": "A dream of flying",
+      "takeaway": "Pair a simple one-touch flight fantasy with a vivid, welcoming landscape."
+    }
+  ],
+  "frames": [
+    {
+      "order": 1,
+      "job": "Core action",
+      "headline": "TAP TO FLY",
+      "sourceCapturePortrait": "assets/marketing/playdrop/screenshots/portrait/gameplay-v2.png",
+      "canonicalPortrait": {
+        "path": "assets/marketing/playdrop/screenshots/portrait/01-tap-to-fly-9x16.png",
+        "width": 1080,
+        "height": 1920,
+        "orientation": "9:16",
+        "method": "ImageGen key art grounded in shipped portrait gameplay and canonical hero art"
+      },
+      "canonicalLandscape": {
+        "path": "assets/marketing/playdrop/screenshots/landscape/01-tap-to-fly-16x9.png",
+        "width": 1920,
+        "height": 1080,
+        "orientation": "16:9",
+        "method": "Built-in ImageGen ratio-native landscape composition grounded in the approved portrait concept, icon, art direction, and real landscape gameplay"
+      }
+    },
+    {
+      "order": 2,
+      "job": "Tension",
+      "headline": "DODGE THE UNEXPECTED",
+      "sourceCapturePortrait": "assets/marketing/playdrop/screenshots/portrait/gameplay-v2.png",
+      "sourceTruthReferences": [
+        "src/gates.js#buildShard",
+        "src/gates.js#GateField._pickVariant",
+        "src/config.js#CFG.shardFromScore",
+        "src/config.js#BIOMES[3]"
+      ],
+      "canonicalPortrait": {
+        "path": "assets/marketing/playdrop/screenshots/portrait/02-dodge-the-unexpected-9x16.png",
+        "width": 1080,
+        "height": 1920,
+        "orientation": "9:16",
+        "method": "ImageGen key art grounded in the shipped charged-shard hazard, advanced obstacle variants, Nightfall biome, portrait gameplay, and canonical hero art"
+      },
+      "canonicalLandscape": {
+        "path": "assets/marketing/playdrop/screenshots/landscape/02-dodge-the-unexpected-16x9.png",
+        "width": 1920,
+        "height": 1080,
+        "orientation": "16:9",
+        "method": "Built-in ImageGen ratio-native landscape composition grounded in the approved portrait concept, icon, art direction, real landscape gameplay, and shipped charged-shard hazard"
+      }
+    },
+    {
+      "order": 3,
+      "job": "Payoff",
+      "headline": "FIVE WORLDS. ONE FLIGHT.",
+      "sourceCapturePortrait": "assets/marketing/playdrop/screenshots/portrait/gameplay-v2.png",
+      "sourceTruthReferences": [
+        "src/config.js#BIOME_SCHEDULE",
+        "src/config.js#BIOMES[0]",
+        "src/config.js#BIOMES[1]",
+        "src/config.js#BIOMES[2]",
+        "src/config.js#BIOMES[3]",
+        "src/config.js#BIOMES[4]"
+      ],
+      "canonicalPortrait": {
+        "path": "assets/marketing/playdrop/screenshots/portrait/03-five-worlds-one-flight-9x16.png",
+        "width": 1080,
+        "height": 1920,
+        "orientation": "9:16",
+        "method": "ImageGen travel-montage key art grounded in all five shipped biome palettes, props, and the canonical hero art"
+      },
+      "canonicalLandscape": {
+        "path": "assets/marketing/playdrop/screenshots/landscape/03-five-worlds-one-flight-16x9.png",
+        "width": 1920,
+        "height": 1080,
+        "orientation": "16:9",
+        "method": "Built-in ImageGen ratio-native landscape journey composition grounded in the approved portrait concept, icon, art direction, real landscape gameplay, and all five shipped biome palettes"
+      }
+    },
+    {
+      "order": 4,
+      "job": "Goal",
+      "headline": "BEAT YOUR BEST",
+      "sourceCapturePortrait": "assets/marketing/playdrop/capture/mobile-portrait-listing.mp4",
+      "sourceTimestampSeconds": 12,
+      "sourceTruthReferences": [
+        "src/config.js#CFG.speedEnd",
+        "src/config.js#BIOMES[3]",
+        "src/config.js#BIOMES[4]",
+        "src/ui.js#MEDALS",
+        "catalogue.json#apps[0].leaderboards"
+      ],
+      "canonicalPortrait": {
+        "path": "assets/marketing/playdrop/screenshots/portrait/04-beat-your-best-9x16.png",
+        "width": 1080,
+        "height": 1920,
+        "orientation": "9:16",
+        "method": "ImageGen key art grounded in the shipped endless score system, speed ramp, Nightfall and Aurora Peaks biomes, LEGEND tier, portrait gameplay, and canonical hero art"
+      },
+      "canonicalLandscape": {
+        "path": "assets/marketing/playdrop/screenshots/landscape/04-beat-your-best-16x9.png",
+        "width": 1920,
+        "height": 1080,
+        "orientation": "16:9",
+        "method": "Built-in ImageGen ratio-native landscape composition grounded in the approved portrait concept, icon, art direction, real landscape gameplay, and shipped endless score goal"
+      }
+    }
+  ]
+}
