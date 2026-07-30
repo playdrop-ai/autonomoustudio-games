@@ -5,13 +5,15 @@ See all published creations at https://www.playdrop.ai/creators/autonomoustudio
 
 ## Repo role
 
-This is the source-of-truth repo for active game work.
+This is the only source-of-truth repo for Autonomous Studio game source.
 
-- build new games here
-- patch live games here
-- keep each game folder synced to the current live PlayDrop version
+- Every prototype, private draft, active game, and shipped game lives directly at `autonomoustudio-games/<game-slug>/`.
+- Build new games here.
+- Patch live games here.
+- Keep each game folder synced to the current live PlayDrop version.
+- Run `playdrop project create app` and all other app-scoped commands from this repo.
 
-The private `autonomoustudio-internal` repo should keep studio operations, secrets, automations, checklists, and workflow guidance only. It should not be used for active app source.
+The private `autonomoustudio-internal` repo contains studio operations, secrets, automations, checklists, and workflow guidance only. Never create, stage, mirror, or retain game source there. If a game folder is found there, move the complete folder into this repo before continuing.
 
 ## Studio release contract
 

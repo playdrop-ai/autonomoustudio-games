@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "prototype": {
+    "start": {
+      "passed": true,
+      "observation": "An ordinary center tap changed the title screen into the ready prompt; a second center tap launched the saucer and its visible thrust beam."
+    },
+    "agency": {
+      "passed": true,
+      "normalInput": "Repeated taps at roughly 350 ms intervals",
+      "controlCondition": "Zero input",
+      "observation": "Repeated taps visibly carried the saucer into the first gate corridor, while zero input remained on the animated home screen."
+    },
+    "restart": {
+      "passed": true,
+      "observation": "A gate collision reached the game-over state, and a subsequent ordinary tap returned to ready and launched a second playable run."
+    }
+  },
+  "final": {
+    "start": {
+      "passed": true,
+      "observation": "The final PlayDrop-hosted build entered gameplay from ordinary tap input on portrait, landscape, and desktop."
+    },
+    "agency": {
+      "passed": true,
+      "normalInput": "The declared tap tape",
+      "controlCondition": "Equal-duration zero-input capture",
+      "observation": "All three final tape captures showed the saucer advancing and flapping through the monolith corridor, visibly distinct from their home-screen idle captures."
+    },
+    "restart": {
+      "passed": true,
+      "observation": "The final tape reached a stable collision state and completed a second playable run without a runtime crash on all three declared surfaces."
+    }
+  }
+}

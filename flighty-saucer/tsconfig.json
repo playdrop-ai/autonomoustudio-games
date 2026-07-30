@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "allowJs": true,
+    "checkJs": false,
+    "lib": ["ES2020", "DOM"],
+    "types": ["playdrop-sdk-types"],
+    "skipLibCheck": false,
+    "noEmit": true
+  },
+  "include": ["src/**/*"]
+}

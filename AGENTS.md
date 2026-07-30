@@ -2,8 +2,11 @@
 
 ## Workspace contract
 
-- The public repo contains games only. Each game lives in its own folder.
-- Active game development happens in this repo. Do not use the private `autonomoustudio-internal` repo for active app source.
+- This is the only repo that may contain Autonomous Studio game source.
+- Every prototype, private draft, active game, and shipped game lives directly under this repo as `<game-slug>/`, never under an `apps/` wrapper.
+- Never create, copy, stage, mirror, or retain game source in the private `autonomoustudio-internal` repo.
+- If game source is found in `autonomoustudio-internal`, treat it as a repo-placement bug and move the complete self-contained folder here before continuing.
+- If a game task starts from the internal repo, switch to this repo before running app creation or app-scoped commands.
 - Each game folder must stay self-contained.
 - Root `catalogue.json` stays empty.
 - The new-game process is step-based: each step has `instruction`, `output`, and `checklist`, plus a required feedback-and-redo loop on failure.
@@ -57,6 +60,7 @@ Only final PASS gate files belong in the committed game folder.
 
 ### `playdrop project create app`
 
+- Run this command from the `autonomoustudio-games` repo root.
 - Prefer `playdrop project create app` when it works because apps need to be registered with the PlayDrop server.
 - Prefer the TypeScript template unless the game is a very small HTML-heavy UI game.
 - Prefer remixing a demo project over starting from a template if the demo is already close.

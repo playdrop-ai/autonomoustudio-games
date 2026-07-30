@@ -1,0 +1,187 @@
+{
+  "apps": [
+    {
+      "name": "flighty-saucer",
+      "version": "1.0.2",
+      "releaseNotes": "Selected the centered Gate Crest hero direction for both portrait and landscape listing art.",
+      "displayName": "Flighty Saucer",
+      "subtitle": "One tap. Tiny UFO. Infinite sky.",
+      "description": "Keep a tiny flying saucer aloft, thread shifting monolith gates, dodge crystal hazards, and chase a new high score across vivid low-poly worlds.",
+      "type": "GAME",
+      "emoji": "🛸",
+      "color": "#FF8355",
+      "license": "CLOSED",
+      "visibility": "PRIVATE",
+      "hostingMode": "HOSTED",
+      "authMode": "OPTIONAL",
+      "controllerMode": "UNSUPPORTED",
+      "previewable": true,
+      "file": "flighty-saucer.html",
+      "listing": {
+        "icon": "assets/marketing/playdrop/icon.png",
+        "heroPortrait": "assets/art-direction/hero-portrait.png",
+        "heroLandscape": "assets/art-direction/hero-landscape.png",
+        "screenshotsPortrait": [
+          "assets/marketing/playdrop/screenshots/portrait/gameplay.png"
+        ],
+        "screenshotsLandscape": [
+          "assets/marketing/playdrop/screenshots/landscape/mobile-gameplay.png",
+          "assets/marketing/playdrop/screenshots/landscape/desktop-gameplay.png"
+        ]
+      },
+      "achievements": [
+        {
+          "key": "first-flight",
+          "displayName": "First Flight",
+          "description": "Launch the saucer on its first run.",
+          "kind": "STANDARD",
+          "icon": "assets/marketing/playdrop/icon.png"
+        },
+        {
+          "key": "gate-runner",
+          "displayName": "Gate Runner",
+          "description": "Clear 25 monolith gates in one flight.",
+          "kind": "INCREMENTAL",
+          "maxProgress": 25,
+          "icon": "assets/marketing/playdrop/icon.png"
+        }
+      ],
+      "leaderboards": [
+        {
+          "key": "high-score",
+          "displayName": "High Score",
+          "description": "Most monolith gates cleared in a single flight.",
+          "scoreType": "INTEGER",
+          "sort": "DESC",
+          "unitLabel": "gates"
+        }
+      ],
+      "surfaceTargets": {
+        "desktop": true,
+        "mobileLandscape": true,
+        "mobilePortrait": true
+      },
+      "primarySurface": "MOBILE_PORTRAIT",
+      "playtestTapes": {
+        "MOBILE_PORTRAIT": {
+          "version": 1,
+          "primaryVerb": "tap",
+          "durationMs": 9000,
+          "startOnlyEventCount": 2,
+          "successSignals": [
+            {
+              "kind": "VISIBLE_PROGRESS",
+              "description": "The saucer leaves the home screen, flaps repeatedly, and advances through the first gate corridor."
+            }
+          ],
+          "events": [
+            { "type": "tap", "atMs": 0, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 500, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 850, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 1200, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 1550, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 1900, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 2250, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 2600, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 2950, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 3300, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 3650, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 4000, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 4350, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 4700, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 5050, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 5400, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 5750, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 6100, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 6450, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 6800, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 7150, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 7500, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 7850, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 8200, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 8550, "x": 0.5, "y": 0.5 }
+          ]
+        },
+        "MOBILE_LANDSCAPE": {
+          "version": 1,
+          "primaryVerb": "tap",
+          "durationMs": 9000,
+          "startOnlyEventCount": 2,
+          "successSignals": [
+            {
+              "kind": "VISIBLE_PROGRESS",
+              "description": "The saucer leaves the home screen, flaps repeatedly, and advances through the first gate corridor."
+            }
+          ],
+          "events": [
+            { "type": "tap", "atMs": 0, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 500, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 850, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 1200, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 1550, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 1900, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 2250, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 2600, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 2950, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 3300, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 3650, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 4000, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 4350, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 4700, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 5050, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 5400, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 5750, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 6100, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 6450, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 6800, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 7150, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 7500, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 7850, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 8200, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 8550, "x": 0.5, "y": 0.5 }
+          ]
+        },
+        "DESKTOP": {
+          "version": 1,
+          "primaryVerb": "tap",
+          "durationMs": 9000,
+          "startOnlyEventCount": 2,
+          "successSignals": [
+            {
+              "kind": "VISIBLE_PROGRESS",
+              "description": "The saucer leaves the home screen, flaps repeatedly, and advances through the first gate corridor."
+            }
+          ],
+          "events": [
+            { "type": "tap", "atMs": 0, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 500, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 850, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 1200, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 1550, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 1900, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 2250, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 2600, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 2950, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 3300, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 3650, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 4000, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 4350, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 4700, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 5050, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 5400, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 5750, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 6100, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 6450, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 6800, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 7150, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 7500, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 7850, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 8200, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 8550, "x": 0.5, "y": 0.5 }
+          ]
+        }
+      },
+      "templateSource": "playdrop/template/three_js_template"
+    }
+  ]
+}
