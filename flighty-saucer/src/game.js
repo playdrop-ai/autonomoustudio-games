@@ -13,6 +13,7 @@ import { Particles } from './particles.js';
 import { PostFX } from './postfx.js';
 import { audio } from './audio.js';
 import { Store } from './storage.js';
+import { RetryInterstitial } from './interstitial.js';
 
 const STATE = { BOOT: 'boot', READY: 'ready', PLAY: 'play', DYING: 'dying', DEAD: 'dead', PAUSED: 'paused' };
 const _v = new THREE.Vector3();
@@ -109,6 +110,7 @@ export class Game {
     this.bounced = false;
     this.previewPresentation = false;
     this.captureAutopilot = false;
+    this.retryInterstitial = new RetryInterstitial(sdk.ads);
     this._achievementUnlocks = new Set();
     this._cx = new Float64Array(8);
     this._cy = new Float64Array(8);
@@ -324,11 +326,27 @@ export class Game {
     switch (this.state) {
       case STATE.READY: this.start(); break;
       case STATE.PLAY: this.thrust(); break;
-      case STATE.DEAD: if (this.deadTimer > 0.75) this.enterReady(); break;
       // backgrounding the tab auto-pauses (main.js), so without this a returning
       // player taps the screen and nothing at all happens
       case STATE.PAUSED: this.resume(); break;
       default: break;
+    }
+  }
+
+  async retryFromResults() {
+    if (
+      this.state !== STATE.DEAD
+      || this.retryInterstitial.pending
+    ) return;
+
+    this.ui.setRetryPending(true);
+    try {
+      await this.retryInterstitial.showIfEligible();
+    } catch (error) {
+      console.error('[flighty-saucer] interstitial request failed', error);
+    } finally {
+      this.ui.setRetryPending(false);
+      if (this.state === STATE.DEAD) this.enterReady();
     }
   }
 
@@ -357,13 +375,6 @@ export class Game {
     this.post.desat = 0;
     this.post.exposure = 0.98;
     this.ui.hidePause();
-  }
-
-  restart() {
-    this.post.desat = 0;
-    this.post.exposure = 0.98;
-    this.ui.hidePause();
-    this.enterReady();
   }
 
   die(cause) {

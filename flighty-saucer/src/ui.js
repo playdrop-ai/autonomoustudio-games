@@ -20,7 +20,7 @@ const $ = (id) => document.getElementById(id);
 export class UI {
   constructor() {
     this.el = {
-      hud: $('hud'), over: $('over'), pause: $('pause'),
+      hud: $('hud'), ready: $('ready'), over: $('over'), pause: $('pause'),
       score: $('score'), bestVal: $('bestVal'),
       biome: $('biomeToast'), biomeText: $('biomeToast').querySelector('span'),
       milestone: $('milestone'),
@@ -28,6 +28,7 @@ export class UI {
       msWord: $('milestone').querySelector('i'),
       overScore: $('overScore'), overBest: $('overBest'),
       overCard: document.querySelector('.over-card'),
+      retryBtn: $('retryBtn'),
       medal: $('medal'), medalName: $('medalName'),
       nearFlash: $('nearFlash'), edgeGlow: $('edgeGlow'),
       previewGuide: $('previewGuide'),
@@ -36,7 +37,7 @@ export class UI {
       boot: $('boot'), bootNote: $('bootNote'), perf: $('perf'),
       root: document.documentElement,
     };
-    this.layers = ['hud', 'over', 'pause'];
+    this.layers = ['hud', 'ready', 'over', 'pause'];
     this.previewMode = false;
     this._previewTapCount = 0;
     this._lastScore = -1;
@@ -60,7 +61,10 @@ export class UI {
       });
     };
 
-    on('retryBtn', () => { audio.ui('tap'); game.enterReady(); });
+    on('retryBtn', () => {
+      audio.ui('tap');
+      void game.retryFromResults();
+    });
   }
 
   /* ---------------------------------------------------------------- *
@@ -89,7 +93,7 @@ export class UI {
   }
 
   showReady(best) {
-    this._only('hud');
+    this._only('hud', 'ready');
     this.el.hud.classList.remove('dim');
     this.el.hud.classList.add('waiting');
     this.setScore(0, true);
@@ -129,6 +133,11 @@ export class UI {
     this.el.medal.className = `medal ${m.cls}`;
     this.el.medalName.textContent = m.name;
     this.el.bestVal.textContent = best;
+  }
+
+  setRetryPending(pending) {
+    this.el.retryBtn.disabled = pending;
+    this.el.retryBtn.setAttribute('aria-busy', pending ? 'true' : 'false');
   }
 
   showPause() { this._only('hud', 'pause'); this.el.hud.classList.add('dim'); }

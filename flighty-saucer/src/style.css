@@ -68,6 +68,7 @@ html, body {
 
 button { font-family: inherit; color: inherit; border: 0; background: none; cursor: pointer; }
 button:focus-visible { outline: 3px solid #fff; outline-offset: 4px; }
+button:disabled { cursor: wait; opacity: 0.72; }
 button, .clickable { pointer-events: auto; }
 svg { width: 100%; height: 100%; fill: currentColor; display: block; }
 
@@ -345,6 +346,53 @@ svg { width: 100%; height: 100%; fill: currentColor; display: block; }
 }
 
 /* =====================================================================
+   Ready
+   ===================================================================== */
+.ready-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  margin-top: auto;
+  margin-bottom: calc(9vh + var(--safe-b));
+}
+.tap-ring { position: relative; width: 84px; height: 84px; }
+.tap-ring span {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.75);
+  animation: ripple 2.1s var(--ease) infinite;
+}
+.tap-ring span:last-child { animation-delay: 1.05s; }
+@keyframes ripple {
+  0% { transform: scale(0.5); opacity: 0; }
+  22% { opacity: 0.95; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+.ready-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-shadow: 0 6px 26px rgba(8, 14, 26, 0.55);
+  animation: breathe 2.2s ease-in-out infinite;
+}
+.ready-text em {
+  font-style: normal;
+  font-size: 9.5px;
+  letter-spacing: 0.3em;
+  color: rgba(255, 255, 255, 0.6);
+}
+@keyframes breathe {
+  0%, 100% { transform: translateY(0); opacity: 0.86; }
+  50% { transform: translateY(-4px); opacity: 1; }
+}
+
+/* =====================================================================
    Game over
    ===================================================================== */
 .over-card { padding-top: 26px; }
@@ -532,6 +580,8 @@ svg { width: 100%; height: 100%; fill: currentColor; display: block; }
   .card { padding: 24px 24px 20px; }
   .os-val { font-size: 38px; }
   .medal { width: 62px; height: 62px; padding: 15px; }
+  .ready-inner { margin-bottom: calc(5vh + var(--safe-b)); }
+  .tap-ring { width: 66px; height: 66px; }
 }
 /* short viewports: landscape phones, split view */
 @media (max-height: 470px) {
@@ -552,6 +602,6 @@ svg { width: 100%; height: 100%; fill: currentColor; display: block; }
   .cta { padding: 16px 34px; font-size: 15px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .cta-glow, .boot-mark { animation: none; }
+  .cta-glow, .tap-ring span, .boot-mark, .ready-text { animation: none; }
   .layer, .card, .cta, .ghost, .icon-btn { transition-duration: 0.12s; }
 }

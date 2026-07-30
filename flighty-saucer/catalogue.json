@@ -3,8 +3,8 @@
     {
       "name": "flighty-saucer",
       "username": "autonomoustudio",
-      "version": "1.1.0",
-      "releaseNotes": "Starts directly in the flight scene, keeps gates and scoring dormant until the first tap, removes in-game menu chrome, isolates preview stats, and adds seven illustrated achievements.",
+      "version": "1.2.0",
+      "releaseNotes": "Restores the lightweight tap-to-flap ready cue and adds Retry-triggered interstitial ads with a strict 30-second session cooldown.",
       "displayName": "Flighty Saucer",
       "subtitle": "One tap. Tiny UFO. Infinite sky.",
       "description": "Tap to keep a tiny saucer airborne, thread shifting monolith gates, dodge crystal hazards, and chase your best run across vivid low-poly skies.",
@@ -121,7 +121,7 @@
           "version": 1,
           "primaryVerb": "tap",
           "durationMs": 3200,
-          "startOnlyEventCount": 0,
+          "startOnlyEventCount": 1,
           "successSignals": [
             {
               "kind": "VISIBLE_PROGRESS",
@@ -141,7 +141,7 @@
           "version": 1,
           "primaryVerb": "tap",
           "durationMs": 3200,
-          "startOnlyEventCount": 0,
+          "startOnlyEventCount": 1,
           "successSignals": [
             {
               "kind": "VISIBLE_PROGRESS",
@@ -161,7 +161,7 @@
           "version": 1,
           "primaryVerb": "tap",
           "durationMs": 3200,
-          "startOnlyEventCount": 0,
+          "startOnlyEventCount": 1,
           "successSignals": [
             {
               "kind": "VISIBLE_PROGRESS",

@@ -88,3 +88,46 @@ Validation:
 - Preview mode is explicitly non-persistent: app-data writes, haptics,
   leaderboard submission, achievement unlocks, achievement progress, and the
   page-hide flush all share the same preview guard.
+
+## Ready cue and interstitial revision (2026-07-30)
+
+User request:
+
+- Restore the lightweight initial tap circle and instruction without bringing
+  back the removed home screen.
+- Show interstitial ads only after the player selects Retry on the result
+  screen, and only after 30 seconds from session start or the last
+  interstitial.
+
+Implementation:
+
+- Restored the animated TAP TO FLAP cue as a READY-only overlay. It disappears
+  on the first gameplay input while the existing BEST-to-score transition and
+  obstacle-free waiting scene remain intact.
+- Routed the result-screen Retry button and keyboard R through one
+  interstitial controller. Generic result-screen taps no longer restart and
+  cannot bypass the ad decision.
+- Added a strict 30-second monotonic session cooldown. The SDK loads and shows
+  only after an eligible Retry action, and the cooldown resets only after the
+  host confirms an interstitial was shown.
+- Added unit coverage for the pre-threshold, exact threshold, reset, and
+  no-inventory cases.
+
+Validation:
+
+- `npm run validate` passes on version 1.2.0, including four focused
+  interstitial cooldown tests.
+- PlayDrop project validation passes with one validated app and zero failures.
+- The hosted ready-state capture at `evidence/ready-cue-proof.png` shows BEST,
+  the animated tap ring, and TAP TO FLAP over the obstacle-free flight scene.
+- Mobile portrait, mobile landscape, and desktop hosted control tapes pass.
+- A hosted 30-second result-and-retry run emitted
+  `client:ad:load` only after Retry. The local dev descriptor was correctly
+  rejected as `source_app_not_eligible`, then the game resumed to READY.
+  Production eligibility comes from the public hosted current version, so no
+  separate operator flag is required.
+- The generic web-game Playwright client was run and inspected. As before, its
+  top-level local page cannot supply the required PlayDrop iframe channel, so
+  it stops at the boot screen with the expected SDK loader error. The hosted
+  PlayDrop checks are the authoritative runtime validation.
+- Version 1.2.0 has not been committed, uploaded, or published.

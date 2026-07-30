@@ -68,9 +68,9 @@ export async function boot() {
         tap();
         break;
       case 'KeyR':
-        if (game.state !== STATE.BOOT) {
+        if (game.state === STATE.DEAD) {
           audio.unlock();
-          game.restart();
+          void game.retryFromResults();
         }
         break;
       case 'KeyF':
@@ -187,6 +187,9 @@ export async function boot() {
     preview: game.previewPresentation,
     persistenceEnabled: game.persistenceEnabled,
     waitingForInput: game.state === STATE.READY,
+    retryPending: game.retryInterstitial.pending,
+    interstitialCooldownRemainingMs: Math.ceil(game.retryInterstitial.remainingMs),
+    lastInterstitialResult: game.retryInterstitial.lastResult,
     score: game.score,
     best: game.best,
     speed: Number(game.speed.toFixed(2)),

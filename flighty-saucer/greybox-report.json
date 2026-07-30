@@ -13,13 +13,13 @@
     },
     "restart": {
       "passed": true,
-      "observation": "A collision reached the stable end state; an ordinary tap returned to ready, and the next tap launched a second playable run."
+      "observation": "A collision reached the stable result screen; pressing Retry returned to ready, and the next tap launched a second playable run."
     }
   },
   "final": {
     "start": {
       "passed": true,
-      "observation": "The finished game opens directly on the flight scene with only BEST visible and no gates. One ordinary center-screen tap fades BEST out, reveals the run score, creates the gate field, and launches the saucer."
+      "observation": "The finished game opens directly on the obstacle-free flight scene with BEST and the animated TAP TO FLAP cue visible. One ordinary center-screen tap fades the cue and BEST out, reveals the run score, creates the gate field, and launches the saucer."
     },
     "agency": {
       "passed": true,
@@ -29,7 +29,7 @@
     },
     "restart": {
       "passed": true,
-      "observation": "The final build reached a collision, accepted an ordinary restart tap, returned to the obstacle-free waiting scene, and launched a second playable run without a pause control."
+      "observation": "The final build reached a collision, accepted the result-screen Retry action, evaluated the 30-second interstitial cooldown, returned to the obstacle-free waiting scene, and launched a second playable run without a pause control."
     }
   }
 }
