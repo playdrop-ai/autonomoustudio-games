@@ -14,7 +14,7 @@ import { PostFX } from './postfx.js';
 import { audio } from './audio.js';
 import { Store } from './storage.js';
 
-const STATE = { BOOT: 'boot', HOME: 'home', READY: 'ready', PLAY: 'play', DYING: 'dying', DEAD: 'dead', PAUSED: 'paused' };
+const STATE = { BOOT: 'boot', READY: 'ready', PLAY: 'play', DYING: 'dying', DEAD: 'dead', PAUSED: 'paused' };
 const _v = new THREE.Vector3();
 const _sep = { x: 0, y: 0 };
 
@@ -107,6 +107,9 @@ export class Game {
     this.homeTime = 0;
     this.lastNearMissGate = null;
     this.bounced = false;
+    this.previewPresentation = false;
+    this.captureAutopilot = false;
+    this._achievementUnlocks = new Set();
     this._cx = new Float64Array(8);
     this._cy = new Float64Array(8);
     this.governor = new ResolutionGovernor(RENDER_SCALE_MIN, RENDER_SCALE_MAX);
@@ -121,7 +124,7 @@ export class Game {
     window.addEventListener('orientationchange', this._resizeBound);
 
     this.resize();
-    this.enterHome(true);
+    this.enterReady();
   }
 
   _resolveQuality(name) {
@@ -215,30 +218,6 @@ export class Game {
   /* ================================================================ *
    * state transitions
    * ================================================================ */
-  enterHome(first = false) {
-    this.state = STATE.HOME;
-    this.score = 0;
-    this.speed = 3.4;
-    this.homeTime = 0;
-    this.trauma = 0;
-    this.timeScale = 1;
-    this.timeScaleTarget = 1;
-    this.camDollyExtra = 0;
-    this.world.setBiome(0);
-    this.gates.reset(140);
-    this.flyer.reset(CFG.camCenterY);
-    this.flyer.setPalette(BIOMES[0]);
-    this.particles.clear();
-    this.post.desat = 0;
-    this.post.exposure = 0.98;
-    this._syncLook();
-    this.ui.setAccent(BIOMES[0].ui);
-    this.previewPresentation = false;
-    this.ui.setPreviewMode(false);
-    this.ui.showHome(this.best, first);
-    this.captureAutopilot = false;
-  }
-
   enterReady() {
     this.state = STATE.READY;
     this.score = 0;
@@ -251,8 +230,10 @@ export class Game {
     this.timeScale = 1;
     this.timeScaleTarget = 1;
     this.world.setBiome(0);
-    this.gates.reset(40);
-    this.gates.ensureAhead(0);
+    // READY is a moving world with no scoring objects. The first real input
+    // creates the obstacle field, so an unattended player can never score,
+    // collide, or watch a gate drift into frame.
+    this.gates.reset(32);
     this.flyer.reset(CFG.camCenterY);
     this.flyer.setPalette(BIOMES[0]);
     this.particles.clear();
@@ -262,16 +243,17 @@ export class Game {
     this._syncLook();
     this.ui.setAccent(BIOMES[0].ui);
     if (this.previewPresentation) this.ui.showPreview();
-    else this.ui.showReady();
+    else this.ui.showReady(this.best);
   }
 
   start() {
+    this.gates.reset(32);
+    this.gates.ensureAhead(0);
     this.state = STATE.PLAY;
     if (this.previewPresentation) this.ui.showPreview();
     else this.ui.showHud(this.score, this.best);
     this.thrust(true);
-    void sdk.achievements.unlock('first-flight')
-      .catch((error) => console.info('[flighty-saucer] achievement unavailable in this session', error));
+    this._unlockAchievement('first-flight');
   }
 
   prepareListingScene(options = {}) {
@@ -283,9 +265,37 @@ export class Game {
     this.start();
   }
 
+  preparePlayerScene() {
+    this.previewPresentation = false;
+    this.captureAutopilot = false;
+    this.ui.setPreviewMode(false);
+    this.gates.setSeed((Math.random() * 1e9) | 0);
+    this.best = Store.get('best') || 0;
+    this.enterReady();
+  }
+
   rearmPreviewGuideForAudioCapture() {
     if (!this.previewPresentation) return;
     this.ui.setPreviewMode(true);
+  }
+
+  get persistenceEnabled() {
+    return !this.previewPresentation;
+  }
+
+  _unlockAchievement(key) {
+    if (!this.persistenceEnabled || this._achievementUnlocks.has(key)) return;
+    this._achievementUnlocks.add(key);
+    void sdk.achievements.unlock(key).catch((error) => {
+      this._achievementUnlocks.delete(key);
+      console.info('[flighty-saucer] achievement unavailable in this session', error);
+    });
+  }
+
+  _setAchievementProgress(key, progress) {
+    if (!this.persistenceEnabled) return;
+    void sdk.achievements.setProgressAtLeast(key, progress)
+      .catch((error) => console.info('[flighty-saucer] achievement progress unavailable in this session', error));
   }
 
   thrust(first = false) {
@@ -296,8 +306,10 @@ export class Game {
     this.trauma = Math.min(1, this.trauma + 0.045);
     this.particles.thrustPuff(0, b.y, 0, this.world.pal.cur.trail);
     audio.flap(first ? 1.15 : 1);
-    Store.bump('flaps');
-    if (Store.get('haptics') && navigator.vibrate) navigator.vibrate(8);
+    if (this.persistenceEnabled) {
+      Store.bump('flaps');
+      if (Store.get('haptics') && navigator.vibrate) navigator.vibrate(8);
+    }
     if (
       this.previewPresentation
       && this.captureAutopilot
@@ -310,7 +322,6 @@ export class Game {
   tap() {
     audio.unlock();
     switch (this.state) {
-      case STATE.HOME: this.enterReady(); this.ui.pulseHint(); break;
       case STATE.READY: this.start(); break;
       case STATE.PLAY: this.thrust(); break;
       case STATE.DEAD: if (this.deadTimer > 0.75) this.enterReady(); break;
@@ -318,18 +329,6 @@ export class Game {
       // player taps the screen and nothing at all happens
       case STATE.PAUSED: this.resume(); break;
       default: break;
-    }
-  }
-
-  togglePause() {
-    if (this.state === STATE.PLAY) {
-      this.state = STATE.PAUSED;
-      this.post.desat = 0.55;
-      this.post.exposure = 0.66;
-      this.ui.showPause();
-      audio.ui('back');
-    } else if (this.state === STATE.PAUSED) {
-      this.resume();
     }
   }
 
@@ -367,13 +366,6 @@ export class Game {
     this.enterReady();
   }
 
-  goHome() {
-    this.post.desat = 0;
-    this.post.exposure = 0.98;
-    this.ui.hidePause();
-    this.enterHome();
-  }
-
   die(cause) {
     if (this.state !== STATE.PLAY) return;
     this.state = STATE.DYING;
@@ -393,17 +385,20 @@ export class Game {
     this.flyer.vx = cause === 'floor' ? -1.2 : -3.4;
     this.wreckHits = 0;
 
-    Store.bump('games');
-    Store.bump('totalScore', this.score);
-    const isBest = this.score > this.best;
-    if (isBest) {
-      this.best = this.score;
-      Store.set('best', this.best);
+    let isBest = false;
+    if (this.persistenceEnabled) {
+      Store.bump('games');
+      Store.bump('totalScore', this.score);
+      isBest = this.score > this.best;
+      if (isBest) {
+        this.best = this.score;
+        Store.set('best', this.best);
+      }
+      void sdk.leaderboards.submitScore('high-score', this.score)
+        .catch((error) => console.info('[flighty-saucer] leaderboard unavailable in this session', error));
+      if (Store.get('haptics') && navigator.vibrate) navigator.vibrate([18, 40, 22]);
     }
     this.pendingBest = isBest;
-    void sdk.leaderboards.submitScore('high-score', this.score)
-      .catch((error) => console.info('[flighty-saucer] leaderboard unavailable in this session', error));
-    if (Store.get('haptics') && navigator.vibrate) navigator.vibrate([18, 40, 22]);
   }
 
   /** Push the live (cross-faded) palette into everything the World doesn't own. */
@@ -533,8 +528,9 @@ export class Game {
     const g = this.gates.takeScore();
     if (!g) return;
     this.score++;
-    void sdk.achievements.setProgressAtLeast('gate-runner', this.score)
-      .catch((error) => console.info('[flighty-saucer] achievement progress unavailable in this session', error));
+    this._setAchievementProgress('gate-runner', this.score);
+    if (this.score === 50) this._unlockAchievement('ace-pilot');
+    if (this.score === 100) this._unlockAchievement('saucer-legend');
     const pal = this.world.pal.cur;
     this.particles.scoreBurst(0, g.gapY, 0, pal.gateAccent);
     audio.score(this.score);
@@ -556,6 +552,7 @@ export class Game {
       this.world.setBiome(bi);
       audio.biomeShift();
       this.ui.biomeToast(BIOMES[bi].name);
+      if (bi === 4) this._unlockAchievement('world-hopper');
     }
   }
 
@@ -567,6 +564,7 @@ export class Game {
     this.trauma = Math.min(1, this.trauma + 0.07);
     this.fovPunch = Math.min(2.0, this.fovPunch + 0.5);
     this.ui.nearMiss();
+    this._unlockAchievement('close-call');
   }
 
   /* ================================================================ *
@@ -605,8 +603,7 @@ export class Game {
 
     // ---- forward speed -------------------------------------------
     let targetSpeed;
-    if (st === STATE.HOME) targetSpeed = 3.4;
-    else if (st === STATE.READY) targetSpeed = 4.6;
+    if (st === STATE.READY) targetSpeed = 4.6;
     else if (playing) targetSpeed = lerp(CFG.speedStart, CFG.speedEnd, rampT(this.score));
     else if (st === STATE.DYING || st === STATE.DEAD) targetSpeed = 0;
     else targetSpeed = this.speed;
@@ -658,26 +655,19 @@ export class Game {
       b.vy = Math.cos(this.homeTime * 2.1) * 0.6;
       b.renderY = b.y;
       this.homeTime += sdt;
-    } else if (st === STATE.HOME) {
-      const b = this.flyer;
-      this.homeTime += sdt;
-      b.y = CFG.camCenterY + Math.sin(this.homeTime * 1.35) * 0.55;
-      b.vy = Math.cos(this.homeTime * 1.35) * 0.7;
-      b.renderY = b.y;
-      if (Math.random() < sdt * 0.85) {
-        b.thrust();
-        this.particles.thrustPuff(0, b.y, 0, this.world.pal.cur.trail);
-      }
     }
 
     // ---- world / actors ------------------------------------------
     if (!paused) {
       const speed01 = clamp01((this.speed - CFG.speedStart * 0.5) / (CFG.speedEnd - CFG.speedStart * 0.5));
       if (this.world.update(sdt, dx)) this._syncLook();
-      this.gates.update(sdt, dx, this.score);
+      if (st !== STATE.READY) this.gates.update(sdt, dx, this.score);
+      if (this.state === STATE.PLAY && this.gates.takePassedShard()) {
+        this._unlockAchievement('crystal-dodger');
+      }
       this.flyer.shift(dx);
       this.particles.shift(dx);
-      this.flyer.update(sdt, speed01, playing || st === STATE.READY || st === STATE.HOME ? 1 : 0);
+      this.flyer.update(sdt, speed01, playing || st === STATE.READY ? 1 : 0);
       this.particles.update(sdt);
       this.sky.update(sdt, this.camera);
 
@@ -687,12 +677,7 @@ export class Game {
         this.particles.trailSpark(_v.x, _v.y, _v.z, this.world.pal.cur.trail);
       }
 
-      audio.setAmbience(
-        st === STATE.HOME ? 0.55 : 1.0,
-        speed01,
-        this.world.pal.chord,
-        this.world.pal.cur.pad,
-      );
+      audio.setAmbience(1.0, speed01, this.world.pal.chord, this.world.pal.cur.pad);
     }
 
     // ---- camera ---------------------------------------------------
@@ -710,9 +695,7 @@ export class Game {
   _camera(dt, st) {
     const b = this.flyer;
     let targetY;
-    if (st === STATE.HOME) {
-      targetY = CFG.camCenterY + Math.sin(this.homeTime * 0.55) * 0.7;
-    } else if (st === STATE.DYING || st === STATE.DEAD) {
+    if (st === STATE.DYING || st === STATE.DEAD) {
       targetY = lerp(CFG.camCenterY, Math.max(b.y, CFG.groundY + 1.6), 0.7);
     } else {
       targetY = lerp(CFG.camCenterY, b.y, CFG.camFollow) + clamp(b.vy * 0.035, -0.5, 0.5);
@@ -721,7 +704,7 @@ export class Game {
 
     // dolly out a little on death and while flying fast
     const dollyTarget = (st === STATE.DYING || st === STATE.DEAD) ? 2.4
-      : (st === STATE.HOME ? 1.2 : clamp01((this.speed - CFG.speedStart) / 7) * 1.1);
+      : clamp01((this.speed - CFG.speedStart) / 7) * 1.1;
     this.camDollyExtra = damp(this.camDollyExtra, dollyTarget, 2.2, dt);
 
     const sh = this.trauma * this.trauma * this.shakeMul;
@@ -729,12 +712,10 @@ export class Game {
     const sx = (Math.sin(t * 47.3) + Math.sin(t * 31.7) * 0.6) * 0.30 * sh;
     const sy = (Math.sin(t * 41.1) + Math.sin(t * 26.3) * 0.6) * 0.30 * sh;
 
-    const homeDrift = st === STATE.HOME ? Math.sin(this.homeTime * 0.4) * 1.1 : 0;
-
     this.camera.position.set(
-      this.camXPos + sx + homeDrift * 0.35,
+      this.camXPos + sx,
       this.camY + sy,
-      this.camDist + this.camDollyExtra + homeDrift,
+      this.camDist + this.camDollyExtra,
     );
     this.camera.lookAt(this.lookX, this.camY + 0.55, 0);
 

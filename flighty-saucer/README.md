@@ -6,6 +6,8 @@ gates and avoiding crystal hazards.
 
 The game is designed first for mobile portrait, including iPhone safe areas and
 Mobile Safari lifecycle behavior, and also supports mobile landscape and desktop.
+It opens directly on a moving, obstacle-free flight scene. The first player
+input starts scoring, spawns the gate field, and reveals the score HUD.
 
 ## Commands
 

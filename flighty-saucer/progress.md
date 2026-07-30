@@ -37,3 +37,54 @@ Original prompt: Implement a clean PlayDrop preview mode, recapture Flighty Sauc
 - Final outputs: 1080x1920 and 1920x1080, both 11.8 seconds, H.264/yuv420p/60 fps/SAR 1:1 with AAC stereo at exactly -16.0 LUFS.
 - Full 10 fps cue sheets and complete 1 fps contact sheets confirm the cartoon hand and radial ring recur across the full gameplay segment in both orientations.
 - Final PlayDrop validation and marketing doctor pass. No upload or publication was performed.
+
+## Live-game revision (2026-07-30)
+
+User request:
+
+- Remove the separate home screen and start directly in the flight scene.
+- While waiting for the first input, show only BEST at the top left.
+- Fade BEST out on first input, reveal the run score, and remove the in-game
+  pause button.
+- Prevent preview autoplay from changing player stats, best score,
+  leaderboard scores, or achievements.
+- Keep the world advancing before input, but do not spawn or move gates,
+  hazards, or score until the player starts the run.
+- Expand the achievement set and give every achievement distinct AI-generated
+  art consistent with Flighty Saucer and the Starfold quality reference.
+
+Implementation:
+
+- Removed HOME from the runtime state machine and removed the home, ready-help,
+  settings, and manual pause controls from the DOM.
+- READY now renders only the BEST chip over the moving world. It keeps the
+  obstacle pool empty; the first player input creates the gate field, starts
+  physics and scoring, fades BEST out, and fades the score in.
+- Added a single preview persistence boundary around app data writes, haptics,
+  leaderboard submission, achievement unlocks, and achievement progress.
+- Added runtime triggers for close calls, cleared shards, Aurora Peaks, 25
+  gates, 50 gates, and 100 gates.
+- Rebuilt the catalogue as seven achievement milestones: First Flight, Close
+  Call, Crystal Dodger, World Hopper, Gate Runner, Ace Pilot, and Saucer
+  Legend.
+- Generated a distinct 512 by 512 AI achievement illustration for every
+  milestone. Each composition uses the canonical Flighty Saucer hero as its
+  style and character reference, with no baked-in text.
+
+Validation:
+
+- `npm run validate` passes on version 1.1.0.
+- PlayDrop project validation passes with one validated app and zero failures.
+- Hosted control and tap-tape checks pass on mobile portrait, mobile landscape,
+  and desktop.
+- The zero-input controls show only BEST, a score of zero, and no gate field.
+  Their tap tapes hide BEST, reveal the score, and bring in the first fair gate
+  only after interaction.
+- A separate hosted action check reached a collision, restarted, and launched a
+  second playable run.
+- A native preview capture completed on all three surfaces with zero recorder
+  warnings. Its portrait proof is HUD-free and shows the synchronized cartoon
+  tap hand.
+- Preview mode is explicitly non-persistent: app-data writes, haptics,
+  leaderboard submission, achievement unlocks, achievement progress, and the
+  page-hide flush all share the same preview guard.

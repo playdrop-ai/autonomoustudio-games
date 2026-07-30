@@ -3,7 +3,7 @@
   "prototype": {
     "start": {
       "passed": true,
-      "observation": "An ordinary center-screen tap left the home screen, and a second tap launched the saucer into active flight."
+      "observation": "An ordinary center-screen tap starts active flight directly from the obstacle-free waiting scene."
     },
     "agency": {
       "passed": true,
@@ -19,17 +19,17 @@
   "final": {
     "start": {
       "passed": true,
-      "observation": "An ordinary center-screen tap left the finished home screen, and a second tap launched the final saucer into active flight."
+      "observation": "The finished game opens directly on the flight scene with only BEST visible and no gates. One ordinary center-screen tap fades BEST out, reveals the run score, creates the gate field, and launches the saucer."
     },
     "agency": {
       "passed": true,
       "normalInput": "Repeated center-screen taps at the flight cadence.",
       "controlCondition": "The same-duration final build with zero input.",
-      "observation": "All three supported-surface tape checks showed visible tap-driven flight that differed from their zero-input controls."
+      "observation": "All three supported-surface controls remained obstacle-free with score zero, while their matched tap tapes showed visible tap-driven flight and approaching gates."
     },
     "restart": {
       "passed": true,
-      "observation": "The final build reached a collision, accepted an ordinary restart tap, and launched a second playable run with the HUD and pause control active."
+      "observation": "The final build reached a collision, accepted an ordinary restart tap, returned to the obstacle-free waiting scene, and launched a second playable run without a pause control."
     }
   }
 }

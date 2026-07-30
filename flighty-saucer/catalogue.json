@@ -3,8 +3,8 @@
     {
       "name": "flighty-saucer",
       "username": "autonomoustudio",
-      "version": "1.0.4",
-      "releaseNotes": "Published the approved marketing video and four feature screenshots in portrait and landscape under fresh immutable media URLs.",
+      "version": "1.1.0",
+      "releaseNotes": "Starts directly in the flight scene, keeps gates and scoring dormant until the first tap, removes in-game menu chrome, isolates preview stats, and adds seven illustrated achievements.",
       "displayName": "Flighty Saucer",
       "subtitle": "One tap. Tiny UFO. Infinite sky.",
       "description": "Tap to keep a tiny saucer airborne, thread shifting monolith gates, dodge crystal hazards, and chase your best run across vivid low-poly skies.",
@@ -52,9 +52,30 @@
         {
           "key": "first-flight",
           "displayName": "First Flight",
-          "description": "Launch the saucer on its first run.",
+          "description": "Launch the saucer on its first player-controlled flight.",
           "kind": "STANDARD",
-          "icon": "assets/marketing/playdrop/icon.png"
+          "icon": "assets/marketing/playdrop/achievements/first-flight.png"
+        },
+        {
+          "key": "close-call",
+          "displayName": "Close Call",
+          "description": "Thread a monolith gate close enough to trigger a near miss.",
+          "kind": "STANDARD",
+          "icon": "assets/marketing/playdrop/achievements/close-call.png"
+        },
+        {
+          "key": "crystal-dodger",
+          "displayName": "Crystal Dodger",
+          "description": "Fly safely past a charged crystal shard.",
+          "kind": "STANDARD",
+          "icon": "assets/marketing/playdrop/achievements/crystal-dodger.png"
+        },
+        {
+          "key": "world-hopper",
+          "displayName": "World Hopper",
+          "description": "Reach Aurora Peaks in one flight.",
+          "kind": "STANDARD",
+          "icon": "assets/marketing/playdrop/achievements/world-hopper.png"
         },
         {
           "key": "gate-runner",
@@ -62,7 +83,21 @@
           "description": "Clear 25 monolith gates in one flight.",
           "kind": "INCREMENTAL",
           "maxProgress": 25,
-          "icon": "assets/marketing/playdrop/icon.png"
+          "icon": "assets/marketing/playdrop/achievements/gate-runner.png"
+        },
+        {
+          "key": "ace-pilot",
+          "displayName": "Ace Pilot",
+          "description": "Clear 50 monolith gates in one flight.",
+          "kind": "STANDARD",
+          "icon": "assets/marketing/playdrop/achievements/ace-pilot.png"
+        },
+        {
+          "key": "saucer-legend",
+          "displayName": "Saucer Legend",
+          "description": "Clear 100 monolith gates in one flight.",
+          "kind": "STANDARD",
+          "icon": "assets/marketing/playdrop/achievements/saucer-legend.png"
         }
       ],
       "leaderboards": [
@@ -85,118 +120,61 @@
         "MOBILE_PORTRAIT": {
           "version": 1,
           "primaryVerb": "tap",
-          "durationMs": 9000,
-          "startOnlyEventCount": 2,
+          "durationMs": 3200,
+          "startOnlyEventCount": 0,
           "successSignals": [
             {
               "kind": "VISIBLE_PROGRESS",
-              "description": "The saucer leaves the home screen, flaps repeatedly, and advances through the first gate corridor."
+              "description": "The first tap starts scoring flight, spawns the gate field, and repeated taps carry the saucer toward the first corridor."
             }
           ],
           "events": [
             { "type": "tap", "atMs": 0, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 500, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 850, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 600, "x": 0.5, "y": 0.5 },
             { "type": "tap", "atMs": 1200, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 1550, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 1900, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 2250, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 2600, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 2950, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 3300, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 3650, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 4000, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 4350, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 4700, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 5050, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 5400, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 5750, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 6100, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 6450, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 6800, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 7150, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 7500, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 7850, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 8200, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 8550, "x": 0.5, "y": 0.5 }
+            { "type": "tap", "atMs": 1800, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 2400, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 3000, "x": 0.5, "y": 0.5 }
           ]
         },
         "MOBILE_LANDSCAPE": {
           "version": 1,
           "primaryVerb": "tap",
-          "durationMs": 9000,
-          "startOnlyEventCount": 2,
+          "durationMs": 3200,
+          "startOnlyEventCount": 0,
           "successSignals": [
             {
               "kind": "VISIBLE_PROGRESS",
-              "description": "The saucer leaves the home screen, flaps repeatedly, and advances through the first gate corridor."
+              "description": "The first tap starts scoring flight, spawns the gate field, and repeated taps carry the saucer toward the first corridor."
             }
           ],
           "events": [
             { "type": "tap", "atMs": 0, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 500, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 850, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 600, "x": 0.5, "y": 0.5 },
             { "type": "tap", "atMs": 1200, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 1550, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 1900, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 2250, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 2600, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 2950, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 3300, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 3650, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 4000, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 4350, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 4700, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 5050, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 5400, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 5750, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 6100, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 6450, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 6800, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 7150, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 7500, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 7850, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 8200, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 8550, "x": 0.5, "y": 0.5 }
+            { "type": "tap", "atMs": 1800, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 2400, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 3000, "x": 0.5, "y": 0.5 }
           ]
         },
         "DESKTOP": {
           "version": 1,
           "primaryVerb": "tap",
-          "durationMs": 9000,
-          "startOnlyEventCount": 2,
+          "durationMs": 3200,
+          "startOnlyEventCount": 0,
           "successSignals": [
             {
               "kind": "VISIBLE_PROGRESS",
-              "description": "The saucer leaves the home screen, flaps repeatedly, and advances through the first gate corridor."
+              "description": "The first tap starts scoring flight, spawns the gate field, and repeated taps carry the saucer toward the first corridor."
             }
           ],
           "events": [
             { "type": "tap", "atMs": 0, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 500, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 850, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 600, "x": 0.5, "y": 0.5 },
             { "type": "tap", "atMs": 1200, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 1550, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 1900, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 2250, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 2600, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 2950, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 3300, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 3650, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 4000, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 4350, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 4700, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 5050, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 5400, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 5750, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 6100, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 6450, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 6800, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 7150, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 7500, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 7850, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 8200, "x": 0.5, "y": 0.5 },
-            { "type": "tap", "atMs": 8550, "x": 0.5, "y": 0.5 }
+            { "type": "tap", "atMs": 1800, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 2400, "x": 0.5, "y": 0.5 },
+            { "type": "tap", "atMs": 3000, "x": 0.5, "y": 0.5 }
           ]
         }
       },

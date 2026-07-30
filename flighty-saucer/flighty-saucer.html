@@ -221,11 +221,6 @@ svg { width: 100%; height: 100%; fill: currentColor; display: block; }
   letter-spacing: 0.14em;
   color: var(--text-dim);
 }
-#soundBtn .i-off { display: none; }
-#soundBtn.muted .i-on { display: none; }
-#soundBtn.muted .i-off { display: block; }
-#soundBtn.muted { color: rgba(255, 255, 255, 0.45); }
-
 /* =====================================================================
    HUD
    ===================================================================== */
@@ -233,10 +228,8 @@ svg { width: 100%; height: 100%; fill: currentColor; display: block; }
   position: absolute;
   top: calc(16px + var(--safe-t));
   left: calc(18px + var(--safe-l));
-  right: calc(18px + var(--safe-r));
   display: flex;
   align-items: center;
-  justify-content: space-between;
 }
 
 .chip {
@@ -253,6 +246,15 @@ svg { width: 100%; height: 100%; fill: currentColor; display: block; }
 }
 .chip-label { font-size: 9.5px; font-weight: 800; letter-spacing: 0.2em; color: var(--text-dim); }
 .chip-val { font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; }
+#bestChip {
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.3s var(--ease), transform 0.38s var(--ease);
+}
+#hud.waiting #bestChip {
+  opacity: 1;
+  transform: translateY(0);
+}
 
 .score-wrap {
   position: absolute;
@@ -263,6 +265,10 @@ svg { width: 100%; height: 100%; fill: currentColor; display: block; }
   justify-content: center;
   pointer-events: none;
   transition: opacity 0.3s var(--ease), transform 0.4s var(--ease);
+}
+#hud.waiting .score-wrap {
+  opacity: 0;
+  transform: translateY(-12px) scale(0.92);
 }
 /* the big score steps back while a glass panel is up */
 #hud.dim .score-wrap {
@@ -349,122 +355,6 @@ svg { width: 100%; height: 100%; fill: currentColor; display: block; }
 }
 
 /* =====================================================================
-   Home
-   ===================================================================== */
-.home-inner {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  padding:
-    calc(4vh + var(--safe-t))
-    calc(20px + var(--safe-r))
-    calc(26px + var(--safe-b))
-    calc(20px + var(--safe-l));
-  text-align: center;
-}
-.home-bottom {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-}
-.brand { display: flex; flex-direction: column; align-items: center; gap: 10px; }
-.kicker {
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.46em;
-  color: rgba(255, 255, 255, 0.92);
-  padding-left: 0.46em;
-  text-shadow: 0 2px 14px rgba(8, 14, 26, 0.6);
-}
-.title {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  line-height: 0.84;
-  font-weight: 800;
-  letter-spacing: -0.035em;
-  font-size: clamp(50px, 11vw, 96px);
-  filter: drop-shadow(0 18px 44px rgba(6, 12, 24, 0.5));
-}
-.title .t1 { color: #fff; }
-.title .t2 {
-  color: transparent;
-  background: linear-gradient(96deg, var(--accent), #ffffff 82%);
-  -webkit-background-clip: text;
-  background-clip: text;
-}
-.tagline {
-  font-size: 13.5px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  color: rgba(255, 255, 255, 0.94);
-  text-shadow: 0 2px 16px rgba(8, 14, 26, 0.55);
-}
-
-.stats {
-  display: flex;
-  align-items: center;
-  gap: 22px;
-  padding: 16px 26px;
-  border-radius: 22px;
-}
-.stat { min-width: 62px; }
-.stat-val { font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; }
-.stat-key { margin-top: 5px; font-size: 9px; font-weight: 800; letter-spacing: 0.22em; color: var(--text-dim); }
-
-.tool-row { display: flex; gap: 10px; }
-
-/* =====================================================================
-   Ready
-   ===================================================================== */
-.ready-inner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 18px;
-  margin-top: auto;
-  margin-bottom: calc(9vh + var(--safe-b));
-}
-.tap-ring { position: relative; width: 84px; height: 84px; }
-.tap-ring span {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.75);
-  animation: ripple 2.1s var(--ease) infinite;
-}
-.tap-ring span:last-child { animation-delay: 1.05s; }
-@keyframes ripple {
-  0% { transform: scale(0.5); opacity: 0; }
-  22% { opacity: 0.95; }
-  100% { transform: scale(1.5); opacity: 0; }
-}
-.ready-text {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  font-size: 19px;
-  font-weight: 800;
-  letter-spacing: 0.22em;
-  text-shadow: 0 6px 26px rgba(8, 14, 26, 0.55);
-  animation: breathe 2.2s ease-in-out infinite;
-}
-.ready-text em {
-  font-style: normal;
-  font-size: 9.5px;
-  letter-spacing: 0.3em;
-  color: rgba(255, 255, 255, 0.6);
-}
-@keyframes breathe {
-  0%, 100% { transform: translateY(0); opacity: 0.86; }
-  50% { transform: translateY(-4px); opacity: 1; }
-}
-
-/* =====================================================================
    Game over
    ===================================================================== */
 .over-card { padding-top: 26px; }
@@ -526,31 +416,6 @@ svg { width: 100%; height: 100%; fill: currentColor; display: block; }
 @media (hover: none) { .hint-small { display: none; } }
 .hint-small { margin-top: 14px; font-size: 10px; letter-spacing: 0.16em; color: rgba(255, 255, 255, 0.55); }
 .hint-small b { color: rgba(255, 255, 255, 0.72); }
-
-/* =====================================================================
-   Help
-   ===================================================================== */
-.help-card { text-align: left; }
-.help-list { list-style: none; display: flex; flex-direction: column; gap: 13px; margin-bottom: 24px; }
-.help-list li {
-  font-size: 13.5px;
-  line-height: 1.5;
-  color: rgba(255, 255, 255, 0.8);
-  padding-left: 16px;
-  position: relative;
-}
-.help-list li::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 8px;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 12px var(--accent-soft);
-}
-.help-list b { color: #fff; font-weight: 700; }
 
 /* =====================================================================
    Overlays
@@ -674,21 +539,14 @@ svg { width: 100%; height: 100%; fill: currentColor; display: block; }
    Responsive
    ===================================================================== */
 @media (max-height: 620px) {
-  .home-inner { gap: 16px; }
-  .stats { padding: 12px 20px; gap: 16px; }
-  .stat-val { font-size: 20px; }
   .card { padding: 24px 24px 20px; }
   .os-val { font-size: 38px; }
   .medal { width: 62px; height: 62px; padding: 15px; }
-  .ready-inner { margin-bottom: calc(5vh + var(--safe-b)); }
-  .tap-ring { width: 66px; height: 66px; }
 }
 /* short viewports: landscape phones, split view */
 @media (max-height: 470px) {
   .card { padding: 18px 22px 16px; border-radius: 20px; }
   .card-title { margin-bottom: 12px; font-size: 11px; }
-  .help-list { gap: 8px; margin-bottom: 16px; }
-  .help-list li { font-size: 12.5px; line-height: 1.45; padding-left: 14px; }
   .medal-wrap { margin-bottom: 12px; gap: 6px; }
   .medal { width: 52px; height: 52px; padding: 13px; }
   .over-scores { margin-bottom: 16px; gap: 20px; }
@@ -701,11 +559,10 @@ svg { width: 100%; height: 100%; fill: currentColor; display: block; }
   .score-wrap { top: calc(46px + var(--safe-t)); }
 }
 @media (max-width: 420px) {
-  .tool-row .icon-btn.wide { min-width: 84px; }
   .cta { padding: 16px 34px; font-size: 15px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .cta-glow, .tap-ring span, .boot-mark, .ready-text { animation: none; }
+  .cta-glow, .boot-mark { animation: none; }
   .layer, .card, .cta, .ghost, .icon-btn { transition-duration: 0.12s; }
 }
 </style>
@@ -723,65 +580,12 @@ svg { width: 100%; height: 100%; fill: currentColor; display: block; }
         <span class="chip-label">BEST</span>
         <span class="chip-val" id="bestVal">0</span>
       </div>
-      <button class="icon-btn" id="pauseBtn" aria-label="Pause">
-        <svg viewBox="0 0 24 24"><rect x="7" y="5" width="3.4" height="14" rx="1.4"/><rect x="13.6" y="5" width="3.4" height="14" rx="1.4"/></svg>
-      </button>
     </div>
     <div class="score-wrap">
       <div id="score" class="score">0</div>
     </div>
     <div id="biomeToast" class="biome-toast"><span></span></div>
     <div id="milestone" class="milestone"><b></b><i></i></div>
-  </div>
-
-  <!-- ===================== HOME ===================== -->
-  <div id="home" class="layer fill">
-    <div class="home-inner">
-      <div class="brand">
-        <div class="kicker">LOW&#8209;POLY&nbsp;3D&nbsp;FLIGHT</div>
-        <h1 class="title"><span class="t1">FLIGHTY</span><span class="t2">SAUCER</span></h1>
-        <div class="tagline">Thread the monoliths. Ride the light.</div>
-      </div>
-
-      <div class="home-bottom">
-      <div class="glass stats">
-        <div class="stat"><div class="stat-val" id="hBest">0</div><div class="stat-key">BEST</div></div>
-        <div class="divider"></div>
-        <div class="stat"><div class="stat-val" id="hGames">0</div><div class="stat-key">FLIGHTS</div></div>
-        <div class="divider"></div>
-        <div class="stat"><div class="stat-val" id="hFlaps">0</div><div class="stat-key">FLAPS</div></div>
-      </div>
-
-      <button class="cta" id="playBtn">
-        <span class="cta-glow"></span>
-        <span class="cta-label">TAP TO FLY</span>
-      </button>
-
-      <div class="tool-row">
-        <button class="icon-btn wide" id="soundBtn" aria-label="Toggle sound">
-          <svg viewBox="0 0 24 24" class="i-on"><path d="M4 10h3l4-3.4v10.8L7 14H4z"/><path d="M15 9.2a4 4 0 0 1 0 5.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M17.6 6.6a7.6 7.6 0 0 1 0 10.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-          <svg viewBox="0 0 24 24" class="i-off"><path d="M4 10h3l4-3.4v10.8L7 14H4z"/><path d="M15.4 9.4l5.2 5.2M20.6 9.4l-5.2 5.2" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
-          <em id="soundLabel">SOUND</em>
-        </button>
-        <button class="icon-btn wide" id="qualityBtn" aria-label="Graphics quality">
-          <svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.6 6.1.8-4.5 4.2 1.2 6L12 16.8 6.6 19.6l1.2-6L3.3 9.4l6.1-.8z"/></svg>
-          <em id="qualityLabel">AUTO</em>
-        </button>
-        <button class="icon-btn wide" id="helpBtn" aria-label="How to play">
-          <svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm.1 13.9a1.15 1.15 0 1 1 0 2.3 1.15 1.15 0 0 1 0-2.3zM12 6.4c2 0 3.4 1.2 3.4 2.9 0 1.3-.6 1.9-1.7 2.7-.8.5-1 .9-1 1.6v.5h-1.9v-.7c0-1.3.5-2 1.6-2.7.8-.6 1-.9 1-1.4 0-.7-.6-1.2-1.5-1.2s-1.5.5-1.6 1.4H8.5c.1-1.8 1.5-3.1 3.5-3.1z"/></svg>
-          <em>HOW TO</em>
-        </button>
-      </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===================== READY ===================== -->
-  <div id="ready" class="layer center">
-    <div class="ready-inner">
-      <div class="tap-ring"><span></span><span></span></div>
-      <div class="ready-text">TAP TO FLAP<em>SPACE&nbsp;/&nbsp;CLICK&nbsp;/&nbsp;TAP</em></div>
-    </div>
   </div>
 
   <!-- ===================== GAME OVER ===================== -->
@@ -801,7 +605,6 @@ svg { width: 100%; height: 100%; fill: currentColor; display: block; }
       </div>
       <div class="btn-row">
         <button class="cta small" id="retryBtn"><span class="cta-glow"></span><span class="cta-label">RETRY</span></button>
-        <button class="ghost" id="homeBtn">HOME</button>
       </div>
       <div class="hint-small">press <b>R</b> to fly again</div>
     </div>
@@ -811,27 +614,7 @@ svg { width: 100%; height: 100%; fill: currentColor; display: block; }
   <div id="pause" class="layer center">
     <div class="glass card pause-card">
       <h2 class="card-title">PAUSED</h2>
-      <div class="btn-col">
-        <button class="cta small" id="resumeBtn"><span class="cta-glow"></span><span class="cta-label">RESUME</span></button>
-        <button class="ghost" id="restartBtn">RESTART</button>
-        <button class="ghost" id="quitBtn">HOME</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===================== HELP ===================== -->
-  <div id="help" class="layer center" role="dialog" aria-modal="true" aria-labelledby="helpTitle" aria-hidden="true">
-    <div class="glass card help-card">
-      <h2 class="card-title" id="helpTitle">HOW TO FLY</h2>
-      <ul class="help-list">
-        <li><b>Tap, click or press Space</b> to flap. Every flap is one beat of lift.</li>
-        <li><b>Thread the gap</b> between the glowing monoliths. Brushing an edge is a near&nbsp;miss — you get a spark, not a crash.</li>
-        <li><b>Watch for shards.</b> The black crystals with a white&#8209;hot core drift between the gates and they <b>will</b> end your run. There is always a clear line past them.</li>
-        <li><b>Gates change as you climb.</b> They start sliding, then offset into diagonal slots, then arrive in tight pairs, then breathe open and shut.</li>
-        <li><b>Every 10 gates</b> the world shifts: dawn meadow, coast, canyon, night, aurora.</li>
-        <li><b>P or Esc</b> pauses. <b>R</b> restarts. <b>F</b> shows the frame&nbsp;rate.</li>
-      </ul>
-      <button class="cta small full" id="helpCloseBtn"><span class="cta-glow"></span><span class="cta-label">GOT IT</span></button>
+      <div class="hint-small">return to PlayDrop to resume</div>
     </div>
   </div>
 
@@ -1351,7 +1134,6 @@ svg { width: 100%; height: 100%; fill: currentColor; display: block; }
   var init_ui = __esm({
     "src/ui.js"() {
       "use strict";
-      init_storage();
       init_audio();
       MEDALS = [
         { min: 80, cls: "plat", name: "LEGEND" },
@@ -1365,16 +1147,10 @@ svg { width: 100%; height: 100%; fill: currentColor; display: block; }
         constructor() {
           this.el = {
             hud: $("hud"),
-            home: $("home"),
-            ready: $("ready"),
             over: $("over"),
             pause: $("pause"),
-            help: $("help"),
             score: $("score"),
             bestVal: $("bestVal"),
-            hBest: $("hBest"),
-            hGames: $("hGames"),
-            hFlaps: $("hFlaps"),
             biome: $("biomeToast"),
             biomeText: $("biomeToast").querySelector("span"),
             milestone: $("milestone"),
@@ -1390,23 +1166,16 @@ svg { width: 100%; height: 100%; fill: currentColor; display: block; }
             previewGuide: $("previewGuide"),
             previewTapHand: $("previewTapHand"),
             previewTapRing: $("previewTapRing"),
-            soundBtn: $("soundBtn"),
-            soundLabel: $("soundLabel"),
-            qualityBtn: $("qualityBtn"),
-            qualityLabel: $("qualityLabel"),
             boot: $("boot"),
             bootNote: $("bootNote"),
             perf: $("perf"),
             root: document.documentElement
           };
-          this.layers = ["hud", "home", "ready", "over", "pause", "help"];
-          this.helpOpen = false;
+          this.layers = ["hud", "over", "pause"];
           this.previewMode = false;
           this._previewTapCount = 0;
           this._lastScore = -1;
           this._reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-          this._syncSoundBtn();
-          this._syncQualityBtn();
         }
         /* ---------------------------------------------------------------- *
          * wiring
@@ -1424,65 +1193,16 @@ svg { width: 100%; height: 100%; fill: currentColor; display: block; }
               fn(e);
             });
           };
-          on("playBtn", () => {
-            audio.ui("tap");
-            game.tap();
-          });
-          on("pauseBtn", () => game.togglePause());
-          on("resumeBtn", () => game.resume());
-          on("restartBtn", () => {
-            audio.ui("tap");
-            game.restart();
-          });
-          on("quitBtn", () => {
-            audio.ui("back");
-            game.goHome();
-          });
           on("retryBtn", () => {
             audio.ui("tap");
             game.enterReady();
           });
-          on("homeBtn", () => {
-            audio.ui("back");
-            game.goHome();
-          });
-          on("helpBtn", () => {
-            audio.ui("tap");
-            this.toggleHelp(true);
-          });
-          on("helpCloseBtn", () => {
-            audio.ui("back");
-            this.toggleHelp(false);
-          });
-          on("soundBtn", () => {
-            const next = !Store.get("sound");
-            Store.set("sound", next);
-            audio.setEnabled(next);
-            this._syncSoundBtn();
-            if (next) audio.ui("tap");
-          });
-          on("qualityBtn", () => {
-            const order = ["auto", "high", "medium", "low"];
-            const next = order[(order.indexOf(Store.get("quality")) + 1) % order.length];
-            game.setQuality(next);
-            this._syncQualityBtn();
-            audio.ui("tap");
-          });
-        }
-        _syncSoundBtn() {
-          const on = Store.get("sound");
-          this.el.soundBtn.classList.toggle("muted", !on);
-          this.el.soundLabel.textContent = on ? "SOUND" : "MUTED";
-        }
-        _syncQualityBtn() {
-          this.el.qualityLabel.textContent = String(Store.get("quality")).toUpperCase();
         }
         /* ---------------------------------------------------------------- *
          * layers
          * ---------------------------------------------------------------- */
         _only(...names) {
           for (const l of this.layers) {
-            if (l === "help" && this.helpOpen) continue;
             this.el[l].classList.toggle("on", names.includes(l));
           }
         }
@@ -1503,31 +1223,23 @@ svg { width: 100%; height: 100%; fill: currentColor; display: block; }
           const r = parseInt(rgb.slice(0, 2), 16), g = parseInt(rgb.slice(2, 4), 16), b = parseInt(rgb.slice(4, 6), 16);
           this.el.root.style.setProperty("--accent-soft", `rgba(${r},${g},${b},0.36)`);
         }
-        showHome(best, first) {
-          this._only("home");
-          const all = Store.all();
-          this.el.hBest.textContent = best;
-          this.el.hGames.textContent = all.games || 0;
-          this.el.hFlaps.textContent = all.flaps || 0;
-          if (first && !Store.get("seenHint")) {
-            Store.set("seenHint", true);
-          }
-        }
-        showReady() {
-          this._only("hud", "ready");
+        showReady(best) {
+          this._only("hud");
           this.el.hud.classList.remove("dim");
+          this.el.hud.classList.add("waiting");
           this.setScore(0, true);
-          this.el.bestVal.textContent = Store.get("best") || 0;
+          this.el.bestVal.textContent = best;
         }
         showHud(score, best) {
           this._only("hud");
           this.el.hud.classList.remove("dim");
+          this.el.hud.classList.remove("waiting");
           this.setScore(score, true);
           this.el.bestVal.textContent = best;
         }
         showPreview() {
           this._only();
-          this.el.hud.classList.remove("dim");
+          this.el.hud.classList.remove("dim", "waiting");
         }
         setPreviewMode(enabled) {
           this.previewMode = enabled;
@@ -1539,6 +1251,7 @@ svg { width: 100%; height: 100%; fill: currentColor; display: block; }
         }
         showGameOver(score, best, isBest) {
           this._only("hud", "over");
+          this.el.hud.classList.remove("waiting");
           this.el.hud.classList.add("dim");
           this.el.overScore.textContent = score;
           this.el.overBest.textContent = best;
@@ -1555,15 +1268,6 @@ svg { width: 100%; height: 100%; fill: currentColor; display: block; }
         hidePause() {
           this._only("hud");
           this.el.hud.classList.remove("dim");
-        }
-        toggleHelp(open) {
-          this.helpOpen = open;
-          this.el.home.inert = open;
-          this.el.home.setAttribute("aria-hidden", open ? "true" : "false");
-          this.el.help.classList.toggle("on", open);
-          this.el.help.setAttribute("aria-hidden", open ? "false" : "true");
-          if (open) $("helpCloseBtn").focus({ preventScroll: true });
-          else $("helpBtn").focus({ preventScroll: true });
         }
         /* ---------------------------------------------------------------- *
          * transient feedback
@@ -1621,8 +1325,6 @@ svg { width: 100%; height: 100%; fill: currentColor; display: block; }
             [{ opacity: 0 }, { opacity: 0.4, offset: 0.1 }, { opacity: 0 }],
             { duration: 340, easing: "ease-out" }
           );
-        }
-        pulseHint() {
         }
         previewTap() {
           if (!this.previewMode) return;
@@ -3833,6 +3535,7 @@ draws ${g.drawCalls || 0}`;
           this.lastGateX = 0;
           this.spawned = 0;
           this.twinPending = 0;
+          this.passedShards = 0;
           this.accent = 16739133;
         }
         setSeed(seed) {
@@ -3855,6 +3558,7 @@ draws ${g.drawCalls || 0}`;
           this.lastGateX = firstX;
           this.spawned = 0;
           this.twinPending = 0;
+          this.passedShards = 0;
           this.time = 0;
         }
         /* ---------------------------------------------------------------- *
@@ -3902,14 +3606,14 @@ draws ${g.drawCalls || 0}`;
             const maxDelta = isTwin ? CFG.twinMaxDelta : 3 + t * 2.2;
             const lo = Math.max(CFG.gapMinY, this.lastGapY - maxDelta);
             const hi = Math.min(CFG.gapMaxY, this.lastGapY + maxDelta);
-            let gy = rand(this.rng, lo, hi);
-            if (!isTwin && Math.abs(gy - this.lastGapY) < 1.1) {
+            let gy = this.spawned === 0 ? CFG.camCenterY : rand(this.rng, lo, hi);
+            if (this.spawned > 0 && !isTwin && Math.abs(gy - this.lastGapY) < 1.1) {
               gy += (this.rng() < 0.5 ? -1 : 1) * 1.4;
               gy = clamp(gy, CFG.gapMinY, CFG.gapMaxY);
             }
             let variant = isTwin ? V_PLAIN : this._pickVariant(score, t);
             let amp = 0, rate = rand(this.rng, 0.6, 1), stagger = 0;
-            let gap = baseGap;
+            let gap = this.spawned === 0 ? baseGap + 1.6 : baseGap;
             if (variant === V_MOVER) {
               amp = rand(this.rng, 0.55, 0.9) + t * 0.7;
               const room = Math.min(gy - CFG.gapMinY, CFG.gapMaxY - gy);
@@ -3960,7 +3664,9 @@ draws ${g.drawCalls || 0}`;
           }
           for (const s of this.shards) {
             if (!s.active) continue;
+            const previousX = s.x;
             s.x -= dx;
+            if (previousX > 0 && s.x <= 0) this.passedShards++;
             if (s.x < -14) {
               s.retire();
               continue;
@@ -4092,6 +3798,12 @@ draws ${g.drawCalls || 0}`;
             }
           }
           return null;
+        }
+        /** Whether the player just crossed a live shard without colliding with it. */
+        takePassedShard() {
+          if (this.passedShards <= 0) return false;
+          this.passedShards--;
+          return true;
         }
       };
     }
@@ -5499,7 +5211,7 @@ draws ${g.drawCalls || 0}`;
       init_postfx();
       init_audio();
       init_storage();
-      STATE = { BOOT: "boot", HOME: "home", READY: "ready", PLAY: "play", DYING: "dying", DEAD: "dead", PAUSED: "paused" };
+      STATE = { BOOT: "boot", READY: "ready", PLAY: "play", DYING: "dying", DEAD: "dead", PAUSED: "paused" };
       _v = new THREE.Vector3();
       _sep = { x: 0, y: 0 };
       RENDER_SCALE_MIN = 0.55;
@@ -5554,6 +5266,9 @@ draws ${g.drawCalls || 0}`;
           this.homeTime = 0;
           this.lastNearMissGate = null;
           this.bounced = false;
+          this.previewPresentation = false;
+          this.captureAutopilot = false;
+          this._achievementUnlocks = /* @__PURE__ */ new Set();
           this._cx = new Float64Array(8);
           this._cy = new Float64Array(8);
           this.governor = new ResolutionGovernor(RENDER_SCALE_MIN, RENDER_SCALE_MAX);
@@ -5565,7 +5280,7 @@ draws ${g.drawCalls || 0}`;
           window.addEventListener("resize", this._resizeBound);
           window.addEventListener("orientationchange", this._resizeBound);
           this.resize();
-          this.enterHome(true);
+          this.enterReady();
         }
         _resolveQuality(name) {
           if (name === "high" || name === "medium" || name === "low") return { ...QUALITY[name] };
@@ -5625,29 +5340,6 @@ draws ${g.drawCalls || 0}`;
         /* ================================================================ *
          * state transitions
          * ================================================================ */
-        enterHome(first = false) {
-          this.state = STATE.HOME;
-          this.score = 0;
-          this.speed = 3.4;
-          this.homeTime = 0;
-          this.trauma = 0;
-          this.timeScale = 1;
-          this.timeScaleTarget = 1;
-          this.camDollyExtra = 0;
-          this.world.setBiome(0);
-          this.gates.reset(140);
-          this.flyer.reset(CFG.camCenterY);
-          this.flyer.setPalette(BIOMES[0]);
-          this.particles.clear();
-          this.post.desat = 0;
-          this.post.exposure = 0.98;
-          this._syncLook();
-          this.ui.setAccent(BIOMES[0].ui);
-          this.previewPresentation = false;
-          this.ui.setPreviewMode(false);
-          this.ui.showHome(this.best, first);
-          this.captureAutopilot = false;
-        }
         enterReady() {
           this.state = STATE.READY;
           this.score = 0;
@@ -5660,8 +5352,7 @@ draws ${g.drawCalls || 0}`;
           this.timeScale = 1;
           this.timeScaleTarget = 1;
           this.world.setBiome(0);
-          this.gates.reset(40);
-          this.gates.ensureAhead(0);
+          this.gates.reset(32);
           this.flyer.reset(CFG.camCenterY);
           this.flyer.setPalette(BIOMES[0]);
           this.particles.clear();
@@ -5671,14 +5362,16 @@ draws ${g.drawCalls || 0}`;
           this._syncLook();
           this.ui.setAccent(BIOMES[0].ui);
           if (this.previewPresentation) this.ui.showPreview();
-          else this.ui.showReady();
+          else this.ui.showReady(this.best);
         }
         start() {
+          this.gates.reset(32);
+          this.gates.ensureAhead(0);
           this.state = STATE.PLAY;
           if (this.previewPresentation) this.ui.showPreview();
           else this.ui.showHud(this.score, this.best);
           this.thrust(true);
-          void sdk2.achievements.unlock("first-flight").catch((error) => console.info("[flighty-saucer] achievement unavailable in this session", error));
+          this._unlockAchievement("first-flight");
         }
         prepareListingScene(options = {}) {
           this.previewPresentation = true;
@@ -5688,9 +5381,32 @@ draws ${g.drawCalls || 0}`;
           this.enterReady();
           this.start();
         }
+        preparePlayerScene() {
+          this.previewPresentation = false;
+          this.captureAutopilot = false;
+          this.ui.setPreviewMode(false);
+          this.gates.setSeed(Math.random() * 1e9 | 0);
+          this.best = Store.get("best") || 0;
+          this.enterReady();
+        }
         rearmPreviewGuideForAudioCapture() {
           if (!this.previewPresentation) return;
           this.ui.setPreviewMode(true);
+        }
+        get persistenceEnabled() {
+          return !this.previewPresentation;
+        }
+        _unlockAchievement(key) {
+          if (!this.persistenceEnabled || this._achievementUnlocks.has(key)) return;
+          this._achievementUnlocks.add(key);
+          void sdk2.achievements.unlock(key).catch((error) => {
+            this._achievementUnlocks.delete(key);
+            console.info("[flighty-saucer] achievement unavailable in this session", error);
+          });
+        }
+        _setAchievementProgress(key, progress) {
+          if (!this.persistenceEnabled) return;
+          void sdk2.achievements.setProgressAtLeast(key, progress).catch((error) => console.info("[flighty-saucer] achievement progress unavailable in this session", error));
         }
         thrust(first = false) {
           const b = this.flyer;
@@ -5700,8 +5416,10 @@ draws ${g.drawCalls || 0}`;
           this.trauma = Math.min(1, this.trauma + 0.045);
           this.particles.thrustPuff(0, b.y, 0, this.world.pal.cur.trail);
           audio.flap(first ? 1.15 : 1);
-          Store.bump("flaps");
-          if (Store.get("haptics") && navigator.vibrate) navigator.vibrate(8);
+          if (this.persistenceEnabled) {
+            Store.bump("flaps");
+            if (Store.get("haptics") && navigator.vibrate) navigator.vibrate(8);
+          }
           if (this.previewPresentation && this.captureAutopilot) {
             this.ui.previewTap();
           }
@@ -5710,10 +5428,6 @@ draws ${g.drawCalls || 0}`;
         tap() {
           audio.unlock();
           switch (this.state) {
-            case STATE.HOME:
-              this.enterReady();
-              this.ui.pulseHint();
-              break;
             case STATE.READY:
               this.start();
               break;
@@ -5730,17 +5444,6 @@ draws ${g.drawCalls || 0}`;
               break;
             default:
               break;
-          }
-        }
-        togglePause() {
-          if (this.state === STATE.PLAY) {
-            this.state = STATE.PAUSED;
-            this.post.desat = 0.55;
-            this.post.exposure = 0.66;
-            this.ui.showPause();
-            audio.ui("back");
-          } else if (this.state === STATE.PAUSED) {
-            this.resume();
           }
         }
         resume() {
@@ -5773,12 +5476,6 @@ draws ${g.drawCalls || 0}`;
           this.ui.hidePause();
           this.enterReady();
         }
-        goHome() {
-          this.post.desat = 0;
-          this.post.exposure = 0.98;
-          this.ui.hidePause();
-          this.enterHome();
-        }
         die(cause) {
           if (this.state !== STATE.PLAY) return;
           this.state = STATE.DYING;
@@ -5796,16 +5493,19 @@ draws ${g.drawCalls || 0}`;
           this.flyer.vy = Math.max(this.flyer.vy, 3.2);
           this.flyer.vx = cause === "floor" ? -1.2 : -3.4;
           this.wreckHits = 0;
-          Store.bump("games");
-          Store.bump("totalScore", this.score);
-          const isBest = this.score > this.best;
-          if (isBest) {
-            this.best = this.score;
-            Store.set("best", this.best);
+          let isBest = false;
+          if (this.persistenceEnabled) {
+            Store.bump("games");
+            Store.bump("totalScore", this.score);
+            isBest = this.score > this.best;
+            if (isBest) {
+              this.best = this.score;
+              Store.set("best", this.best);
+            }
+            void sdk2.leaderboards.submitScore("high-score", this.score).catch((error) => console.info("[flighty-saucer] leaderboard unavailable in this session", error));
+            if (Store.get("haptics") && navigator.vibrate) navigator.vibrate([18, 40, 22]);
           }
           this.pendingBest = isBest;
-          void sdk2.leaderboards.submitScore("high-score", this.score).catch((error) => console.info("[flighty-saucer] leaderboard unavailable in this session", error));
-          if (Store.get("haptics") && navigator.vibrate) navigator.vibrate([18, 40, 22]);
         }
         /** Push the live (cross-faded) palette into everything the World doesn't own. */
         _syncLook() {
@@ -5924,7 +5624,9 @@ draws ${g.drawCalls || 0}`;
           const g = this.gates.takeScore();
           if (!g) return;
           this.score++;
-          void sdk2.achievements.setProgressAtLeast("gate-runner", this.score).catch((error) => console.info("[flighty-saucer] achievement progress unavailable in this session", error));
+          this._setAchievementProgress("gate-runner", this.score);
+          if (this.score === 50) this._unlockAchievement("ace-pilot");
+          if (this.score === 100) this._unlockAchievement("saucer-legend");
           const pal = this.world.pal.cur;
           this.particles.scoreBurst(0, g.gapY, 0, pal.gateAccent);
           audio.score(this.score);
@@ -5944,6 +5646,7 @@ draws ${g.drawCalls || 0}`;
             this.world.setBiome(bi);
             audio.biomeShift();
             this.ui.biomeToast(BIOMES[bi].name);
+            if (bi === 4) this._unlockAchievement("world-hopper");
           }
         }
         _nearMiss() {
@@ -5954,6 +5657,7 @@ draws ${g.drawCalls || 0}`;
           this.trauma = Math.min(1, this.trauma + 0.07);
           this.fovPunch = Math.min(2, this.fovPunch + 0.5);
           this.ui.nearMiss();
+          this._unlockAchievement("close-call");
         }
         /* ================================================================ *
          * per-frame
@@ -5981,8 +5685,7 @@ draws ${g.drawCalls || 0}`;
             if (this.flyer.y < targetY - 0.2 && this.flyer.vy < 2.5) this.thrust();
           }
           let targetSpeed;
-          if (st === STATE.HOME) targetSpeed = 3.4;
-          else if (st === STATE.READY) targetSpeed = 4.6;
+          if (st === STATE.READY) targetSpeed = 4.6;
           else if (playing) targetSpeed = lerp(CFG.speedStart, CFG.speedEnd, rampT(this.score));
           else if (st === STATE.DYING || st === STATE.DEAD) targetSpeed = 0;
           else targetSpeed = this.speed;
@@ -6021,36 +5724,24 @@ draws ${g.drawCalls || 0}`;
             b.vy = Math.cos(this.homeTime * 2.1) * 0.6;
             b.renderY = b.y;
             this.homeTime += sdt;
-          } else if (st === STATE.HOME) {
-            const b = this.flyer;
-            this.homeTime += sdt;
-            b.y = CFG.camCenterY + Math.sin(this.homeTime * 1.35) * 0.55;
-            b.vy = Math.cos(this.homeTime * 1.35) * 0.7;
-            b.renderY = b.y;
-            if (Math.random() < sdt * 0.85) {
-              b.thrust();
-              this.particles.thrustPuff(0, b.y, 0, this.world.pal.cur.trail);
-            }
           }
           if (!paused) {
             const speed01 = clamp01((this.speed - CFG.speedStart * 0.5) / (CFG.speedEnd - CFG.speedStart * 0.5));
             if (this.world.update(sdt, dx)) this._syncLook();
-            this.gates.update(sdt, dx, this.score);
+            if (st !== STATE.READY) this.gates.update(sdt, dx, this.score);
+            if (this.state === STATE.PLAY && this.gates.takePassedShard()) {
+              this._unlockAchievement("crystal-dodger");
+            }
             this.flyer.shift(dx);
             this.particles.shift(dx);
-            this.flyer.update(sdt, speed01, playing || st === STATE.READY || st === STATE.HOME ? 1 : 0);
+            this.flyer.update(sdt, speed01, playing || st === STATE.READY ? 1 : 0);
             this.particles.update(sdt);
             this.sky.update(sdt, this.camera);
             if (playing && Math.random() < sdt * (6 + speed01 * 12)) {
               this.flyer.tailPoint(_v);
               this.particles.trailSpark(_v.x, _v.y, _v.z, this.world.pal.cur.trail);
             }
-            audio.setAmbience(
-              st === STATE.HOME ? 0.55 : 1,
-              speed01,
-              this.world.pal.chord,
-              this.world.pal.cur.pad
-            );
+            audio.setAmbience(1, speed01, this.world.pal.chord, this.world.pal.cur.pad);
           }
           this._camera(Math.min(rawDt, 0.05), st);
           this.post.setTrauma(this.trauma * this.trauma * this.shakeMul);
@@ -6062,25 +5753,22 @@ draws ${g.drawCalls || 0}`;
         _camera(dt, st) {
           const b = this.flyer;
           let targetY;
-          if (st === STATE.HOME) {
-            targetY = CFG.camCenterY + Math.sin(this.homeTime * 0.55) * 0.7;
-          } else if (st === STATE.DYING || st === STATE.DEAD) {
+          if (st === STATE.DYING || st === STATE.DEAD) {
             targetY = lerp(CFG.camCenterY, Math.max(b.y, CFG.groundY + 1.6), 0.7);
           } else {
             targetY = lerp(CFG.camCenterY, b.y, CFG.camFollow) + clamp(b.vy * 0.035, -0.5, 0.5);
           }
           this.camY = damp(this.camY, targetY, CFG.camDamp, dt);
-          const dollyTarget = st === STATE.DYING || st === STATE.DEAD ? 2.4 : st === STATE.HOME ? 1.2 : clamp01((this.speed - CFG.speedStart) / 7) * 1.1;
+          const dollyTarget = st === STATE.DYING || st === STATE.DEAD ? 2.4 : clamp01((this.speed - CFG.speedStart) / 7) * 1.1;
           this.camDollyExtra = damp(this.camDollyExtra, dollyTarget, 2.2, dt);
           const sh = this.trauma * this.trauma * this.shakeMul;
           const t = performance.now() * 1e-3;
           const sx = (Math.sin(t * 47.3) + Math.sin(t * 31.7) * 0.6) * 0.3 * sh;
           const sy = (Math.sin(t * 41.1) + Math.sin(t * 26.3) * 0.6) * 0.3 * sh;
-          const homeDrift = st === STATE.HOME ? Math.sin(this.homeTime * 0.4) * 1.1 : 0;
           this.camera.position.set(
-            this.camXPos + sx + homeDrift * 0.35,
+            this.camXPos + sx,
             this.camY + sy,
-            this.camDist + this.camDollyExtra + homeDrift
+            this.camDist + this.camDollyExtra
           );
           this.camera.lookAt(this.lookX, this.camY + 0.55, 0);
           this.camRoll = damp(this.camRoll, clamp(-b.vy * 4e-3, -0.05, 0.05) + sh * 0.05, 5, dt);
@@ -6140,7 +5828,6 @@ draws ${g.drawCalls || 0}`;
     const tap = () => game.tap();
     window.addEventListener("pointerdown", (e) => {
       if (e.button !== void 0 && e.button !== 0) return;
-      if (ui.helpOpen) return;
       tap();
     }, { passive: true });
     window.addEventListener("keydown", (e) => {
@@ -6151,16 +5838,10 @@ draws ${g.drawCalls || 0}`;
         case "KeyW":
         case "Enter":
           e.preventDefault();
-          if (!ui.helpOpen) tap();
-          break;
-        case "Escape":
-        case "KeyP":
-          e.preventDefault();
-          if (ui.helpOpen) ui.toggleHelp(false);
-          else game.togglePause();
+          tap();
           break;
         case "KeyR":
-          if (game.state !== STATE.HOME && game.state !== STATE.BOOT) {
+          if (game.state !== STATE.BOOT) {
             audio.unlock();
             game.restart();
           }
@@ -6168,13 +5849,6 @@ draws ${g.drawCalls || 0}`;
         case "KeyF":
           ui.togglePerf();
           break;
-        case "KeyM": {
-          const next = !Store.get("sound");
-          Store.set("sound", next);
-          audio.setEnabled(next);
-          ui._syncSoundBtn();
-          break;
-        }
         default:
           break;
       }
@@ -6185,7 +5859,7 @@ draws ${g.drawCalls || 0}`;
     window.addEventListener("contextmenu", (e) => e.preventDefault());
     document.addEventListener("gesturestart", (e) => e.preventDefault());
     window.addEventListener("pagehide", () => {
-      void Store.flushNow();
+      if (game.persistenceEnabled) void Store.flushNow();
     });
     let lostAt = 0;
     const recoveryOverlay = document.getElementById("boot");
@@ -6254,7 +5928,7 @@ draws ${g.drawCalls || 0}`;
     };
     sdk2.host.onPhaseChange((phase) => {
       if (phase === "preview") void prepareListingScene();
-      else if (game.state !== STATE.HOME) game.goHome();
+      else if (game.previewPresentation) game.preparePlayerScene();
     });
     if (sdk2.host.phase === "preview") await prepareListingScene();
     game.frame(1 / 60);
@@ -6266,7 +5940,10 @@ draws ${g.drawCalls || 0}`;
       coordinateSystem: "world x increases toward incoming gates; y increases upward",
       state: game.state,
       preview: game.previewPresentation,
+      persistenceEnabled: game.persistenceEnabled,
+      waitingForInput: game.state === STATE.READY,
       score: game.score,
+      best: game.best,
       speed: Number(game.speed.toFixed(2)),
       flyer: {
         y: Number(game.flyer.y.toFixed(2)),

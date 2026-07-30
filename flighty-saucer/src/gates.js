@@ -324,6 +324,7 @@ export class GateField {
     this.lastGateX = 0;
     this.spawned = 0;
     this.twinPending = 0;
+    this.passedShards = 0;
     this.accent = 0xff6b3d;
   }
 
@@ -349,6 +350,7 @@ export class GateField {
     this.lastGateX = firstX;
     this.spawned = 0;
     this.twinPending = 0;
+    this.passedShards = 0;
     this.time = 0;
   }
 
@@ -406,8 +408,11 @@ export class GateField {
       const maxDelta = isTwin ? CFG.twinMaxDelta : 3.0 + t * 2.2;
       const lo = Math.max(CFG.gapMinY, this.lastGapY - maxDelta);
       const hi = Math.min(CFG.gapMaxY, this.lastGapY + maxDelta);
-      let gy = rand(this.rng, lo, hi);
-      if (!isTwin && Math.abs(gy - this.lastGapY) < 1.1) {
+      // The first gate is a fair calibration beat at the launch height. Later
+      // gates introduce vertical route changes once the player has established
+      // the tap rhythm.
+      let gy = this.spawned === 0 ? CFG.camCenterY : rand(this.rng, lo, hi);
+      if (this.spawned > 0 && !isTwin && Math.abs(gy - this.lastGapY) < 1.1) {
         gy += (this.rng() < 0.5 ? -1 : 1) * 1.4;
         gy = clamp(gy, CFG.gapMinY, CFG.gapMaxY);
       }
@@ -415,7 +420,7 @@ export class GateField {
       // twins are plain: two variants back to back would be unreadable
       let variant = isTwin ? V_PLAIN : this._pickVariant(score, t);
       let amp = 0, rate = rand(this.rng, 0.6, 1.0), stagger = 0;
-      let gap = baseGap;
+      let gap = this.spawned === 0 ? baseGap + 1.6 : baseGap;
 
       if (variant === V_MOVER) {
         amp = rand(this.rng, 0.55, 0.9) + t * 0.7;
@@ -472,7 +477,9 @@ export class GateField {
     }
     for (const s of this.shards) {
       if (!s.active) continue;
+      const previousX = s.x;
       s.x -= dx;
+      if (previousX > 0 && s.x <= 0) this.passedShards++;
       if (s.x < -14) { s.retire(); continue; }
       s.animate(this.time);
     }
@@ -607,5 +614,12 @@ export class GateField {
       }
     }
     return null;
+  }
+
+  /** Whether the player just crossed a live shard without colliding with it. */
+  takePassedShard() {
+    if (this.passedShards <= 0) return false;
+    this.passedShards--;
+    return true;
   }
 }

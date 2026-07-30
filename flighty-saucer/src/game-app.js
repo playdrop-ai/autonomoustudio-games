@@ -54,7 +54,6 @@ export async function boot() {
 
   window.addEventListener('pointerdown', (e) => {
     if (e.button !== undefined && e.button !== 0) return;
-    if (ui.helpOpen) return;
     tap();
   }, { passive: true });
 
@@ -66,16 +65,10 @@ export async function boot() {
       case 'KeyW':
       case 'Enter':
         e.preventDefault();
-        if (!ui.helpOpen) tap();
-        break;
-      case 'Escape':
-      case 'KeyP':
-        e.preventDefault();
-        if (ui.helpOpen) ui.toggleHelp(false);
-        else game.togglePause();
+        tap();
         break;
       case 'KeyR':
-        if (game.state !== STATE.HOME && game.state !== STATE.BOOT) {
+        if (game.state !== STATE.BOOT) {
           audio.unlock();
           game.restart();
         }
@@ -83,13 +76,6 @@ export async function boot() {
       case 'KeyF':
         ui.togglePerf();
         break;
-      case 'KeyM': {
-        const next = !Store.get('sound');
-        Store.set('sound', next);
-        audio.setEnabled(next);
-        ui._syncSoundBtn();
-        break;
-      }
       default: break;
     }
   });
@@ -100,7 +86,9 @@ export async function boot() {
   }
   window.addEventListener('contextmenu', (e) => e.preventDefault());
   document.addEventListener('gesturestart', (e) => e.preventDefault());
-  window.addEventListener('pagehide', () => { void Store.flushNow(); });
+  window.addEventListener('pagehide', () => {
+    if (game.persistenceEnabled) void Store.flushNow();
+  });
 
   /*
    * iOS jettisons the GPU process when Safari backgrounds a tab, and often never
@@ -180,11 +168,11 @@ export async function boot() {
 
   sdk.host.onPhaseChange((phase) => {
     if (phase === 'preview') void prepareListingScene();
-    else if (game.state !== STATE.HOME) game.goHome();
+    else if (game.previewPresentation) game.preparePlayerScene();
   });
   if (sdk.host.phase === 'preview') await prepareListingScene();
 
-  // Draw the designed home scene before telling the PlayDrop host it is ready.
+  // Draw the waiting gameplay scene before telling the PlayDrop host it is ready.
   game.frame(1 / 60);
   ui.setBootNote('ready');
   requestAnimationFrame(tick);
@@ -197,7 +185,10 @@ export async function boot() {
     coordinateSystem: 'world x increases toward incoming gates; y increases upward',
     state: game.state,
     preview: game.previewPresentation,
+    persistenceEnabled: game.persistenceEnabled,
+    waitingForInput: game.state === STATE.READY,
     score: game.score,
+    best: game.best,
     speed: Number(game.speed.toFixed(2)),
     flyer: {
       y: Number(game.flyer.y.toFixed(2)),

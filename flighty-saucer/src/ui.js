@@ -5,7 +5,6 @@
  * Animations use the Web Animations API so a re-trigger never needs a class
  * dance or a forced reflow.
  */
-import { Store } from './storage.js';
 import { audio } from './audio.js';
 
 const MEDALS = [
@@ -21,10 +20,8 @@ const $ = (id) => document.getElementById(id);
 export class UI {
   constructor() {
     this.el = {
-      hud: $('hud'), home: $('home'), ready: $('ready'), over: $('over'),
-      pause: $('pause'), help: $('help'),
+      hud: $('hud'), over: $('over'), pause: $('pause'),
       score: $('score'), bestVal: $('bestVal'),
-      hBest: $('hBest'), hGames: $('hGames'), hFlaps: $('hFlaps'),
       biome: $('biomeToast'), biomeText: $('biomeToast').querySelector('span'),
       milestone: $('milestone'),
       msNum: $('milestone').querySelector('b'),
@@ -36,19 +33,14 @@ export class UI {
       previewGuide: $('previewGuide'),
       previewTapHand: $('previewTapHand'),
       previewTapRing: $('previewTapRing'),
-      soundBtn: $('soundBtn'), soundLabel: $('soundLabel'),
-      qualityBtn: $('qualityBtn'), qualityLabel: $('qualityLabel'),
       boot: $('boot'), bootNote: $('bootNote'), perf: $('perf'),
       root: document.documentElement,
     };
-    this.layers = ['hud', 'home', 'ready', 'over', 'pause', 'help'];
-    this.helpOpen = false;
+    this.layers = ['hud', 'over', 'pause'];
     this.previewMode = false;
     this._previewTapCount = 0;
     this._lastScore = -1;
     this._reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    this._syncSoundBtn();
-    this._syncQualityBtn();
   }
 
   /* ---------------------------------------------------------------- *
@@ -68,39 +60,7 @@ export class UI {
       });
     };
 
-    on('playBtn', () => { audio.ui('tap'); game.tap(); });
-    on('pauseBtn', () => game.togglePause());
-    on('resumeBtn', () => game.resume());
-    on('restartBtn', () => { audio.ui('tap'); game.restart(); });
-    on('quitBtn', () => { audio.ui('back'); game.goHome(); });
     on('retryBtn', () => { audio.ui('tap'); game.enterReady(); });
-    on('homeBtn', () => { audio.ui('back'); game.goHome(); });
-    on('helpBtn', () => { audio.ui('tap'); this.toggleHelp(true); });
-    on('helpCloseBtn', () => { audio.ui('back'); this.toggleHelp(false); });
-    on('soundBtn', () => {
-      const next = !Store.get('sound');
-      Store.set('sound', next);
-      audio.setEnabled(next);
-      this._syncSoundBtn();
-      if (next) audio.ui('tap');
-    });
-    on('qualityBtn', () => {
-      const order = ['auto', 'high', 'medium', 'low'];
-      const next = order[(order.indexOf(Store.get('quality')) + 1) % order.length];
-      game.setQuality(next);
-      this._syncQualityBtn();
-      audio.ui('tap');
-    });
-  }
-
-  _syncSoundBtn() {
-    const on = Store.get('sound');
-    this.el.soundBtn.classList.toggle('muted', !on);
-    this.el.soundLabel.textContent = on ? 'SOUND' : 'MUTED';
-  }
-
-  _syncQualityBtn() {
-    this.el.qualityLabel.textContent = String(Store.get('quality')).toUpperCase();
   }
 
   /* ---------------------------------------------------------------- *
@@ -108,7 +68,6 @@ export class UI {
    * ---------------------------------------------------------------- */
   _only(...names) {
     for (const l of this.layers) {
-      if (l === 'help' && this.helpOpen) continue;
       this.el[l].classList.toggle('on', names.includes(l));
     }
   }
@@ -129,34 +88,25 @@ export class UI {
     this.el.root.style.setProperty('--accent-soft', `rgba(${r},${g},${b},0.36)`);
   }
 
-  showHome(best, first) {
-    this._only('home');
-    const all = Store.all();
-    this.el.hBest.textContent = best;
-    this.el.hGames.textContent = all.games || 0;
-    this.el.hFlaps.textContent = all.flaps || 0;
-    if (first && !Store.get('seenHint')) {
-      Store.set('seenHint', true);
-    }
-  }
-
-  showReady() {
-    this._only('hud', 'ready');
+  showReady(best) {
+    this._only('hud');
     this.el.hud.classList.remove('dim');
+    this.el.hud.classList.add('waiting');
     this.setScore(0, true);
-    this.el.bestVal.textContent = Store.get('best') || 0;
+    this.el.bestVal.textContent = best;
   }
 
   showHud(score, best) {
     this._only('hud');
     this.el.hud.classList.remove('dim');
+    this.el.hud.classList.remove('waiting');
     this.setScore(score, true);
     this.el.bestVal.textContent = best;
   }
 
   showPreview() {
     this._only();
-    this.el.hud.classList.remove('dim');
+    this.el.hud.classList.remove('dim', 'waiting');
   }
 
   setPreviewMode(enabled) {
@@ -170,6 +120,7 @@ export class UI {
 
   showGameOver(score, best, isBest) {
     this._only('hud', 'over');
+    this.el.hud.classList.remove('waiting');
     this.el.hud.classList.add('dim');
     this.el.overScore.textContent = score;
     this.el.overBest.textContent = best;
@@ -182,16 +133,6 @@ export class UI {
 
   showPause() { this._only('hud', 'pause'); this.el.hud.classList.add('dim'); }
   hidePause() { this._only('hud'); this.el.hud.classList.remove('dim'); }
-
-  toggleHelp(open) {
-    this.helpOpen = open;
-    this.el.home.inert = open;
-    this.el.home.setAttribute('aria-hidden', open ? 'true' : 'false');
-    this.el.help.classList.toggle('on', open);
-    this.el.help.setAttribute('aria-hidden', open ? 'false' : 'true');
-    if (open) $('helpCloseBtn').focus({ preventScroll: true });
-    else $('helpBtn').focus({ preventScroll: true });
-  }
 
   /* ---------------------------------------------------------------- *
    * transient feedback
@@ -253,8 +194,6 @@ export class UI {
       { duration: 340, easing: 'ease-out' },
     );
   }
-
-  pulseHint() { /* reserved: the ready layer animates on its own */ }
 
   previewTap() {
     if (!this.previewMode) return;
