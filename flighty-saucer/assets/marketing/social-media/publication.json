@@ -1,0 +1,114 @@
+{
+  "version": 1,
+  "destinationUrl": "https://www.playdrop.ai/creators/autonomoustudio/apps/game/flighty-saucer",
+  "featuredPlacement": {
+    "status": "verified",
+    "environment": "prod",
+    "collectionSlug": "featured",
+    "position": 1,
+    "gameId": 1020,
+    "creatorUsername": "autonomoustudio",
+    "appName": "flighty-saucer",
+    "evidenceUrl": "https://api.playdrop.ai/home/games/collections/featured_games?limit=24&offset=0",
+    "ownerInstruction": "Put Flighty Saucer number 1 in the featured list before promoting it and override the automated LOW_QUALITY result.",
+    "verifiedAt": "2026-07-31T13:34:36Z"
+  },
+  "publications": [
+    {
+      "provider": "tiktok",
+      "format": "short_portrait",
+      "status": "published",
+      "account": "@playdropai",
+      "media": "assets/marketing/social-media/short/portrait-9x16.mp4",
+      "copy": "Every tap bumps the UFO up. Gravity pulls it back down. How far can you fly? Flighty Saucer is free in your browser, no download. #ArcadeGame #OneTapGame #MobileGaming #IndieGame",
+      "publicUrl": "https://www.tiktok.com/t/ZTAurVb7B/",
+      "publishedAt": "2026-07-31T13:50:54Z",
+      "followUpComment": {
+        "status": "published",
+        "copy": "Gates or crystal shards: what ends your run first? Find Flighty Saucer on playdrop.ai.",
+        "pinned": false,
+        "note": "TikTok did not offer a Pin action for the account's own comment."
+      },
+      "utm_source": "tiktok",
+      "utm_medium": "organic_social",
+      "utm_campaign": "flighty_saucer_launch",
+      "utm_content": "short",
+      "measurements": []
+    },
+    {
+      "provider": "instagram",
+      "format": "reel",
+      "status": "published",
+      "account": "@playdrop.ai",
+      "media": "assets/marketing/social-media/short/portrait-9x16.mp4",
+      "cover": "assets/marketing/social-media/instagram/reels-cover-420x654.png",
+      "copy": "One tap sends a tiny UFO upward. Gravity does the rest.\n\nThread monolith gates, dodge crystal surprises, cross five vivid worlds, and chase your best run as the pace keeps climbing.\n\nFlighty Saucer is free in your browser. No download.\n\n#ArcadeGame #OneTapGame #MobileGaming #IndieGame #CasualGames",
+      "publicUrl": "https://www.instagram.com/reel/Dbda_69ugq8/?igsh=aDFhMWo4cDZ4cHBn",
+      "publishedAt": "2026-07-31T14:02:42Z",
+      "linkIncluded": false,
+      "utm_source": "instagram",
+      "utm_medium": "organic_social",
+      "utm_campaign": "flighty_saucer_launch",
+      "utm_content": "reel",
+      "measurements": []
+    },
+    {
+      "provider": "instagram",
+      "format": "story",
+      "status": "published",
+      "account": "@playdrop.ai",
+      "media": "assets/marketing/social-media/short/portrait-9x16.mp4",
+      "publicUrl": null,
+      "publishedAt": "2026-07-31T14:07:38Z",
+      "linkIncluded": false,
+      "verification": "Verified in the official Instagram app as playdrop.ai's active story immediately after publishing.",
+      "measurements": []
+    },
+    {
+      "provider": "youtube",
+      "format": "short_portrait",
+      "status": "published",
+      "account": "@playdropai",
+      "media": "assets/marketing/social-media/short/portrait-9x16.mp4",
+      "title": "Every Tap Lifts the UFO | Flighty Saucer",
+      "description": "Tap to rise. Gravity pulls you back. Thread monolith gates, dodge crystal surprises, and chase your best run across five vivid skies. Flighty Saucer is free to play in your browser, no download. Watch the full trailer through the linked video. #ArcadeGame #OneTapGame #IndieGame",
+      "publicUrl": "https://youtube.com/shorts/q_r1HFm4JjA",
+      "publishedAt": "2026-07-31T14:24:19Z",
+      "pinnedComment": {
+        "status": "published",
+        "copy": "How many gates can you clear? Play Flighty Saucer free in your browser:\nhttps://www.playdrop.ai/creators/autonomoustudio/apps/game/flighty-saucer?utm_source=youtube&utm_medium=organic_social&utm_campaign=flighty_saucer_launch&utm_content=short_comment",
+        "pinned": true
+      },
+      "relatedVideo": "https://youtu.be/kIU2RCh17HI",
+      "utm_source": "youtube",
+      "utm_medium": "organic_social",
+      "utm_campaign": "flighty_saucer_launch",
+      "utm_content": "short_comment",
+      "measurements": []
+    },
+    {
+      "provider": "youtube",
+      "format": "trailer_landscape",
+      "status": "published",
+      "account": "@playdropai",
+      "media": "assets/marketing/social-media/trailer/landscape-16x9.mp4",
+      "thumbnail": "assets/marketing/social-media/youtube/trailer-thumbnail-1280x720.png",
+      "thumbnailStatus": "blocked_by_chrome_extension_file_url_permission",
+      "title": "Flighty Saucer: One-Tap UFO Arcade Game | Play Free Online",
+      "description": "Play free in your browser, no download:\nhttps://www.playdrop.ai/creators/autonomoustudio/apps/game/flighty-saucer?utm_source=youtube&utm_medium=organic_social&utm_campaign=flighty_saucer_launch&utm_content=trailer\n\nEvery tap bumps a tiny UFO upward. Gravity brings it back down. Thread shifting monolith gates, dodge crystal surprises, and stay airborne as five vivid low-poly environments roll beneath you.\n\nThe run keeps accelerating. Chase your saved high score and climb the leaderboard one gate at a time.\n\nWhat ends your run first: the gates or the crystal shards?\n\n#ArcadeGame #OneTapGame #IndieGame",
+      "tags": "Flighty Saucer, UFO game, one tap game, one touch game, arcade game, endless flying game, endless flyer, casual game, high score game, browser game, no download games, indie game, PlayDrop Games",
+      "publicUrl": "https://youtu.be/kIU2RCh17HI",
+      "publishedAt": "2026-07-31T14:39:48Z",
+      "pinnedComment": {
+        "status": "published",
+        "copy": "Play Flighty Saucer free in your browser, no download:\nhttps://www.playdrop.ai/creators/autonomoustudio/apps/game/flighty-saucer?utm_source=youtube&utm_medium=organic_social&utm_campaign=flighty_saucer_launch&utm_content=trailer_comment\n\nWhat ends your run first: the gates or the crystal shards?",
+        "pinned": true
+      },
+      "utm_source": "youtube",
+      "utm_medium": "organic_social",
+      "utm_campaign": "flighty_saucer_launch",
+      "utm_content": "trailer",
+      "measurements": []
+    }
+  ]
+}
