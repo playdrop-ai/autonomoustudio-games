@@ -1,6 +1,7 @@
 # Flighty Saucer social media package
 
-Status: prepared for owner review. Nothing in this directory authorizes publication.
+Status: the shared 9:16 short is owner approved. Nothing in this directory
+authorizes publication.
 
 Destination: https://www.playdrop.ai/creators/autonomoustudio/apps/game/flighty-saucer
 
@@ -18,7 +19,8 @@ This promise follows the current game exactly:
 
 ## Package inventory
 
-- `short/portrait-9x16.mp4`: shared 1080x1920 short for YouTube Shorts, TikTok, Instagram Reels, and Stories.
+- `short/portrait-9x16.mp4`: owner-approved shared 1080x1920 short for YouTube
+  Shorts, TikTok, Instagram Reels, and Instagram Stories.
 - `short/pinterest-2x3.mp4`: 1000x1500 Pinterest video Pin.
 - `trailer/landscape-16x9.mp4`: 1920x1080 YouTube trailer and X video.
 - `pinterest/static/`: five 1000x1500 image Pins in campaign story order.
@@ -33,7 +35,11 @@ This promise follows the current game exactly:
 
 ## Creative integrity
 
-The 9:16 short and 16:9 trailer are byte-for-byte copies of the approved Flighty Saucer marketing masters.
+The 9:16 short is a byte-for-byte copy of the approved Flighty Saucer
+casual-to-advanced v3 master. It shows calm early gameplay, then jumps into the
+same real run at score 30+, ends on a real score-32 crash, and fades to the
+protected hero. The 16:9 trailer remains a byte-for-byte copy of the approved
+v2 landscape master.
 
 Pinterest and Instagram video adaptations use:
 
@@ -46,10 +52,12 @@ The five 2:3 and five 3:4 static cards are ratio-native ImageGen recompositions 
 
 ## Publishing handoff
 
-After owner approval:
+Publishing remains a separate operator action:
 
 1. Publish the YouTube trailer first.
-2. Publish the YouTube Short and connect it to the trailer as the related video.
+2. Publish the registered YouTube Short and connect it to the trailer as the
+   related video. YouTube Stories are not a destination because that product
+   was retired.
 3. Publish TikTok with the approved pinned comment.
 4. Publish the Pinterest video Pin and five static Pins.
 5. Publish the X video, add the tracked first reply, and pin the post.

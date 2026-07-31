@@ -8,7 +8,7 @@ const socialDir = resolve(projectDir, '..');
 const gameDir = resolve(socialDir, '../../..');
 const portraitMaster = resolve(
   gameDir,
-  'assets/marketing/video-social-v2/final/flighty-saucer-social-short-portrait-9x16-en-US.mp4',
+  'assets/marketing/video-social-v3/final/flighty-saucer-social-short-portrait-9x16-en-US.mp4',
 );
 const landscapeMaster = resolve(
   gameDir,

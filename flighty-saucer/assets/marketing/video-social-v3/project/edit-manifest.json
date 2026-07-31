@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "locale": "en-US",
+  "destinations": [
+    "youtube-shorts",
+    "tiktok",
+    "instagram-reels",
+    "instagram-stories"
+  ],
+  "protectedAssets": {
+    "portraitHero": "assets/marketing/playdrop/hero-portrait-9x16-v3.png"
+  },
+  "forbiddenTreatments": [
+    "generated gameplay",
+    "cropping",
+    "nonuniform scaling",
+    "padding or gutters",
+    "caption overlays",
+    "CTA overlays",
+    "hero retouching or decoration",
+    "result screen"
+  ],
+  "source": {
+    "path": "assets/marketing/video-social-v3/source-captures/portrait-final/listing.mp4",
+    "dimensions": "540x960",
+    "durationSeconds": 47.383333,
+    "frameRate": 60,
+    "audio": "captured game audio, synchronized",
+    "run": "one continuous deterministic preview run ending at score 32"
+  },
+  "segments": [
+    {
+      "kind": "opening-identity",
+      "source": "protected hero",
+      "outputStartSeconds": 0,
+      "durationSeconds": 0.8,
+      "speed": 1,
+      "transitionOut": "0.2-second fade into casual gameplay",
+      "audio": "silent"
+    },
+    {
+      "kind": "casual-gameplay",
+      "sourceRangeSeconds": [0, 3.9],
+      "speed": 1,
+      "audio": "source"
+    },
+    {
+      "kind": "advanced-gameplay",
+      "sourceRangeSeconds": [20.65, 24.9],
+      "speed": 1,
+      "audio": "source"
+    },
+    {
+      "kind": "crash",
+      "sourceRangeSeconds": [24.9, 25.35],
+      "speed": 0.4587,
+      "videoSetptsMultiplier": 2.18,
+      "audioAtempo": [0.5, 0.917431],
+      "audio": "source, synchronized"
+    },
+    {
+      "kind": "closing-identity",
+      "source": "protected hero",
+      "durationSeconds": 1.5,
+      "transitionIn": "0.35-second fade from crash",
+      "audio": "silent"
+    }
+  ],
+  "interactionCue": {
+    "asset": "assets/ui/preview-tap-hand.png",
+    "source": "rendered live by the preview runtime",
+    "behavior": "every real thrust; fingertip anchored at the contact point"
+  },
+  "output": {
+    "path": "assets/marketing/video-social-v3/final/flighty-saucer-social-short-portrait-9x16-en-US.mp4",
+    "dimensions": "1080x1920",
+    "durationSeconds": 10.795,
+    "frameRate": 60,
+    "sampleAspectRatio": "1:1",
+    "videoCodec": "h264",
+    "audioCodec": "aac",
+    "audioSampleRate": 48000,
+    "audioChannels": 2,
+    "sha256": "85403456e0efe818d2c2e66a41cbdabbaa9d94c3d9e8fe71920624c5258f7737"
+  }
+}

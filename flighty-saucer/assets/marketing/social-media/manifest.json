@@ -3,8 +3,8 @@
   "game": "Flighty Saucer",
   "subtitle": "One tap. Tiny UFO. Infinite sky.",
   "approval": {
-    "status": "pending_owner_approval",
-    "scope": "Flighty Saucer organic launch package for YouTube, TikTok, Pinterest, X, and future Instagram use",
+    "status": "shared_short_owner_approved",
+    "scope": "The shared 9:16 short is approved for YouTube Shorts, TikTok, Instagram Reels, and Instagram Stories. Other package assets remain prepared for separate publication decisions.",
     "preparedAt": "2026-07-30"
   },
   "destinationUrl": "https://www.playdrop.ai/creators/autonomoustudio/apps/game/flighty-saucer",
@@ -25,18 +25,23 @@
   },
   "creativePolicy": {
     "gameplay": "Real HUD-free PlayDrop gameplay only, with the cartoon hand synchronized to every real upward tap.",
-    "videoIdentity": "Ratio-native approved hero art opens for 0.8 seconds and closes for 1.5 seconds.",
+    "videoIdentity": "Ratio-native approved hero art opens for 0.8 seconds. A real score-32 crash fades into the unchanged 1.5-second hero ending.",
     "staticArt": "Native 2:3 and 3:4 ImageGen recompositions based on the approved 9:16 and 16:9 masters.",
     "barsOrFiller": false
   },
   "videoRevision": {
-    "id": "social-launch-v1",
-    "durationSeconds": 11.8,
-    "playerSpeed": 1,
+    "id": "social-short-v2-casual-to-advanced",
+    "durationSeconds": 10.795,
+    "phaseSpeeds": {
+      "casualGameplay": 1,
+      "advancedGameplay": 1,
+      "crash": 0.4587
+    },
+    "lateGameScore": 32,
     "finishesOnHero": true,
     "cartoonHand": "synchronized_with_every_real_thrust",
     "mediaSha256": {
-      "short/portrait-9x16.mp4": "d78436ca384654936b1f4ca3a28d10a1dbb5bafc3efc38e3e2b217b2938718ad",
+      "short/portrait-9x16.mp4": "85403456e0efe818d2c2e66a41cbdabbaa9d94c3d9e8fe71920624c5258f7737",
       "short/pinterest-2x3.mp4": "62999eff9f35315fbef2e9081077f7ecabe124dde80edabc5fec8343932a1911",
       "trailer/landscape-16x9.mp4": "f34f13e7f9e054cc6e4e4a66afaf8bb248a704b2219fc6861b0d5cfd9f52e9fb",
       "instagram/feed/video-3x4.mp4": "ad97a3a1362df43a8d8a7214dd70a6b9d0ef513d9009ffd2a1d150e5de505b94"
@@ -61,7 +66,7 @@
     "pinnedComment": "Gates or crystal shards: what ends your run first? Find Flighty Saucer on playdrop.ai."
   },
   "instagram": {
-    "status": "excluded_disabled_account",
+    "status": "asset_registered_publish_blocked_disabled_account",
     "reelVideo": "short/portrait-9x16.mp4",
     "storyVideo": "short/portrait-9x16.mp4",
     "reelCover": "instagram/reels-cover-420x654.png",
