@@ -15,6 +15,7 @@ const buildOptions = {
   write: false,
   logLevel: 'silent',
   outfile: 'bundle.js',
+  loader: { '.png': 'dataurl' },
   plugins: [],
 };
 

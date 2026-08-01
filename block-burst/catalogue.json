@@ -5,6 +5,7 @@
       "version": "1.0.4",
       "license": "PLAYDROP",
       "displayName": "Block Burst",
+      "subtitle": "Build lines. Burst blocks. Chase combos.",
       "description": "Drag chunky pieces onto the grid, complete rows and columns, watch the blocks burst, and chase the highest combo score before the board locks up.",
       "type": "GAME",
       "authMode": "OPTIONAL",
@@ -30,6 +31,47 @@
           "sort": "DESC"
         }
       ],
+      "ownedAssets": [
+        {
+          "name": "cinder-plum-background-portrait",
+          "runtimeKey": "background-mobile-portrait",
+          "displayName": "Cinder Plum Portrait Background",
+          "description": "Neutral portrait background plate used behind the animated gameplay field.",
+          "category": "IMAGE",
+          "subcategory": "generic",
+          "format": "PNG",
+          "files": {
+            "primary": "assets/generated/background-mobile-portrait.png"
+          },
+          "license": "PLAYDROP"
+        },
+        {
+          "name": "cinder-plum-background-desktop",
+          "runtimeKey": "background-desktop",
+          "displayName": "Cinder Plum Desktop Background",
+          "description": "Neutral landscape background plate used behind the animated gameplay field.",
+          "category": "IMAGE",
+          "subcategory": "generic",
+          "format": "PNG",
+          "files": {
+            "primary": "assets/generated/background-desktop.png"
+          },
+          "license": "PLAYDROP"
+        },
+        {
+          "name": "hammer",
+          "runtimeKey": "hammer",
+          "displayName": "Block Burst Hammer",
+          "description": "Transparent silver and gold hammer rendered in the gameplay HUD.",
+          "category": "IMAGE",
+          "subcategory": "generic",
+          "format": "PNG",
+          "files": {
+            "primary": "assets/generated/hammer.png"
+          },
+          "license": "PLAYDROP"
+        }
+      ],
       "listing": {
         "icon": "assets/marketing/playdrop/icon.png",
         "heroLandscape": "assets/marketing/playdrop/hero-landscape.png",
@@ -52,6 +94,7 @@
         "mobileLandscape": true,
         "mobilePortrait": true
       },
+      "primarySurface": "MOBILE_PORTRAIT",
       "templateSource": "playdrop/template/typescript_template"
     }
   ]

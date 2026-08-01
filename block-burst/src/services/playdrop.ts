@@ -35,6 +35,7 @@ export class PlaydropServices {
   private sdk: RuntimeSdk | null = null;
   private readySent = false;
   private phase: HostPhase = "play";
+  private rewardedReady = false;
 
   async init(): Promise<void> {
     const namespace = window.playdrop as PlaydropNamespace | undefined;
@@ -82,11 +83,23 @@ export class PlaydropServices {
     return Boolean(this.sdk?.ads?.interstitial?.load && this.sdk.ads.interstitial.show);
   }
 
+  async prepareRewarded(): Promise<boolean> {
+    const rewarded = this.sdk?.ads?.rewarded;
+    if (!rewarded?.load || !rewarded.show) return false;
+    try {
+      const load = await rewarded.load();
+      this.rewardedReady = load.status === "ready";
+    } catch {
+      this.rewardedReady = false;
+    }
+    return this.rewardedReady;
+  }
+
   async showRewarded(): Promise<boolean> {
     const rewarded = this.sdk?.ads?.rewarded;
     if (!rewarded?.load || !rewarded.show) return false;
-    const load = await rewarded.load();
-    if (load.status !== "ready") return false;
+    if (!this.rewardedReady && !(await this.prepareRewarded())) return false;
+    this.rewardedReady = false;
     const shown = await rewarded.show();
     return shown.status === "completed";
   }

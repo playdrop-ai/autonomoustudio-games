@@ -1,4 +1,7 @@
 import Phaser from "phaser";
+import backgroundDesktopUrl from "../../assets/generated/background-desktop.png";
+import backgroundMobilePortraitUrl from "../../assets/generated/background-mobile-portrait.png";
+import hammerUrl from "../../assets/generated/hammer.png";
 import {
   COLOR_KEYS,
   COLS,
@@ -9,8 +12,7 @@ import {
   PIECES,
   PIECES_BY_SIZE,
   PIECES_BY_TIER,
-  PRAISE,
-  REVIVE_FREE,
+  REVIVES_PER_GAME,
   ROWS,
   TEX,
   TRAY_SCALE,
@@ -26,6 +28,7 @@ type Cell = ColorKey | null;
 export interface BlockBurstCallbacks {
   initialHammers: number;
   saveHammers: (hammers: number) => Promise<void>;
+  prepareRewarded: () => Promise<boolean>;
   showRewarded: () => Promise<boolean>;
   showInterstitial: () => Promise<void>;
   submitScore: (score: number) => Promise<void>;
@@ -40,7 +43,7 @@ export interface PreviewPayload {
 }
 
 interface Layout {
-  landscape: boolean;
+  landscapeBackground: boolean;
   dw: number;
   dh: number;
   cell: number;
@@ -75,6 +78,239 @@ type PieceContainer = Phaser.GameObjects.Container & {
   getData(key: "home"): { x: number; y: number };
 };
 
+interface BackgroundSquareSpec {
+  x: number;
+  y: number;
+  color: number;
+  size: number;
+  minAlpha: number;
+  maxAlpha: number;
+  duration: number;
+  delay: number;
+}
+
+const GRID_STROKE_COLOR = 0x0a0e1a;
+const GRID_EMPTY_CELL_COLOR = 0x181c2f;
+const GRID_EMPTY_CELL_TOP_COLOR = 0x181f33;
+const BACKGROUND_LIFT_TOP_COLOR = 0x4b4148;
+const BACKGROUND_LIFT_BOTTOM_COLOR = 0x4a5060;
+
+function formatScore(score: number): string {
+  return Math.max(0, Math.floor(score)).toLocaleString("en-US");
+}
+
+const BACKGROUND_SQUARES: BackgroundSquareSpec[] = [
+  {
+    x: 0.06,
+    y: 0.06,
+    color: 0x74445f,
+    size: 1.05,
+    minAlpha: 0.015,
+    maxAlpha: 0.075,
+    duration: 5200,
+    delay: 400,
+  },
+  {
+    x: 0.38,
+    y: 0.1,
+    color: 0x76506c,
+    size: 0.85,
+    minAlpha: 0.012,
+    maxAlpha: 0.065,
+    duration: 6100,
+    delay: 1700,
+  },
+  {
+    x: 0.72,
+    y: 0.055,
+    color: 0x6e3d54,
+    size: 1.08,
+    minAlpha: 0.018,
+    maxAlpha: 0.08,
+    duration: 4600,
+    delay: 800,
+  },
+  {
+    x: 0.91,
+    y: 0.16,
+    color: 0x59617a,
+    size: 0.72,
+    minAlpha: 0.01,
+    maxAlpha: 0.055,
+    duration: 6800,
+    delay: 2500,
+  },
+  {
+    x: 0.15,
+    y: 0.25,
+    color: 0x69425d,
+    size: 0.78,
+    minAlpha: 0.012,
+    maxAlpha: 0.06,
+    duration: 5700,
+    delay: 3200,
+  },
+  {
+    x: 0.63,
+    y: 0.31,
+    color: 0x75435f,
+    size: 1.12,
+    minAlpha: 0.018,
+    maxAlpha: 0.085,
+    duration: 6500,
+    delay: 1100,
+  },
+  {
+    x: 0.84,
+    y: 0.4,
+    color: 0x50677a,
+    size: 0.65,
+    minAlpha: 0.008,
+    maxAlpha: 0.05,
+    duration: 7200,
+    delay: 2100,
+  },
+  {
+    x: 0.32,
+    y: 0.46,
+    color: 0x80506d,
+    size: 0.92,
+    minAlpha: 0.015,
+    maxAlpha: 0.07,
+    duration: 4900,
+    delay: 600,
+  },
+  {
+    x: 0.73,
+    y: 0.56,
+    color: 0x74445f,
+    size: 0.78,
+    minAlpha: 0.012,
+    maxAlpha: 0.068,
+    duration: 6200,
+    delay: 2900,
+  },
+  {
+    x: 0.11,
+    y: 0.61,
+    color: 0x66405a,
+    size: 1.05,
+    minAlpha: 0.016,
+    maxAlpha: 0.075,
+    duration: 5500,
+    delay: 1400,
+  },
+  {
+    x: 0.42,
+    y: 0.69,
+    color: 0x566b79,
+    size: 0.68,
+    minAlpha: 0.008,
+    maxAlpha: 0.05,
+    duration: 7400,
+    delay: 3600,
+  },
+  {
+    x: 0.92,
+    y: 0.72,
+    color: 0x76435c,
+    size: 0.95,
+    minAlpha: 0.014,
+    maxAlpha: 0.072,
+    duration: 5800,
+    delay: 300,
+  },
+  {
+    x: 0.22,
+    y: 0.79,
+    color: 0x7b4b68,
+    size: 0.82,
+    minAlpha: 0.012,
+    maxAlpha: 0.062,
+    duration: 6600,
+    delay: 2300,
+  },
+  {
+    x: 0.67,
+    y: 0.84,
+    color: 0x754057,
+    size: 1.1,
+    minAlpha: 0.018,
+    maxAlpha: 0.08,
+    duration: 5100,
+    delay: 1200,
+  },
+  {
+    x: 0.08,
+    y: 0.92,
+    color: 0x536879,
+    size: 0.72,
+    minAlpha: 0.008,
+    maxAlpha: 0.048,
+    duration: 7000,
+    delay: 3300,
+  },
+  {
+    x: 0.82,
+    y: 0.95,
+    color: 0x71425d,
+    size: 0.88,
+    minAlpha: 0.012,
+    maxAlpha: 0.065,
+    duration: 6000,
+    delay: 1900,
+  },
+];
+
+const PORTRAIT_LINE_OFFSETS = [
+  -0.12, 0.02, 0.16, 0.3, 0.44, 0.58, 0.72, 0.86, 1,
+];
+const LANDSCAPE_LINE_OFFSETS = [
+  -0.3, -0.14, 0.02, 0.18, 0.34, 0.5, 0.66, 0.82, 0.98,
+];
+const BACKGROUND_TRACERS = [
+  {
+    line: 0,
+    color: 0xf06b61,
+    period: 21000,
+    phase: 0.08,
+    length: 0.16,
+    alpha: 0.24,
+  },
+  {
+    line: 2,
+    color: 0x78d9e6,
+    period: 26000,
+    phase: 0.64,
+    length: 0.13,
+    alpha: 0.2,
+  },
+  {
+    line: 4,
+    color: 0xef6666,
+    period: 24000,
+    phase: 0.35,
+    length: 0.17,
+    alpha: 0.22,
+  },
+  {
+    line: 6,
+    color: 0x73cfdb,
+    period: 28000,
+    phase: 0.82,
+    length: 0.14,
+    alpha: 0.18,
+  },
+  {
+    line: 8,
+    color: 0xf27a61,
+    period: 23000,
+    phase: 0.5,
+    length: 0.15,
+    alpha: 0.2,
+  },
+];
+
 export class BlockBurstScene extends Phaser.Scene {
   private readonly callbacks: BlockBurstCallbacks;
   private readonly sfx = new Sfx();
@@ -85,8 +321,7 @@ export class BlockBurstScene extends Phaser.Scene {
   private comboGrace = 0;
   private revivesUsed = 0;
   private best = 0;
-  private prevBest = 0;
-  private newBestFired = false;
+  private runStartingBest = 0;
   private hammers = HAMMER_START;
   private hammerMode = false;
   private linesRun = 0;
@@ -109,6 +344,9 @@ export class BlockBurstScene extends Phaser.Scene {
 
   private L!: Layout;
   private bg!: Phaser.GameObjects.Image;
+  private backgroundLift!: Phaser.GameObjects.Graphics;
+  private backgroundMotionGfx!: Phaser.GameObjects.Graphics;
+  private backgroundSquares: Array<{ object: Phaser.GameObjects.Rectangle; spec: BackgroundSquareSpec }> = [];
   private boardGfx!: Phaser.GameObjects.Graphics;
   private vignette!: Phaser.GameObjects.Image;
   private ghost!: Phaser.GameObjects.Graphics;
@@ -116,7 +354,7 @@ export class BlockBurstScene extends Phaser.Scene {
   private hammerGfx!: Phaser.GameObjects.Graphics;
   private scoreText!: Phaser.GameObjects.Text;
   private bestText!: Phaser.GameObjects.Text;
-  private hammerGlyph!: Phaser.GameObjects.Text;
+  private hammerIcon!: Phaser.GameObjects.Image;
   private hammerCount!: Phaser.GameObjects.Text;
   private hammerHint!: Phaser.GameObjects.Text;
   private previewBadge!: Phaser.GameObjects.Text;
@@ -125,10 +363,10 @@ export class BlockBurstScene extends Phaser.Scene {
   private dropTarget: { c0: number; r0: number; valid: boolean } | null = null;
   private hintTimer: Phaser.Time.TimerEvent | null = null;
   private heartTimer: Phaser.Time.TimerEvent | null = null;
-  private onboarding: Phaser.GameObjects.GameObject[] | null = null;
   private gameOverActive = false;
   private overlayObjects: Phaser.GameObjects.GameObject[] = [];
-  private goButtons: Array<{ cx: number; cy: number; hw: number; hh: number; action: () => void }> = [];
+  private goButtons: Array<{ cx: number; cy: number; hw: number; hh: number; enabled: boolean; action: () => void }> = [];
+  private readonly reduceBackgroundMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
   private ready = false;
   private readyResolve!: () => void;
   private readonly readyPromise = new Promise<void>((resolve) => {
@@ -141,14 +379,22 @@ export class BlockBurstScene extends Phaser.Scene {
     this.hammers = callbacks.initialHammers;
   }
 
+  preload(): void {
+    this.load.image("background-mobile-portrait", backgroundMobilePortraitUrl);
+    this.load.image("background-desktop", backgroundDesktopUrl);
+    this.load.image("hammer", hammerUrl);
+  }
+
   create(): void {
     this.best = Number(localStorage.getItem("block_burst_best") ?? 0);
-    this.prevBest = this.best;
+    this.runStartingBest = this.best;
     this.resetBoard();
     this.layout();
     this.makeTextures();
 
-    this.bg = this.add.image(0, 0, "bg").setOrigin(0, 0).setDepth(0);
+    this.bg = this.add.image(0, 0, this.L.landscapeBackground ? "background-desktop" : "background-mobile-portrait").setOrigin(0.5).setDepth(0);
+    this.backgroundLift = this.add.graphics().setDepth(0.05);
+    this.createBackgroundMotion();
     this.boardGfx = this.add.graphics().setDepth(1);
     this.vignette = this.add.image(0, 0, "vignette").setOrigin(0, 0).setDepth(3).setAlpha(0);
     this.ghost = this.add.graphics().setDepth(4);
@@ -170,12 +416,12 @@ export class BlockBurstScene extends Phaser.Scene {
 
     this.dealNewSet();
     this.resetHint();
-    this.showOnboarding();
     this.ready = true;
     this.readyResolve();
   }
 
-  override update(_time: number, delta: number): void {
+  override update(time: number, delta: number): void {
+    this.drawBackgroundMotion(time);
     if (!this.previewMode || this.gameOverActive || this.previewMoveActive || this.previewAdvancePending) return;
     this.autoplayTimer -= delta / 1000;
     if (this.autoplayTimer <= 0) {
@@ -206,11 +452,39 @@ export class BlockBurstScene extends Phaser.Scene {
     this.previewStep = 0;
     this.setPreviewHud(true);
     this.sfx.muted = payload?.audioPolicy === "silent";
-    this.dismissOnboarding();
     this.clearOverlay();
     this.layout();
     this.applyLayout();
     this.setupPreviewMoment();
+    if (payload?.sceneId === "state-gameplay") {
+      this.autoplayTimer = 3600;
+    }
+    if (payload?.sceneId === "state-hammer-selected") {
+      this.autoplayTimer = 3600;
+      this.hammerMode = true;
+      this.drawHammer();
+      this.hammerHint.setVisible(true);
+    }
+    if (payload?.sceneId === "state-combo") {
+      this.combo = 2;
+      this.comboGrace = 1;
+      this.bestComboRun = 2;
+      this.autoplayTimer = 0;
+    }
+    if (payload?.sceneId?.startsWith("result-overlay")) {
+      this.linesRun = 18;
+      this.bestComboRun = 4;
+      if (payload.sceneId === "result-overlay-used") this.revivesUsed = REVIVES_PER_GAME;
+      if (payload.sceneId === "result-overlay-new-best") {
+        this.runStartingBest = 10000;
+        this.best = this.score;
+      } else {
+        this.runStartingBest = 18950;
+        this.best = 18950;
+      }
+      this.syncBestText();
+      this.showGameOver(true);
+    }
   }
 
   startAudioCapture(): void {
@@ -259,7 +533,8 @@ export class BlockBurstScene extends Phaser.Scene {
     this.revivesUsed = 0;
     this.linesRun = 0;
     this.bestComboRun = 0;
-    this.scoreText?.setText("0");
+    this.runStartingBest = this.best;
+    this.scoreText?.setText(formatScore(0));
     this.syncBestText();
     this.drawHammer();
     this.gameOverActive = false;
@@ -269,10 +544,10 @@ export class BlockBurstScene extends Phaser.Scene {
   private layout(): void {
     const dw = this.scale.width;
     const dh = this.scale.height;
-    const landscape = dw > dh * 1.15;
+    const landscapeBackground = dw > dh * 1.15;
     const pad = Math.round(Math.min(dw, dh) * 0.035);
-    const safeTop = Math.max(pad, Math.round(dh * (landscape ? 0.045 : 0.075)));
-    const safeBottom = Math.max(pad, Math.round(dh * (landscape ? 0.055 : 0.08)));
+    const safeTop = Math.max(pad, Math.round(dh * (landscapeBackground ? 0.05 : 0.075)));
+    const safeBottom = Math.max(pad, Math.round(dh * (landscapeBackground ? 0.06 : 0.08)));
     let cell: number;
     let boardLeft: number;
     let boardTop: number;
@@ -280,54 +555,46 @@ export class BlockBurstScene extends Phaser.Scene {
     let scorePos: { x: number; y: number };
     let bestPos: { x: number; y: number };
 
-    if (!landscape) {
-      const topBand = Math.max(dh * (this.previewMode ? 0.075 : 0.13), safeTop + dh * 0.02);
-      const trayReserve = dh * (this.previewMode ? 0.18 : 0.22);
+    if (!landscapeBackground) {
+      const topBand = Math.max(dh * 0.13, safeTop + dh * 0.02);
+      const trayReserve = dh * 0.22;
       const availH = dh - topBand - safeBottom - trayReserve;
-      const availW = dw * (this.previewMode ? 0.82 : 0.92);
+      const availW = dw * 0.88;
       cell = Math.floor(Math.min(availW, availH) / 8);
       const board = cell * 8;
       boardLeft = Math.round((dw - board) / 2);
-      boardTop = Math.round(topBand + Math.max(0, (availH - board) * (this.previewMode ? 0.18 : 0.5)));
+      boardTop = Math.round(topBand + Math.max(0, (availH - board) * 0.43));
       const below = Math.max(0, dh - safeBottom - (boardTop + board));
-      const trayY = Math.min(dh - safeBottom - cell * 1.25, boardTop + board + below * (this.previewMode ? 0.48 : 0.56));
+      const trayY = Math.min(dh - safeBottom - cell * 1.25, boardTop + board + below * 0.56);
       const spread = Math.min(board * 0.72, dw * 0.84);
       slotPos = [{ x: dw / 2 - spread / 2, y: trayY }, { x: dw / 2, y: trayY }, { x: dw / 2 + spread / 2, y: trayY }];
-      scorePos = { x: dw / 2, y: safeTop + cell * 0.48 };
-      bestPos = { x: pad, y: safeTop + cell * 0.46 };
-    } else if (this.previewMode) {
-      const availH = dh - safeTop - safeBottom;
-      const availW = dw - pad * 2;
-      cell = Math.floor(Math.min(availH * 0.76, availW * 0.58) / 8);
-      const board = cell * 8;
-      boardTop = Math.round(safeTop + availH * 0.04);
-      boardLeft = Math.round(pad + Math.max(0, (availW * 0.62 - board) / 2));
-      const rightCx = Math.round(boardLeft + board + (dw - (boardLeft + board)) * 0.5);
-      const spread = Math.min(board * 0.62, availH * 0.64);
-      slotPos = [{ x: rightCx, y: boardTop + board / 2 - spread / 2 }, { x: rightCx, y: boardTop + board / 2 }, { x: rightCx, y: boardTop + board / 2 + spread / 2 }];
-      scorePos = { x: boardLeft + board / 2, y: safeTop + cell * 0.52 };
-      bestPos = { x: pad, y: safeTop + cell * 0.5 };
+      scorePos = { x: dw / 2, y: safeTop + cell * 0.42 };
+      bestPos = { x: dw / 2, y: safeTop + cell * 1.34 };
     } else {
-      const topBand = Math.max(dh * 0.12, safeTop + dh * 0.04);
+      const topBand = Math.max(dh * 0.14, safeTop + dh * 0.05);
       const availH = dh - topBand - safeBottom;
-      cell = Math.floor(Math.min(availH * 0.62, dw * 0.3) / 8);
+      cell = Math.floor(Math.min(availH * 0.76, dw * 0.38) / 8);
       const board = cell * 8;
-      boardTop = Math.round(topBand + Math.max(0, (availH - board) * 0.25));
-      boardLeft = Math.round((dw * 0.66 - board) / 2 + dw * 0.02);
-      const rightCx = (boardLeft + board + dw) / 2;
-      const spread = Math.min(board * 0.72, (dh - safeTop - safeBottom) * 0.7);
+      boardTop = Math.round(topBand + Math.max(0, (availH - board) * 0.38));
+      boardLeft = Math.round((dw * 0.64 - board) / 2 + dw * 0.02);
+      const rightCx = Math.round(boardLeft + board + (dw - (boardLeft + board)) * 0.5);
+      const spread = Math.min(board * 0.65, (dh - safeTop - safeBottom) * 0.62);
       slotPos = [{ x: rightCx, y: boardTop + board / 2 - spread / 2 }, { x: rightCx, y: boardTop + board / 2 }, { x: rightCx, y: boardTop + board / 2 + spread / 2 }];
-      scorePos = { x: boardLeft + board / 2, y: safeTop + cell * 0.52 };
-      bestPos = { x: pad, y: safeTop + cell * 0.5 };
+      scorePos = { x: boardLeft + board / 2, y: safeTop + cell * 0.42 };
+      bestPos = { x: boardLeft + board / 2, y: safeTop + cell * 1.2 };
     }
 
     const board = cell * 8;
+    const hammer = landscapeBackground
+      ? { x: slotPos[0]!.x, y: safeTop + cell * 0.62, r: cell * 0.62 }
+      : { x: dw - pad - cell * 0.62, y: safeTop + cell * 0.62, r: cell * 0.62 };
+
     this.L = {
-      landscape,
+      landscapeBackground,
       dw,
       dh,
       cell,
-      gap: Math.max(2, Math.round(cell * 0.05)),
+      gap: Math.max(4, Math.round(cell * 0.06)),
       board,
       boardLeft,
       boardTop,
@@ -336,14 +603,14 @@ export class BlockBurstScene extends Phaser.Scene {
       bestPos,
       lift: cell * 1.35,
       grabSlop: cell * 0.95,
-      fScore: Math.round(cell * 1.2),
-      fBest: Math.round(cell * 0.4),
+      fScore: Math.round(cell * 1.05),
+      fBest: Math.round(cell * 0.34),
       fHud: Math.round(cell * 0.5),
       fHint: Math.round(cell * 0.42),
       pad,
       safeTop,
       safeBottom,
-      hammer: { x: dw - pad - cell * 0.55, y: safeTop + cell * 0.55, r: cell * 0.55 },
+      hammer,
     };
   }
 
@@ -351,14 +618,112 @@ export class BlockBurstScene extends Phaser.Scene {
     return [this.L.boardLeft + c * this.L.cell + this.L.cell / 2, this.L.boardTop + r * this.L.cell + this.L.cell / 2];
   }
 
+  private createBackgroundMotion(): void {
+    this.backgroundMotionGfx = this.add.graphics().setDepth(0.2);
+    this.backgroundSquares = BACKGROUND_SQUARES.map((spec) => {
+      const minAlpha = Math.min(0.16, spec.minAlpha * 1.8);
+      const object = this.add
+        .rectangle(0, 0, 10, 10, spec.color, 1)
+        .setAlpha(minAlpha)
+        .setDepth(0.1);
+      return { object, spec };
+    });
+  }
+
+  private layoutBackground(): void {
+    const L = this.L;
+    this.bg.setTexture(
+      L.landscapeBackground ? "background-desktop" : "background-mobile-portrait",
+    );
+    const scale = Math.max(L.dw / this.bg.width, L.dh / this.bg.height);
+    this.bg.setPosition(L.dw / 2, L.dh / 2).setScale(scale);
+    this.backgroundLift.clear();
+    this.backgroundLift.fillGradientStyle(
+      BACKGROUND_LIFT_TOP_COLOR,
+      BACKGROUND_LIFT_TOP_COLOR,
+      BACKGROUND_LIFT_BOTTOM_COLOR,
+      BACKGROUND_LIFT_BOTTOM_COLOR,
+      0.35,
+      0.35,
+      0.16,
+      0.16,
+    );
+    this.backgroundLift.fillRect(0, 0, L.dw, L.dh);
+    const baseSize = Math.max(7, Math.min(L.dw, L.dh) * 0.016);
+    for (const { object, spec } of this.backgroundSquares) {
+      object
+        .setPosition(spec.x * L.dw, spec.y * L.dh)
+        .setDisplaySize(baseSize * spec.size, baseSize * spec.size);
+    }
+  }
+
+  private drawBackgroundMotion(time: number): void {
+    const g = this.backgroundMotionGfx;
+    if (!g) return;
+    g.clear();
+
+    for (const { object, spec } of this.backgroundSquares) {
+      const minAlpha = Math.min(0.16, spec.minAlpha * 1.8);
+      const maxAlpha = Math.min(0.18, spec.maxAlpha * 1.8);
+      const phase = ((time + spec.delay) % spec.duration) / spec.duration;
+      const pulse = this.reduceBackgroundMotion ? 0 : 0.5 - Math.cos(phase * Math.PI * 2) * 0.5;
+      object.setAlpha(lerp(minAlpha, maxAlpha, pulse));
+    }
+
+    if (this.reduceBackgroundMotion) return;
+
+    const L = this.L;
+    const offsets = L.landscapeBackground
+      ? LANDSCAPE_LINE_OFFSETS
+      : PORTRAIT_LINE_OFFSETS;
+    const rise = L.landscapeBackground ? 0.45 : 0.185;
+    const haloWidth = Math.max(4, Math.min(L.dw, L.dh) * 0.008);
+    const coreWidth = Math.max(1, Math.min(L.dw, L.dh) * 0.002);
+    const steps = 12;
+
+    for (const tracer of BACKGROUND_TRACERS) {
+      const offset = offsets[tracer.line];
+      if (offset === undefined) continue;
+      const progress = (time / tracer.period + tracer.phase) % 1;
+      const start = progress - tracer.length / 2;
+      for (let step = 0; step < steps; step++) {
+        const t0 = start + (tracer.length * step) / steps;
+        const t1 = start + (tracer.length * (step + 1)) / steps;
+        if (t0 < 0 || t1 > 1) continue;
+        const intensity = Math.sin((Math.PI * (step + 0.5)) / steps);
+        const x0n = -0.2 + t0 * 1.4;
+        const x1n = -0.2 + t1 * 1.4;
+        const x0 = x0n * L.dw;
+        const x1 = x1n * L.dw;
+        const y0 = (offset + rise * x0n) * L.dh;
+        const y1 = (offset + rise * x1n) * L.dh;
+        g.lineStyle(
+          haloWidth,
+          tracer.color,
+          tracer.alpha * intensity * 0.24,
+        ).lineBetween(x0, y0, x1, y1);
+        g.lineStyle(
+          coreWidth,
+          tracer.color,
+          tracer.alpha * intensity,
+        ).lineBetween(x0, y0, x1, y1);
+      }
+    }
+  }
+
   private applyLayout(): void {
     const L = this.L;
-    this.bg?.setDisplaySize(L.dw, L.dh);
+    this.layoutBackground();
     this.vignette?.setDisplaySize(L.dw, L.dh);
     this.drawBoard();
     this.scoreText?.setPosition(L.scorePos.x, L.scorePos.y).setFontSize(L.fScore);
     this.bestText?.setPosition(L.bestPos.x, L.bestPos.y).setFontSize(L.fBest);
-    this.hammerHint?.setPosition(L.boardLeft + L.board / 2, L.boardTop + L.board + (L.dh - (L.boardTop + L.board)) * 0.16).setFontSize(L.fHint);
+    this.hammerHint
+      ?.setPosition(
+        L.boardLeft + L.board / 2,
+        L.boardTop + L.board + (L.dh - (L.boardTop + L.board)) * (L.landscapeBackground ? 0.26 : 0.16),
+      )
+      .setFontSize(L.fHint);
     this.previewBadge?.setPosition(L.dw / 2, L.pad + L.cell * 0.3).setFontSize(Math.round(L.cell * 0.28));
     this.drawHammer();
 
@@ -390,41 +755,47 @@ export class BlockBurstScene extends Phaser.Scene {
   private drawBoard(): void {
     const L = this.L;
     const g = this.boardGfx;
+    const inset = L.gap / 2;
+    const frame = L.gap * 0.85;
     g.clear();
-    g.fillStyle(0x0a1538, 1);
-    g.fillRoundedRect(L.boardLeft - 5, L.boardTop - 5, L.board + 10, L.board + 10, 10);
+    g.fillStyle(GRID_STROKE_COLOR, 1);
+    g.fillRoundedRect(L.boardLeft - frame, L.boardTop - frame, L.board + frame * 2, L.board + frame * 2, Math.max(8, L.cell * 0.08));
     for (let r = 0; r < ROWS; r++) {
       for (let c = 0; c < COLS; c++) {
-        g.fillStyle(0x172657, 1);
-        g.fillRoundedRect(L.boardLeft + c * L.cell + 2, L.boardTop + r * L.cell + 2, L.cell - 4, L.cell - 4, Math.max(3, L.cell * 0.06));
+        const x = L.boardLeft + c * L.cell + inset;
+        const y = L.boardTop + r * L.cell + inset;
+        const size = L.cell - L.gap;
+        const radius = Math.max(3, L.cell * 0.06);
+        g.fillStyle(GRID_EMPTY_CELL_COLOR, 1);
+        g.fillRoundedRect(x, y, size, size, radius);
+        g.lineStyle(Math.max(1, L.cell * 0.016), GRID_EMPTY_CELL_TOP_COLOR, 0.95);
+        g.lineBetween(x + radius, y + 1, x + size - radius, y + 1);
       }
     }
   }
 
   private drawHammer(): void {
-    if (!this.hammerGfx || !this.hammerGlyph || !this.hammerCount) return;
+    if (!this.hammerGfx || !this.hammerIcon || !this.hammerCount) return;
     const h = this.L.hammer;
     this.hammerGfx.clear();
-    if (this.previewMode) {
-      this.hammerGfx.setVisible(false);
-      this.hammerGlyph.setVisible(false);
-      this.hammerCount.setVisible(false);
-      this.hammerHint.setVisible(false);
-      return;
-    }
     this.hammerGfx.setVisible(true);
-    this.hammerGlyph.setVisible(true);
+    this.hammerIcon.setVisible(true);
     this.hammerCount.setVisible(true);
-    this.hammerGfx.fillStyle(0x1b2c5e, 1);
+    this.hammerGfx.fillStyle(0x171424, 0.96);
     this.hammerGfx.fillCircle(h.x, h.y, h.r);
-    this.hammerGfx.lineStyle(Math.max(3, h.r * 0.09), this.hammerMode ? 0xffd24d : 0x33457f, 1);
+    this.hammerGfx.lineStyle(
+      Math.max(3, h.r * 0.09),
+      this.hammerMode ? 0xffd24d : 0x59365f,
+      1,
+    );
     this.hammerGfx.strokeCircle(h.x, h.y, h.r);
-    this.hammerGlyph
-      .setVisible(true)
-      .setText("🔨")
-      .setPosition(h.x, h.y - h.r * 0.08)
-      .setFontSize(Math.round(h.r * 1.32));
-    this.hammerCount.setPosition(h.x + h.r * 0.64, h.y + h.r * 0.5).setFontSize(Math.round(h.r * 0.62)).setText(String(this.hammers));
+    this.hammerIcon
+      .setPosition(h.x - h.r * 0.08, h.y - h.r * 0.08)
+      .setDisplaySize(h.r * 1.72, h.r * 1.72);
+    this.hammerCount
+      .setPosition(h.x + h.r * 0.48, h.y + h.r * 0.46)
+      .setFontSize(Math.round(h.r * 0.62))
+      .setText(String(this.hammers));
   }
 
   private makeTextures(): void {
@@ -454,38 +825,6 @@ export class BlockBurstScene extends Phaser.Scene {
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, 96, 96);
     });
-    mk("bg", 360, 640, (ctx) => {
-      const lin = ctx.createLinearGradient(0, 0, 0, 640);
-      lin.addColorStop(0, "#5575df");
-      lin.addColorStop(0.55, "#3554bf");
-      lin.addColorStop(1, "#233993");
-      ctx.fillStyle = lin;
-      ctx.fillRect(0, 0, 360, 640);
-      const glow = ctx.createRadialGradient(180, 120, 20, 180, 120, 340);
-      glow.addColorStop(0, "rgba(255,255,255,0.18)");
-      glow.addColorStop(0.42, "rgba(91,130,255,0.08)");
-      glow.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = glow;
-      ctx.fillRect(0, 0, 360, 640);
-      ctx.save();
-      ctx.globalAlpha = 0.08;
-      ctx.strokeStyle = "#d7e4ff";
-      ctx.lineWidth = 2;
-      for (let y = -180; y < 720; y += 82) {
-        ctx.beginPath();
-        ctx.moveTo(-40, y);
-        ctx.lineTo(420, y + 180);
-        ctx.stroke();
-      }
-      ctx.globalAlpha = 0.09;
-      ctx.fillStyle = "#ffffff";
-      for (let y = 28; y < 640; y += 118) {
-        for (let x = 18; x < 360; x += 126) {
-          ctx.fillRect(x, y, 10, 10);
-        }
-      }
-      ctx.restore();
-    });
     mk("vignette", 360, 640, (ctx) => {
       const g = ctx.createRadialGradient(180, 320, 150, 180, 320, 420);
       g.addColorStop(0, "rgba(255,40,40,0)");
@@ -513,23 +852,21 @@ export class BlockBurstScene extends Phaser.Scene {
   private makeBlockTexture(key: ColorKey): void {
     const texKey = `blk_${key}`;
     if (this.textures.exists(texKey)) return;
-    const face = PALETTE[key].face;
+    const palette = PALETTE[key];
+    const face = palette.face;
     const S = TEX;
-    const rad = S * 0.07;
+    const margin = S * 0.008;
+    const rad = S * 0.075;
     const bev = S * 0.17;
-    const topC = mix(mul(face, 1.2), 0xffffff, 0.1);
-    const leftC = mix(mul(face, 1.1), 0xffffff, 0.04);
-    const rightC = mul(face, 0.8);
-    const botC = mul(face, 0.62);
     const texture = this.textures.createCanvas(texKey, S, S);
     if (!texture) throw new Error(`[block-burst] Could not create block texture ${key}`);
     const ctx = texture.getContext();
     ctx.clearRect(0, 0, S, S);
     ctx.save();
     ctx.beginPath();
-    ctx.roundRect(0.5, 0.5, S - 1, S - 1, rad);
+    ctx.roundRect(margin, margin, S - margin * 2, S - margin * 2, rad);
     ctx.clip();
-    const O = [[0, 0], [S, 0], [S, S], [0, S]];
+    const O = [[margin, margin], [S - margin, margin], [S - margin, S - margin], [margin, S - margin]];
     const I = [[bev, bev], [S - bev, bev], [S - bev, S - bev], [bev, S - bev]];
     const quad = (a: number[], b: number[], c: number[], d: number[], col: string): void => {
       ctx.beginPath();
@@ -541,52 +878,64 @@ export class BlockBurstScene extends Phaser.Scene {
       ctx.fillStyle = col;
       ctx.fill();
     };
-    quad(O[0]!, O[1]!, I[1]!, I[0]!, hexStr(topC));
-    quad(O[0]!, I[0]!, I[3]!, O[3]!, hexStr(leftC));
-    quad(O[1]!, O[2]!, I[2]!, I[1]!, hexStr(rightC));
-    quad(O[3]!, I[3]!, I[2]!, O[2]!, hexStr(botC));
-    ctx.fillStyle = hexStr(face);
+    quad(O[0]!, O[1]!, I[1]!, I[0]!, hexStr(palette.top));
+    quad(O[0]!, I[0]!, I[3]!, O[3]!, hexStr(palette.left));
+    quad(O[1]!, O[2]!, I[2]!, I[1]!, hexStr(palette.right));
+    quad(O[3]!, I[3]!, I[2]!, O[2]!, hexStr(palette.bottom));
+
+    const faceGradient = ctx.createLinearGradient(0, bev, 0, S - bev);
+    faceGradient.addColorStop(0, hexStr(mix(face, 0xffffff, 0.08)));
+    faceGradient.addColorStop(0.4, hexStr(face));
+    faceGradient.addColorStop(1, hexStr(mul(face, 0.9)));
+    ctx.fillStyle = faceGradient;
     ctx.fillRect(bev, bev, S - 2 * bev, S - 2 * bev);
-    const sh = ctx.createLinearGradient(0, bev, 0, S * 0.52);
-    sh.addColorStop(0, "rgba(255,255,255,0.15)");
-    sh.addColorStop(1, "rgba(255,255,255,0)");
-    ctx.fillStyle = sh;
-    ctx.fillRect(bev, bev, S - 2 * bev, S * 0.52 - bev);
+
+    const sheen = ctx.createLinearGradient(0, bev, 0, S * 0.55);
+    sheen.addColorStop(0, "rgba(255,255,255,0.14)");
+    sheen.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = sheen;
+    ctx.fillRect(bev, bev, S - 2 * bev, S * 0.55 - bev);
+
+    ctx.strokeStyle = "rgba(255,255,255,0.1)";
+    ctx.lineWidth = S * 0.012;
+    ctx.strokeRect(bev + ctx.lineWidth / 2, bev + ctx.lineWidth / 2, S - 2 * bev - ctx.lineWidth, S - 2 * bev - ctx.lineWidth);
     ctx.restore();
+
     ctx.beginPath();
-    ctx.roundRect(1, 1, S - 2, S - 2, rad);
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = hexStr(mul(face, 0.4));
+    ctx.roundRect(margin, margin, S - margin * 2, S - margin * 2, rad);
+    ctx.lineWidth = S * 0.018;
+    ctx.strokeStyle = hexStr(mix(palette.bottom, GRID_STROKE_COLOR, 0.34));
     ctx.stroke();
     texture.refresh();
   }
 
   private buildHUD(): void {
     const t = (x: number, y: number, text: string, style: Phaser.Types.GameObjects.Text.TextStyle): Phaser.GameObjects.Text => this.add.text(x, y, text, style).setDepth(20);
-    this.scoreText = t(0, 0, "0", { fontFamily: "ui-rounded, system-ui, sans-serif", fontStyle: "700", color: "#ffffff" }).setOrigin(0.5);
+    const roundedFont = 'ui-rounded, "Arial Rounded MT Bold", system-ui, sans-serif';
+    this.scoreText = t(0, 0, "0", { fontFamily: roundedFont, fontStyle: "700", color: "#ffffff" }).setOrigin(0.5);
     this.scoreText.setShadow(0, 5, "rgba(10,16,50,0.45)", 7, false, true);
-    this.bestText = t(0, 0, `BEST ${this.best}`, { fontFamily: "ui-rounded, system-ui, sans-serif", fontStyle: "700", color: "#ffe08a" }).setOrigin(0, 0.5).setAlpha(0.92);
-    this.hammerGlyph = t(0, 0, "🔨", { fontFamily: "Apple Color Emoji, ui-rounded, system-ui, sans-serif", fontStyle: "700", color: "#ffe08a" }).setOrigin(0.5).setDepth(21);
-    this.hammerCount = t(0, 0, String(this.hammers), { fontFamily: "ui-rounded, system-ui, sans-serif", fontStyle: "700", color: "#fff" }).setOrigin(0.5).setDepth(21);
-    this.hammerHint = t(0, 0, "Tap a block to burst it", { fontFamily: "ui-rounded, system-ui, sans-serif", fontStyle: "700", color: "#ffd24d" }).setOrigin(0.5).setVisible(false);
-    this.previewBadge = t(0, 0, "PREVIEW", { fontFamily: "ui-rounded, system-ui, sans-serif", fontStyle: "700", color: "#ffffff" }).setOrigin(0.5).setAlpha(0.6).setVisible(false);
+    this.bestText = t(0, 0, `BEST ${formatScore(this.best)}`, { fontFamily: roundedFont, fontStyle: "700", color: "#e7e5ea" }).setOrigin(0.5).setAlpha(0.92);
+    this.hammerIcon = this.add.image(0, 0, "hammer").setOrigin(0.5).setDepth(21);
+    this.hammerCount = t(0, 0, String(this.hammers), { fontFamily: roundedFont, fontStyle: "700", color: "#fff" }).setOrigin(0.5).setDepth(21);
+    this.hammerHint = t(0, 0, "Tap a block to burst it", { fontFamily: roundedFont, fontStyle: "700", color: "#ffd24d" }).setOrigin(0.5).setVisible(false);
+    this.previewBadge = t(0, 0, "PREVIEW", { fontFamily: roundedFont, fontStyle: "700", color: "#ffffff" }).setOrigin(0.5).setAlpha(0.6).setVisible(false);
     this.syncBestText();
   }
 
-  private setPreviewHud(active: boolean): void {
+  private setPreviewHud(_active: boolean): void {
     this.previewBadge?.setVisible(false);
-    this.scoreText?.setVisible(!active);
-    this.bestText?.setVisible(!active && this.best > 0);
-    this.hammerGfx?.setVisible(!active);
-    this.hammerGlyph?.setVisible(!active);
-    this.hammerCount?.setVisible(!active);
+    this.scoreText?.setVisible(true);
+    this.bestText?.setVisible(this.best > 0);
+    this.hammerGfx?.setVisible(true);
+    this.hammerIcon?.setVisible(true);
+    this.hammerCount?.setVisible(true);
     this.hammerHint?.setVisible(false);
   }
 
   private syncBestText(): void {
     if (!this.bestText) return;
-    this.bestText.setText(this.best > 0 ? `BEST ${this.best}` : "");
-    this.bestText.setVisible(!this.previewMode && this.best > 0);
+    this.bestText.setText(this.best > 0 ? `BEST ${formatScore(this.best)}` : "");
+    this.bestText.setVisible(this.best > 0);
   }
 
   private dealNewSet(): void {
@@ -645,7 +994,7 @@ export class BlockBurstScene extends Phaser.Scene {
     cont.setData("key", data.key);
     cont.setData("slot", slot);
     cont.setData("home", { x: pos.x, y: pos.y });
-    const trayScale = this.previewMode ? (L.landscape ? 0.82 : 0.66) : TRAY_SCALE;
+    const trayScale = TRAY_SCALE;
     if (animate) {
       cont.setScale(trayScale * 0.2).setAlpha(0);
       this.tweens.add({ targets: cont, scale: trayScale, alpha: 1, duration: 240, ease: "Back.easeOut", delay: slot * 40 });
@@ -701,7 +1050,6 @@ export class BlockBurstScene extends Phaser.Scene {
     this.tweens.add({ targets: obj, scale: 1, duration: 120, ease: "Back.easeOut" });
     this.sfx.pick();
     this.clearHint();
-    this.dismissOnboarding();
     this.moveDrag(p);
   }
 
@@ -802,7 +1150,6 @@ export class BlockBurstScene extends Phaser.Scene {
     }
     this.sfx.place();
     this.addScore(cells.length);
-    this.dismissOnboarding();
     const slot = obj.getData("slot");
     this.slots[slot] = null;
     this.pieceData[slot] = null;
@@ -852,7 +1199,6 @@ export class BlockBurstScene extends Phaser.Scene {
     const extra = set.size - base;
     const points = (lines * 10 + (lines - 1) * 10 + extra * 5) * Math.max(1, this.combo);
     this.addScore(points);
-    this.floatScore(points);
     this.celebrate(lines, this.combo, detonated);
     if (!this.previewMode && lines >= 2) this.spawnSpecialAfterClear(lines);
     this.updateDanger();
@@ -975,10 +1321,7 @@ export class BlockBurstScene extends Phaser.Scene {
   private async toggleHammer(): Promise<void> {
     if (!this.hammerMode && this.hammers <= 0) {
       const ok = await this.callbacks.showRewarded();
-      if (!ok) {
-        this.toast("Watch a rewarded ad to refill a burst");
-        return;
-      }
+      if (!ok) return;
       this.hammers = 1;
       await this.callbacks.saveHammers(this.hammers);
     }
@@ -1054,47 +1397,6 @@ export class BlockBurstScene extends Phaser.Scene {
     this.tweens.add({ targets: g, alpha: 0.3, duration: 950, yoyo: true, repeat: 3, ease: "Sine.easeInOut", onComplete: () => g.clear() });
   }
 
-  private showOnboarding(): void {
-    if (this.previewMode || localStorage.getItem("block_burst_played")) return;
-    const [bx, by] = this.cellXY(3.5, 5);
-    const cap = this.add.text(this.L.boardLeft + this.L.board / 2, this.L.boardTop + this.L.board + (this.L.dh - (this.L.boardTop + this.L.board)) * 0.18, "Drag a piece onto the board", {
-      fontFamily: "ui-rounded, system-ui, sans-serif",
-      fontSize: `${this.L.fHint}px`,
-      fontStyle: "700",
-      color: "#fff",
-    }).setOrigin(0.5).setDepth(30).setAlpha(0.95);
-    const hand = this.add.text(this.L.slotPos[1]!.x, this.L.slotPos[1]!.y, "●", { fontSize: `${Math.round(this.L.cell * 0.55)}px`, color: "#ffe08a" }).setOrigin(0.5).setDepth(31);
-    this.onboarding = [cap, hand];
-    this.tweens.add({ targets: hand, x: bx, y: by, duration: 1100, ease: "Sine.easeInOut", yoyo: true, repeat: -1 });
-  }
-
-  private dismissOnboarding(): void {
-    if (!this.onboarding) return;
-    for (const object of this.onboarding) {
-      this.tweens.killTweensOf(object);
-      object.destroy();
-    }
-    this.onboarding = null;
-    localStorage.setItem("block_burst_played", "1");
-  }
-
-  private toast(text: string): void {
-    if (this.previewMode) return;
-    const y = this.L.landscape ? this.L.dh * 0.9 : this.L.boardTop + this.L.board + (this.L.dh - (this.L.boardTop + this.L.board)) * 0.5;
-    const t = this.add.text(this.L.dw / 2, y, text, {
-      fontFamily: "ui-rounded, system-ui, sans-serif",
-      fontSize: `${Math.round(this.L.cell * 0.4)}px`,
-      fontStyle: "700",
-      color: "#15224d",
-      backgroundColor: "#ffe9a8",
-      padding: { x: 22, y: 14 },
-      align: "center",
-      wordWrap: { width: this.L.dw * 0.82 },
-    }).setOrigin(0.5).setDepth(120).setAlpha(0);
-    this.tweens.add({ targets: t, alpha: 1, y: y - 10, duration: 240, ease: "Back.easeOut" });
-    this.time.delayedCall(2800, () => this.tweens.add({ targets: t, alpha: 0, duration: 320, onComplete: () => t.destroy() }));
-  }
-
   private burst(x: number, y: number, color: number, count: number): void {
     const particles = this.add.particles(x, y, "spark", {
       speed: { min: this.L.cell, max: this.L.cell * 3.4 },
@@ -1127,7 +1429,7 @@ export class BlockBurstScene extends Phaser.Scene {
     this.tweens.add({ targets: fl, alpha: 0, duration: 260, ease: "Quad.easeOut", onComplete: () => fl.destroy() });
   }
 
-  private celebrate(lines: number, combo: number, detonated: number): void {
+  private celebrate(lines: number, combo: number, detonated: number, forceLabel = false): void {
     if (lines < 2 && combo < 2 && detonated === 0) return;
     const intensity = (lines >= 2 ? lines - 1 : 0) + (combo >= 2 ? combo - 1 : 0) + detonated;
     const k = Math.min(intensity, 6);
@@ -1136,8 +1438,9 @@ export class BlockBurstScene extends Phaser.Scene {
     const cy = this.L.boardTop + this.L.board / 2;
     const glow = this.add.image(cx, cy, "glow").setDepth(95).setScale(this.L.cell / 200).setAlpha(0);
     this.tweens.add({ targets: glow, scale: (this.L.cell / 72) * (1 + k * 0.17), alpha: 0.92, duration: 240, ease: "Quad.easeOut", yoyo: true, hold: 360, onComplete: () => glow.destroy() });
-    if (!this.previewMode) {
-      const label = `${PRAISE[Math.min(intensity, PRAISE.length - 1)]}${combo >= 2 ? `  x${combo}` : ""}`;
+    const captureCombo = this.previewMode && this.lastPreviewPayload?.sceneId === "state-combo";
+    if ((!this.previewMode || forceLabel || captureCombo) && combo >= 2) {
+      const label = `COMBO x${combo}`;
       const txt = this.add.text(cx, cy, label, {
         fontFamily: "ui-rounded, system-ui, sans-serif",
         fontSize: `${Math.round(this.L.cell * (1 + k * 0.13))}px`,
@@ -1157,19 +1460,6 @@ export class BlockBurstScene extends Phaser.Scene {
     this.burst(cx, cy, 0xffe08a, Math.round(28 + k * 20));
   }
 
-  private floatScore(pts: number): void {
-    if (this.previewMode) return;
-    const t = this.add.text(this.L.boardLeft + this.L.board / 2, this.L.boardTop + this.L.board / 2 + this.L.cell * 0.4, `+${pts}`, {
-      fontFamily: "ui-rounded, system-ui, sans-serif",
-      fontSize: `${Math.round(this.L.cell * 0.66)}px`,
-      fontStyle: "700",
-      color: "#ffffff",
-      stroke: "#1d2a5e",
-      strokeThickness: Math.max(5, this.L.cell * 0.08),
-    }).setOrigin(0.5).setDepth(70);
-    this.tweens.add({ targets: t, y: t.y - this.L.cell * 1.5, alpha: 0, duration: 780, ease: "Quad.easeOut", onComplete: () => t.destroy() });
-  }
-
   private addScore(points: number): void {
     this.score += points;
     this.tweens.killTweensOf(this);
@@ -1178,17 +1468,13 @@ export class BlockBurstScene extends Phaser.Scene {
       shownScore: this.score,
       duration: 300,
       ease: "Quad.easeOut",
-      onUpdate: () => this.scoreText.setText(Math.round(this.shownScore).toString()),
+      onUpdate: () => this.scoreText.setText(formatScore(this.shownScore)),
     });
     if (points > 0) this.tweens.add({ targets: this.scoreText, scale: 1.16, duration: 130, yoyo: true, ease: "Quad.easeOut" });
     if (this.score > this.best) {
       this.best = this.score;
       this.syncBestText();
       localStorage.setItem("block_burst_best", String(this.best));
-      if (!this.newBestFired && this.prevBest > 0 && this.score > this.prevBest) {
-        this.newBestFired = true;
-        this.toast("New best!");
-      }
     }
   }
 
@@ -1229,57 +1515,178 @@ export class BlockBurstScene extends Phaser.Scene {
     this.showGameOver();
   }
 
-  private showGameOver(): void {
+  private showGameOver(forcePreview = false): void {
     this.gameOverActive = true;
-    if (this.previewMode) {
+    if (this.previewMode && !forcePreview) {
       this.time.delayedCall(260, () => this.restartAfterInterstitial());
       return;
     }
     this.goButtons = [];
     const u = this.L.cell;
-    const overlay = this.add.rectangle(this.L.dw / 2, this.L.dh / 2, this.L.dw, this.L.dh, 0x0b1233, 0).setDepth(200);
+    const panelWidth = Math.min(this.L.dw - this.L.pad * 2, u * 6.7);
+    const panelHeight = u * 8.2;
+    const panelCenterY = this.L.dh / 2 + u * 0.14;
+    const buttonWidth = panelWidth - u * 0.78;
+    const buttonHeight = u * 1.18;
+    const overlay = this.add.rectangle(this.L.dw / 2, this.L.dh / 2, this.L.dw, this.L.dh, 0x070711, 0).setDepth(200);
     this.overlayObjects.push(overlay);
-    this.tweens.add({ targets: overlay, fillAlpha: 0.74, duration: 300 });
-    const panel = this.add.container(this.L.dw / 2, this.L.dh / 2).setDepth(201).setScale(0.6).setAlpha(0);
+    this.tweens.add({ targets: overlay, fillAlpha: 0.78, duration: 300 });
+    const panel = this.add.container(this.L.dw / 2, panelCenterY).setDepth(201).setScale(0.6).setAlpha(0);
     this.overlayObjects.push(panel);
-    panel.add(this.add.text(0, -u * 2.2, "No more moves", { fontFamily: "ui-rounded, system-ui, sans-serif", fontSize: `${Math.round(u * 0.75)}px`, fontStyle: "700", color: "#fff" }).setOrigin(0.5));
-    panel.add(this.add.text(0, -u * 1.2, `Score  ${this.score}`, { fontFamily: "ui-rounded, system-ui, sans-serif", fontSize: `${Math.round(u * 0.66)}px`, color: "#ffe08a" }).setOrigin(0.5));
-    panel.add(this.add.text(0, -u * 0.45, `Lines ${this.linesRun} · Best combo x${this.bestComboRun}`, { fontFamily: "ui-rounded, system-ui, sans-serif", fontSize: `${Math.round(u * 0.38)}px`, color: "#cdd6f5" }).setOrigin(0.5));
-    const addBtn = (ly: number, label: string, color: string, action: () => void): void => {
+
+    const chrome = this.add.graphics();
+    const panelRadius = u * 0.28;
+    chrome.fillStyle(0x000000, 0.48);
+    chrome.fillRoundedRect(-panelWidth / 2 + u * 0.08, -panelHeight / 2 + u * 0.14, panelWidth, panelHeight, panelRadius);
+    chrome.fillStyle(0x121018, 0.98);
+    chrome.fillRoundedRect(-panelWidth / 2, -panelHeight / 2, panelWidth, panelHeight, panelRadius);
+    chrome.lineStyle(Math.max(4, u * 0.09), 0x06070d, 1);
+    chrome.strokeRoundedRect(-panelWidth / 2, -panelHeight / 2, panelWidth, panelHeight, panelRadius);
+    chrome.lineStyle(Math.max(1, u * 0.035), 0xc8cad5, 0.72);
+    chrome.strokeRoundedRect(-panelWidth / 2 + u * 0.06, -panelHeight / 2 + u * 0.06, panelWidth - u * 0.12, panelHeight - u * 0.12, panelRadius * 0.78);
+    chrome.lineStyle(Math.max(1, u * 0.035), 0xf08b75, 0.88);
+    chrome.lineBetween(-panelWidth / 2 + panelRadius, -panelHeight / 2 + u * 0.06, -panelWidth * 0.12, -panelHeight / 2 + u * 0.06);
+    chrome.lineStyle(Math.max(1, u * 0.035), 0x8b79df, 0.82);
+    chrome.lineBetween(-panelWidth * 0.12, -panelHeight / 2 + u * 0.06, panelWidth * 0.22, -panelHeight / 2 + u * 0.06);
+    chrome.lineStyle(Math.max(1, u * 0.035), 0x62d6de, 0.9);
+    chrome.lineBetween(panelWidth * 0.22, -panelHeight / 2 + u * 0.06, panelWidth / 2 - panelRadius, -panelHeight / 2 + u * 0.06);
+    panel.add(chrome);
+
+    const roundedFont = 'ui-rounded, "Arial Rounded MT Bold", system-ui, sans-serif';
+    const title = this.add.text(0, -u * 2.7, "NO MORE MOVES", {
+      fontFamily: roundedFont,
+      fontSize: `${Math.round(u * 0.62)}px`,
+      fontStyle: "700",
+      color: "#ffffff",
+    }).setOrigin(0.5).setShadow(0, u * 0.07, "#000000", u * 0.1, false, true);
+    const score = this.add.text(0, -u * 1.68, formatScore(this.score), {
+      fontFamily: roundedFont,
+      fontSize: `${Math.round(u * 1.34)}px`,
+      fontStyle: "700",
+      color: "#ffffff",
+    }).setOrigin(0.5).setShadow(0, u * 0.1, "#000000", u * 0.14, false, true);
+    const isNewBest = this.score > this.runStartingBest;
+    const best = this.add.text(0, -u * 0.55, `${isNewBest ? "NEW BEST" : "BEST"}  ${formatScore(this.best)}`, {
+      fontFamily: roundedFont,
+      fontSize: `${Math.round(u * 0.37)}px`,
+      fontStyle: "700",
+      color: isNewBest ? "#ffd24d" : "#bfc0c6",
+    }).setOrigin(0.5);
+    panel.add([title, score, best]);
+
+    const addDivider = (y: number): void => {
+      const divider = this.add.graphics();
+      const half = buttonWidth / 2;
+      divider.lineStyle(Math.max(1, u * 0.025), 0x777480, 0.62);
+      divider.lineBetween(-half, y, half, y);
+      divider.lineStyle(Math.max(1, u * 0.025), 0xf07468, 0.9);
+      divider.lineBetween(-u * 0.72, y, -u * 0.18, y);
+      divider.lineStyle(Math.max(1, u * 0.025), 0xf3c148, 0.95);
+      divider.lineBetween(-u * 0.18, y, u * 0.16, y);
+      divider.lineStyle(Math.max(1, u * 0.025), 0x67d7d9, 0.9);
+      divider.lineBetween(u * 0.16, y, u * 0.72, y);
+      panel.add(divider);
+    };
+    addDivider(-u * 0.12);
+
+    const statY = u * 0.48;
+    const statStyle: Phaser.Types.GameObjects.Text.TextStyle = {
+      fontFamily: roundedFont,
+      fontSize: `${Math.round(u * 0.306)}px`,
+      fontStyle: "700",
+      color: "#d7d7dc",
+    };
+    const linesStat = this.add.text(-buttonWidth / 4, statY, `${this.linesRun} LINES`, statStyle).setOrigin(0.5);
+    const comboStat = this.add.text(buttonWidth / 4, statY, `TOP COMBO x${this.bestComboRun}`, statStyle).setOrigin(0.5);
+    const statRule = this.add.graphics();
+    statRule.lineStyle(Math.max(1, u * 0.025), 0x777480, 0.62);
+    statRule.lineBetween(0, statY - u * 0.42, 0, statY + u * 0.42);
+    panel.add([linesStat, comboStat, statRule]);
+    addDivider(u * 1.08);
+
+    const addBtn = (
+      ly: number,
+      label: string,
+      fillColor: number,
+      borderColor: number,
+      labelColor: string,
+      action: () => void,
+      rewardedIcon = false,
+      initiallyEnabled = true,
+    ): { setEnabled: (enabled: boolean) => void } => {
       const labelText = this.add.text(0, 0, label, {
-        fontFamily: "ui-rounded, system-ui, sans-serif",
+        fontFamily: roundedFont,
         fontSize: `${Math.round(u * 0.48)}px`,
         fontStyle: "700",
-        color: "#0f1635",
+        color: labelColor,
       }).setOrigin(0.5);
-      const bw = labelText.width + u * 1.05;
-      const bh = labelText.height + u * 0.62;
+      const iconWidth = rewardedIcon ? u * 0.62 : 0;
+      const iconGap = rewardedIcon ? u * 0.22 : 0;
+      const contentWidth = labelText.width + iconGap + iconWidth;
       const btn = this.add.container(0, ly);
       const bg = this.add.graphics();
-      bg.fillStyle(Phaser.Display.Color.HexStringToColor(color).color, 1);
-      bg.fillRoundedRect(-bw / 2, -bh / 2, bw, bh, Math.max(12, u * 0.18));
+      const buttonRadius = u * 0.12;
       btn.add([bg, labelText]);
-      btn.setSize(bw, bh);
-      btn.setInteractive({ useHandCursor: true });
-      btn.on("pointerup", action);
+      let icon: Phaser.GameObjects.Graphics | null = null;
+      if (rewardedIcon) {
+        labelText.x = -(iconWidth + iconGap) / 2;
+        icon = this.add.graphics();
+        const iconX = contentWidth / 2 - iconWidth / 2;
+        const iconHeight = iconWidth * 0.68;
+        icon.lineStyle(Math.max(2, u * 0.055), 0xffffff, 0.94);
+        icon.strokeRoundedRect(iconX - iconWidth / 2, -iconHeight / 2, iconWidth, iconHeight, iconHeight * 0.18);
+        icon.fillStyle(0xffffff, 0.94);
+        icon.fillTriangle(
+          iconX - iconWidth * 0.1,
+          -iconHeight * 0.24,
+          iconX - iconWidth * 0.1,
+          iconHeight * 0.24,
+          iconX + iconWidth * 0.22,
+          0,
+        );
+        btn.add(icon);
+      }
+      btn.setSize(buttonWidth, buttonHeight);
       panel.add(btn);
-      this.goButtons.push({ cx: this.L.dw / 2, cy: this.L.dh / 2 + ly, hw: bw / 2 + 16, hh: bh / 2 + 16, action });
+      const hit = { cx: this.L.dw / 2, cy: panelCenterY + ly, hw: buttonWidth / 2 + 8, hh: buttonHeight / 2 + 8, enabled: initiallyEnabled, action };
+      this.goButtons.push(hit);
+      const setEnabled = (enabled: boolean): void => {
+        hit.enabled = enabled;
+        bg.clear();
+        bg.fillStyle(enabled ? fillColor : 0x343640, 1);
+        bg.fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, buttonRadius);
+        bg.lineStyle(Math.max(1, u * 0.03), enabled ? borderColor : 0x50525d, 1);
+        bg.strokeRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, buttonRadius);
+        labelText.setColor(enabled ? labelColor : "#858792");
+        icon?.setAlpha(enabled ? 1 : 0.38);
+      };
+      setEnabled(initiallyEnabled);
+      return { setEnabled };
     };
-    if (this.revivesUsed < REVIVE_FREE) {
-      addBtn(u * 0.65, "Continue · free", "#7ce08a", () => this.revive());
-    } else {
-      addBtn(u * 0.65, "Continue · ad", "#7ce08a", () => void this.rewardedRevive());
+    const reviveUnused = this.revivesUsed < REVIVES_PER_GAME;
+    const previewReviveEnabled = this.previewMode && this.lastPreviewPayload?.sceneId !== "result-overlay-disabled";
+    const reviveButton = addBtn(
+      u * 1.88,
+      "REVIVE",
+      0x19b956,
+      0x087d38,
+      "#ffffff",
+      () => void this.rewardedRevive(),
+      true,
+      reviveUnused && previewReviveEnabled,
+    );
+    if (reviveUnused && !this.previewMode) {
+      void this.callbacks.prepareRewarded().then((available) => {
+        if (this.gameOverActive && this.overlayObjects.includes(panel)) reviveButton.setEnabled(available);
+      });
     }
-    addBtn(u * 1.75, "Play again", "#ffd24d", () => void this.restartAfterInterstitial());
+    addBtn(u * 3.3, "PLAY AGAIN", 0xffc62e, 0xd79400, "#1b1710", () => void this.restartAfterInterstitial());
     this.tweens.add({ targets: panel, scale: 1, alpha: 1, duration: 340, ease: "Back.easeOut" });
-    if (this.previewMode) {
-      this.time.delayedCall(900, () => this.restartAfterInterstitial());
-    }
   }
 
   private handleGameOverTap(p: Phaser.Input.Pointer): void {
     for (const b of this.goButtons) {
-      if (Math.abs(p.x - b.cx) <= b.hw && Math.abs(p.y - b.cy) <= b.hh) {
+      if (b.enabled && Math.abs(p.x - b.cx) <= b.hw && Math.abs(p.y - b.cy) <= b.hh) {
         b.action();
         return;
       }
@@ -1296,7 +1703,6 @@ export class BlockBurstScene extends Phaser.Scene {
   private async rewardedRevive(): Promise<void> {
     const ok = await this.callbacks.showRewarded();
     if (ok) this.revive();
-    else this.toast("Rewarded ad unavailable");
   }
 
   private revive(): void {
@@ -1338,7 +1744,7 @@ export class BlockBurstScene extends Phaser.Scene {
     this.interstitialPending = true;
     if (this.previewMode) {
       this.interstitialPending = false;
-      await this.preparePreview(this.lastPreviewPayload ?? { active: true, audioPolicy: "sfx-only", surface: this.L.landscape ? "mobile-landscape" : "mobile-portrait" });
+      await this.preparePreview(this.lastPreviewPayload ?? { active: true, audioPolicy: "sfx-only", surface: "mobile-portrait" });
       return;
     }
     await this.callbacks.showInterstitial();
@@ -1347,10 +1753,14 @@ export class BlockBurstScene extends Phaser.Scene {
 
   private setupPreviewMoment(): void {
     this.resetRun();
+    this.score = 12480 + this.previewStep * 1840;
+    this.shownScore = this.score;
+    this.scoreText.setText(formatScore(this.score));
+    this.best = Math.max(this.best, 18950);
+    this.syncBestText();
     this.layout();
     this.applyLayout();
-    const surface = this.lastPreviewPayload?.surface ?? "desktop";
-    this.seedPreviewBoard(surface, this.previewStep);
+    this.seedPreviewBoard(this.previewStep);
     this.dealPreviewSet(this.previewStep);
     this.previewAdvancePending = false;
     this.previewMoveActive = false;
@@ -1363,7 +1773,7 @@ export class BlockBurstScene extends Phaser.Scene {
     this.setupPreviewMoment();
   }
 
-  private seedPreviewBoard(surface: string, step: number): void {
+  private seedPreviewBoard(step: number): void {
     const fillRow = (r: number, except: number[], offset: number): void => {
       for (let c = 0; c < COLS; c++) if (!except.includes(c)) this.addPreviewBlock(c, r, this.previewColor(c, r, offset));
     };
@@ -1380,7 +1790,7 @@ export class BlockBurstScene extends Phaser.Scene {
       fillCol(3, [5, 6], 2);
       fillCol(4, [5, 6], 3);
       sprinkle([[0, 0], [1, 0], [6, 0], [7, 0], [0, 2], [2, 2], [5, 2], [7, 2], [1, 7], [6, 7]], 4);
-      if (surface.includes("portrait")) sprinkle([[0, 1], [7, 1], [0, 4], [7, 4]], 5);
+      sprinkle([[0, 1], [7, 1], [0, 4], [7, 4]], 5);
       return;
     }
 

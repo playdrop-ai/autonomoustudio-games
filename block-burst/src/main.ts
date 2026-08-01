@@ -27,6 +27,7 @@ async function boot(): Promise<void> {
   const scene = new BlockBurstScene({
     initialHammers,
     saveHammers: (hammers) => services.saveHammers(hammers),
+    prepareRewarded: () => services.prepareRewarded(),
     showRewarded: () => services.showRewarded(),
     showInterstitial: () => services.showInterstitial(),
     submitScore: (score) => services.submitScore(score),
@@ -37,7 +38,7 @@ async function boot(): Promise<void> {
     parent: "game",
     width: design.dw,
     height: design.dh,
-    backgroundColor: "#3150b8",
+    backgroundColor: "#111119",
     disableContextMenu: true,
     render: { preserveDrawingBuffer: true, antialias: true, roundPixels: true },
     scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },

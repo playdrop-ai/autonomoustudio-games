@@ -4,4 +4,46 @@ Block Burst is a PlayDrop puzzle game built as a clean TypeScript Phaser project
 
 Players drag three chunky pieces onto an 8 by 8 grid. Full rows and columns burst away, combo clears create special blocks, and the run ends when none of the current pieces fit. The v1 focus is a readable solo score chase with optional PlayDrop login, one highest-score leaderboard, rewarded ads for revive and hammer help, and interstitial ads between replay attempts.
 
+At the first no-moves state of each run, offer exactly one rewarded revive. Use
+the concise `REVIVE` action with an inline rewarded-video icon. There is no free
+revive. Once used, only `PLAY AGAIN` remains. The result panel uses the framed,
+score-forward approved mockup without the decorative five-block strip. `REVIVE`
+and `PLAY AGAIN` must always use identical button dimensions.
+
+On the result panel, show `BEST {score}` when the run did not beat the score that
+was current when the run began. Otherwise show `NEW BEST {score}` in gold. Center
+`{N} LINES` and `TOP COMBO x{N}` in equal stat columns using one consistent text
+style. Result buttons use one solid rounded fill, one thin border, and plain bold
+labels without shadows.
+
+Use `TOP COMBO x{N}` for the combo stat. Both result stats use the same font size,
+reduced by 10 percent from the prior result-panel style. Keep the revive button in
+place but visibly disabled when its one use has already been consumed or PlayDrop
+reports that no rewarded ad is ready.
+
 The game should use the Block Burst name, original runtime code, generated visuals, PlayDrop listing art, and no copied third-party assets or external game naming.
+
+The selected runtime background uses a dark Cinder Plum material on portrait and
+landscape surfaces. Its square motifs must be rendered in Phaser and breathe with
+slow, low-opacity fades. Subtle coral and cyan light packets should travel along
+the diagonal seams so the screen feels gently active without competing with the
+board, score, tray, or clear effects.
+
+Mobile portrait keeps its centered board with a horizontal three-piece tray below.
+Desktop and landscape use the earlier split composition: the board sits on the left
+and the three available pieces stack vertically in a tray to its right. Keep the
+desktop board and tray lower to leave a clear score-and-best band, and align the
+hammer to the tray's vertical centerline. The full-bleed background plate and
+animated seam paths still adapt to the aspect ratio.
+
+The runtime must render at up to 2x device pixel density. The measured grid seam
+color is `#0A0E1A`, the empty-cell face is `#181C2F`, and the subtle empty-cell top
+edge is `#181F33`. Grid gaps and frame widths scale with cell size so these colors
+retain the same visible proportions as the selected art direction.
+
+Show the saved best score beneath the current score whenever one is available.
+Keep all three tray pieces large and tactile. Do not show a tutorial overlay in
+the current build; onboarding will be redesigned separately.
+
+Only combo streaks may show transient gameplay text (`COMBO xN`, for `N >= 2`).
+Do not show generic praise, score-gain, new-best, or availability toasts.
