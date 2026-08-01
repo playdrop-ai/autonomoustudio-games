@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "assets": [
+    {
+      "id": "video-landscape",
+      "kind": "playdrop-listing-video",
+      "path": "assets/marketing/videos/landscape.mp4",
+      "source": "assets/marketing/captures/mobile-landscape.mp4",
+      "width": 1920,
+      "height": 1080,
+      "fps": 60,
+      "durationSeconds": 14.37,
+      "audioPolicy": "sfx-only"
+    },
+    {
+      "id": "video-portrait",
+      "kind": "playdrop-listing-video",
+      "path": "assets/marketing/videos/portrait.mp4",
+      "source": "assets/marketing/captures/mobile-portrait.mp4",
+      "width": 1080,
+      "height": 1920,
+      "fps": 60,
+      "durationSeconds": 14.33,
+      "audioPolicy": "sfx-only"
+    },
+    {
+      "id": "hero-landscape",
+      "kind": "playdrop-hero",
+      "path": "assets/marketing/playdrop/hero-landscape.png",
+      "source": "assets/marketing/playdrop/hero-landscape-art.jpg",
+      "width": 1920,
+      "height": 1080,
+      "title": "BLOCK BURST",
+      "font": "../../../../../System/Library/Fonts/Supplemental/Arial Rounded Bold.ttf",
+      "artworkSource": "playdrop-ai",
+      "aiGenerated": true
+    },
+    {
+      "id": "hero-portrait",
+      "kind": "playdrop-hero",
+      "path": "assets/marketing/playdrop/hero-portrait.png",
+      "source": "assets/marketing/playdrop/hero-portrait-art.jpg",
+      "width": 1080,
+      "height": 1920,
+      "title": "BLOCK\nBURST",
+      "font": "../../../../../System/Library/Fonts/Supplemental/Arial Rounded Bold.ttf",
+      "artworkSource": "playdrop-ai",
+      "aiGenerated": true
+    },
+    {
+      "id": "icon",
+      "kind": "playdrop-icon",
+      "path": "assets/marketing/playdrop/icon.png",
+      "source": "assets/marketing/playdrop/icon-art.jpg",
+      "width": 512,
+      "height": 512,
+      "artworkSource": "playdrop-ai",
+      "aiGenerated": true
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "appName": "block-burst",
+  "createdAt": "2026-06-20T20:52:48.772Z",
+  "status": "passed",
+  "durationSeconds": 51,
+  "gates": [
+    {
+      "id": "marketing-capture",
+      "status": "passed",
+      "summary": "Local marketing capture completed."
+    }
+  ],
+  "assetCounts": {
+    "captures": 2,
+    "videos": 0,
+    "images": 0,
+    "listingArt": 0
+  },
+  "captureValidation": {
+    "surfaces": [
+      "mobile-portrait",
+      "mobile-landscape"
+    ],
+    "fps": 60,
+    "audioValidated": true,
+    "excitingMomentValidated": false
+  },
+  "timings": {
+    "captureSeconds": 51,
+    "assetRenderSeconds": 0,
+    "documentationSeconds": 0
+  },
+  "warnings": [
+    "Exciting moment validation requires visual review from the marketing-pack workflow."
+  ]
+}
