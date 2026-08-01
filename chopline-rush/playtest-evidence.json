@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "environment": "Rescued build in Chromium through the local PlayDrop SDK harness, driven by real pointer taps with deterministic state tracing, plus the full validate:local and proof:mechanics suites",
+      "url": "http://127.0.0.1:4199/",
+      "surface": "Portrait 390x844 primary; desktop is compatibility-only",
+      "captures": [
+        "evidence/rescue-v2/gameplay-rescued.mp4",
+        "evidence/rescue-v2/gameplay-timeline.json"
+      ],
+      "actions": [
+        "Booted directly into the endless run with the planted cooking knife on the pedestal.",
+        "Tapped once and watched the knife complete a full flip, catch the wall with the blade, stop forward motion, and carve down through all thirteen courses before planting tip-first.",
+        "Continued a thirteen-flight run with land-and-relaunch cadence; landings settled on the canonical blade-down angle and cuts spawned persistent halves with interior caps.",
+        "Observed a misaligned landing recover through rotating-to-stick within a tenth of a second.",
+        "Observed a fair death: low stick, backward bounce, exhausted recovery spin, tumble, and the result screen with New Best 36 and Try Again.",
+        "Verified shop equip and purchase flows and the endless leaderboard submission path via the runtime smoke suite."
+      ],
+      "statesObserved": [
+        "stuck",
+        "flying",
+        "slicing",
+        "rotating-stick",
+        "bouncing",
+        "tumbling",
+        "dead",
+        "result"
+      ],
+      "consoleErrors": [],
+      "consoleWarnings": [],
+      "checkedAt": "2026-07-17T22:30:00-04:00"
+    }
+  ],
+  "proof": {
+    "suite": "npm run validate:local && npm run proof:mechanics",
+    "status": "passed"
+  }
+}

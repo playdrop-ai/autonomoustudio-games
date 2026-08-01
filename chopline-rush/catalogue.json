@@ -1,0 +1,61 @@
+{
+  "apps": [
+    {
+      "name": "chopline-rush",
+      "username": "autonomoustudio",
+      "version": "1.1.0",
+      "displayName": "Chopline Rush",
+      "description": "Tap to flip a 3D knife through an endless course, split targets, collect coins, chase the PlayDrop leaderboard, and unlock knives and world themes.",
+      "license": "PLAYDROP",
+      "visibility": "PUBLIC",
+      "tags": [
+        "game-genre/arcade",
+        "game-genre/action",
+        "interaction-mode/solo"
+      ],
+      "emoji": "🔪",
+      "color": "#FFE36D",
+      "type": "GAME",
+      "file": "dist/index.html",
+      "authMode": "OPTIONAL",
+      "controllerMode": "UNSUPPORTED",
+      "previewable": true,
+      "preview": {
+        "audioPolicy": "music-and-sfx"
+      },
+      "surfaceTargets": {
+        "desktop": true,
+        "mobileLandscape": false,
+        "mobilePortrait": true
+      },
+      "leaderboards": [
+        {
+          "key": "endless_score",
+          "displayName": "Endless Score",
+          "description": "Best endless slicing score.",
+          "scoreType": "INTEGER",
+          "sort": "DESC"
+        }
+      ],
+      "listing": {
+        "icon": "assets/marketing/playdrop/icon.png",
+        "heroLandscape": "assets/marketing/playdrop/hero-landscape.png",
+        "heroPortrait": "assets/marketing/playdrop/hero-portrait.png",
+        "screenshotsLandscape": [
+          "assets/marketing/screenshots/landscape/1.png"
+        ]
+      },
+      "design": {
+        "genre": "game-genre/arcade",
+        "coreGameplay": "core-gameplay/runner",
+        "perspective": "perspective/3d-third-person",
+        "controls": "game-controls/tap",
+        "visualStyle": "visual-style/stylized",
+        "progression": "game-progression/endless",
+        "feel": "game-feel/juicy"
+      },
+      "releaseNotes": "Rebuilt as a portrait-first endless knife-flip game with responsive midair taps, one-point cuts, visible split pieces, coin progression, knife upgrades, world themes, and one PlayDrop best-score leaderboard.",
+      "templateSource": "playdrop/template/typescript_template"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0d2430"/>
+      <stop offset="0.52" stop-color="#173b4f"/>
+      <stop offset="1" stop-color="#4c2458"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="28" stdDeviation="24" flood-color="#000000" flood-opacity="0.32"/>
+    </filter>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#bg)"/>
+  <circle cx="210" cy="130" r="230" fill="#68d7ff" opacity="0.18"/>
+  <circle cx="1510" cy="840" r="360" fill="#ffe36d" opacity="0.14"/>
+  <circle cx="1000" cy="180" r="280" fill="#78f2b6" opacity="0.11"/>
+  <rect x="170" y="562" width="1580" height="190" rx="46" fill="#10202b" opacity="0.95" filter="url(#shadow)"/>
+  <rect x="210" y="590" width="1500" height="134" rx="28" fill="#fff5d8"/>
+  <path d="M260 590h1380" stroke="#0f172a" stroke-opacity="0.10" stroke-width="42" stroke-dasharray="54 62"/>
+  <line x1="805" y1="535" x2="805" y2="768" stroke="#ffb84d" stroke-width="7" stroke-dasharray="22 20"/>
+  <path d="M630 430 1038 292l54 72-352 218-170 14 60-166Z" fill="#edf7ff" filter="url(#shadow)"/>
+  <path d="M1042 292 1152 414 1085 471 976 349Z" fill="#ffe36d"/>
+  <circle cx="480" cy="658" r="70" fill="#ff6f59" stroke="#ffffff" stroke-width="9"/>
+  <path d="M890 566 1014 658 890 750 766 658Z" fill="#fb6fb3" stroke="#ffffff" stroke-width="9"/>
+  <path d="M1285 566 1385 734 1185 734Z" fill="#77b7ff" stroke="#ffffff" stroke-width="9"/>
+  <rect x="1470" y="600" width="142" height="112" rx="28" fill="#5fd39b" stroke="#ffffff" stroke-width="9"/>
+  <text x="960" y="240" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="150" font-weight="900" fill="#ffffff">CHOPLINE RUSH</text>
+  <text x="960" y="930" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="54" font-weight="800" fill="#ffffff" opacity="0.86">Hold to slice. Release before the blocks.</text>
+</svg>

@@ -1,0 +1,37 @@
+{
+  "appName": "chopline-rush",
+  "createdAt": "2026-06-10T16:17:38.157Z",
+  "status": "passed",
+  "durationSeconds": 66,
+  "gates": [
+    {
+      "id": "marketing-capture",
+      "status": "passed",
+      "summary": "Local marketing capture completed."
+    }
+  ],
+  "assetCounts": {
+    "captures": 3,
+    "videos": 0,
+    "images": 0,
+    "listingArt": 0
+  },
+  "captureValidation": {
+    "surfaces": [
+      "desktop",
+      "mobile-landscape",
+      "mobile-portrait"
+    ],
+    "fps": 60,
+    "audioValidated": true,
+    "excitingMomentValidated": false
+  },
+  "timings": {
+    "captureSeconds": 66,
+    "assetRenderSeconds": 0,
+    "documentationSeconds": 0
+  },
+  "warnings": [
+    "Exciting moment validation requires visual review from the marketing-pack workflow."
+  ]
+}

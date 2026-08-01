@@ -1,0 +1,29 @@
+output/
+tmp/
+evidence/
+.playwright-cli/
+node_modules/
+tests/
+scripts/
+gates/
+mockups/
+package-lock.json
+README.md
+SPECS.md
+
+# Generated listing working files stay local unless promoted into listing/.
+listing/tmp/
+listing/output/
+listing/
+
+# Marketing capture working files stay local; catalogue.json references the
+# final PlayDrop listing assets separately.
+assets/marketing/captures/
+assets/marketing/social/
+assets/marketing/videos/
+assets/marketing/review/
+assets/marketing/thumbnails/
+assets/marketing/audio/
+assets/marketing/fonts/
+assets/marketing/playdrop/*-art.jpg
+assets/marketing/playdrop/achievement-badge-sheet.jpg
