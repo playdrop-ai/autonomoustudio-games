@@ -1,11 +1,14 @@
 import type { PlaydropNamespace, PlaydropSDK } from "playdrop-sdk-types";
 
 export const LEADERBOARD_KEY = "highest_score";
+export const INTERSTITIAL_MIN_SESSION_MS = 30_000;
+export const INTERSTITIAL_AD_COOLDOWN_MS = 30_000;
 const HAMMERS_STORAGE_KEY = "block_burst_hammers";
 
 type RewardedLoadStatus = "ready" | "no_fill" | "rate_limited" | "blocked";
 type RewardedShowStatus = "completed" | "dismissed" | "not_ready" | "expired";
 type InterstitialLoadStatus = "ready" | "no_fill" | "rate_limited" | "blocked";
+type InterstitialShowStatus = "dismissed" | "not_ready" | "expired";
 type HostPhase = "play" | "preview" | string;
 type RuntimeSdk = PlaydropSDK & {
   host: PlaydropSDK["host"] & {
@@ -23,7 +26,7 @@ type RuntimeSdk = PlaydropSDK & {
     };
     interstitial?: {
       load?: () => Promise<{ status: InterstitialLoadStatus }>;
-      show?: () => Promise<unknown>;
+      show?: () => Promise<{ status: InterstitialShowStatus }>;
     };
   };
   leaderboards?: {
@@ -36,6 +39,13 @@ export class PlaydropServices {
   private readySent = false;
   private phase: HostPhase = "play";
   private rewardedReady = false;
+  private readonly sessionStartedAt: number;
+  private lastAdSeenAt: number | null = null;
+  private adRequestPending = false;
+
+  constructor(private readonly now: () => number = () => Date.now()) {
+    this.sessionStartedAt = this.now();
+  }
 
   async init(): Promise<void> {
     const namespace = window.playdrop as PlaydropNamespace | undefined;
@@ -84,6 +94,7 @@ export class PlaydropServices {
   }
 
   async prepareRewarded(): Promise<boolean> {
+    if (this.adRequestPending) return false;
     const rewarded = this.sdk?.ads?.rewarded;
     if (!rewarded?.load || !rewarded.show) return false;
     try {
@@ -96,20 +107,39 @@ export class PlaydropServices {
   }
 
   async showRewarded(): Promise<boolean> {
+    if (this.adRequestPending) return false;
     const rewarded = this.sdk?.ads?.rewarded;
     if (!rewarded?.load || !rewarded.show) return false;
-    if (!this.rewardedReady && !(await this.prepareRewarded())) return false;
-    this.rewardedReady = false;
-    const shown = await rewarded.show();
-    return shown.status === "completed";
+    this.adRequestPending = true;
+    try {
+      if (!this.rewardedReady) {
+        const load = await rewarded.load();
+        if (load.status !== "ready") return false;
+      }
+      this.rewardedReady = false;
+      const shown = await rewarded.show();
+      if (shown.status === "completed" || shown.status === "dismissed") this.lastAdSeenAt = this.now();
+      return shown.status === "completed";
+    } finally {
+      this.adRequestPending = false;
+    }
   }
 
   async showInterstitial(): Promise<void> {
+    const now = this.now();
+    if (this.adRequestPending) return;
+    if (now - this.sessionStartedAt < INTERSTITIAL_MIN_SESSION_MS) return;
+    if (this.lastAdSeenAt !== null && now - this.lastAdSeenAt < INTERSTITIAL_AD_COOLDOWN_MS) return;
     const interstitial = this.sdk?.ads?.interstitial;
     if (!interstitial?.load || !interstitial.show) return;
-    const load = await interstitial.load();
-    if (load.status === "ready") {
-      await interstitial.show();
+    this.adRequestPending = true;
+    try {
+      const load = await interstitial.load();
+      if (load.status !== "ready") return;
+      const shown = await interstitial.show();
+      if (shown.status === "dismissed") this.lastAdSeenAt = this.now();
+    } finally {
+      this.adRequestPending = false;
     }
   }
 

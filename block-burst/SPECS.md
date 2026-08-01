@@ -4,6 +4,14 @@ Block Burst is a PlayDrop puzzle game built as a clean TypeScript Phaser project
 
 Players drag three chunky pieces onto an 8 by 8 grid. Full rows and columns burst away, combo clears create special blocks, and the run ends when none of the current pieces fit. The v1 focus is a readable solo score chase with optional PlayDrop login, one highest-score leaderboard, rewarded ads for revive and hammer help, and interstitial ads between replay attempts.
 
+Rewarded ads must remain player-initiated and economically capped: allow one
+rewarded revive per run, offer a rewarded hammer only when the balance is zero,
+and grant exactly one hammer after a completed ad. Never allow overlapping ad
+requests. Do not attempt an interstitial until the player has been in the current
+app session for at least 30 seconds, or within 30 seconds of any rewarded or
+interstitial ad the player completed or dismissed. A skipped or failed
+interstitial must never prevent `PLAY AGAIN` from restarting the game.
+
 At the first no-moves state of each run, offer exactly one rewarded revive. Use
 the concise `REVIVE` action with an inline rewarded-video icon. There is no free
 revive. Once used, only `PLAY AGAIN` remains. The result panel uses the framed,

@@ -1747,8 +1747,11 @@ export class BlockBurstScene extends Phaser.Scene {
       await this.preparePreview(this.lastPreviewPayload ?? { active: true, audioPolicy: "sfx-only", surface: "mobile-portrait" });
       return;
     }
-    await this.callbacks.showInterstitial();
-    this.scene.restart();
+    try {
+      await this.callbacks.showInterstitial();
+    } finally {
+      this.scene.restart();
+    }
   }
 
   private setupPreviewMoment(): void {
