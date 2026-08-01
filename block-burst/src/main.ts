@@ -10,6 +10,7 @@ declare global {
       startAudioCapture?: () => Promise<void> | void;
       stopAudioCapture?: () => Promise<{ mimeType: string; base64: string }> | { mimeType: string; base64: string };
     };
+    render_game_to_text?: () => string;
   }
 }
 
@@ -26,6 +27,7 @@ async function boot(): Promise<void> {
   const design = computeDesign();
   const scene = new BlockBurstScene({
     initialHammers,
+    tutorialEnabled: !services.isPreviewPhase(),
     saveHammers: (hammers) => services.saveHammers(hammers),
     prepareRewarded: () => services.prepareRewarded(),
     showRewarded: () => services.showRewarded(),
@@ -66,6 +68,7 @@ async function boot(): Promise<void> {
     startAudioCapture: () => scene.startAudioCapture(),
     stopAudioCapture: () => scene.stopAudioCapture(),
   };
+  window.render_game_to_text = () => JSON.stringify(scene.getPreviewDebugState());
 
   await scene.whenReady();
   if (services.isPreviewPhase()) {

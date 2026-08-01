@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import backgroundDesktopUrl from "../../assets/generated/background-desktop.png";
 import backgroundMobilePortraitUrl from "../../assets/generated/background-mobile-portrait.png";
 import hammerUrl from "../../assets/generated/hammer.png";
+import previewHandUrl from "../../assets/ui/preview-hand.png";
 import {
   COLOR_KEYS,
   COLS,
@@ -20,6 +21,7 @@ import {
   type PieceDef,
 } from "./constants";
 import { clamp01, hexStr, lerp, mix, mul } from "./color";
+import { calculatePreviewGestureFrame, PREVIEW_GESTURE_TOTAL_MS } from "./preview";
 import { Sfx } from "./sfx";
 
 type SpecialType = "bomb" | "cross" | "laser";
@@ -27,6 +29,7 @@ type Cell = ColorKey | null;
 
 export interface BlockBurstCallbacks {
   initialHammers: number;
+  tutorialEnabled: boolean;
   saveHammers: (hammers: number) => Promise<void>;
   prepareRewarded: () => Promise<boolean>;
   showRewarded: () => Promise<boolean>;
@@ -78,6 +81,18 @@ type PieceContainer = Phaser.GameObjects.Container & {
   getData(key: "home"): { x: number; y: number };
 };
 
+interface PreviewGesture {
+  obj: PieceContainer;
+  move: { slot: number; cells: Array<[number, number]>; c0: number; r0: number };
+  startedAt: number;
+  originX: number;
+  originY: number;
+  targetX: number;
+  targetY: number;
+  lift: number;
+  committed: boolean;
+}
+
 interface BackgroundSquareSpec {
   x: number;
   y: number;
@@ -94,6 +109,10 @@ const GRID_EMPTY_CELL_COLOR = 0x181c2f;
 const GRID_EMPTY_CELL_TOP_COLOR = 0x181f33;
 const BACKGROUND_LIFT_TOP_COLOR = 0x4b4148;
 const BACKGROUND_LIFT_BOTTOM_COLOR = 0x4a5060;
+const TUTORIAL_STORAGE_KEY = "block_burst_tutorial_complete";
+const TUTORIAL_STEP = 1;
+const TUTORIAL_TARGET = { c0: 2, r0: 3 };
+const TUTORIAL_GUIDE_PAUSE_MS = 700;
 
 function formatScore(score: number): string {
   return Math.max(0, Math.floor(score)).toLocaleString("en-US");
@@ -328,11 +347,15 @@ export class BlockBurstScene extends Phaser.Scene {
   private bestComboRun = 0;
   private danger = false;
   private previewMode = false;
+  private previewPresentation = false;
   private lastPreviewPayload: PreviewPayload | null = null;
   private autoplayTimer = 0;
   private previewMoveActive = false;
   private previewAdvancePending = false;
   private previewStep = 0;
+  private previewGesture: PreviewGesture | null = null;
+  private tutorialActive = false;
+  private tutorialGuideStartedAt = 0;
   private interstitialPending = false;
 
   private grid: Cell[][] = [];
@@ -357,7 +380,11 @@ export class BlockBurstScene extends Phaser.Scene {
   private hammerIcon!: Phaser.GameObjects.Image;
   private hammerCount!: Phaser.GameObjects.Text;
   private hammerHint!: Phaser.GameObjects.Text;
+  private tutorialText!: Phaser.GameObjects.Text;
   private previewBadge!: Phaser.GameObjects.Text;
+  private previewGuide!: HTMLDivElement;
+  private previewGuideHand!: HTMLImageElement;
+  private previewGuideRing!: HTMLDivElement;
   private dragging: PieceContainer | null = null;
   private dragPointerId = -1;
   private dropTarget: { c0: number; r0: number; valid: boolean } | null = null;
@@ -369,8 +396,10 @@ export class BlockBurstScene extends Phaser.Scene {
   private readonly reduceBackgroundMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
   private ready = false;
   private readyResolve!: () => void;
-  private readonly readyPromise = new Promise<void>((resolve) => {
+  private readyReject!: (error: Error) => void;
+  private readonly readyPromise = new Promise<void>((resolve, reject) => {
     this.readyResolve = resolve;
+    this.readyReject = reject;
   });
 
   constructor(callbacks: BlockBurstCallbacks) {
@@ -400,6 +429,16 @@ export class BlockBurstScene extends Phaser.Scene {
     this.ghost = this.add.graphics().setDepth(4);
     this.hintGfx = this.add.graphics().setDepth(4);
     this.hammerGfx = this.add.graphics().setDepth(20);
+    const previewGuide = document.querySelector<HTMLDivElement>("#preview-guide");
+    const previewGuideHand = document.querySelector<HTMLImageElement>("#preview-guide-hand");
+    const previewGuideRing = document.querySelector<HTMLDivElement>("#preview-guide-ring");
+    if (!previewGuide || !previewGuideHand || !previewGuideRing) {
+      throw new Error("Block Burst preview guide markup is missing");
+    }
+    this.previewGuide = previewGuide;
+    this.previewGuideHand = previewGuideHand;
+    this.previewGuideRing = previewGuideRing;
+    this.previewGuideHand.src = previewHandUrl;
     this.buildHUD();
     this.applyLayout();
 
@@ -414,18 +453,33 @@ export class BlockBurstScene extends Phaser.Scene {
     window.addEventListener("resize", this.onResize);
     this.events.once("shutdown", () => window.removeEventListener("resize", this.onResize));
 
-    this.dealNewSet();
+    if (this.callbacks.tutorialEnabled && localStorage.getItem(TUTORIAL_STORAGE_KEY) !== "1") {
+      this.startTutorial();
+    } else {
+      this.dealNewSet();
+    }
     this.resetHint();
-    this.ready = true;
-    this.readyResolve();
+    void this.previewGuideHand.decode().then(() => {
+      this.ready = true;
+      this.readyResolve();
+    }).catch((error: unknown) => {
+      const message = error instanceof Error ? error.message : String(error);
+      this.readyReject(new Error(`Block Burst preview hand failed to decode: ${message}`));
+    });
   }
 
   override update(time: number, delta: number): void {
     this.drawBackgroundMotion(time);
-    if (!this.previewMode || this.gameOverActive || this.previewMoveActive || this.previewAdvancePending) return;
+    if (this.tutorialActive) this.updateTutorialGuide(time);
+    if (!this.previewMode) return;
+    if (this.previewGesture) {
+      this.updatePreviewGesture(time);
+      return;
+    }
+    if (this.gameOverActive || this.previewMoveActive || this.previewAdvancePending) return;
     this.autoplayTimer -= delta / 1000;
     if (this.autoplayTimer <= 0) {
-      this.autoplayMove();
+      this.autoplayMove(time);
       this.autoplayTimer = 0.76;
     }
   }
@@ -438,24 +492,28 @@ export class BlockBurstScene extends Phaser.Scene {
     if (!this.ready) await this.readyPromise;
     if (payload?.active === false) {
       if (!this.previewMode) return;
+      this.stopPreviewGesture();
       this.previewMode = false;
+      this.previewPresentation = false;
       this.lastPreviewPayload = null;
-      this.previewMoveActive = false;
       this.setPreviewHud(false);
       this.scene.restart();
       return;
     }
+    this.stopTutorial(false);
+    this.stopPreviewGesture();
     this.previewMode = true;
+    this.previewPresentation = this.isPreviewPresentationScene(payload?.sceneId);
     this.lastPreviewPayload = { ...payload, active: true };
-    this.previewMoveActive = false;
     this.previewAdvancePending = false;
     this.previewStep = 0;
-    this.setPreviewHud(true);
     this.sfx.muted = payload?.audioPolicy === "silent";
     this.clearOverlay();
+    this.cameras.main.resetFX();
     this.layout();
     this.applyLayout();
     this.setupPreviewMoment();
+    this.setPreviewHud(this.previewPresentation);
     if (payload?.sceneId === "state-gameplay") {
       this.autoplayTimer = 3600;
     }
@@ -488,11 +546,43 @@ export class BlockBurstScene extends Phaser.Scene {
   }
 
   startAudioCapture(): void {
+    if (this.previewPresentation) {
+      this.stopPreviewGesture();
+      this.previewStep = 0;
+      this.setupPreviewMoment();
+    }
     this.sfx.startCapture();
   }
 
   async stopAudioCapture(): Promise<{ mimeType: string; base64: string }> {
     return this.sfx.stopCapture();
+  }
+
+  getPreviewDebugState(): Record<string, unknown> {
+    const gestureFrame = this.previewGesture
+      ? calculatePreviewGestureFrame(this.time.now - this.previewGesture.startedAt)
+      : null;
+    return {
+      previewMode: this.previewMode,
+      previewPresentation: this.previewPresentation,
+      previewStep: this.previewStep,
+      gesturePhase: gestureFrame?.phase ?? null,
+      gestureDragProgress: gestureFrame?.dragProgress ?? null,
+      gestureReleaseProgress: gestureFrame?.releaseProgress ?? null,
+      gestureActive: Boolean(this.previewGesture),
+      handVisible: this.previewGuide?.classList.contains("on") ?? false,
+      tutorialActive: this.tutorialActive,
+      draggingSlot: this.dragging?.getData("slot") ?? null,
+      dropTarget: this.dropTarget,
+      score: this.score,
+      hudVisible: Boolean(
+        this.scoreText?.visible
+        || this.bestText?.visible
+        || this.hammerIcon?.visible
+        || this.hammerCount?.visible
+      ),
+      overlayVisible: this.gameOverActive,
+    };
   }
 
   private readonly onResize = (): void => {
@@ -539,6 +629,85 @@ export class BlockBurstScene extends Phaser.Scene {
     this.drawHammer();
     this.gameOverActive = false;
     this.interstitialPending = false;
+  }
+
+  private startTutorial(): void {
+    this.tutorialActive = true;
+    this.tutorialGuideStartedAt = this.time.now;
+    this.resetRun();
+    this.layout();
+    this.applyLayout();
+    this.seedPreviewBoard(TUTORIAL_STEP);
+    this.dealPreviewSet(TUTORIAL_STEP);
+    this.tutorialText.setVisible(true);
+    this.bestText.setVisible(false);
+    this.drawHammer();
+    this.clearHint();
+  }
+
+  private completeTutorial(): void {
+    if (!this.tutorialActive) return;
+    this.tutorialActive = false;
+    localStorage.setItem(TUTORIAL_STORAGE_KEY, "1");
+    this.tutorialText.setVisible(false);
+    this.hidePreviewGuide();
+    this.drawHammer();
+    this.syncBestText();
+    this.resetHint();
+  }
+
+  private stopTutorial(persist: boolean): void {
+    if (!this.tutorialActive) return;
+    this.tutorialActive = false;
+    if (persist) localStorage.setItem(TUTORIAL_STORAGE_KEY, "1");
+    this.tutorialText?.setVisible(false);
+    this.hidePreviewGuide();
+    this.drawHammer();
+    this.syncBestText();
+  }
+
+  private updateTutorialGuide(time: number): void {
+    const piece = this.slots[1];
+    if (!piece || this.dragging || this.previewMode) {
+      this.hidePreviewGuide();
+      return;
+    }
+    const cycleDuration = PREVIEW_GESTURE_TOTAL_MS + TUTORIAL_GUIDE_PAUSE_MS;
+    const elapsed = (time - this.tutorialGuideStartedAt + cycleDuration) % cycleDuration;
+    if (elapsed >= PREVIEW_GESTURE_TOTAL_MS) {
+      this.hidePreviewGuide();
+      return;
+    }
+    const frame = calculatePreviewGestureFrame(elapsed);
+    const targetX = this.L.boardLeft + (TUTORIAL_TARGET.c0 + piece.getData("cols") / 2) * this.L.cell;
+    const targetY = this.L.boardTop + (TUTORIAL_TARGET.r0 + piece.getData("rows") / 2) * this.L.cell;
+    const pointerLift = this.L.landscapeBackground && this.L.dw >= 900 ? 6 : this.L.lift;
+    const handX = lerp(piece.x, targetX, frame.dragProgress);
+    const handY = lerp(piece.y, targetY + pointerLift, frame.dragProgress);
+    this.updatePreviewGuide(
+      handX,
+      handY,
+      this.L.cell * 1.55,
+      this.L.cell * 0.32,
+      frame.handScale,
+      1 + frame.releaseProgress * 1.35,
+      frame.handOpacity,
+    );
+  }
+
+  private pulseTutorialPiece(): void {
+    const piece = this.slots[1];
+    if (!piece) return;
+    this.tweens.killTweensOf(piece);
+    this.tweens.add({
+      targets: piece,
+      scale: TRAY_SCALE * 1.12,
+      duration: 120,
+      yoyo: true,
+      ease: "Sine.easeInOut",
+      onComplete: () => piece.active && piece.setScale(TRAY_SCALE),
+    });
+    this.tutorialGuideStartedAt = this.time.now;
   }
 
   private layout(): void {
@@ -724,6 +893,9 @@ export class BlockBurstScene extends Phaser.Scene {
         L.boardTop + L.board + (L.dh - (L.boardTop + L.board)) * (L.landscapeBackground ? 0.26 : 0.16),
       )
       .setFontSize(L.fHint);
+    this.tutorialText
+      ?.setPosition(L.bestPos.x, L.bestPos.y)
+      .setFontSize(Math.max(16, Math.round(L.fBest * 0.9)));
     this.previewBadge?.setPosition(L.dw / 2, L.pad + L.cell * 0.3).setFontSize(Math.round(L.cell * 0.28));
     this.drawHammer();
 
@@ -776,11 +948,13 @@ export class BlockBurstScene extends Phaser.Scene {
 
   private drawHammer(): void {
     if (!this.hammerGfx || !this.hammerIcon || !this.hammerCount) return;
+    const visible = !this.previewPresentation && !this.tutorialActive;
+    this.hammerGfx.setVisible(visible);
+    this.hammerIcon.setVisible(visible);
+    this.hammerCount.setVisible(visible);
+    if (!visible) return;
     const h = this.L.hammer;
     this.hammerGfx.clear();
-    this.hammerGfx.setVisible(true);
-    this.hammerIcon.setVisible(true);
-    this.hammerCount.setVisible(true);
     this.hammerGfx.fillStyle(0x171424, 0.96);
     this.hammerGfx.fillCircle(h.x, h.y, h.r);
     this.hammerGfx.lineStyle(
@@ -918,24 +1092,25 @@ export class BlockBurstScene extends Phaser.Scene {
     this.hammerIcon = this.add.image(0, 0, "hammer").setOrigin(0.5).setDepth(21);
     this.hammerCount = t(0, 0, String(this.hammers), { fontFamily: roundedFont, fontStyle: "700", color: "#fff" }).setOrigin(0.5).setDepth(21);
     this.hammerHint = t(0, 0, "Tap a block to burst it", { fontFamily: roundedFont, fontStyle: "700", color: "#ffd24d" }).setOrigin(0.5).setVisible(false);
+    this.tutorialText = t(0, 0, "DRAG TO COMPLETE THE LINE", { fontFamily: roundedFont, fontStyle: "700", color: "#ffd24d" }).setOrigin(0.5).setVisible(false);
     this.previewBadge = t(0, 0, "PREVIEW", { fontFamily: roundedFont, fontStyle: "700", color: "#ffffff" }).setOrigin(0.5).setAlpha(0.6).setVisible(false);
     this.syncBestText();
   }
 
-  private setPreviewHud(_active: boolean): void {
+  private setPreviewHud(active: boolean): void {
+    const visible = !active;
     this.previewBadge?.setVisible(false);
-    this.scoreText?.setVisible(true);
-    this.bestText?.setVisible(this.best > 0);
-    this.hammerGfx?.setVisible(true);
-    this.hammerIcon?.setVisible(true);
-    this.hammerCount?.setVisible(true);
+    this.scoreText?.setVisible(visible);
+    this.bestText?.setVisible(visible && !this.tutorialActive && this.best > 0);
+    this.tutorialText?.setVisible(visible && this.tutorialActive);
+    this.drawHammer();
     this.hammerHint?.setVisible(false);
   }
 
   private syncBestText(): void {
     if (!this.bestText) return;
     this.bestText.setText(this.best > 0 ? `BEST ${formatScore(this.best)}` : "");
-    this.bestText.setVisible(this.best > 0);
+    this.bestText.setVisible(!this.previewPresentation && !this.tutorialActive && this.best > 0);
   }
 
   private dealNewSet(): void {
@@ -1010,7 +1185,7 @@ export class BlockBurstScene extends Phaser.Scene {
       this.handleGameOverTap(p);
       return;
     }
-    if (!this.previewMode && this.overHammer(p)) {
+    if (!this.previewMode && !this.tutorialActive && this.overHammer(p)) {
       void this.toggleHammer();
       return;
     }
@@ -1029,7 +1204,13 @@ export class BlockBurstScene extends Phaser.Scene {
         best = candidate;
       }
     }
-    if (best && bestD <= this.L.grabSlop) this.beginDrag(best, p);
+    if (best && bestD <= this.L.grabSlop) {
+      if (this.tutorialActive && best.getData("slot") !== 1) {
+        this.pulseTutorialPiece();
+        return;
+      }
+      this.beginDrag(best, p);
+    }
   }
 
   private pointerDistToPiece(p: Phaser.Input.Pointer, c: PieceContainer): number {
@@ -1050,6 +1231,7 @@ export class BlockBurstScene extends Phaser.Scene {
     this.tweens.add({ targets: obj, scale: 1, duration: 120, ease: "Back.easeOut" });
     this.sfx.pick();
     this.clearHint();
+    if (this.tutorialActive) this.hidePreviewGuide();
     this.moveDrag(p);
   }
 
@@ -1068,10 +1250,22 @@ export class BlockBurstScene extends Phaser.Scene {
     this.ghost.clear();
     const t = this.dropTarget;
     this.dropTarget = null;
-    if (t?.valid) {
+    const tutorialTargetX = this.L.boardLeft + (TUTORIAL_TARGET.c0 + obj.getData("cols") / 2) * this.L.cell;
+    const tutorialTargetY = this.L.boardTop + (TUTORIAL_TARGET.r0 + obj.getData("rows") / 2) * this.L.cell;
+    const completesTutorial = this.tutorialActive
+      && obj.getData("slot") === 1
+      && this.canPlace(obj.getData("cells"), TUTORIAL_TARGET.c0, TUTORIAL_TARGET.r0)
+      && Math.hypot(obj.x - tutorialTargetX, obj.y - tutorialTargetY) <= this.L.cell * 1.1;
+    if (completesTutorial) {
+      this.placePiece(obj, TUTORIAL_TARGET.c0, TUTORIAL_TARGET.r0);
+      this.completeTutorial();
+      return;
+    }
+    if (t?.valid && !this.tutorialActive) {
       this.placePiece(obj, t.c0, t.r0);
       return;
     }
+    if (this.tutorialActive) this.tutorialGuideStartedAt = this.time.now;
     this.sfx.invalid();
     const home = obj.getData("home");
     this.tweens.add({
@@ -1159,7 +1353,7 @@ export class BlockBurstScene extends Phaser.Scene {
     if (this.previewMode) {
       this.previewAdvancePending = true;
       this.autoplayTimer = 10;
-      this.time.delayedCall(1200, () => this.advancePreviewMoment());
+      this.time.delayedCall(this.previewPresentation ? 1600 : 1200, () => this.advancePreviewMoment());
       return;
     }
     if (this.slots.every((slotItem) => slotItem === null)) {
@@ -1370,7 +1564,7 @@ export class BlockBurstScene extends Phaser.Scene {
   private resetHint(): void {
     this.clearHint();
     this.hintTimer?.remove();
-    if (!this.previewMode) this.hintTimer = this.time.delayedCall(HINT_IDLE, () => this.showHint());
+    if (!this.previewMode && !this.tutorialActive) this.hintTimer = this.time.delayedCall(HINT_IDLE, () => this.showHint());
   }
 
   private clearHint(): void {
@@ -1379,7 +1573,7 @@ export class BlockBurstScene extends Phaser.Scene {
   }
 
   private showHint(): void {
-    if (this.dragging || this.gameOverActive || this.previewMode) return;
+    if (this.dragging || this.gameOverActive || this.previewMode || this.tutorialActive) return;
     const move = this.findMove();
     if (move) this.drawHint(move.cells, move.c0, move.r0);
   }
@@ -1438,20 +1632,21 @@ export class BlockBurstScene extends Phaser.Scene {
     const cy = this.L.boardTop + this.L.board / 2;
     const glow = this.add.image(cx, cy, "glow").setDepth(95).setScale(this.L.cell / 200).setAlpha(0);
     this.tweens.add({ targets: glow, scale: (this.L.cell / 72) * (1 + k * 0.17), alpha: 0.92, duration: 240, ease: "Quad.easeOut", yoyo: true, hold: 360, onComplete: () => glow.destroy() });
-    const captureCombo = this.previewMode && this.lastPreviewPayload?.sceneId === "state-combo";
+    const captureCombo = this.previewMode
+      && (this.previewPresentation || this.lastPreviewPayload?.sceneId === "state-combo");
     if ((!this.previewMode || forceLabel || captureCombo) && combo >= 2) {
       const label = `COMBO x${combo}`;
       const txt = this.add.text(cx, cy, label, {
         fontFamily: "ui-rounded, system-ui, sans-serif",
-        fontSize: `${Math.round(this.L.cell * (1 + k * 0.13))}px`,
+        fontSize: `${Math.round(this.L.cell * (0.72 + k * 0.035))}px`,
         fontStyle: "700",
         color: "#ffe9a8",
         stroke: "#17306f",
-        strokeThickness: Math.max(6, this.L.cell * 0.1),
+        strokeThickness: Math.max(4, this.L.cell * 0.075),
       }).setOrigin(0.5).setScale(0).setDepth(96);
       this.tweens.add({
         targets: txt,
-        scale: 1.12 + k * 0.05,
+        scale: 1.05 + k * 0.02,
         duration: 240,
         ease: "Back.easeOut",
         onComplete: () => this.time.delayedCall(520, () => this.tweens.add({ targets: txt, scale: 1.5, alpha: 0, duration: 240, ease: "Quad.easeIn", onComplete: () => txt.destroy() })),
@@ -1474,7 +1669,7 @@ export class BlockBurstScene extends Phaser.Scene {
     if (this.score > this.best) {
       this.best = this.score;
       this.syncBestText();
-      localStorage.setItem("block_burst_best", String(this.best));
+      if (!this.previewMode) localStorage.setItem("block_burst_best", String(this.best));
     }
   }
 
@@ -1507,7 +1702,7 @@ export class BlockBurstScene extends Phaser.Scene {
 
   private checkGameOver(): void {
     if (this.slots.some((slot) => slot && this.pieceFitsAnywhere(slot.getData("cells")))) return;
-    if (this.best > 0) localStorage.setItem("block_burst_best", String(this.best));
+    if (!this.previewMode && this.best > 0) localStorage.setItem("block_burst_best", String(this.best));
     if (!this.previewMode) void this.callbacks.submitScore(this.score);
     this.clearHint();
     this.hintTimer?.remove();
@@ -1761,19 +1956,33 @@ export class BlockBurstScene extends Phaser.Scene {
     this.scoreText.setText(formatScore(this.score));
     this.best = Math.max(this.best, 18950);
     this.syncBestText();
+    if (this.previewPresentation) {
+      this.combo = this.previewStep;
+      this.comboGrace = 1;
+      this.bestComboRun = this.previewStep;
+    }
     this.layout();
     this.applyLayout();
     this.seedPreviewBoard(this.previewStep);
     this.dealPreviewSet(this.previewStep);
     this.previewAdvancePending = false;
     this.previewMoveActive = false;
-    this.autoplayTimer = this.previewStep === 0 ? 0.36 : 0.28;
+    this.autoplayTimer = this.previewPresentation ? 0.72 : this.previewStep === 0 ? 0.36 : 0.28;
+    this.setPreviewHud(this.previewPresentation);
   }
 
   private advancePreviewMoment(): void {
     if (!this.previewMode) return;
     this.previewStep = (this.previewStep + 1) % 3;
-    this.setupPreviewMoment();
+    if (!this.previewPresentation) {
+      this.setupPreviewMoment();
+      return;
+    }
+    this.cameras.main.fadeOut(180, 17, 14, 22);
+    this.time.delayedCall(190, () => {
+      this.setupPreviewMoment();
+      this.cameras.main.fadeIn(240, 17, 14, 22);
+    });
   }
 
   private seedPreviewBoard(step: number): void {
@@ -1855,7 +2064,7 @@ export class BlockBurstScene extends Phaser.Scene {
     return palette[(c * 3 + r * 5 + offset) % palette.length] ?? "blue";
   }
 
-  private autoplayMove(): void {
+  private autoplayMove(time = this.time.now): void {
     const move = this.previewMode ? this.findPreviewMove() : this.findMove();
     if (!move) {
       this.checkGameOver();
@@ -1863,13 +2072,17 @@ export class BlockBurstScene extends Phaser.Scene {
     }
     const obj = this.slots[move.slot];
     if (!obj) return;
+    if (this.previewPresentation) {
+      this.startPreviewGesture(obj, move, time);
+      return;
+    }
     this.previewMoveActive = true;
     if (this.previewMode) this.previewTargetFlash(move.cells, move.c0, move.r0);
     obj.setDepth(50);
     this.tweens.add({
       targets: obj,
-      x: this.L.boardLeft + (move.c0 + obj.getData("cols") / 2 - 0.5) * this.L.cell,
-      y: this.L.boardTop + (move.r0 + obj.getData("rows") / 2 - 0.5) * this.L.cell,
+      x: this.L.boardLeft + (move.c0 + obj.getData("cols") / 2) * this.L.cell,
+      y: this.L.boardTop + (move.r0 + obj.getData("rows") / 2) * this.L.cell,
       scale: 1,
       duration: 260,
       ease: "Sine.easeInOut",
@@ -1879,6 +2092,112 @@ export class BlockBurstScene extends Phaser.Scene {
         this.autoplayTimer = 0.56;
       },
     });
+  }
+
+  private startPreviewGesture(
+    obj: PieceContainer,
+    move: { slot: number; cells: Array<[number, number]>; c0: number; r0: number },
+    time: number,
+  ): void {
+    const targetX = this.L.boardLeft + (move.c0 + obj.getData("cols") / 2) * this.L.cell;
+    const targetY = this.L.boardTop + (move.r0 + obj.getData("rows") / 2) * this.L.cell;
+    this.previewMoveActive = true;
+    this.previewGesture = {
+      obj,
+      move,
+      startedAt: time,
+      originX: obj.x,
+      originY: obj.y,
+      targetX,
+      targetY,
+      lift: this.L.cell * 0.42,
+      committed: false,
+    };
+    obj.setDepth(50);
+    this.previewTargetFlash(move.cells, move.c0, move.r0);
+    this.sfx.pick();
+    this.updatePreviewGesture(time);
+  }
+
+  private updatePreviewGesture(time: number): void {
+    const gesture = this.previewGesture;
+    if (!gesture) return;
+    const frame = calculatePreviewGestureFrame(time - gesture.startedAt);
+    const dragProgress = frame.dragProgress;
+    const handX = lerp(gesture.originX, gesture.targetX, dragProgress);
+    const handY = lerp(gesture.originY, gesture.targetY + gesture.lift, dragProgress);
+    const ringSize = this.L.cell * 0.32;
+    const ringScale = 1 + frame.releaseProgress * 1.35;
+    this.updatePreviewGuide(
+      handX,
+      handY,
+      this.L.cell * 1.55,
+      ringSize,
+      frame.handScale,
+      ringScale,
+      frame.handOpacity,
+    );
+
+    if (!gesture.committed && gesture.obj.active) {
+      if (frame.phase === "drag" || frame.phase === "release" || frame.phase === "complete") {
+        gesture.obj.setPosition(
+          lerp(gesture.originX, gesture.targetX, dragProgress),
+          lerp(gesture.originY - gesture.lift, gesture.targetY, dragProgress),
+        );
+      } else {
+        gesture.obj.setPosition(gesture.originX, gesture.originY - gesture.lift * frame.liftProgress);
+      }
+      gesture.obj.setScale(lerp(TRAY_SCALE, 1, Math.max(frame.liftProgress, dragProgress)));
+    }
+
+    if (!gesture.committed && (frame.phase === "release" || frame.complete)) {
+      gesture.committed = true;
+      this.placePiece(gesture.obj, gesture.move.c0, gesture.move.r0);
+    }
+
+    if (frame.complete) this.stopPreviewGesture();
+  }
+
+  private updatePreviewGuide(
+    x: number,
+    y: number,
+    handWidth: number,
+    ringSize: number,
+    handScale: number,
+    ringScale: number,
+    opacity: number,
+  ): void {
+    const canvasBounds = this.game.canvas.getBoundingClientRect();
+    const scaleX = canvasBounds.width / this.L.dw;
+    const scaleY = canvasBounds.height / this.L.dh;
+    const visible = opacity > 0.001;
+    this.previewGuide.classList.toggle("on", visible);
+    this.previewGuide.style.opacity = String(opacity);
+    this.previewGuide.style.left = `${canvasBounds.left + x * scaleX}px`;
+    this.previewGuide.style.top = `${canvasBounds.top + y * scaleY}px`;
+    const handWidthCss = handWidth * scaleX;
+    this.previewGuide.style.width = `${handWidthCss}px`;
+    this.previewGuide.style.height = `${handWidthCss}px`;
+    this.previewGuideHand.style.width = `${handWidthCss}px`;
+    this.previewGuideHand.style.transform = `translate(-37%, -10%) scale(${handScale})`;
+    this.previewGuideRing.style.width = `${ringSize * scaleX}px`;
+    this.previewGuideRing.style.height = `${ringSize * scaleY}px`;
+    this.previewGuideRing.style.transform = `translate(-50%, -50%) scale(${ringScale})`;
+  }
+
+  private stopPreviewGesture(): void {
+    this.previewGesture = null;
+    this.previewMoveActive = false;
+    this.hidePreviewGuide();
+  }
+
+  private hidePreviewGuide(): void {
+    this.previewGuide?.classList.remove("on");
+    if (this.previewGuide) this.previewGuide.style.opacity = "0";
+  }
+
+  private isPreviewPresentationScene(sceneId?: string): boolean {
+    return !sceneId || sceneId === "sdk-preview" || sceneId === "preview" || sceneId.startsWith("listing-");
   }
 
   private findPreviewMove(): { slot: number; cells: Array<[number, number]>; c0: number; r0: number } | null {
@@ -1901,6 +2220,14 @@ export class BlockBurstScene extends Phaser.Scene {
       g.fillRoundedRect(x + 4, y + 4, this.L.cell - 8, this.L.cell - 8, Math.max(8, this.L.cell * 0.1));
     }
     g.setAlpha(0.25);
-    this.tweens.add({ targets: g, alpha: 0.66, duration: 180, yoyo: true, repeat: 1, ease: "Sine.easeInOut", onComplete: () => g.clear() });
+    this.tweens.add({
+      targets: g,
+      alpha: 0.66,
+      duration: this.previewPresentation ? 450 : 180,
+      yoyo: true,
+      repeat: 1,
+      ease: "Sine.easeInOut",
+      onComplete: () => g.clear(),
+    });
   }
 }

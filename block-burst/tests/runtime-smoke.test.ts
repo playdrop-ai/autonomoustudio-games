@@ -12,6 +12,23 @@ test("built game renders and exposes listing preview hook", async () => {
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto(APP_URL, { waitUntil: "networkidle" });
     await page.waitForSelector("canvas", { timeout: 10_000 });
+
+    let tutorialStart: Record<string, unknown> = {};
+    const tutorialDeadline = Date.now() + 3000;
+    while ((!tutorialStart.tutorialActive || !tutorialStart.handVisible) && Date.now() < tutorialDeadline) {
+      await page.waitForTimeout(100);
+      tutorialStart = await page.evaluate(() => JSON.parse(window.render_game_to_text?.() ?? "{}"));
+    }
+    assert.equal(tutorialStart.tutorialActive, true);
+    assert.equal(tutorialStart.handVisible, true);
+    await page.mouse.move(195, 658);
+    await page.mouse.down();
+    await page.mouse.move(195, 325, { steps: 18 });
+    await page.mouse.up();
+    await page.waitForFunction(() => window.localStorage.getItem("block_burst_tutorial_complete") === "1");
+    const tutorialComplete = await page.evaluate(() => JSON.parse(window.render_game_to_text?.() ?? "{}"));
+    assert.equal(tutorialComplete.tutorialActive, false);
+
     await page.evaluate(async () => {
       if (!window.__listingCapture?.prepare) throw new Error("missing listing preview hook");
       await window.__listingCapture.prepare({
@@ -22,12 +39,31 @@ test("built game renders and exposes listing preview hook", async () => {
         audioPolicy: "sfx-only",
       });
     });
+    const previewStart = await page.evaluate(() => {
+      if (!window.render_game_to_text) throw new Error("missing preview debug hook");
+      return JSON.parse(window.render_game_to_text());
+    });
+    assert.equal(previewStart.previewMode, true);
+    assert.equal(previewStart.previewPresentation, true);
+    assert.equal(previewStart.hudVisible, false);
+    assert.equal(previewStart.overlayVisible, false);
+
+    let previewGesture: Record<string, unknown> = {};
+    const gestureDeadline = Date.now() + 3000;
+    while ((!previewGesture.gestureActive || !previewGesture.handVisible) && Date.now() < gestureDeadline) {
+      await page.waitForTimeout(150);
+      previewGesture = await page.evaluate(() => JSON.parse(window.render_game_to_text?.() ?? "{}"));
+    }
+    assert.equal(previewGesture.gestureActive, true);
+    assert.equal(previewGesture.handVisible, true);
+    assert.match(String(previewGesture.gesturePhase), /fade-in|lift|drag/);
+
     const audio = await page.evaluate(async () => {
       if (!window.__listingCapture?.startAudioCapture || !window.__listingCapture.stopAudioCapture) {
         throw new Error("missing listing audio capture hooks");
       }
       await window.__listingCapture.startAudioCapture();
-      await new Promise((resolve) => setTimeout(resolve, 1800));
+      await new Promise((resolve) => setTimeout(resolve, 3200));
       return window.__listingCapture.stopAudioCapture();
     });
     assert.match(audio.mimeType, /^audio\//);
@@ -42,11 +78,13 @@ test("built game renders and exposes listing preview hook", async () => {
         height: Math.round(rect?.height ?? 0),
         title: document.title,
         hammers: window.localStorage.getItem("block_burst_hammers"),
+        tutorial: window.localStorage.getItem("block_burst_tutorial_complete"),
       };
     });
     assert.equal(state.title, "Block Burst");
     assert.equal(state.hasCanvas, true);
     assert.equal(state.hammers, "2");
+    assert.equal(state.tutorial, "1");
     assert.ok(state.width > 300);
     assert.ok(state.height > 600);
     assert.deepEqual(errors, []);

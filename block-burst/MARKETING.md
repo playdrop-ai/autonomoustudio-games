@@ -20,11 +20,10 @@ Accepted listing media:
 - `assets/marketing/videos/landscape.mp4`
 - `assets/marketing/videos/portrait.mp4`
 
-The final listing MP4s were rendered from official `playdrop project marketing capture` source captures in `assets/marketing/captures/`.
-The `1.0.4` media pass removes all special blocks from preview/video and focuses the launch package on the actual core loop: place normal pieces, complete rows or columns, and watch blocks burst. The preview stages three normal-block moments: a multi-line 2x2 clear, a horizontal row clear, and a vertical column clear. Listing capture records real SFX at accepted loudness, and final media must pass visual review before republish.
+The `1.0.5` listing MP4s are externally recorded from the shipped preview hook at the native portrait and desktop surface sizes. Both use the same deterministic normal-block sequence and synchronized in-game SFX. The preview focuses on the actual core loop: drag normal pieces, complete rows or columns, and watch blocks burst through successive combo moments.
 
 Visual review evidence:
 
-- `tmp/final-r104-contact.png` shows the final portrait and landscape listing videos with no browser chrome, no HUD, no stretched frames, no special-block icons, and multiple visible normal line/block burst moments.
-- `tmp/block-burst-proof-composite-r104.png` compares the selected portrait video frame, landscape video frame, both hero artworks, and app icon as the current launch set.
-- Official capture audio is `sfx-only`, full-length, and accepted by PlayDrop marketing capture at about `-16.7 LUFS` with peaks below clipping.
+- Portrait final: `390x844`, 15 seconds, H.264 at 30 fps, stereo AAC at 48 kHz.
+- Desktop final: `1280x720`, 15 seconds, H.264 at 30 fps, stereo AAC at 48 kHz.
+- Both videos use square pixels, contain no browser chrome or gameplay HUD, preserve the complete board and gesture cue, and visibly include normal line bursts plus combo payoffs.

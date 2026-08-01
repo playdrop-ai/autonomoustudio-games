@@ -50,8 +50,21 @@ edge is `#181F33`. Grid gaps and frame widths scale with cell size so these colo
 retain the same visible proportions as the selected art direction.
 
 Show the saved best score beneath the current score whenever one is available.
-Keep all three tray pieces large and tactile. Do not show a tutorial overlay in
-the current build; onboarding will be redesigned separately.
+Keep all three tray pieces large and tactile. On the first local play session,
+seed one real four-block line completion and loop the approved hand cue from the
+middle tray piece to its exact target. Accept only that demonstrated placement,
+complete the normal burst, then persist tutorial completion locally and continue
+the same run without an overlay. Keep the hammer out of this opening lesson; its
+existing contextual instruction appears when the player selects it later.
 
 Only combo streaks may show transient gameplay text (`COMBO xN`, for `N >= 2`).
 Do not show generic praise, score-gain, new-best, or availability toasts.
+
+PlayDrop preview mode is a deterministic, self-playing presentation of real game
+actions. Hide the score, best, hammer controls, hints, result overlays, and all
+other HUD while it runs. Show the approved studio hand with its fingertip anchored
+to the real contact point, plus a restrained touch ring. Each move must visibly
+press, lift, drag, release, and then commit through the normal placement and clear
+logic. Cycle through authored line-clear and combo moments with a quiet transition,
+without accepting player input, showing ads, or writing preview progress to local
+or PlayDrop persistence. Static named QA capture states may keep their HUD.

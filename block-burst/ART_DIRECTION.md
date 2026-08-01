@@ -76,6 +76,7 @@ visual target, not a claim that every lighting detail is already implemented.
 - Mobile portrait background: `assets/generated/background-mobile-portrait.png`
 - Desktop and landscape background: `assets/generated/background-desktop.png`
 - Transparent hammer: `assets/generated/hammer.png`
+- Approved preview hand: `assets/ui/preview-hand.png`
 - Portrait identity reference: `assets/marketing/playdrop/hero-portrait.png`
 - Icon material reference: `assets/marketing/playdrop/icon.png`
 - Real portrait layout reference: `assets/marketing/captures/mobile-portrait-reference.png`

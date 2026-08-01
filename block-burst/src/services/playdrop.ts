@@ -152,6 +152,7 @@ export class PlaydropServices {
     const remote = normalizeHammers(this.sdk?.me.appData?.data.hammers);
     const local = normalizeHammers(window.localStorage.getItem(HAMMERS_STORAGE_KEY));
     const hammers = remote ?? local ?? defaultValue;
+    if (this.isPreviewPhase()) return hammers;
     window.localStorage.setItem(HAMMERS_STORAGE_KEY, String(hammers));
     if (remote === null && this.sdk) {
       await this.sdk.me.updateAppData({ hammers });
@@ -160,6 +161,7 @@ export class PlaydropServices {
   }
 
   async saveHammers(hammers: number): Promise<void> {
+    if (this.isPreviewPhase()) return;
     const value = Math.max(0, Math.floor(hammers));
     window.localStorage.setItem(HAMMERS_STORAGE_KEY, String(value));
     if (this.sdk) {

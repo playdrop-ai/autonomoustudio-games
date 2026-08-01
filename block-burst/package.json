@@ -1,13 +1,13 @@
 {
   "name": "block-burst",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "type": "module",
   "private": true,
   "scripts": {
     "build": "node build.mjs",
     "dev": "node build.mjs --watch",
     "test": "tsx --test tests/**/*.test.ts",
-    "validate": "npm run test && tsc --noEmit && npm run build",
+    "validate": "tsc --noEmit && npm run build && npm run test",
     "capture:screens": "node scripts/capture-screens.mjs",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json}\""
   },
@@ -21,7 +21,7 @@
     "@playdrop/types": "file:vendor/playdrop/types.tgz",
     "@playdrop/web-bridge": "file:vendor/playdrop/web-bridge.tgz",
     "esbuild": "^0.24.0",
-    "phaser": "^3.80.1",
+    "phaser": "^3.90.0",
     "playdrop-sdk-types": "file:vendor/playdrop-sdk-types.tgz",
     "playwright": "^1.61.0",
     "prettier": "^3.2.5",
@@ -29,7 +29,7 @@
     "typescript": "^5.9.2"
   },
   "playdrop": {
-    "platformVersion": "0.4.0",
-    "sdkTypesVersion": "0.9.6"
+    "platformVersion": "0.14.0",
+    "sdkTypesVersion": "0.14.0"
   }
 }

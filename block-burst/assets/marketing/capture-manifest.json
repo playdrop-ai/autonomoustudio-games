@@ -1,47 +1,57 @@
 {
   "appName": "block-burst",
-  "createdAt": "2026-06-20T20:52:48.772Z",
-  "captureSource": "playdrop-cli-local-screen",
-  "captureEngine": "avfoundation",
+  "createdAt": "2026-08-01T23:11:39Z",
+  "captureSource": "external-playwright-listing-preview",
+  "captureEngine": "chromium-playwright-video",
   "audioPolicy": "sfx-only",
-  "seed": "block-burst-r104-normal-clears",
+  "seed": "block-burst-1.0.5",
   "captures": [
     {
       "surface": "mobile-portrait",
-      "path": "assets/marketing/captures/mobile-portrait.mp4",
-      "width": 1080,
-      "height": 1920,
-      "fps": 60,
-      "durationSeconds": 14.391,
+      "path": "assets/marketing/videos/portrait.mp4",
+      "width": 390,
+      "height": 844,
+      "fps": 30,
+      "durationSeconds": 15,
       "hasAudio": true,
       "audio": {
         "policy": "sfx-only",
         "backgroundMusic": false,
         "sfx": true,
-        "peakDb": -1.4,
-        "integratedLufs": -16.7
+        "codec": "aac",
+        "sampleRate": 48000,
+        "channels": 2
       },
       "validation": {
-        "previewFrameSimilarity": 0.619048
+        "codec": "h264",
+        "pixelFormat": "yuv420p",
+        "sampleAspectRatio": "1:1",
+        "interactionReviewed": true,
+        "payoffReviewed": true
       }
     },
     {
-      "surface": "mobile-landscape",
-      "path": "assets/marketing/captures/mobile-landscape.mp4",
-      "width": 1920,
-      "height": 1080,
-      "fps": 60,
-      "durationSeconds": 14.396,
+      "surface": "desktop",
+      "path": "assets/marketing/videos/landscape.mp4",
+      "width": 1280,
+      "height": 720,
+      "fps": 30,
+      "durationSeconds": 15,
       "hasAudio": true,
       "audio": {
         "policy": "sfx-only",
         "backgroundMusic": false,
         "sfx": true,
-        "peakDb": -1.3,
-        "integratedLufs": -16.7
+        "codec": "aac",
+        "sampleRate": 48000,
+        "channels": 2
       },
       "validation": {
-        "previewFrameSimilarity": 0.690398
+        "codec": "h264",
+        "pixelFormat": "yuv420p",
+        "sampleAspectRatio": "1:1",
+        "interactionReviewed": true,
+        "payoffReviewed": true
       }
     }
   ]

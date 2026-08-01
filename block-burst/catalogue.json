@@ -2,7 +2,8 @@
   "apps": [
     {
       "name": "block-burst",
-      "version": "1.0.4",
+      "version": "1.0.5",
+      "releaseNotes": "Adds a first-run drag lesson, deterministic gameplay previews with visible touch guidance, PlayDrop surface playtests, and refreshed portrait and desktop listing videos.",
       "license": "PLAYDROP",
       "displayName": "Block Burst",
       "subtitle": "Build lines. Burst blocks. Chase combos.",
@@ -70,6 +71,21 @@
             "primary": "assets/generated/hammer.png"
           },
           "license": "PLAYDROP"
+        },
+        {
+          "name": "block-burst-ui-preview-hand",
+          "runtimeKey": "preview-hand",
+          "displayName": "Block Burst Preview Hand",
+          "description": "Approved hand cursor shown during the automated gameplay preview.",
+          "category": "IMAGE",
+          "subcategory": "generic",
+          "format": "PNG",
+          "visibility": "PUBLIC",
+          "tags": [],
+          "files": {
+            "primary": "assets/ui/preview-hand.png"
+          },
+          "license": "PLAYDROP"
         }
       ],
       "listing": {
@@ -95,6 +111,68 @@
         "mobilePortrait": true
       },
       "primarySurface": "MOBILE_PORTRAIT",
+      "playtestTapes": {
+        "MOBILE_PORTRAIT": {
+          "version": 1,
+          "primaryVerb": "drag",
+          "durationMs": 5000,
+          "startOnlyEventCount": 0,
+          "successSignals": [
+            {
+              "kind": "VISIBLE_PROGRESS",
+              "description": "The guided four-block piece completes and bursts the prepared line."
+            }
+          ],
+          "events": [
+            { "type": "pointerDown", "atMs": 500, "x": 0.5, "y": 0.78 },
+            { "type": "pointerMove", "atMs": 900, "x": 0.5, "y": 0.7 },
+            { "type": "pointerMove", "atMs": 1300, "x": 0.5, "y": 0.6 },
+            { "type": "pointerMove", "atMs": 1700, "x": 0.5, "y": 0.5 },
+            { "type": "pointerMove", "atMs": 2100, "x": 0.5, "y": 0.445 },
+            { "type": "pointerUp", "atMs": 2300, "x": 0.5, "y": 0.445 }
+          ]
+        },
+        "MOBILE_LANDSCAPE": {
+          "version": 1,
+          "primaryVerb": "drag",
+          "durationMs": 5000,
+          "startOnlyEventCount": 0,
+          "successSignals": [
+            {
+              "kind": "VISIBLE_PROGRESS",
+              "description": "The guided four-block piece completes and bursts the prepared line."
+            }
+          ],
+          "events": [
+            { "type": "pointerDown", "atMs": 500, "x": 0.739, "y": 0.515 },
+            { "type": "pointerMove", "atMs": 900, "x": 0.64, "y": 0.55 },
+            { "type": "pointerMove", "atMs": 1300, "x": 0.52, "y": 0.575 },
+            { "type": "pointerMove", "atMs": 1700, "x": 0.41, "y": 0.6 },
+            { "type": "pointerMove", "atMs": 2100, "x": 0.34, "y": 0.625 },
+            { "type": "pointerUp", "atMs": 2300, "x": 0.34, "y": 0.625 }
+          ]
+        },
+        "DESKTOP": {
+          "version": 1,
+          "primaryVerb": "drag",
+          "durationMs": 5000,
+          "startOnlyEventCount": 0,
+          "successSignals": [
+            {
+              "kind": "VISIBLE_PROGRESS",
+              "description": "The guided four-block piece completes and bursts the prepared line."
+            }
+          ],
+          "events": [
+            { "type": "pointerDown", "atMs": 500, "x": 0.754, "y": 0.517 },
+            { "type": "pointerMove", "atMs": 900, "x": 0.65, "y": 0.51 },
+            { "type": "pointerMove", "atMs": 1300, "x": 0.54, "y": 0.505 },
+            { "type": "pointerMove", "atMs": 1700, "x": 0.43, "y": 0.497 },
+            { "type": "pointerMove", "atMs": 2100, "x": 0.34, "y": 0.488 },
+            { "type": "pointerUp", "atMs": 2300, "x": 0.34, "y": 0.488 }
+          ]
+        }
+      },
       "templateSource": "playdrop/template/typescript_template"
     }
   ]

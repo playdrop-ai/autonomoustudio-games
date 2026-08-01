@@ -8,7 +8,10 @@ import {
 
 type AdStatus = "completed" | "dismissed" | "not_ready" | "expired";
 
-function installPlaydropWindow(sdk: object): () => void {
+function installPlaydropWindow(
+  sdk: object,
+  localStorage: { getItem: (key: string) => string | null; setItem: (key: string, value: string) => void },
+): () => void {
   const descriptor = Object.getOwnPropertyDescriptor(globalThis, "window");
   Object.defineProperty(globalThis, "window", {
     configurable: true,
@@ -16,6 +19,7 @@ function installPlaydropWindow(sdk: object): () => void {
       location: { href: "https://playdrop.test/?playdrop_channel=test" },
       playdrop: { init: async () => sdk },
       dispatchEvent: () => true,
+      localStorage,
     },
   });
   return () => {
@@ -24,11 +28,32 @@ function installPlaydropWindow(sdk: object): () => void {
   };
 }
 
-function createHarness(rewardedStatus: AdStatus = "completed") {
+function createHarness(rewardedStatus: AdStatus = "completed", phase = "play") {
   let now = 0;
-  const calls = { rewardedLoad: 0, rewardedShow: 0, interstitialLoad: 0, interstitialShow: 0 };
+  const stored = new Map<string, string>();
+  const calls = {
+    rewardedLoad: 0,
+    rewardedShow: 0,
+    interstitialLoad: 0,
+    interstitialShow: 0,
+    appDataUpdates: 0,
+    localWrites: 0,
+  };
+  const localStorage = {
+    getItem: (key: string) => stored.get(key) ?? null,
+    setItem: (key: string, value: string) => {
+      calls.localWrites++;
+      stored.set(key, value);
+    },
+  };
   const sdk = {
-    host: { phase: "play" },
+    host: { phase },
+    me: {
+      appData: { data: {} },
+      updateAppData: async () => {
+        calls.appDataUpdates++;
+      },
+    },
     ads: {
       rewarded: {
         load: async () => {
@@ -52,7 +77,7 @@ function createHarness(rewardedStatus: AdStatus = "completed") {
       },
     },
   };
-  const restore = installPlaydropWindow(sdk);
+  const restore = installPlaydropWindow(sdk, localStorage);
   const services = new PlaydropServices(() => now);
   return {
     calls,
@@ -133,6 +158,19 @@ test("rapid rewarded taps cannot start overlapping ad requests", async () => {
     assert.equal(await first, true);
     assert.equal(harness.calls.rewardedLoad, 1);
     assert.equal(harness.calls.rewardedShow, 1);
+  } finally {
+    harness.restore();
+  }
+});
+
+test("preview phase reads hammer state without writing persistence", async () => {
+  const harness = createHarness("completed", "preview");
+  try {
+    await harness.services.init();
+    assert.equal(await harness.services.loadHammers(2), 2);
+    await harness.services.saveHammers(5);
+    assert.equal(harness.calls.localWrites, 0);
+    assert.equal(harness.calls.appDataUpdates, 0);
   } finally {
     harness.restore();
   }

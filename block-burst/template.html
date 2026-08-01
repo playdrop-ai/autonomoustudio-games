@@ -34,10 +34,56 @@
         display: block;
         touch-action: none;
       }
+
+      #preview-guide {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        z-index: 99999;
+        overflow: visible;
+        will-change: left, top, opacity;
+      }
+
+      #preview-guide.on {
+        visibility: visible;
+      }
+
+      #preview-guide-hand {
+        position: absolute;
+        left: 0;
+        top: 0;
+        max-width: none;
+        height: auto;
+        transform-origin: 37% 10%;
+        filter: drop-shadow(0 8px 12px rgba(8, 5, 20, 0.34));
+        will-change: width, transform;
+      }
+
+      #preview-guide-ring {
+        position: absolute;
+        left: 0;
+        top: 0;
+        box-sizing: border-box;
+        border: 3px solid rgba(255, 255, 255, 0.96);
+        border-radius: 50%;
+        background: rgba(38, 24, 77, 0.78);
+        box-shadow: 0 0 14px rgba(183, 154, 255, 0.58);
+        transform-origin: center;
+        will-change: width, height, transform;
+      }
     </style>
   </head>
   <body>
     <div id="game"></div>
+    <div id="preview-guide" aria-hidden="true">
+      <div id="preview-guide-ring"></div>
+      <img id="preview-guide-hand" alt="" />
+    </div>
     <script src="https://assets.playdrop.ai/sdk/playdrop.js"></script>
     <!-- APP_SCRIPT -->
   </body>
