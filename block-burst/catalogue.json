@@ -1,0 +1,58 @@
+{
+  "apps": [
+    {
+      "name": "block-burst",
+      "version": "1.0.4",
+      "license": "PLAYDROP",
+      "displayName": "Block Burst",
+      "description": "Drag chunky pieces onto the grid, complete rows and columns, watch the blocks burst, and chase the highest combo score before the board locks up.",
+      "type": "GAME",
+      "authMode": "OPTIONAL",
+      "controllerMode": "UNSUPPORTED",
+      "previewable": true,
+      "preview": {
+        "audioPolicy": "sfx-only"
+      },
+      "file": "dist/index.html",
+      "emoji": "💥",
+      "color": "#2D69D8",
+      "tags": [
+        "game-genre/puzzle",
+        "game-genre/strategy",
+        "interaction-mode/solo"
+      ],
+      "leaderboards": [
+        {
+          "key": "highest_score",
+          "displayName": "Highest Score",
+          "description": "Best Block Burst score from a completed run.",
+          "scoreType": "INTEGER",
+          "sort": "DESC"
+        }
+      ],
+      "listing": {
+        "icon": "assets/marketing/playdrop/icon.png",
+        "heroLandscape": "assets/marketing/playdrop/hero-landscape.png",
+        "heroPortrait": "assets/marketing/playdrop/hero-portrait.png",
+        "screenshotsLandscape": [
+          "assets/marketing/screenshots/landscape-1.png"
+        ],
+        "screenshotsPortrait": [
+          "assets/marketing/screenshots/portrait-1.png"
+        ],
+        "videosLandscape": [
+          "assets/marketing/videos/landscape.mp4"
+        ],
+        "videosPortrait": [
+          "assets/marketing/videos/portrait.mp4"
+        ]
+      },
+      "surfaceTargets": {
+        "desktop": true,
+        "mobileLandscape": true,
+        "mobilePortrait": true
+      },
+      "templateSource": "playdrop/template/typescript_template"
+    }
+  ]
+}

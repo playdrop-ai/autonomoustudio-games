@@ -1,0 +1,10 @@
+node_modules
+tmp
+tests
+scripts
+*.log
+package-lock.json
+assets/marketing/work
+assets/marketing/raw
+assets/marketing/captures/*.webm
+assets/marketing/captures/*.mov

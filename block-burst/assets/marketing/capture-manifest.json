@@ -1,0 +1,48 @@
+{
+  "appName": "block-burst",
+  "createdAt": "2026-06-20T20:52:48.772Z",
+  "captureSource": "playdrop-cli-local-screen",
+  "captureEngine": "avfoundation",
+  "audioPolicy": "sfx-only",
+  "seed": "block-burst-r104-normal-clears",
+  "captures": [
+    {
+      "surface": "mobile-portrait",
+      "path": "assets/marketing/captures/mobile-portrait.mp4",
+      "width": 1080,
+      "height": 1920,
+      "fps": 60,
+      "durationSeconds": 14.391,
+      "hasAudio": true,
+      "audio": {
+        "policy": "sfx-only",
+        "backgroundMusic": false,
+        "sfx": true,
+        "peakDb": -1.4,
+        "integratedLufs": -16.7
+      },
+      "validation": {
+        "previewFrameSimilarity": 0.619048
+      }
+    },
+    {
+      "surface": "mobile-landscape",
+      "path": "assets/marketing/captures/mobile-landscape.mp4",
+      "width": 1920,
+      "height": 1080,
+      "fps": 60,
+      "durationSeconds": 14.396,
+      "hasAudio": true,
+      "audio": {
+        "policy": "sfx-only",
+        "backgroundMusic": false,
+        "sfx": true,
+        "peakDb": -1.3,
+        "integratedLufs": -16.7
+      },
+      "validation": {
+        "previewFrameSimilarity": 0.690398
+      }
+    }
+  ]
+}

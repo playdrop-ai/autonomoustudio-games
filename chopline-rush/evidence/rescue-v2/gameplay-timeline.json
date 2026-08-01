@@ -1,0 +1,2089 @@
+{
+ "final": {
+  "score": 41,
+  "outcome": "lost",
+  "best": 41
+ },
+ "flightsLaunched": 14,
+ "timeline": [
+  {
+   "t": 1.412,
+   "knifeState": "stuck",
+   "slicing": false,
+   "score": 0,
+   "outcome": null,
+   "y": 2.1699999999999995,
+   "z": 0.32775681356645436
+  },
+  {
+   "t": 1.796,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 0,
+   "outcome": null,
+   "y": 2.697642699999996,
+   "z": 0.7789568135664515
+  },
+  {
+   "t": 1.988,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 0,
+   "outcome": null,
+   "y": 3.0393897499999945,
+   "z": 1.1045568135664499
+  },
+  {
+   "t": 2.065,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 0,
+   "outcome": null,
+   "y": 3.6948803999999997,
+   "z": 1.8477568135664546
+  },
+  {
+   "t": 2.139,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 0,
+   "outcome": null,
+   "y": 4.099228066666664,
+   "z": 2.448556813566451
+  },
+  {
+   "t": 2.214,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 0,
+   "outcome": null,
+   "y": 4.390123983333331,
+   "z": 3.048556813566451
+  },
+  {
+   "t": 2.288,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 0,
+   "outcome": null,
+   "y": 4.567853766666667,
+   "z": 3.6477568135664558
+  },
+  {
+   "t": 2.364,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 0,
+   "outcome": null,
+   "y": 4.634354766666668,
+   "z": 4.247756813566457
+  },
+  {
+   "t": 2.438,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 0,
+   "outcome": null,
+   "y": 4.587763766666669,
+   "z": 4.845356813566455
+  },
+  {
+   "t": 2.901,
+   "knifeState": "flying",
+   "slicing": true,
+   "score": 5,
+   "outcome": null,
+   "y": 4.478557934583336,
+   "z": 5.261156813566456
+  },
+  {
+   "t": 2.966,
+   "knifeState": "flying",
+   "slicing": true,
+   "score": 5,
+   "outcome": null,
+   "y": 4.478557934583336,
+   "z": 5.261156813566456
+  },
+  {
+   "t": 3.041,
+   "knifeState": "flying",
+   "slicing": true,
+   "score": 5,
+   "outcome": null,
+   "y": 4.324746750666672,
+   "z": 5.261156813566456
+  },
+  {
+   "t": 3.114,
+   "knifeState": "flying",
+   "slicing": true,
+   "score": 6,
+   "outcome": null,
+   "y": 4.074154214300004,
+   "z": 5.261156813566456
+  },
+  {
+   "t": 3.212,
+   "knifeState": "flying",
+   "slicing": true,
+   "score": 9,
+   "outcome": null,
+   "y": 3.7632489525182473,
+   "z": 5.261156813566456
+  },
+  {
+   "t": 3.306,
+   "knifeState": "flying",
+   "slicing": true,
+   "score": 10,
+   "outcome": null,
+   "y": 3.511650848253432,
+   "z": 5.261156813566456
+  },
+  {
+   "t": 3.372,
+   "knifeState": "flying",
+   "slicing": true,
+   "score": 11,
+   "outcome": null,
+   "y": 3.2454049687906035,
+   "z": 5.261156813566456
+  },
+  {
+   "t": 3.469,
+   "knifeState": "flying",
+   "slicing": true,
+   "score": 12,
+   "outcome": null,
+   "y": 2.720618439774318,
+   "z": 5.261156813566456
+  },
+  {
+   "t": 3.557,
+   "knifeState": "stuck",
+   "slicing": false,
+   "score": 13,
+   "outcome": null,
+   "y": 2.1749999999999985,
+   "z": 5.261156813566456
+  },
+  {
+   "t": 3.878,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 13,
+   "outcome": null,
+   "y": 2.7859949999999993,
+   "z": 5.789156813566454
+  },
+  {
+   "t": 4.023,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 13,
+   "outcome": null,
+   "y": 3.309870000000001,
+   "z": 6.317156813566453
+  },
+  {
+   "t": 4.118,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 13,
+   "outcome": null,
+   "y": 3.7466250000000008,
+   "z": 6.845156813566452
+  },
+  {
+   "t": 4.187,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 13,
+   "outcome": null,
+   "y": 4.088940000000004,
+   "z": 7.360356813566455
+  },
+  {
+   "t": 4.281,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 13,
+   "outcome": null,
+   "y": 4.42964766666667,
+   "z": 8.084356813566455
+  },
+  {
+   "t": 4.36,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 13,
+   "outcome": null,
+   "y": 4.606987466666671,
+   "z": 8.80755681356646
+  },
+  {
+   "t": 4.441,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 13,
+   "outcome": null,
+   "y": 4.63000606666667,
+   "z": 9.400356813566454
+  },
+  {
+   "t": 4.52,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 13,
+   "outcome": null,
+   "y": 4.527192908333337,
+   "z": 10.059556813566465
+  },
+  {
+   "t": 4.602,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 13,
+   "outcome": null,
+   "y": 4.310992458333337,
+   "z": 10.670756813566467
+  },
+  {
+   "t": 4.683,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 13,
+   "outcome": null,
+   "y": 3.943256225000006,
+   "z": 11.333956813566468
+  },
+  {
+   "t": 4.752,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 13,
+   "outcome": null,
+   "y": 3.4924864416666703,
+   "z": 11.93475681356647
+  },
+  {
+   "t": 4.828,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 13,
+   "outcome": null,
+   "y": 2.9292113833333366,
+   "z": 12.534756813566469
+  },
+  {
+   "t": 4.973,
+   "knifeState": "stuck",
+   "slicing": false,
+   "score": 13,
+   "outcome": null,
+   "y": 2.290228387833104,
+   "z": 13.03475681356647
+  },
+  {
+   "t": 5.209,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 13,
+   "outcome": null,
+   "y": 2.8971087961664423,
+   "z": 13.557956813566472
+  },
+  {
+   "t": 5.28,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 13,
+   "outcome": null,
+   "y": 3.497427212833105,
+   "z": 14.16915681356647
+  },
+  {
+   "t": 5.35,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 13,
+   "outcome": null,
+   "y": 3.9727521544997715,
+   "z": 14.76915681356647
+  },
+  {
+   "t": 5.648,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 14,
+   "outcome": null,
+   "y": 4.173026034499775,
+   "z": 15.090756813566477
+  },
+  {
+   "t": 5.72,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 15,
+   "outcome": null,
+   "y": 4.393253390333107,
+   "z": 15.754756813566479
+  },
+  {
+   "t": 5.818,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 15,
+   "outcome": null,
+   "y": 5.117297535999766,
+   "z": 16.55235681356647
+  },
+  {
+   "t": 5.889,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 15,
+   "outcome": null,
+   "y": 5.63432878599977,
+   "z": 17.08515681356646
+  },
+  {
+   "t": 5.958,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 15,
+   "outcome": null,
+   "y": 6.103119527666431,
+   "z": 17.674756813566454
+  },
+  {
+   "t": 6.029,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 15,
+   "outcome": null,
+   "y": 6.440556769333102,
+   "z": 18.219556813566456
+  },
+  {
+   "t": 6.095,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 15,
+   "outcome": null,
+   "y": 6.679959160999772,
+   "z": 18.752356813566454
+  },
+  {
+   "t": 6.175,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 15,
+   "outcome": null,
+   "y": 6.843942710999774,
+   "z": 19.35315681356645
+  },
+  {
+   "t": 6.245,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 15,
+   "outcome": null,
+   "y": 6.894617652666441,
+   "z": 19.953156813566444
+  },
+  {
+   "t": 6.31,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 15,
+   "outcome": null,
+   "y": 6.846066119333111,
+   "z": 20.481956813566434
+  },
+  {
+   "t": 6.379,
+   "knifeState": "flying",
+   "slicing": true,
+   "score": 16,
+   "outcome": null,
+   "y": 6.804277994333113,
+   "z": 20.685956813566428
+  },
+  {
+   "t": 6.444,
+   "knifeState": "flying",
+   "slicing": true,
+   "score": 16,
+   "outcome": null,
+   "y": 6.669250094333113,
+   "z": 20.685956813566428
+  },
+  {
+   "t": 6.511,
+   "knifeState": "flying",
+   "slicing": true,
+   "score": 16,
+   "outcome": null,
+   "y": 6.44412096099978,
+   "z": 20.685956813566428
+  },
+  {
+   "t": 6.581,
+   "knifeState": "flying",
+   "slicing": true,
+   "score": 16,
+   "outcome": null,
+   "y": 6.132982594333119,
+   "z": 20.685956813566428
+  },
+  {
+   "t": 6.656,
+   "knifeState": "flying",
+   "slicing": true,
+   "score": 16,
+   "outcome": null,
+   "y": 5.674932535999788,
+   "z": 20.685956813566428
+  },
+  {
+   "t": 6.733,
+   "knifeState": "flying",
+   "slicing": true,
+   "score": 17,
+   "outcome": null,
+   "y": 5.183903285999785,
+   "z": 20.685956813566428
+  },
+  {
+   "t": 6.818,
+   "knifeState": "flying",
+   "slicing": true,
+   "score": 17,
+   "outcome": null,
+   "y": 4.512052577666446,
+   "z": 20.685956813566428
+  },
+  {
+   "t": 6.903,
+   "knifeState": "flying",
+   "slicing": true,
+   "score": 18,
+   "outcome": null,
+   "y": 3.6643433318331127,
+   "z": 20.685956813566428
+  },
+  {
+   "t": 6.994,
+   "knifeState": "flying",
+   "slicing": true,
+   "score": 19,
+   "outcome": null,
+   "y": 2.922654461020621,
+   "z": 20.685956813566428
+  },
+  {
+   "t": 7.089,
+   "knifeState": "stuck",
+   "slicing": false,
+   "score": 19,
+   "outcome": null,
+   "y": 2.1750000000000003,
+   "z": 20.685956813566428
+  },
+  {
+   "t": 7.375,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 19,
+   "outcome": null,
+   "y": 2.9207446416666643,
+   "z": 21.341156813566425
+  },
+  {
+   "t": 7.441,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 19,
+   "outcome": null,
+   "y": 3.4335875833333387,
+   "z": 21.879556813566435
+  },
+  {
+   "t": 7.506,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 19,
+   "outcome": null,
+   "y": 3.854812149999999,
+   "z": 22.41715681356642
+  },
+  {
+   "t": 7.568,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 19,
+   "outcome": null,
+   "y": 4.147170225000004,
+   "z": 22.88355681356643
+  },
+  {
+   "t": 7.65,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 19,
+   "outcome": null,
+   "y": 4.446602425000005,
+   "z": 23.548356813566425
+  },
+  {
+   "t": 7.717,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 19,
+   "outcome": null,
+   "y": 4.586991225000006,
+   "z": 24.083556813566425
+  },
+  {
+   "t": 7.796,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 19,
+   "outcome": null,
+   "y": 4.637952758333339,
+   "z": 24.684356813566424
+  },
+  {
+   "t": 7.875,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 19,
+   "outcome": null,
+   "y": 4.578541825000006,
+   "z": 25.27075681356642
+  },
+  {
+   "t": 7.953,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 19,
+   "outcome": null,
+   "y": 4.451393625000005,
+   "z": 25.747556813566415
+  },
+  {
+   "t": 8.032,
+   "knifeState": "flying",
+   "slicing": true,
+   "score": 20,
+   "outcome": null,
+   "y": 4.126516800000006,
+   "z": 26.427956813566404
+  },
+  {
+   "t": 8.105,
+   "knifeState": "flying",
+   "slicing": true,
+   "score": 20,
+   "outcome": null,
+   "y": 4.038795966666673,
+   "z": 26.427956813566404
+  },
+  {
+   "t": 8.171,
+   "knifeState": "flying",
+   "slicing": true,
+   "score": 20,
+   "outcome": null,
+   "y": 3.7523483833333393,
+   "z": 26.427956813566404
+  },
+  {
+   "t": 8.237,
+   "knifeState": "stuck",
+   "slicing": false,
+   "score": 20,
+   "outcome": null,
+   "y": 3.225,
+   "z": 26.427956813566404
+  },
+  {
+   "t": 8.558,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 20,
+   "outcome": null,
+   "y": 3.8399354166666635,
+   "z": 26.9591568135664
+  },
+  {
+   "t": 8.638,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 20,
+   "outcome": null,
+   "y": 4.482817083333335,
+   "z": 27.620756813566405
+  },
+  {
+   "t": 8.712,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 20,
+   "outcome": null,
+   "y": 4.950301816666669,
+   "z": 28.224756813566394
+  },
+  {
+   "t": 8.793,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 20,
+   "outcome": null,
+   "y": 5.302279683333337,
+   "z": 28.825556813566386
+  },
+  {
+   "t": 8.865,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 20,
+   "outcome": null,
+   "y": 5.541224808333336,
+   "z": 29.42555681356638
+  },
+  {
+   "t": 8.939,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 20,
+   "outcome": null,
+   "y": 5.667664550000001,
+   "z": 30.02555681356638
+  },
+  {
+   "t": 9.013,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 21,
+   "outcome": null,
+   "y": 5.682221131458334,
+   "z": 30.62795681356637
+  },
+  {
+   "t": 9.094,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 21,
+   "outcome": null,
+   "y": 5.584588898125002,
+   "z": 31.227956813566365
+  },
+  {
+   "t": 9.16,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 21,
+   "outcome": null,
+   "y": 5.403858144791669,
+   "z": 31.75915681356636
+  },
+  {
+   "t": 9.235,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 21,
+   "outcome": null,
+   "y": 5.094081562291662,
+   "z": 32.35835681356637
+  },
+  {
+   "t": 9.307,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 21,
+   "outcome": null,
+   "y": 4.6712952614583365,
+   "z": 32.95915681356635
+  },
+  {
+   "t": 9.378,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 21,
+   "outcome": null,
+   "y": 4.13648586979167,
+   "z": 33.559156813566354
+  },
+  {
+   "t": 9.449,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 21,
+   "outcome": null,
+   "y": 3.5673797814583343,
+   "z": 34.09195681356635
+  },
+  {
+   "t": 9.522,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 21,
+   "outcome": null,
+   "y": 2.8195648806249975,
+   "z": 34.69275681356636
+  },
+  {
+   "t": 9.597,
+   "knifeState": "stuck",
+   "slicing": false,
+   "score": 21,
+   "outcome": null,
+   "y": 2.2771547871009874,
+   "z": 35.0028901468997
+  },
+  {
+   "t": 9.876,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 21,
+   "outcome": null,
+   "y": 2.882642853767663,
+   "z": 35.52529014689971
+  },
+  {
+   "t": 9.947,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 21,
+   "outcome": null,
+   "y": 3.4828313121009895,
+   "z": 36.135690146899684
+  },
+  {
+   "t": 10.018,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 21,
+   "outcome": null,
+   "y": 3.911323695434325,
+   "z": 36.6684901468997
+  },
+  {
+   "t": 10.089,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 21,
+   "outcome": null,
+   "y": 4.286261087100994,
+   "z": 37.26609014689973
+  },
+  {
+   "t": 10.166,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 23,
+   "outcome": null,
+   "y": 4.5327636309343236,
+   "z": 37.86929014689971
+  },
+  {
+   "t": 10.239,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 23,
+   "outcome": null,
+   "y": 4.6162324559343215,
+   "z": 38.4692901468997
+  },
+  {
+   "t": 10.316,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 23,
+   "outcome": null,
+   "y": 4.586805180934321,
+   "z": 39.06929014689971
+  },
+  {
+   "t": 10.391,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 23,
+   "outcome": null,
+   "y": 4.445323547600985,
+   "z": 39.66929014689973
+  },
+  {
+   "t": 10.485,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 23,
+   "outcome": null,
+   "y": 5.085045638100999,
+   "z": 40.401290146899754
+  },
+  {
+   "t": 10.562,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 23,
+   "outcome": null,
+   "y": 5.719967704767664,
+   "z": 41.06929014689976
+  },
+  {
+   "t": 10.643,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 23,
+   "outcome": null,
+   "y": 6.162238896434325,
+   "z": 41.655690146899765
+  },
+  {
+   "t": 10.721,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 23,
+   "outcome": null,
+   "y": 6.541683896434329,
+   "z": 42.33809014689978
+  },
+  {
+   "t": 10.793,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 23,
+   "outcome": null,
+   "y": 6.735508096434326,
+   "z": 42.868490146899774
+  },
+  {
+   "t": 10.863,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 23,
+   "outcome": null,
+   "y": 6.849235279767659,
+   "z": 43.46929014689977
+  },
+  {
+   "t": 10.933,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 23,
+   "outcome": null,
+   "y": 6.855891346434325,
+   "z": 44.001290146899755
+  },
+  {
+   "t": 10.998,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 23,
+   "outcome": null,
+   "y": 6.773846713100992,
+   "z": 44.532490146899754
+  },
+  {
+   "t": 11.065,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 23,
+   "outcome": null,
+   "y": 6.602001479767658,
+   "z": 45.06769014689976
+  },
+  {
+   "t": 11.132,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 23,
+   "outcome": null,
+   "y": 6.341116546434323,
+   "z": 45.60369014689975
+  },
+  {
+   "t": 11.198,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 23,
+   "outcome": null,
+   "y": 5.9929280797676565,
+   "z": 46.13569014689976
+  },
+  {
+   "t": 11.265,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 23,
+   "outcome": null,
+   "y": 5.554818746434318,
+   "z": 46.669290146899755
+  },
+  {
+   "t": 11.331,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 23,
+   "outcome": null,
+   "y": 5.029119146434317,
+   "z": 47.20209014689978
+  },
+  {
+   "t": 11.398,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 23,
+   "outcome": null,
+   "y": 4.413208579767661,
+   "z": 47.73569014689976
+  },
+  {
+   "t": 11.726,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 24,
+   "outcome": null,
+   "y": 3.7105703631009948,
+   "z": 48.267690146899774
+  },
+  {
+   "t": 11.803,
+   "knifeState": "flying",
+   "slicing": true,
+   "score": 25,
+   "outcome": null,
+   "y": 3.160432473600991,
+   "z": 48.63209014689979
+  },
+  {
+   "t": 11.881,
+   "knifeState": "flying",
+   "slicing": true,
+   "score": 28,
+   "outcome": null,
+   "y": 2.721636224729656,
+   "z": 48.63209014689979
+  },
+  {
+   "t": 11.958,
+   "knifeState": "flying",
+   "slicing": true,
+   "score": 29,
+   "outcome": null,
+   "y": 2.285146135820443,
+   "z": 48.63209014689979
+  },
+  {
+   "t": 12.036,
+   "knifeState": "flying",
+   "slicing": true,
+   "score": 31,
+   "outcome": null,
+   "y": 1.8294204211025924,
+   "z": 48.63209014689979
+  },
+  {
+   "t": 12.114,
+   "knifeState": "stuck",
+   "slicing": false,
+   "score": 31,
+   "outcome": null,
+   "y": 1.2749999999999944,
+   "z": 48.63209014689979
+  },
+  {
+   "t": 12.486,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 31,
+   "outcome": null,
+   "y": 1.9667984499999913,
+   "z": 49.23529014689979
+  },
+  {
+   "t": 12.56,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 31,
+   "outcome": null,
+   "y": 2.5394559833333274,
+   "z": 49.832090146899816
+  },
+  {
+   "t": 12.636,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 31,
+   "outcome": null,
+   "y": 3.043158383333327,
+   "z": 50.49209014689981
+  },
+  {
+   "t": 12.712,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 31,
+   "outcome": null,
+   "y": 3.3858265166666563,
+   "z": 51.098490146899806
+  },
+  {
+   "t": 12.786,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 31,
+   "outcome": null,
+   "y": 3.6132593749999886,
+   "z": 51.701690146899786
+  },
+  {
+   "t": 12.859,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 31,
+   "outcome": null,
+   "y": 3.7176458416666573,
+   "z": 52.22409014689979
+  },
+  {
+   "t": 12.932,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 31,
+   "outcome": null,
+   "y": 3.733022158333324,
+   "z": 52.81929014689978
+  },
+  {
+   "t": 13.006,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 31,
+   "outcome": null,
+   "y": 3.6335190249999902,
+   "z": 53.43209014689979
+  },
+  {
+   "t": 13.076,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 31,
+   "outcome": null,
+   "y": 3.45276579166666,
+   "z": 53.96169014689978
+  },
+  {
+   "t": 13.146,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 31,
+   "outcome": null,
+   "y": 3.1394298583333278,
+   "z": 54.565690146899776
+  },
+  {
+   "t": 13.214,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 31,
+   "outcome": null,
+   "y": 2.768416658333325,
+   "z": 55.09929014689978
+  },
+  {
+   "t": 13.283,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 31,
+   "outcome": null,
+   "y": 2.3079115750000003,
+   "z": 55.632890146899776
+  },
+  {
+   "t": 13.399,
+   "knifeState": "stuck",
+   "slicing": false,
+   "score": 31,
+   "outcome": null,
+   "y": 1.774999999999994,
+   "z": 55.96089014689978
+  },
+  {
+   "t": 13.656,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 31,
+   "outcome": null,
+   "y": 2.2454146666666737,
+   "z": 56.360090146899786
+  },
+  {
+   "t": 13.723,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 31,
+   "outcome": null,
+   "y": 2.9067294666666874,
+   "z": 57.012890146899814
+  },
+  {
+   "t": 13.792,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 31,
+   "outcome": null,
+   "y": 3.358512799999999,
+   "z": 57.558490146899786
+  },
+  {
+   "t": 13.864,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 31,
+   "outcome": null,
+   "y": 3.7426168000000044,
+   "z": 58.14969014689978
+  },
+  {
+   "t": 13.932,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 31,
+   "outcome": null,
+   "y": 3.999410983333333,
+   "z": 58.69209014689978
+  },
+  {
+   "t": 14,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 31,
+   "outcome": null,
+   "y": 4.162165716666668,
+   "z": 59.224890146899774
+  },
+  {
+   "t": 14.067,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 31,
+   "outcome": null,
+   "y": 4.238104033333328,
+   "z": 59.82089014689978
+  },
+  {
+   "t": 14.135,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 31,
+   "outcome": null,
+   "y": 4.211771158333327,
+   "z": 60.35849014689973
+  },
+  {
+   "t": 14.203,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 31,
+   "outcome": null,
+   "y": 4.095927899999988,
+   "z": 60.893690146899736
+  },
+  {
+   "t": 14.271,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 31,
+   "outcome": null,
+   "y": 3.892329466666655,
+   "z": 61.42409014689974
+  },
+  {
+   "t": 14.337,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 31,
+   "outcome": null,
+   "y": 3.5992562333333162,
+   "z": 61.95769014689974
+  },
+  {
+   "t": 14.407,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 31,
+   "outcome": null,
+   "y": 3.217235099999975,
+   "z": 62.491290146899736
+  },
+  {
+   "t": 14.524,
+   "knifeState": "flying",
+   "slicing": true,
+   "score": 32,
+   "outcome": null,
+   "y": 2.902144136666654,
+   "z": 62.792623480233054
+  },
+  {
+   "t": 14.597,
+   "knifeState": "flying",
+   "slicing": true,
+   "score": 33,
+   "outcome": null,
+   "y": 2.67263284666665,
+   "z": 62.792623480233054
+  },
+  {
+   "t": 14.67,
+   "knifeState": "flying",
+   "slicing": true,
+   "score": 33,
+   "outcome": null,
+   "y": 2.226506610666654,
+   "z": 62.792623480233054
+  },
+  {
+   "t": 14.742,
+   "knifeState": "stuck",
+   "slicing": false,
+   "score": 33,
+   "outcome": null,
+   "y": 1.7749999999999937,
+   "z": 62.792623480233054
+  },
+  {
+   "t": 14.993,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 33,
+   "outcome": null,
+   "y": 2.393349783333302,
+   "z": 63.326223480233025
+  },
+  {
+   "t": 15.066,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 33,
+   "outcome": null,
+   "y": 2.9810347166666507,
+   "z": 63.92542348023302
+  },
+  {
+   "t": 15.137,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 33,
+   "outcome": null,
+   "y": 3.4566102999999866,
+   "z": 64.525423480233
+  },
+  {
+   "t": 15.209,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 33,
+   "outcome": null,
+   "y": 3.785566616666659,
+   "z": 65.059023480233
+  },
+  {
+   "t": 15.281,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 33,
+   "outcome": null,
+   "y": 4.050208141666655,
+   "z": 65.662223480233
+  },
+  {
+   "t": 15.352,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 33,
+   "outcome": null,
+   "y": 4.200144591666662,
+   "z": 66.25902348023301
+  },
+  {
+   "t": 15.432,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 33,
+   "outcome": null,
+   "y": 4.238570124999999,
+   "z": 66.84862348023297
+  },
+  {
+   "t": 15.499,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 33,
+   "outcome": null,
+   "y": 4.191538391666665,
+   "z": 67.32062348023295
+  },
+  {
+   "t": 15.577,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 33,
+   "outcome": null,
+   "y": 4.004060158333333,
+   "z": 67.99262348023292
+  },
+  {
+   "t": 15.727,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 34,
+   "outcome": null,
+   "y": 3.9207268249999996,
+   "z": 68.19262348023291
+  },
+  {
+   "t": 15.807,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 34,
+   "outcome": null,
+   "y": 3.5571875916666817,
+   "z": 68.92622348023288
+  },
+  {
+   "t": 15.89,
+   "knifeState": "flying",
+   "slicing": true,
+   "score": 35,
+   "outcome": null,
+   "y": 3.387984621666663,
+   "z": 68.9914234802329
+  },
+  {
+   "t": 15.972,
+   "knifeState": "flying",
+   "slicing": true,
+   "score": 36,
+   "outcome": null,
+   "y": 3.0497520302083294,
+   "z": 68.9914234802329
+  },
+  {
+   "t": 16.049,
+   "knifeState": "flying",
+   "slicing": true,
+   "score": 36,
+   "outcome": null,
+   "y": 2.56520993804168,
+   "z": 68.9914234802329
+  },
+  {
+   "t": 16.132,
+   "knifeState": "stuck",
+   "slicing": false,
+   "score": 36,
+   "outcome": null,
+   "y": 1.7749999999999932,
+   "z": 68.9914234802329
+  },
+  {
+   "t": 16.368,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 2.244062746666666,
+   "z": 69.45702348023289
+  },
+  {
+   "t": 16.449,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 2.7817093866666607,
+   "z": 70.12342348023289
+  },
+  {
+   "t": 16.526,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 3.1475177833333357,
+   "z": 70.7242234802329
+  },
+  {
+   "t": 16.605,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 3.297057076666657,
+   "z": 71.04582348023287
+  },
+  {
+   "t": 16.693,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 3.515877291666657,
+   "z": 71.7762234802329
+  },
+  {
+   "t": 16.757,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 3.5709622333333257,
+   "z": 72.37622348023287
+  },
+  {
+   "t": 16.835,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 3.502613659999993,
+   "z": 73.03382348023287
+  },
+  {
+   "t": 16.907,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 3.345011766666663,
+   "z": 73.57622348023284
+  },
+  {
+   "t": 16.978,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 3.099367173333335,
+   "z": 74.11062348023283
+  },
+  {
+   "t": 17.047,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 2.717761426666663,
+   "z": 74.70982348023283
+  },
+  {
+   "t": 17.114,
+   "knifeState": "stuck",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 2.6850041911111133,
+   "z": 74.78609691239
+  },
+  {
+   "t": 17.378,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 3.3729777244444286,
+   "z": 74.08498993512605
+  },
+  {
+   "t": 17.456,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 3.9497569077777803,
+   "z": 73.78458993512604
+  },
+  {
+   "t": 17.525,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 4.364798824444451,
+   "z": 73.51978993512601
+  },
+  {
+   "t": 17.598,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 4.731047424444442,
+   "z": 73.21818993512606
+  },
+  {
+   "t": 17.664,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 4.956454807777781,
+   "z": 72.95658993512606
+  },
+  {
+   "t": 17.732,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 5.100379207777781,
+   "z": 72.68458993512611
+  },
+  {
+   "t": 17.798,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 5.151307741111114,
+   "z": 72.41898993512613
+  },
+  {
+   "t": 17.861,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 5.114823307777783,
+   "z": 72.15698993512613
+  },
+  {
+   "t": 17.938,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 4.96813377444445,
+   "z": 71.85738993512611
+  },
+  {
+   "t": 18.016,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 4.703312007777779,
+   "z": 71.55178993512612
+  },
+  {
+   "t": 18.086,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 4.375961541111115,
+   "z": 71.28458993512615
+  },
+  {
+   "t": 18.151,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 3.970273949444454,
+   "z": 71.02338993512612
+  },
+  {
+   "t": 18.217,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 3.4556285494444667,
+   "z": 70.7509899351261
+  },
+  {
+   "t": 18.284,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 2.781525932777804,
+   "z": 70.45098993512609
+  },
+  {
+   "t": 18.356,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 2.0882160327777837,
+   "z": 70.18458993512606
+  },
+  {
+   "t": 18.444,
+   "knifeState": "stuck",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 1.683803539597235,
+   "z": 70.12338993512607
+  },
+  {
+   "t": 18.831,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 2.299528706263902,
+   "z": 70.65538993512608
+  },
+  {
+   "t": 18.897,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 2.8298950395972566,
+   "z": 71.18978993512609
+  },
+  {
+   "t": 18.964,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 3.2704226229305693,
+   "z": 71.72338993512604
+  },
+  {
+   "t": 19.031,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 3.6215416229305806,
+   "z": 72.25618993512603
+  },
+  {
+   "t": 19.098,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 3.8838445395972476,
+   "z": 72.78978993512604
+  },
+  {
+   "t": 19.165,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 4.057577339597239,
+   "z": 73.32338993512597
+  },
+  {
+   "t": 19.23,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 4.141705872930575,
+   "z": 73.85458993512597
+  },
+  {
+   "t": 19.296,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 4.137660139597241,
+   "z": 74.39058993512596
+  },
+  {
+   "t": 19.374,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 4.027173456263907,
+   "z": 74.98658993512593
+  },
+  {
+   "t": 19.453,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 3.7697934562639044,
+   "z": 75.65858993512593
+  },
+  {
+   "t": 19.53,
+   "knifeState": "rotating-stick",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 4.136992218877096,
+   "z": 75.85618993512593
+  },
+  {
+   "t": 19.607,
+   "knifeState": "rotating-stick",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 4.136992218877096,
+   "z": 75.85618993512593
+  },
+  {
+   "t": 19.732,
+   "knifeState": "stuck",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 4.0776505048542475,
+   "z": 75.85618993512593
+  },
+  {
+   "t": 20.081,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 4.7664565381875805,
+   "z": 76.45618993512593
+  },
+  {
+   "t": 20.156,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 5.34327893818758,
+   "z": 77.05618993512594
+  },
+  {
+   "t": 20.232,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 5.807173338187581,
+   "z": 77.65618993512591
+  },
+  {
+   "t": 20.308,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 6.190452338187578,
+   "z": 78.32258993512588
+  },
+  {
+   "t": 20.385,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 6.4175322715209075,
+   "z": 78.92338993512585
+  },
+  {
+   "t": 20.46,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 6.531347404854245,
+   "z": 79.52338993512582
+  },
+  {
+   "t": 20.538,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 6.532543471520913,
+   "z": 80.1193899351258
+  },
+  {
+   "t": 20.605,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 6.438769871520911,
+   "z": 80.65618993512582
+  },
+  {
+   "t": 20.673,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 6.2574841215209105,
+   "z": 81.18818993512582
+  },
+  {
+   "t": 20.739,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 5.985834421520914,
+   "z": 81.72258993512581
+  },
+  {
+   "t": 20.802,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 5.6247998048542405,
+   "z": 82.25778993512581
+  },
+  {
+   "t": 20.867,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 5.175967938187584,
+   "z": 82.79058993512578
+  },
+  {
+   "t": 20.945,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 4.5625515715209115,
+   "z": 83.3921899351258
+  },
+  {
+   "t": 21.01,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 3.927488288187585,
+   "z": 83.92258993512576
+  },
+  {
+   "t": 21.077,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 3.295545604854237,
+   "z": 84.38978993512575
+  },
+  {
+   "t": 21.178,
+   "knifeState": "stuck",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 2.6749999999999923,
+   "z": 84.65498993512571
+  },
+  {
+   "t": 21.414,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 3.2801158499999983,
+   "z": 85.17658993512572
+  },
+  {
+   "t": 21.484,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 3.8249583166666645,
+   "z": 85.7245899351257
+  },
+  {
+   "t": 21.551,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 4.262657900000007,
+   "z": 86.25578993512572
+  },
+  {
+   "t": 21.621,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 4.651012283333337,
+   "z": 86.85578993512576
+  },
+  {
+   "t": 21.693,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 37,
+   "outcome": null,
+   "y": 4.901159749999995,
+   "z": 87.38858993512571
+  },
+  {
+   "t": 21.933,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 38,
+   "outcome": null,
+   "y": 5.0443965624999905,
+   "z": 87.85338993512568
+  },
+  {
+   "t": 22.014,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 39,
+   "outcome": null,
+   "y": 5.100507280729158,
+   "z": 88.65098993512566
+  },
+  {
+   "t": 22.076,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 40,
+   "outcome": null,
+   "y": 5.044624022458324,
+   "z": 89.10858993512566
+  },
+  {
+   "t": 22.155,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 40,
+   "outcome": null,
+   "y": 4.872742415666656,
+   "z": 89.71818993512568
+  },
+  {
+   "t": 22.219,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 41,
+   "outcome": null,
+   "y": 4.640372777805208,
+   "z": 90.25178993512561
+  },
+  {
+   "t": 22.283,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 41,
+   "outcome": null,
+   "y": 4.346932105649993,
+   "z": 90.7789899351256
+  },
+  {
+   "t": 22.364,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 41,
+   "outcome": null,
+   "y": 3.8471387801916603,
+   "z": 91.45098993512556
+  },
+  {
+   "t": 22.429,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 41,
+   "outcome": null,
+   "y": 3.416850065666649,
+   "z": 91.9181899351256
+  },
+  {
+   "t": 22.507,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 41,
+   "outcome": null,
+   "y": 2.6987304500020706,
+   "z": 92.5725899351256
+  },
+  {
+   "t": 22.584,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 41,
+   "outcome": null,
+   "y": 1.9086257921552034,
+   "z": 93.18298993512558
+  },
+  {
+   "t": 22.662,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 41,
+   "outcome": null,
+   "y": 1.0172389275291807,
+   "z": 93.78378993512554
+  },
+  {
+   "t": 22.738,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 41,
+   "outcome": null,
+   "y": -0.10249109133749296,
+   "z": 94.44938993512555
+  },
+  {
+   "t": 22.815,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 41,
+   "outcome": null,
+   "y": -1.2331706609541693,
+   "z": 95.05098993512556
+  },
+  {
+   "t": 22.888,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 41,
+   "outcome": null,
+   "y": -2.4700810106083217,
+   "z": 95.64938993512553
+  },
+  {
+   "t": 22.964,
+   "knifeState": "flying",
+   "slicing": false,
+   "score": 41,
+   "outcome": null,
+   "y": -3.8263652218916664,
+   "z": 96.2509899351255
+  },
+  {
+   "t": 23.032,
+   "knifeState": "tumbling",
+   "slicing": false,
+   "score": 41,
+   "outcome": "lost",
+   "y": 0.21,
+   "z": 96.7725899351255
+  }
+ ]
+}

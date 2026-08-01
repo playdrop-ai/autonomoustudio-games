@@ -1,0 +1,67 @@
+{
+  "appName": "chopline-rush",
+  "createdAt": "2026-06-10T16:17:38.157Z",
+  "captureSource": "playdrop-cli-local-screen",
+  "captureEngine": "avfoundation",
+  "audioPolicy": "music-and-sfx",
+  "seed": "marketing-2026-06-10",
+  "captures": [
+    {
+      "surface": "desktop",
+      "path": "assets/marketing/captures/desktop.mp4",
+      "width": 1920,
+      "height": 1080,
+      "fps": 60,
+      "durationSeconds": 12,
+      "hasAudio": true,
+      "audio": {
+        "policy": "music-and-sfx",
+        "backgroundMusic": true,
+        "sfx": true,
+        "peakDb": -5.5,
+        "integratedLufs": -20.9
+      },
+      "validation": {
+        "previewFrameSimilarity": 0.69649
+      }
+    },
+    {
+      "surface": "mobile-landscape",
+      "path": "assets/marketing/captures/mobile-landscape.mp4",
+      "width": 1920,
+      "height": 1080,
+      "fps": 60,
+      "durationSeconds": 12,
+      "hasAudio": true,
+      "audio": {
+        "policy": "music-and-sfx",
+        "backgroundMusic": true,
+        "sfx": true,
+        "peakDb": -5,
+        "integratedLufs": -20.8
+      },
+      "validation": {
+        "previewFrameSimilarity": 0.596594
+      }
+    },
+    {
+      "surface": "mobile-portrait",
+      "path": "assets/marketing/captures/mobile-portrait.mp4",
+      "width": 1080,
+      "height": 1920,
+      "fps": 60,
+      "durationSeconds": 12,
+      "hasAudio": true,
+      "audio": {
+        "policy": "music-and-sfx",
+        "backgroundMusic": true,
+        "sfx": true,
+        "peakDb": -5.5,
+        "integratedLufs": -20.8
+      },
+      "validation": {
+        "previewFrameSimilarity": 0.666311
+      }
+    }
+  ]
+}

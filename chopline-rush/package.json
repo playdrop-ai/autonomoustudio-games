@@ -1,0 +1,45 @@
+{
+  "name": "chopline-rush",
+  "version": "1.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "node build.mjs",
+    "dev": "node build.mjs --watch",
+    "dev:standalone": "npm run build && node scripts/local-dev-server.mjs",
+    "validate": "tsc --noEmit && npm run build",
+    "validate:local": "npm run validate && npm run test:content && npm run test:endless-generator && npm run test:runtime && npm run test:bot && npm run test:chunks && npm run test:visual",
+    "validate:release": "npm run validate:local && playdrop project validate .",
+    "test:content": "node tests/content-audit.mjs",
+    "test:runtime": "node tests/runtime-smoke.mjs",
+    "test:endless-generator": "node tests/endless-generator-parity.mjs",
+    "proof:mechanics": "npm run build && node tests/mechanics-proof.mjs",
+    "prepare:listing-media": "node scripts/prepare-listing-media.mjs",
+    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json}\"",
+    "test:bot": "node tests/bot-playtest.mjs",
+    "test:visual": "node tests/visual-baselines.mjs",
+    "test:chunks": "node tests/chunk-validation.mjs",
+    "test:difficulty": "node tests/difficulty-sweep.mjs"
+  },
+  "devDependencies": {
+    "@playdrop/ai-client": "file:vendor/playdrop/ai-client.tgz",
+    "@playdrop/api-client": "file:vendor/playdrop/api-client.tgz",
+    "@playdrop/assets-client": "file:vendor/playdrop/assets-client.tgz",
+    "@playdrop/boxel-core": "file:vendor/playdrop/boxel-core.tgz",
+    "@playdrop/boxel-three": "file:vendor/playdrop/boxel-three.tgz",
+    "@playdrop/realtime-client": "file:vendor/playdrop/realtime-client.tgz",
+    "@playdrop/types": "file:vendor/playdrop/types.tgz",
+    "@playdrop/web-bridge": "file:vendor/playdrop/web-bridge.tgz",
+    "@types/three": "0.183.1",
+    "esbuild": "^0.24.0",
+    "playdrop-sdk-types": "file:vendor/playdrop-sdk-types.tgz",
+    "playwright": "^1.60.0",
+    "prettier": "^3.2.5",
+    "three": "0.183.2",
+    "typescript": "^5.9.2"
+  },
+  "playdrop": {
+    "platformVersion": "0.12.8",
+    "sdkTypesVersion": "0.12.5"
+  }
+}
