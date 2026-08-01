@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "locale": "en-US",
+  "destination": "applovin-video-interstitial",
+  "protectedAssets": {
+    "portraitHero": "assets/marketing/playdrop/hero-portrait-9x16-v3.png",
+    "endCardPolicy": "byte-identical copy"
+  },
+  "forbiddenTreatments": [
+    "generated gameplay",
+    "cropping",
+    "nonuniform scaling",
+    "padding or gutters",
+    "caption overlays",
+    "fake CTA or install button",
+    "store badge",
+    "rating",
+    "duplicate network app metadata",
+    "hero retouching or decoration",
+    "result screen"
+  ],
+  "source": {
+    "path": "assets/marketing/video-social-v3/source-captures/portrait-final/listing.mp4",
+    "dimensions": "540x960",
+    "durationSeconds": 47.383333,
+    "frameRate": 60,
+    "audio": "captured game audio, synchronized",
+    "run": "one continuous deterministic preview run ending at score 32"
+  },
+  "segments": [
+    {
+      "kind": "opening-identity",
+      "source": "protected hero",
+      "durationSeconds": 0.6,
+      "speed": 1,
+      "transitionOut": "0.15-second fade into casual gameplay",
+      "audio": "silent"
+    },
+    {
+      "kind": "casual-gameplay",
+      "sourceRangeSeconds": [0, 3.4],
+      "speed": 1,
+      "audio": "source"
+    },
+    {
+      "kind": "advanced-gameplay",
+      "sourceRangeSeconds": [20.65, 24.9],
+      "speed": 1,
+      "audio": "source"
+    },
+    {
+      "kind": "crash",
+      "sourceRangeSeconds": [24.9, 25.35],
+      "speed": 0.4587,
+      "videoSetptsMultiplier": 2.18,
+      "audioAtempo": [0.5, 0.917431],
+      "audio": "source, synchronized"
+    }
+  ],
+  "interactionCue": {
+    "asset": "assets/ui/preview-tap-hand.png",
+    "source": "rendered live by the preview runtime",
+    "behavior": "every real thrust; fingertip anchored at the contact point"
+  },
+  "output": {
+    "video": "assets/marketing/applovin-interstitial/portrait/video.mp4",
+    "endCard": "assets/marketing/applovin-interstitial/portrait/end-card.png",
+    "poster": "assets/marketing/applovin-interstitial/portrait/poster.png",
+    "dimensions": "1080x1920",
+    "durationSeconds": 8.995,
+    "targetFrameRate": 30,
+    "sampleAspectRatio": "1:1",
+    "videoCodec": "h264",
+    "audioCodec": "aac",
+    "audioSampleRate": 48000,
+    "audioChannels": 2,
+    "videoFileSizeBytes": 6863348,
+    "videoSha256": "0d8a02e4fa6a18df49c00500f56069b353f9374ae82abf0e856ed6423d9d16a7",
+    "endCardFileSizeBytes": 558971,
+    "endCardSha256": "bc374d43075f406a5cd52ddeb42942bd65d07b6b4509915fa50c8fe414cc0edb"
+  }
+}
