@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 import { BlockBurstScene, type PreviewPayload } from "./game/BlockBurstScene";
-import { computeDesign } from "./game/constants";
+import { computeDesign, HAMMER_START } from "./game/constants";
 import { PlaydropServices } from "./services/playdrop";
 
 declare global {
@@ -22,8 +22,11 @@ void boot().catch((error) => {
 
 async function boot(): Promise<void> {
   await services.init();
+  const initialHammers = await services.loadHammers(HAMMER_START);
   const design = computeDesign();
   const scene = new BlockBurstScene({
+    initialHammers,
+    saveHammers: (hammers) => services.saveHammers(hammers),
     showRewarded: () => services.showRewarded(),
     showInterstitial: () => services.showInterstitial(),
     submitScore: (score) => services.submitScore(score),

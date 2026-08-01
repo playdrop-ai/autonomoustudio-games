@@ -24,6 +24,8 @@ type SpecialType = "bomb" | "cross" | "laser";
 type Cell = ColorKey | null;
 
 export interface BlockBurstCallbacks {
+  initialHammers: number;
+  saveHammers: (hammers: number) => Promise<void>;
   showRewarded: () => Promise<boolean>;
   showInterstitial: () => Promise<void>;
   submitScore: (score: number) => Promise<void>;
@@ -136,6 +138,7 @@ export class BlockBurstScene extends Phaser.Scene {
   constructor(callbacks: BlockBurstCallbacks) {
     super("block-burst");
     this.callbacks = callbacks;
+    this.hammers = callbacks.initialHammers;
   }
 
   create(): void {
@@ -254,7 +257,6 @@ export class BlockBurstScene extends Phaser.Scene {
     this.combo = 0;
     this.comboGrace = 0;
     this.revivesUsed = 0;
-    this.hammers = HAMMER_START;
     this.linesRun = 0;
     this.bestComboRun = 0;
     this.scoreText?.setText("0");
@@ -978,6 +980,7 @@ export class BlockBurstScene extends Phaser.Scene {
         return;
       }
       this.hammers = 1;
+      await this.callbacks.saveHammers(this.hammers);
     }
     this.hammerMode = !this.hammerMode;
     this.drawHammer();
@@ -1003,6 +1006,7 @@ export class BlockBurstScene extends Phaser.Scene {
     this.drawHammer();
     this.updateDanger();
     this.checkGameOver();
+    await this.callbacks.saveHammers(this.hammers);
   }
 
   private updateDanger(): void {

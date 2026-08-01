@@ -18,4 +18,4 @@ playdrop project validate block-burst
 playdrop project dev block-burst
 ```
 
-The app is a TypeScript Phaser project with PlayDrop SDK integration for lifecycle, leaderboard submission, rewarded ads, interstitial ads, and listing preview capture.
+The app is a TypeScript Phaser project with PlayDrop SDK integration for lifecycle, leaderboard submission, persistent hammer count, rewarded ads, interstitial ads, and listing preview capture.

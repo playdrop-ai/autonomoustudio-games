@@ -41,10 +41,12 @@ test("built game renders and exposes listing preview hook", async () => {
         width: Math.round(rect?.width ?? 0),
         height: Math.round(rect?.height ?? 0),
         title: document.title,
+        hammers: window.localStorage.getItem("block_burst_hammers"),
       };
     });
     assert.equal(state.title, "Block Burst");
     assert.equal(state.hasCanvas, true);
+    assert.equal(state.hammers, "2");
     assert.ok(state.width > 300);
     assert.ok(state.height > 600);
     assert.deepEqual(errors, []);

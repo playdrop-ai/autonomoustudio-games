@@ -1,6 +1,7 @@
 import type { PlaydropNamespace, PlaydropSDK } from "playdrop-sdk-types";
 
 export const LEADERBOARD_KEY = "highest_score";
+const HAMMERS_STORAGE_KEY = "block_burst_hammers";
 
 type RewardedLoadStatus = "ready" | "no_fill" | "rate_limited" | "blocked";
 type RewardedShowStatus = "completed" | "dismissed" | "not_ready" | "expired";
@@ -103,6 +104,31 @@ export class PlaydropServices {
     if (!this.sdk?.leaderboards?.submitScore || score <= 0) return;
     await this.sdk.leaderboards.submitScore(LEADERBOARD_KEY, Math.floor(score));
   }
+
+  async loadHammers(defaultValue: number): Promise<number> {
+    const remote = normalizeHammers(this.sdk?.me.appData?.data.hammers);
+    const local = normalizeHammers(window.localStorage.getItem(HAMMERS_STORAGE_KEY));
+    const hammers = remote ?? local ?? defaultValue;
+    window.localStorage.setItem(HAMMERS_STORAGE_KEY, String(hammers));
+    if (remote === null && this.sdk) {
+      await this.sdk.me.updateAppData({ hammers });
+    }
+    return hammers;
+  }
+
+  async saveHammers(hammers: number): Promise<void> {
+    const value = Math.max(0, Math.floor(hammers));
+    window.localStorage.setItem(HAMMERS_STORAGE_KEY, String(value));
+    if (this.sdk) {
+      await this.sdk.me.updateAppData({ hammers: value });
+    }
+  }
+}
+
+function normalizeHammers(value: unknown): number | null {
+  if (value === null || value === undefined || value === "") return null;
+  const parsed = Number(value);
+  return Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : null;
 }
 
 function hasPlaydropChannel(): boolean {
