@@ -106,8 +106,10 @@ confirmed the authenticated `playdrop (prod, ADMIN)` actor and
 `autonomoustudio` workspace owner. All three surfaces passed for both native
 captures at 60 fps with synchronized audio and zero capture warnings. The four
 revised final deliverables have 100% unique consecutive-frame cadence, no
-detected black intervals, and audio peaks between -1.0 and -0.9 dBFS. Upload
-remains intentionally pending owner and marketing-director approval.
+detected black intervals, and audio peaks between -1.0 and -0.9 dBFS. The
+PlayDrop game and listing package were uploaded as public version `1.0.7` on
+August 2, 2026; social publishing and paid spend remain pending
+marketing-director approval.
 
 ## Requested decision
 
