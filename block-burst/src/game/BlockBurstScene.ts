@@ -110,8 +110,15 @@ const GRID_EMPTY_CELL_TOP_COLOR = 0x181f33;
 const BACKGROUND_LIFT_TOP_COLOR = 0x4b4148;
 const BACKGROUND_LIFT_BOTTOM_COLOR = 0x4a5060;
 const TUTORIAL_STORAGE_KEY = "block_burst_tutorial_complete";
-const TUTORIAL_STEP = 1;
 const TUTORIAL_TARGET = { c0: 2, r0: 3 };
+const TUTORIAL_PIECE: PieceData = {
+  cells: [[0, 0], [1, 0], [2, 0], [3, 0]],
+  cols: 4,
+  rows: 1,
+  n: 4,
+  tier: 1,
+  key: "yellow",
+};
 const TUTORIAL_GUIDE_PAUSE_MS = 700;
 
 function formatScore(score: number): string {
@@ -357,6 +364,7 @@ export class BlockBurstScene extends Phaser.Scene {
   private tutorialActive = false;
   private tutorialGuideStartedAt = 0;
   private interstitialPending = false;
+  private rewardedRevivePending = false;
 
   private grid: Cell[][] = [];
   private sprites: Array<Array<Phaser.GameObjects.Image | null>> = [];
@@ -572,9 +580,13 @@ export class BlockBurstScene extends Phaser.Scene {
       gestureActive: Boolean(this.previewGesture),
       handVisible: this.previewGuide?.classList.contains("on") ?? false,
       tutorialActive: this.tutorialActive,
+      boardOccupied: this.filledCount(),
+      trayPieceCount: this.slots.filter(Boolean).length,
       draggingSlot: this.dragging?.getData("slot") ?? null,
       dropTarget: this.dropTarget,
       score: this.score,
+      revivesUsed: this.revivesUsed,
+      revivePending: this.rewardedRevivePending,
       hudVisible: Boolean(
         this.scoreText?.visible
         || this.bestText?.visible
@@ -629,6 +641,7 @@ export class BlockBurstScene extends Phaser.Scene {
     this.drawHammer();
     this.gameOverActive = false;
     this.interstitialPending = false;
+    this.rewardedRevivePending = false;
   }
 
   private startTutorial(): void {
@@ -637,12 +650,25 @@ export class BlockBurstScene extends Phaser.Scene {
     this.resetRun();
     this.layout();
     this.applyLayout();
-    this.seedPreviewBoard(TUTORIAL_STEP);
-    this.dealPreviewSet(TUTORIAL_STEP);
+    this.seedTutorialBoard();
+    this.dealTutorialPiece();
     this.tutorialText.setVisible(true);
     this.bestText.setVisible(false);
     this.drawHammer();
     this.clearHint();
+  }
+
+  private seedTutorialBoard(): void {
+    for (const c of [0, 1, 6, 7]) {
+      this.addPreviewBlock(c, TUTORIAL_TARGET.r0, "yellow");
+    }
+  }
+
+  private dealTutorialPiece(): void {
+    for (const slot of this.slots) slot?.destroy();
+    this.slots = [null, null, null];
+    this.pieceData = [null, TUTORIAL_PIECE, null];
+    this.buildTrayPiece(1, TUTORIAL_PIECE, true);
   }
 
   private completeTutorial(): void {
@@ -1896,8 +1922,16 @@ export class BlockBurstScene extends Phaser.Scene {
   }
 
   private async rewardedRevive(): Promise<void> {
-    const ok = await this.callbacks.showRewarded();
-    if (ok) this.revive();
+    if (this.rewardedRevivePending || !this.gameOverActive || this.revivesUsed >= REVIVES_PER_GAME) return;
+    this.rewardedRevivePending = true;
+    try {
+      const ok = await this.callbacks.showRewarded();
+      if (ok && this.gameOverActive) this.revive();
+    } catch (error) {
+      console.warn("[block-burst] rewarded revive failed", error);
+    } finally {
+      this.rewardedRevivePending = false;
+    }
   }
 
   private revive(): void {
@@ -2037,7 +2071,7 @@ export class BlockBurstScene extends Phaser.Scene {
       return { cells: [[0, 0], [1, 0], [0, 1], [1, 1]], cols: 2, rows: 2, n: 4, tier: 1, key: "red", previewTarget: { c0: 3, r0: 5 } };
     }
     if (step % 3 === 1) {
-      return { cells: [[0, 0], [1, 0], [2, 0], [3, 0]], cols: 4, rows: 1, n: 4, tier: 1, key: "yellow", previewTarget: { c0: 2, r0: 3 } };
+      return { ...TUTORIAL_PIECE, previewTarget: TUTORIAL_TARGET };
     }
     return { cells: [[0, 0], [0, 1], [0, 2], [0, 3]], cols: 1, rows: 4, n: 4, tier: 1, key: "purple", previewTarget: { c0: 6, r0: 2 } };
   }

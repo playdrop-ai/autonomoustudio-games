@@ -21,6 +21,8 @@ test("built game renders and exposes listing preview hook", async () => {
     }
     assert.equal(tutorialStart.tutorialActive, true);
     assert.equal(tutorialStart.handVisible, true);
+    assert.equal(tutorialStart.boardOccupied, 4);
+    assert.equal(tutorialStart.trayPieceCount, 1);
     await page.mouse.move(195, 658);
     await page.mouse.down();
     await page.mouse.move(195, 325, { steps: 18 });
@@ -28,6 +30,8 @@ test("built game renders and exposes listing preview hook", async () => {
     await page.waitForFunction(() => window.localStorage.getItem("block_burst_tutorial_complete") === "1");
     const tutorialComplete = await page.evaluate(() => JSON.parse(window.render_game_to_text?.() ?? "{}"));
     assert.equal(tutorialComplete.tutorialActive, false);
+    assert.equal(tutorialComplete.boardOccupied, 0);
+    assert.equal(tutorialComplete.trayPieceCount, 3);
 
     await page.evaluate(async () => {
       if (!window.__listingCapture?.prepare) throw new Error("missing listing preview hook");
@@ -88,6 +92,82 @@ test("built game renders and exposes listing preview hook", async () => {
     assert.ok(state.width > 300);
     assert.ok(state.height > 600);
     assert.deepEqual(errors, []);
+  } finally {
+    await browser.close();
+  }
+});
+
+test("an active PlayDrop rewarded ad timeout closes the result overlay and resumes the round", async () => {
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const page = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+    await page.route("https://assets.playdrop.ai/sdk/playdrop.js", (route) => route.fulfill({
+      contentType: "application/javascript",
+      body: `
+        window.__blockBurstAdCalls = { load: 0, show: 0 };
+        window.__blockBurstOnPause = null;
+        window.__blockBurstOnResume = null;
+        window.playdrop = {
+          init: async () => ({
+            host: {
+              phase: "play",
+              onPause: (callback) => { window.__blockBurstOnPause = callback; },
+              onResume: (callback) => { window.__blockBurstOnResume = callback; },
+            },
+            me: {
+              appData: { data: { hammers: 2 } },
+              updateAppData: async () => undefined,
+            },
+            ads: {
+              rewarded: {
+                load: async () => {
+                  window.__blockBurstAdCalls.load++;
+                  return { status: "ready" };
+                },
+                show: async () => {
+                  window.__blockBurstAdCalls.show++;
+                  window.__blockBurstOnPause?.("host_overlay");
+                  const error = new Error("ad_show_timeout");
+                  error.name = "AdsError";
+                  throw error;
+                },
+              },
+            },
+          }),
+        };
+      `,
+    }));
+    await page.addInitScript(() => {
+      window.localStorage.setItem("block_burst_tutorial_complete", "1");
+    });
+    const appUrl = new URL(APP_URL);
+    appUrl.searchParams.set("playdrop_channel", "test");
+    await page.goto(appUrl.href, { waitUntil: "networkidle" });
+    await page.waitForSelector("canvas", { timeout: 10_000 });
+    await page.evaluate(async () => {
+      await window.__listingCapture?.prepare?.({
+        active: true,
+        sceneId: "result-overlay",
+        surface: "mobile-portrait",
+        seed: "revive-test",
+        audioPolicy: "sfx-only",
+      });
+    });
+    await page.waitForFunction(() => JSON.parse(window.render_game_to_text?.() ?? "{}").overlayVisible === true);
+    await page.waitForTimeout(450);
+    await page.mouse.click(195, 509);
+    await page.waitForTimeout(1000);
+    const result = await page.evaluate(() => ({
+      state: JSON.parse(window.render_game_to_text?.() ?? "{}"),
+      adCalls: (window as typeof window & { __blockBurstAdCalls?: { load: number; show: number } }).__blockBurstAdCalls,
+    }));
+    const revived = result.state;
+    assert.equal(result.adCalls?.show, 1, JSON.stringify(result));
+    assert.equal(revived.overlayVisible, false);
+    assert.equal(revived.revivesUsed, 1);
+    assert.equal(revived.revivePending, false);
+    assert.equal(revived.trayPieceCount, 3);
+    assert.ok(Number(revived.boardOccupied) <= 24);
   } finally {
     await browser.close();
   }

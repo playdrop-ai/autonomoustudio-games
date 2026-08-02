@@ -28,8 +28,10 @@ function installPlaydropWindow(
   };
 }
 
-function createHarness(rewardedStatus: AdStatus = "completed", phase = "play") {
+function createHarness(rewardedStatus: AdStatus | Error = "completed", phase = "play") {
   let now = 0;
+  let onPause: ((reason?: string) => void) | null = null;
+  let onResume: ((reason?: string) => void) | null = null;
   const stored = new Map<string, string>();
   const calls = {
     rewardedLoad: 0,
@@ -47,7 +49,15 @@ function createHarness(rewardedStatus: AdStatus = "completed", phase = "play") {
     },
   };
   const sdk = {
-    host: { phase },
+    host: {
+      phase,
+      onPause: (callback: (reason?: string) => void) => {
+        onPause = callback;
+      },
+      onResume: (callback: (reason?: string) => void) => {
+        onResume = callback;
+      },
+    },
     me: {
       appData: { data: {} },
       updateAppData: async () => {
@@ -62,6 +72,7 @@ function createHarness(rewardedStatus: AdStatus = "completed", phase = "play") {
         },
         show: async () => {
           calls.rewardedShow++;
+          if (rewardedStatus instanceof Error) throw rewardedStatus;
           return { status: rewardedStatus };
         },
       },
@@ -83,6 +94,8 @@ function createHarness(rewardedStatus: AdStatus = "completed", phase = "play") {
     calls,
     restore,
     services,
+    pause: (reason = "host_overlay") => onPause?.(reason),
+    resume: (reason = "host_overlay") => onResume?.(reason),
     setNow: (value: number) => {
       now = value;
     },
@@ -160,6 +173,28 @@ test("rapid rewarded taps cannot start overlapping ad requests", async () => {
     assert.equal(harness.calls.rewardedShow, 1);
   } finally {
     harness.restore();
+  }
+});
+
+test("an SDK show timeout grants the reward only while the PlayDrop ad overlay is active", async () => {
+  const timeout = Object.assign(new Error("ad_show_timeout"), { name: "AdsError" });
+  const activeOverlay = createHarness(timeout);
+  try {
+    await activeOverlay.services.init();
+    activeOverlay.pause();
+    assert.equal(await activeOverlay.services.showRewarded(), true);
+    assert.equal(activeOverlay.calls.rewardedShow, 1);
+    activeOverlay.resume();
+  } finally {
+    activeOverlay.restore();
+  }
+
+  const noOverlay = createHarness(timeout);
+  try {
+    await noOverlay.services.init();
+    await assert.rejects(() => noOverlay.services.showRewarded(), /ad_show_timeout/);
+  } finally {
+    noOverlay.restore();
   }
 });
 

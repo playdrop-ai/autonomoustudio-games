@@ -11,6 +11,8 @@ requests. Do not attempt an interstitial until the player has been in the curren
 app session for at least 30 seconds, or within 30 seconds of any rewarded or
 interstitial ad the player completed or dismissed. A skipped or failed
 interstitial must never prevent `PLAY AGAIN` from restarting the game.
+After a completed rewarded revive, including the device-proven active-overlay
+SDK timeout case, close the result overlay and resume the same round exactly once.
 
 At the first no-moves state of each run, offer exactly one rewarded revive. Use
 the concise `REVIVE` action with an inline rewarded-video icon. There is no free
@@ -37,6 +39,12 @@ slow, low-opacity fades. Subtle coral and cyan light packets should travel along
 the diagonal seams so the screen feels gently active without competing with the
 board, score, tray, or clear effects.
 
+The PlayDrop identity art uses the same Cinder Plum world and beveled jewel-block
+materials. Its icon must communicate one straight line bursting at thumbnail
+size without text or UI. Both hero compositions use the exact `BLOCK BURST` title
+and a crossed row-and-column clear as the main fantasy, with the hammer kept as a
+secondary supporting tool.
+
 Mobile portrait keeps its centered board with a horizontal three-piece tray below.
 Desktop and landscape use the earlier split composition: the board sits on the left
 and the three available pieces stack vertically in a tray to its right. Keep the
@@ -51,11 +59,13 @@ retain the same visible proportions as the selected art direction.
 
 Show the saved best score beneath the current score whenever one is available.
 Keep all three tray pieces large and tactile. On the first local play session,
-seed one real four-block line completion and loop the approved hand cue from the
-middle tray piece to its exact target. Accept only that demonstrated placement,
-complete the normal burst, then persist tutorial completion locally and continue
-the same run without an overlay. Keep the hammer out of this opening lesson; its
-existing contextual instruction appears when the player selects it later.
+show exactly four occupied cells in one row and one four-block piece in the middle
+tray slot. Loop the approved hand cue from that piece to the row's four-cell gap.
+Accept only that demonstrated placement, burst the completed row so the board is
+immediately empty, then deal the normal three-piece set, persist tutorial
+completion locally, and continue the same run without an overlay. Keep the hammer
+out of this opening lesson; its existing contextual instruction appears when the
+player selects it later.
 
 Only combo streaks may show transient gameplay text (`COMBO xN`, for `N >= 2`).
 Do not show generic praise, score-gain, new-best, or availability toasts.

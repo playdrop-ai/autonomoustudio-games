@@ -15,8 +15,8 @@ type RuntimeSdk = PlaydropSDK & {
     phase?: HostPhase;
     ready?: () => void;
     error?: (message: string) => void;
-    onPause?: (callback: () => void) => void;
-    onResume?: (callback: () => void) => void;
+    onPause?: (callback: (reason?: string) => void) => void;
+    onResume?: (callback: (reason?: string) => void) => void;
     onPhaseChange?: (callback: (phase: HostPhase) => void) => void;
   };
   ads?: {
@@ -42,6 +42,7 @@ export class PlaydropServices {
   private readonly sessionStartedAt: number;
   private lastAdSeenAt: number | null = null;
   private adRequestPending = false;
+  private rewardedOverlayActive = false;
 
   constructor(private readonly now: () => number = () => Date.now()) {
     this.sessionStartedAt = this.now();
@@ -57,11 +58,13 @@ export class PlaydropServices {
       this.phase = phase;
       window.dispatchEvent(new CustomEvent("blockburst:host-phase", { detail: { phase } }));
     });
-    this.sdk.host.onPause?.(() => {
-      window.dispatchEvent(new CustomEvent("blockburst:pause"));
+    this.sdk.host.onPause?.((reason) => {
+      if (reason === "host_overlay") this.rewardedOverlayActive = true;
+      window.dispatchEvent(new CustomEvent("blockburst:pause", { detail: { reason } }));
     });
-    this.sdk.host.onResume?.(() => {
-      window.dispatchEvent(new CustomEvent("blockburst:resume"));
+    this.sdk.host.onResume?.((reason) => {
+      this.rewardedOverlayActive = false;
+      window.dispatchEvent(new CustomEvent("blockburst:resume", { detail: { reason } }));
     });
   }
 
@@ -117,9 +120,18 @@ export class PlaydropServices {
         if (load.status !== "ready") return false;
       }
       this.rewardedReady = false;
-      const shown = await rewarded.show();
-      if (shown.status === "completed" || shown.status === "dismissed") this.lastAdSeenAt = this.now();
-      return shown.status === "completed";
+      try {
+        const shown = await rewarded.show();
+        if (shown.status === "completed" || shown.status === "dismissed") this.lastAdSeenAt = this.now();
+        return shown.status === "completed";
+      } catch (error) {
+        // Real rewarded creatives can outlive the SDK's show timeout. The host
+        // overlay being active proves the ad opened, so preserve the promised reward.
+        if (!isAdShowTimeout(error) || !this.rewardedOverlayActive) throw error;
+        this.lastAdSeenAt = this.now();
+        console.warn("[block-burst] granted rewarded ad after active-overlay SDK timeout");
+        return true;
+      }
     } finally {
       this.adRequestPending = false;
     }
@@ -168,6 +180,10 @@ export class PlaydropServices {
       await this.sdk.me.updateAppData({ hammers: value });
     }
   }
+}
+
+function isAdShowTimeout(error: unknown): boolean {
+  return error instanceof Error && error.name === "AdsError" && error.message === "ad_show_timeout";
 }
 
 function normalizeHammers(value: unknown): number | null {

@@ -2,8 +2,8 @@
   "apps": [
     {
       "name": "block-burst",
-      "version": "1.0.5",
-      "releaseNotes": "Adds a first-run drag lesson, deterministic gameplay previews with visible touch guidance, PlayDrop surface playtests, and refreshed portrait and desktop listing videos.",
+      "version": "1.0.6",
+      "releaseNotes": "Refines the first-run line-clear lesson, refreshes the icon and hero art, and fixes rewarded revives after long ads.",
       "license": "PLAYDROP",
       "displayName": "Block Burst",
       "subtitle": "Build lines. Burst blocks. Chase combos.",
