@@ -156,7 +156,10 @@ test("an active PlayDrop rewarded ad timeout closes the result overlay and resum
     await page.waitForFunction(() => JSON.parse(window.render_game_to_text?.() ?? "{}").overlayVisible === true);
     await page.waitForTimeout(450);
     await page.mouse.click(195, 509);
-    await page.waitForTimeout(1000);
+    await page.waitForFunction(() => {
+      const state = JSON.parse(window.render_game_to_text?.() ?? "{}");
+      return state.overlayVisible === false && state.revivesUsed === 1 && state.trayPieceCount === 3;
+    }, undefined, { timeout: 5000 });
     const result = await page.evaluate(() => ({
       state: JSON.parse(window.render_game_to_text?.() ?? "{}"),
       adCalls: (window as typeof window & { __blockBurstAdCalls?: { load: number; show: number } }).__blockBurstAdCalls,
