@@ -21,6 +21,7 @@ import {
   type PieceDef,
 } from "./constants";
 import { clamp01, hexStr, lerp, mix, mul } from "./color";
+import { boundedDebrisCountRange } from "./debris";
 import { calculatePreviewGestureFrame, PREVIEW_GESTURE_TOTAL_MS } from "./preview";
 import { Sfx } from "./sfx";
 
@@ -120,6 +121,7 @@ const TUTORIAL_PIECE: PieceData = {
   key: "yellow",
 };
 const TUTORIAL_GUIDE_PAUSE_MS = 700;
+const MAX_ACTIVE_DEBRIS = 240;
 
 function formatScore(score: number): string {
   return Math.max(0, Math.floor(score)).toLocaleString("en-US");
@@ -360,6 +362,7 @@ export class BlockBurstScene extends Phaser.Scene {
   private previewMoveActive = false;
   private previewAdvancePending = false;
   private previewStep = 0;
+  private marketingPreviewMoveIndex = 0;
   private previewGesture: PreviewGesture | null = null;
   private tutorialActive = false;
   private tutorialGuideStartedAt = 0;
@@ -379,6 +382,8 @@ export class BlockBurstScene extends Phaser.Scene {
   private backgroundMotionGfx!: Phaser.GameObjects.Graphics;
   private backgroundSquares: Array<{ object: Phaser.GameObjects.Rectangle; spec: BackgroundSquareSpec }> = [];
   private boardGfx!: Phaser.GameObjects.Graphics;
+  private debrisGroup!: Phaser.Physics.Arcade.Group;
+  private debrisCollider!: Phaser.Physics.Arcade.Collider;
   private vignette!: Phaser.GameObjects.Image;
   private ghost!: Phaser.GameObjects.Graphics;
   private hintGfx!: Phaser.GameObjects.Graphics;
@@ -428,6 +433,7 @@ export class BlockBurstScene extends Phaser.Scene {
     this.resetBoard();
     this.layout();
     this.makeTextures();
+    this.setupDebrisPhysics();
 
     this.bg = this.add.image(0, 0, this.L.landscapeBackground ? "background-desktop" : "background-mobile-portrait").setOrigin(0.5).setDepth(0);
     this.backgroundLift = this.add.graphics().setDepth(0.05);
@@ -459,7 +465,10 @@ export class BlockBurstScene extends Phaser.Scene {
       if (this.dragging && p.id === this.dragPointerId) this.endDrag();
     });
     window.addEventListener("resize", this.onResize);
-    this.events.once("shutdown", () => window.removeEventListener("resize", this.onResize));
+    this.events.once("shutdown", () => {
+      window.removeEventListener("resize", this.onResize);
+      this.debrisCollider?.destroy();
+    });
 
     if (this.callbacks.tutorialEnabled && localStorage.getItem(TUTORIAL_STORAGE_KEY) !== "1") {
       this.startTutorial();
@@ -570,6 +579,24 @@ export class BlockBurstScene extends Phaser.Scene {
     const gestureFrame = this.previewGesture
       ? calculatePreviewGestureFrame(this.time.now - this.previewGesture.startedAt)
       : null;
+    const debris = this.debrisGroup?.getChildren()
+      .filter((child): child is Phaser.Physics.Arcade.Image => child instanceof Phaser.Physics.Arcade.Image && child.active)
+      .slice(0, 6)
+      .map((fragment) => {
+        const body = fragment.body as Phaser.Physics.Arcade.Body;
+        return {
+          x: Math.round(fragment.x),
+          y: Math.round(fragment.y),
+          width: Math.round(body.width),
+          height: Math.round(body.height),
+          velocityX: Math.round(body.velocity.x),
+          velocityY: Math.round(body.velocity.y),
+          gravityY: Math.round(body.gravity.y),
+          moves: body.moves,
+          immovable: body.immovable,
+          enabled: body.enable,
+        };
+      }) ?? [];
     return {
       previewMode: this.previewMode,
       previewPresentation: this.previewPresentation,
@@ -585,6 +612,29 @@ export class BlockBurstScene extends Phaser.Scene {
       draggingSlot: this.dragging?.getData("slot") ?? null,
       dropTarget: this.dropTarget,
       score: this.score,
+      combo: this.combo,
+      comboGrace: this.comboGrace,
+      bestComboRun: this.bestComboRun,
+      linesRun: this.linesRun,
+      board: this.grid.map((row) => row.map((cell) => cell ?? null)),
+      specials: this.special.map((row) => row.map((cell) => cell ?? null)),
+      pieces: this.pieceData.map((piece, slot) => piece
+        ? {
+            slot,
+            cells: piece.cells,
+            cols: piece.cols,
+            rows: piece.rows,
+            key: piece.key,
+          }
+        : null),
+      layout: {
+        dw: this.L.dw,
+        dh: this.L.dh,
+        cell: this.L.cell,
+        boardLeft: this.L.boardLeft,
+        boardTop: this.L.boardTop,
+        slotPos: this.L.slotPos,
+      },
       revivesUsed: this.revivesUsed,
       revivePending: this.rewardedRevivePending,
       hudVisible: Boolean(
@@ -594,6 +644,10 @@ export class BlockBurstScene extends Phaser.Scene {
         || this.hammerCount?.visible
       ),
       overlayVisible: this.gameOverActive,
+      debris: {
+        active: this.debrisGroup?.countActive(true) ?? 0,
+        sample: debris,
+      },
     };
   }
 
@@ -601,6 +655,12 @@ export class BlockBurstScene extends Phaser.Scene {
     this.layout();
     this.applyLayout();
   };
+
+  private setupDebrisPhysics(): void {
+    this.physics.world.setBounds(0, 0, this.L.dw, this.L.dh);
+    this.debrisGroup = this.physics.add.group({ collideWorldBounds: true });
+    this.debrisCollider = this.physics.add.collider(this.debrisGroup, this.debrisGroup);
+  }
 
   private resetBoard(): void {
     this.grid = [];
@@ -622,6 +682,7 @@ export class BlockBurstScene extends Phaser.Scene {
   }
 
   private resetRun(): void {
+    this.debrisGroup?.clear(true, true);
     for (const slot of this.slots) slot?.destroy();
     this.slots = [null, null, null];
     this.pieceData = [null, null, null];
@@ -908,6 +969,7 @@ export class BlockBurstScene extends Phaser.Scene {
 
   private applyLayout(): void {
     const L = this.L;
+    this.physics?.world.setBounds(0, 0, L.dw, L.dh);
     this.layoutBackground();
     this.vignette?.setDisplaySize(L.dw, L.dh);
     this.drawBoard();
@@ -1377,6 +1439,31 @@ export class BlockBurstScene extends Phaser.Scene {
     this.resolveClears();
     this.resetHint();
     if (this.previewMode) {
+      if (this.isSixLineMarketingPreview()) {
+        this.marketingPreviewMoveIndex++;
+        if (this.marketingPreviewMoveIndex === 3) this.dealSixLineContinuation();
+        if (this.L.landscapeBackground && this.marketingPreviewMoveIndex === 6) this.dealSixLineFinalSet();
+        const scriptedMoveCount = this.L.landscapeBackground ? 7 : 5;
+        const hasNextScriptedMove = this.marketingPreviewMoveIndex < scriptedMoveCount;
+        this.previewAdvancePending = !hasNextScriptedMove;
+        if (this.L.landscapeBackground) {
+          this.autoplayTimer = this.marketingPreviewMoveIndex === 1
+            ? 0.35
+            : this.marketingPreviewMoveIndex === 2 || this.marketingPreviewMoveIndex === 3
+              ? 0.25
+              : this.marketingPreviewMoveIndex === 4 || this.marketingPreviewMoveIndex === 5
+                ? 0.3
+                : this.marketingPreviewMoveIndex === 6 ? 3.5 : 3600;
+        }
+        else {
+          this.autoplayTimer = this.marketingPreviewMoveIndex === 1
+            ? 0.35
+            : this.marketingPreviewMoveIndex === 2 || this.marketingPreviewMoveIndex === 3
+              ? 0.25
+              : this.marketingPreviewMoveIndex === 4 ? 1.75 : 3600;
+        }
+        return;
+      }
       this.previewAdvancePending = true;
       this.autoplayTimer = 10;
       this.time.delayedCall(this.previewPresentation ? 1600 : 1200, () => this.advancePreviewMoment());
@@ -1427,6 +1514,7 @@ export class BlockBurstScene extends Phaser.Scene {
   private clearCells(list: Array<[number, number]>): void {
     const blockScale = (this.L.cell - this.L.gap) / TEX;
     const shards = list.length > 18 ? 6 : 10;
+    const debrisRange = boundedDebrisCountRange(this.combo, list.length);
     for (const [r, c] of list) {
       const sprite = this.sprites[r]?.[c];
       const key = this.grid[r]?.[c];
@@ -1453,7 +1541,57 @@ export class BlockBurstScene extends Phaser.Scene {
           },
         });
         this.burst(cx, cy, PALETTE[key].face, shards);
+        this.spawnBlockDebris(cx, cy, key, Phaser.Math.Between(debrisRange.min, debrisRange.max));
         this.popFlash(cx, cy);
+      });
+    }
+  }
+
+  private spawnBlockDebris(x: number, y: number, key: ColorKey, requestedCount: number): void {
+    const activeCount = this.debrisGroup.countActive(true);
+    const count = Math.max(0, Math.min(requestedCount, MAX_ACTIVE_DEBRIS - activeCount));
+    for (let index = 0; index < count; index++) {
+      const size = this.L.cell * Phaser.Math.FloatBetween(0.12, 0.23);
+      const fragment = this.physics.add.image(
+        x + Phaser.Math.FloatBetween(-this.L.cell * 0.12, this.L.cell * 0.12),
+        y + Phaser.Math.FloatBetween(-this.L.cell * 0.12, this.L.cell * 0.12),
+        `blk_${key}`,
+      );
+      this.debrisGroup.add(fragment);
+      fragment
+        .setDepth(59)
+        .setDisplaySize(size, size)
+        .setAlpha(Phaser.Math.FloatBetween(0.88, 1))
+        .setAngle(Phaser.Math.Between(-35, 35))
+        .setCollideWorldBounds(true)
+        .setBounce(
+          Phaser.Math.FloatBetween(0.32, 0.56),
+          Phaser.Math.FloatBetween(0.28, 0.48),
+        )
+        .setVelocity(
+          Phaser.Math.FloatBetween(-this.L.cell * 3.2, this.L.cell * 3.2),
+          Phaser.Math.FloatBetween(-this.L.cell * 5.4, -this.L.cell * 2.4),
+        )
+        .setAngularVelocity(Phaser.Math.Between(-420, 420))
+        .setDrag(this.L.cell * 0.12, 0)
+        .setGravityY(this.L.cell * Phaser.Math.FloatBetween(10.5, 13.5))
+        .setMaxVelocity(this.L.cell * 6, this.L.cell * 8);
+      const body = fragment.body as Phaser.Physics.Arcade.Body;
+      body.setSize(TEX * 0.72, TEX * 0.72, true);
+      body.setMass(Math.max(0.35, size / this.L.cell));
+
+      this.time.delayedCall(Phaser.Math.Between(2300, 3200), () => {
+        if (!fragment.active) return;
+        fragment.disableBody();
+        this.tweens.add({
+          targets: fragment,
+          alpha: 0,
+          scaleX: fragment.scaleX * 0.35,
+          scaleY: fragment.scaleY * 0.35,
+          duration: 360,
+          ease: "Quad.easeIn",
+          onComplete: () => fragment.destroy(),
+        });
       });
     }
   }
@@ -1985,6 +2123,7 @@ export class BlockBurstScene extends Phaser.Scene {
 
   private setupPreviewMoment(): void {
     this.resetRun();
+    this.marketingPreviewMoveIndex = 0;
     this.score = 12480 + this.previewStep * 1840;
     this.shownScore = this.score;
     this.scoreText.setText(formatScore(this.score));
@@ -2001,7 +2140,9 @@ export class BlockBurstScene extends Phaser.Scene {
     this.dealPreviewSet(this.previewStep);
     this.previewAdvancePending = false;
     this.previewMoveActive = false;
-    this.autoplayTimer = this.previewPresentation ? 0.72 : this.previewStep === 0 ? 0.36 : 0.28;
+    this.autoplayTimer = this.isSixLineMarketingPreview()
+      ? 1.8
+      : this.previewPresentation ? 0.36 : this.previewStep === 0 ? 0.36 : 0.28;
     this.setPreviewHud(this.previewPresentation);
   }
 
@@ -2030,6 +2171,30 @@ export class BlockBurstScene extends Phaser.Scene {
       for (const [c, r] of cells) this.addPreviewBlock(c, r, this.previewColor(c, r, offset));
     };
 
+    if (this.isSixLineMarketingPreview()) {
+      const landingRows = new Set([2, 3, 4]);
+      const landingCols = new Set([3, 4, 5]);
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          const supportsLanding = landingRows.has(r) !== landingCols.has(c);
+          const openingHole = r === 6 && c === 5;
+          if (supportsLanding && !openingHole) {
+            this.addPreviewBlock(c, r, this.previewColor(c, r, 3));
+          }
+        }
+      }
+      // The first move fills row six and triggers an opening bomb. Its blast is
+      // outside the reserved columns, so the same board can be repaired and
+      // carried into the six-line finale without a reset.
+      for (let c = 0; c <= 2; c++) this.addPreviewBlock(c, 6, this.previewColor(c, 6, 6));
+      this.makeSpecial(6, 0, "bomb");
+      // These two bombs sit on rows completed by the final 3x3 placement. They
+      // use the shipped bomb behavior in the same continuous play session.
+      this.makeSpecial(2, 1, "bomb");
+      this.makeSpecial(4, 7, "bomb");
+      return;
+    }
+
     if (step % 3 === 0) {
       fillRow(5, [3, 4], 0);
       fillRow(6, [3, 4], 1);
@@ -2057,10 +2222,144 @@ export class BlockBurstScene extends Phaser.Scene {
   }
 
   private dealPreviewSet(step: number): void {
+    if (this.isSixLineMarketingPreview()) {
+      const scripted: PieceData[] = [
+        { cells: [[0, 0], [1, 0], [2, 0]], cols: 3, rows: 1, n: 3, tier: 0, key: "yellow", previewTarget: { c0: 5, r0: 6 } },
+        { cells: [[0, 0], [1, 0], [2, 0]], cols: 3, rows: 1, n: 3, tier: 0, key: "teal", previewTarget: { c0: 3, r0: 6 } },
+        {
+          cells: [[0, 0], [0, 1], [1, 1]],
+          cols: 2,
+          rows: 2,
+          n: 3,
+          tier: 0,
+          key: "green",
+          previewTarget: { c0: 0, r0: 0 },
+        },
+      ];
+      for (let i = 0; i < scripted.length; i++) {
+        this.slots[i]?.destroy();
+        const data = scripted[i];
+        if (!data) throw new Error(`[block-burst] Missing scripted six-line preview piece ${i}`);
+        this.pieceData[i] = data;
+        this.buildTrayPiece(i, data, true);
+      }
+      return;
+    }
     for (let i = 0; i < 3; i++) {
       this.slots[i]?.destroy();
       const active = i === 1;
       const data = active ? this.previewPieceForStep(step) : this.previewDecoyPiece(step, i);
+      this.pieceData[i] = data;
+      this.buildTrayPiece(i, data, true);
+    }
+  }
+
+  private dealSixLineContinuation(): void {
+    const scripted: PieceData[] = this.L.landscapeBackground ? [
+      {
+        cells: [[0, 0], [1, 0], [0, 1], [1, 1]],
+        cols: 2,
+        rows: 2,
+        n: 4,
+        tier: 1,
+        key: "purple",
+        previewTarget: { c0: 6, r0: 0 },
+      },
+      {
+        cells: [[0, 0]],
+        cols: 1,
+        rows: 1,
+        n: 1,
+        tier: 0,
+        key: "yellow",
+        previewTarget: { c0: 2, r0: 1 },
+      },
+      {
+        cells: [[0, 0], [1, 0], [2, 0]],
+        cols: 3,
+        rows: 1,
+        n: 3,
+        tier: 0,
+        key: "teal",
+        previewTarget: { c0: 3, r0: 1 },
+      },
+    ] : [
+      {
+        cells: [[0, 0], [1, 0], [0, 1], [1, 1]],
+        cols: 2,
+        rows: 2,
+        n: 4,
+        tier: 1,
+        key: "purple",
+        previewTarget: { c0: 6, r0: 0 },
+      },
+      {
+        cells: [
+          [0, 0], [1, 0], [2, 0],
+          [0, 1], [1, 1], [2, 1],
+          [0, 2], [1, 2], [2, 2],
+        ],
+        cols: 3,
+        rows: 3,
+        n: 9,
+        tier: 2,
+        key: "red",
+        previewTarget: { c0: 3, r0: 2 },
+      },
+      {
+        cells: [[0, 0], [1, 0], [2, 0]],
+        cols: 3,
+        rows: 1,
+        n: 3,
+        tier: 0,
+        key: "orange",
+      },
+    ];
+    for (let i = 0; i < scripted.length; i++) {
+      this.slots[i]?.destroy();
+      const data = scripted[i];
+      if (!data) throw new Error(`[block-burst] Missing scripted continuation piece ${i}`);
+      this.pieceData[i] = data;
+      this.buildTrayPiece(i, data, true);
+    }
+  }
+
+  private dealSixLineFinalSet(): void {
+    const scripted: PieceData[] = [
+      {
+        cells: [
+          [0, 0], [1, 0], [2, 0],
+          [0, 1], [1, 1], [2, 1],
+          [0, 2], [1, 2], [2, 2],
+        ],
+        cols: 3,
+        rows: 3,
+        n: 9,
+        tier: 2,
+        key: "red",
+        previewTarget: { c0: 3, r0: 2 },
+      },
+      {
+        cells: [[0, 0], [0, 1], [1, 1]],
+        cols: 2,
+        rows: 2,
+        n: 3,
+        tier: 0,
+        key: "orange",
+      },
+      {
+        cells: [[0, 0], [1, 0], [2, 0]],
+        cols: 3,
+        rows: 1,
+        n: 3,
+        tier: 0,
+        key: "green",
+      },
+    ];
+    for (let i = 0; i < scripted.length; i++) {
+      this.slots[i]?.destroy();
+      const data = scripted[i];
+      if (!data) throw new Error(`[block-burst] Missing scripted final piece ${i}`);
       this.pieceData[i] = data;
       this.buildTrayPiece(i, data, true);
     }
@@ -2232,6 +2531,12 @@ export class BlockBurstScene extends Phaser.Scene {
 
   private isPreviewPresentationScene(sceneId?: string): boolean {
     return !sceneId || sceneId === "sdk-preview" || sceneId === "preview" || sceneId.startsWith("listing-");
+  }
+
+  private isSixLineMarketingPreview(): boolean {
+    return this.lastPreviewPayload?.sceneId === "listing-applovin-six-line"
+      || this.lastPreviewPayload?.sceneId === "listing-portrait"
+      || this.lastPreviewPayload?.sceneId === "listing-landscape";
   }
 
   private findPreviewMove(): { slot: number; cells: Array<[number, number]>; c0: number; r0: number } | null {

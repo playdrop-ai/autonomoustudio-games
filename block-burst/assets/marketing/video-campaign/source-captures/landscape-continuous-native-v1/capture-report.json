@@ -1,0 +1,276 @@
+{
+  "appName": "block-burst",
+  "outputDir": "/Users/olivier/Documents/autonomoustudio-games/block-burst/assets/marketing/video-campaign/source-captures/landscape-continuous-native-v1",
+  "captures": [
+    {
+      "surface": "DESKTOP",
+      "targetUrl": "https://www.playdrop.ai/creators/autonomoustudio/apps/game/block-burst/dev-preview?launchCheck=1&captureShell=listing&mobileFrameHost=admin",
+      "command": {
+        "durationSeconds": 18,
+        "width": 1280,
+        "height": 720,
+        "fps": 60,
+        "posterAtSeconds": 16,
+        "audio": true,
+        "keepRaw": false
+      },
+      "measurement": {
+        "outerWidth": 1280,
+        "outerHeight": 807,
+        "innerWidth": 1280,
+        "innerHeight": 720,
+        "devicePixelRatio": 2,
+        "iframeRect": {
+          "x": 0,
+          "y": 0,
+          "width": 1280,
+          "height": 720,
+          "top": 0,
+          "left": 0,
+          "right": 1280,
+          "bottom": 720
+        }
+      },
+      "recorder": {
+        "applicationName": "Google Chrome for Testing",
+        "contentRectPoints": {
+          "height": 1440,
+          "width": 2560,
+          "x": 0,
+          "y": 0
+        },
+        "pointPixelScale": 2,
+        "processID": 5597,
+        "recordedDurationSeconds": 19,
+        "recordedFileSizeBytes": 40151181,
+        "windowFramePoints": {
+          "height": 807,
+          "width": 1280,
+          "x": 22,
+          "y": 52
+        },
+        "windowID": 21895,
+        "windowTitle": "Dev Preview block-burst | PlayDrop"
+      },
+      "crop": {
+        "x": 0,
+        "y": 174,
+        "width": 2560,
+        "height": 1440
+      },
+      "rawVideo": {
+        "path": null,
+        "width": 2560,
+        "height": 1614,
+        "durationSeconds": 19.033333,
+        "audioTrackCount": 0
+      },
+      "finalVideo": {
+        "path": "/Users/olivier/Documents/autonomoustudio-games/block-burst/assets/marketing/video-campaign/source-captures/landscape-continuous-native-v1/desktop-listing.mp4",
+        "width": 1280,
+        "height": 720,
+        "durationSeconds": 19.033333,
+        "audioTrackCount": 1,
+        "fps": 60
+      },
+      "posterPath": "/Users/olivier/Documents/autonomoustudio-games/block-burst/assets/marketing/video-campaign/source-captures/landscape-continuous-native-v1/desktop-poster.png",
+      "validation": {
+        "status": "passed",
+        "referenceFrameSimilarity": 0.977358,
+        "firstFrameMeanLuma": 0.16619466145833334,
+        "firstFrameVisiblePixelRatio": 0.956298828125,
+        "posterFrameMeanLuma": 0.12433938419117647,
+        "posterFrameVisiblePixelRatio": 0.930419921875,
+        "motionMeanDelta": 0.05548694087009804,
+        "motionChangedPixelRatio": 0.156982421875
+      },
+      "warnings": []
+    },
+    {
+      "surface": "MOBILE_LANDSCAPE",
+      "targetUrl": "https://www.playdrop.ai/creators/autonomoustudio/apps/game/block-burst/dev-preview?launchCheck=1&captureShell=listing&mobileFrameHost=admin",
+      "command": {
+        "durationSeconds": 18,
+        "width": 1280,
+        "height": 720,
+        "fps": 60,
+        "posterAtSeconds": 16,
+        "audio": true,
+        "keepRaw": false
+      },
+      "measurement": {
+        "outerWidth": 1280,
+        "outerHeight": 720,
+        "innerWidth": 1280,
+        "innerHeight": 720,
+        "devicePixelRatio": 2,
+        "iframeRect": {
+          "x": 0,
+          "y": 0,
+          "width": 1280,
+          "height": 720,
+          "top": 0,
+          "left": 0,
+          "right": 1280,
+          "bottom": 720
+        }
+      },
+      "recorder": {
+        "applicationName": "Google Chrome for Testing",
+        "contentRectPoints": {
+          "height": 1440,
+          "width": 2560,
+          "x": 0,
+          "y": 0
+        },
+        "pointPixelScale": 2,
+        "processID": 5730,
+        "recordedDurationSeconds": 19,
+        "recordedFileSizeBytes": 40723460,
+        "windowFramePoints": {
+          "height": 800,
+          "width": 1282,
+          "x": 22,
+          "y": 52
+        },
+        "windowID": 21914,
+        "windowTitle": "Dev Preview block-burst | PlayDrop"
+      },
+      "crop": {
+        "x": 0,
+        "y": 160,
+        "width": 2560,
+        "height": 1440
+      },
+      "rawVideo": {
+        "path": null,
+        "width": 2564,
+        "height": 1600,
+        "durationSeconds": 19.016667,
+        "audioTrackCount": 0
+      },
+      "finalVideo": {
+        "path": "/Users/olivier/Documents/autonomoustudio-games/block-burst/assets/marketing/video-campaign/source-captures/landscape-continuous-native-v1/mobile-landscape-listing.mp4",
+        "width": 1280,
+        "height": 720,
+        "durationSeconds": 19.016667,
+        "audioTrackCount": 1,
+        "fps": 60
+      },
+      "posterPath": "/Users/olivier/Documents/autonomoustudio-games/block-burst/assets/marketing/video-campaign/source-captures/landscape-continuous-native-v1/mobile-landscape-poster.png",
+      "validation": {
+        "status": "passed",
+        "referenceFrameSimilarity": 0.918344,
+        "firstFrameMeanLuma": 0.17393344056372548,
+        "firstFrameVisiblePixelRatio": 0.937744140625,
+        "posterFrameMeanLuma": 0.13220071231617647,
+        "posterFrameVisiblePixelRatio": 0.915283203125,
+        "motionMeanDelta": 0.055287798713235296,
+        "motionChangedPixelRatio": 0.15673828125
+      },
+      "warnings": []
+    },
+    {
+      "surface": "MOBILE_PORTRAIT",
+      "targetUrl": "https://www.playdrop.ai/creators/autonomoustudio/apps/game/block-burst/dev-preview?launchCheck=1&captureShell=listing&mobileFrameHost=admin",
+      "command": {
+        "durationSeconds": 18,
+        "width": 1280,
+        "height": 720,
+        "fps": 60,
+        "posterAtSeconds": 16,
+        "audio": true,
+        "keepRaw": false
+      },
+      "measurement": {
+        "outerWidth": 1280,
+        "outerHeight": 720,
+        "innerWidth": 1280,
+        "innerHeight": 720,
+        "devicePixelRatio": 2,
+        "iframeRect": {
+          "x": 0,
+          "y": 0,
+          "width": 1280,
+          "height": 720,
+          "top": 0,
+          "left": 0,
+          "right": 1280,
+          "bottom": 720
+        }
+      },
+      "recorder": {
+        "applicationName": "Google Chrome for Testing",
+        "contentRectPoints": {
+          "height": 1440,
+          "width": 2560,
+          "x": 0,
+          "y": 0
+        },
+        "pointPixelScale": 2,
+        "processID": 5827,
+        "recordedDurationSeconds": 19,
+        "recordedFileSizeBytes": 38885456,
+        "windowFramePoints": {
+          "height": 800,
+          "width": 1282,
+          "x": 22,
+          "y": 52
+        },
+        "windowID": 21933,
+        "windowTitle": "Dev Preview block-burst | PlayDrop"
+      },
+      "crop": {
+        "x": 0,
+        "y": 160,
+        "width": 2560,
+        "height": 1440
+      },
+      "rawVideo": {
+        "path": null,
+        "width": 2564,
+        "height": 1600,
+        "durationSeconds": 19.15,
+        "audioTrackCount": 0
+      },
+      "finalVideo": {
+        "path": "/Users/olivier/Documents/autonomoustudio-games/block-burst/assets/marketing/video-campaign/source-captures/landscape-continuous-native-v1/mobile-portrait-listing.mp4",
+        "width": 1280,
+        "height": 720,
+        "durationSeconds": 19.15,
+        "audioTrackCount": 1,
+        "fps": 60
+      },
+      "posterPath": "/Users/olivier/Documents/autonomoustudio-games/block-burst/assets/marketing/video-campaign/source-captures/landscape-continuous-native-v1/mobile-portrait-poster.png",
+      "validation": {
+        "status": "passed",
+        "referenceFrameSimilarity": 0.924957,
+        "firstFrameMeanLuma": 0.17443416819852942,
+        "firstFrameVisiblePixelRatio": 0.936279296875,
+        "posterFrameMeanLuma": 0.13227347579656862,
+        "posterFrameVisiblePixelRatio": 0.912841796875,
+        "motionMeanDelta": 0.05587948069852941,
+        "motionChangedPixelRatio": 0.159912109375
+      },
+      "warnings": []
+    }
+  ],
+  "warnings": [],
+  "binding": {
+    "artifactHashes": {
+      "desktop-listing.mp4": "bed65bc378f2a51960ff9675f1e542a0f49a2b962171d74917486ac13f283146",
+      "desktop-poster.png": "93d349bc004f3b1771387d6f9ee31f3f4fc581757120ae7b348a7ad5c19013a8",
+      "mobile-landscape-listing.mp4": "eebedb442a83b640197a54db77ae8ed0d08aec21a8e27483cd491e1028457a5c",
+      "mobile-landscape-poster.png": "dd5ee27da504c4e4ddb179198d49c5ff69ffe98fe811569fa6accc871cbbf3ca",
+      "mobile-portrait-listing.mp4": "5f7468a064ee643c3fe4c13cae8e03ff9fa1bf3aef4efe08e25126ce1af933dc",
+      "mobile-portrait-poster.png": "dd4cfb621f36f8cb9ad26628b031d72a46c80a503f8c79e6d28225c48915b0b6"
+    },
+    "capturedSurfaces": [
+      "DESKTOP",
+      "MOBILE_LANDSCAPE",
+      "MOBILE_PORTRAIT"
+    ],
+    "pixelValidation": "passed",
+    "runtimeBundleHash": "68657b660be77113a56e674a5d107ce0dc3f7cfceaf986286412dd8d8783fe05"
+  }
+}

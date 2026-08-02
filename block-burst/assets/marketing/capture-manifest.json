@@ -1,18 +1,22 @@
 {
   "appName": "block-burst",
-  "createdAt": "2026-08-01T23:11:39Z",
-  "captureSource": "external-playwright-listing-preview",
-  "captureEngine": "chromium-playwright-video",
+  "createdAt": "2026-08-02T02:02:31Z",
+  "captureSource": "PlayDrop listing preview captured from the shipped game",
+  "captureEngine": "PlayDrop CLI 0.14.5 native macOS ScreenCaptureKit",
   "audioPolicy": "sfx-only",
-  "seed": "block-burst-1.0.5",
+  "seed": "deterministic truthful listing-preview sequences for portrait and landscape",
   "captures": [
     {
       "surface": "mobile-portrait",
-      "path": "assets/marketing/videos/portrait.mp4",
-      "width": 390,
-      "height": 844,
-      "fps": 30,
-      "durationSeconds": 15,
+      "sourcePath": "assets/marketing/video-campaign/source-captures/physics-debris-native-v1/desktop-listing.mp4",
+      "listingPath": "assets/marketing/playdrop/capture/portrait-listing.mp4",
+      "width": 1080,
+      "height": 1920,
+      "fps": 60,
+      "durationSeconds": 12,
+      "sourceDurationSeconds": 12.467,
+      "editRangeSeconds": [0, 12],
+      "captureMode": "one continuous native-captured board at 1x with five legal placements",
       "hasAudio": true,
       "audio": {
         "policy": "sfx-only",
@@ -26,17 +30,27 @@
         "codec": "h264",
         "pixelFormat": "yuv420p",
         "sampleAspectRatio": "1:1",
+        "browserChrome": false,
         "interactionReviewed": true,
-        "payoffReviewed": true
+        "payoffReviewed": true,
+        "uniqueMovesInEdit": 5,
+        "finalMoveLines": 6,
+        "finalMoveBombs": 2,
+        "repeatedFootage": false,
+        "continuousSession": true
       }
     },
     {
-      "surface": "desktop",
-      "path": "assets/marketing/videos/landscape.mp4",
-      "width": 1280,
-      "height": 720,
-      "fps": 30,
-      "durationSeconds": 15,
+      "surface": "mobile-landscape",
+      "sourcePath": "assets/marketing/video-campaign/source-captures/landscape-continuous-native-v1/desktop-listing.mp4",
+      "listingPath": "assets/marketing/playdrop/capture/landscape-listing.mp4",
+      "width": 1920,
+      "height": 1080,
+      "fps": 60,
+      "durationSeconds": 17,
+      "sourceDurationSeconds": 19.033,
+      "editRangeSeconds": [0, 17],
+      "captureMode": "one continuous native-captured board at 1x with seven legal placements",
       "hasAudio": true,
       "audio": {
         "policy": "sfx-only",
@@ -50,9 +64,47 @@
         "codec": "h264",
         "pixelFormat": "yuv420p",
         "sampleAspectRatio": "1:1",
+        "browserChrome": false,
         "interactionReviewed": true,
-        "payoffReviewed": true
+        "payoffReviewed": true,
+        "uniqueMovesInEdit": 7,
+        "finalMoveLines": 6,
+        "finalMoveBombs": 2,
+        "repeatedFootage": false,
+        "continuousSession": true
       }
+    }
+  ],
+  "nativeCaptureEvidence": {
+    "portrait": {
+      "reportPath": "assets/marketing/video-campaign/source-captures/physics-debris-native-v1/capture-report.json",
+      "sourceVideoSha256": "ee7ef87102bc265b40cc544c6fabacaa44cd56e24496127931e0e3e5f6d13957",
+      "reportSha256": "8eb8086dcf66a2e0935ecbc81a8e26adfb3dff1993496e9978d40a991af296b7",
+      "capturedSurfaces": 3,
+      "warnings": 0
+    },
+    "landscape": {
+      "reportPath": "assets/marketing/video-campaign/source-captures/landscape-continuous-native-v1/capture-report.json",
+      "sourceVideoSha256": "bed65bc378f2a51960ff9675f1e542a0f49a2b962171d74917486ac13f283146",
+      "reportSha256": "ec7cae7947484f8231604e73192521bbe98de719240ef539b91bd87c84b4b181",
+      "capturedSurfaces": 3,
+      "warnings": 0
+    }
+  },
+  "ratioNativeCampaignCaptures": [
+    {
+      "surface": "instagram-3x4",
+      "path": "assets/marketing/video-campaign/source-captures/instagram-3x4/instagram-3x4-gameplay.mp4",
+      "width": 1080,
+      "height": 1440,
+      "durationSeconds": 15
+    },
+    {
+      "surface": "pinterest-2x3",
+      "path": "assets/marketing/video-campaign/source-captures/pinterest-2x3/pinterest-2x3-gameplay.mp4",
+      "width": 1000,
+      "height": 1500,
+      "durationSeconds": 15
     }
   ]
 }

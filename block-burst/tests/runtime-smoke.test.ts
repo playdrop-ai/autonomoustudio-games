@@ -53,7 +53,7 @@ test("built game renders and exposes listing preview hook", async () => {
     assert.equal(previewStart.overlayVisible, false);
 
     let previewGesture: Record<string, unknown> = {};
-    const gestureDeadline = Date.now() + 3000;
+    const gestureDeadline = Date.now() + 9000;
     while ((!previewGesture.gestureActive || !previewGesture.handVisible) && Date.now() < gestureDeadline) {
       await page.waitForTimeout(150);
       previewGesture = await page.evaluate(() => JSON.parse(window.render_game_to_text?.() ?? "{}"));

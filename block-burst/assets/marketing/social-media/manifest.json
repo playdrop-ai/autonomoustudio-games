@@ -1,0 +1,134 @@
+{
+  "version": 1,
+  "game": "Block Burst",
+  "subtitle": "Build lines. Burst blocks. Chase combos.",
+  "approval": {
+    "status": "prepared_for_owner_review",
+    "scope": "All assets and copy are review-ready. Nothing in this package authorizes publication, registration, paid spend, or upload.",
+    "preparedAt": "2026-08-01"
+  },
+  "destinationUrl": "https://www.playdrop.ai/creators/autonomoustudio/apps/game/block-burst",
+  "attribution": {
+    "utm_medium": "organic_social",
+    "utm_campaign": "block_burst_launch"
+  },
+  "positioning": {
+    "audience": "Casual puzzle players, block-game fans, planners, and high-score chasers who want a fast browser game with tactile clears.",
+    "promise": "Drag a piece, burst a line, keep the grid alive, chain the next combo, and beat your best.",
+    "storyOrder": [
+      "Block Burst identity",
+      "Drag. Drop. Burst.",
+      "Plan every piece",
+      "Chain big combos",
+      "Beat your best"
+    ]
+  },
+  "creativePolicy": {
+    "gameplay": "Real shipped 1.0.6 gameplay with synchronized in-game SFX. The shared 9:16 short is one continuous 12-second, five-move native session. The 16:9 trailer is one continuous 17-second, seven-move native session with an opening clear, a mid-session row clear, and a final 3x3 placement that clears six lines and detonates two bombs. Every gameplay frame plays at 1x with no cuts, resets, repeated footage, or time warps.",
+    "videoIdentity": "Four approved transparent caption plates carry the sound-off story over real gameplay. The caption-free versions of the same native sessions are reserved for the PlayDrop listing.",
+    "staticArt": "Native 3:4 ImageGen campaign compositions use protected hero, icon, and real-gameplay references. Verified 2:3 variants remove only empty side scenery.",
+    "barsOrFiller": false,
+    "unsupportedClaims": false
+  },
+  "youtube": {
+    "shortVideo": "short/portrait-9x16.mp4",
+    "trailerVideo": "trailer/landscape-16x9.mp4",
+    "trailerThumbnail": "youtube/trailer-thumbnail-1280x720.png",
+    "shortTitle": "One Piece Starts the Combo | Block Burst",
+    "shortDescription": "Drag a piece. Burst a line. Keep enough room for the next move, chain brighter combo clears, and beat your best. Block Burst is free to play in your browser, no download. Watch the full trailer through the linked video. #BlockPuzzle #PuzzleGame #IndieGame",
+    "shortPinnedComment": "What is your best combo: x2, x3, or higher? Play Block Burst free in your browser:\nhttps://www.playdrop.ai/creators/autonomoustudio/apps/game/block-burst?utm_source=youtube&utm_medium=organic_social&utm_campaign=block_burst_launch&utm_content=short_comment",
+    "trailerTitle": "Block Burst: Jewel Block Puzzle & Combo Game | Play Free Online",
+    "description": "Play free in your browser, no download:\nhttps://www.playdrop.ai/creators/autonomoustudio/apps/game/block-burst?utm_source=youtube&utm_medium=organic_social&utm_campaign=block_burst_launch&utm_content=trailer\n\nDrag one of three jewel-bright pieces onto the 8x8 grid. Complete a full row or column to burst it, open space, and set up the next move.\n\nEvery placement changes what fits next. Plan around awkward shapes, clear again before the combo fades, and turn careful board management into bigger crossed-line payoffs. Chase your saved personal best and post completed runs to the highest-score leaderboard.\n\nWhere does your best run end: a perfect combo or one impossible piece?\n\n#BlockPuzzle #PuzzleGame #HighScoreGame #BrowserGame #IndieGame",
+    "trailerPinnedComment": "Play Block Burst free in your browser, no download:\nhttps://www.playdrop.ai/creators/autonomoustudio/apps/game/block-burst?utm_source=youtube&utm_medium=organic_social&utm_campaign=block_burst_launch&utm_content=trailer_comment\n\nWhat is your best combo so far?",
+    "searchTags": "Block Burst, block puzzle, block blast game, jewel block puzzle, drag and drop puzzle, line clear game, combo puzzle game, high score game, browser puzzle game, free online puzzle game, no download game, casual game, indie game, PlayDrop Games"
+  },
+  "tiktok": {
+    "video": "short/portrait-9x16.mp4",
+    "coverInstruction": "Use instagram/reels-cover-420x654.png as the visual reference and choose the nearest clean BLOCK BURST identity frame in TikTok's cover picker.",
+    "caption": "One piece can save the board—or end the run. Drag, burst, chain the combo, and beat your best in Block Burst. Free in your browser, no download. #BlockPuzzle #PuzzleGame #MobileGaming #IndieGame",
+    "pinnedComment": "What is the piece that always ruins your setup? Play Block Burst on playdrop.ai."
+  },
+  "instagram": {
+    "reelVideo": "short/portrait-9x16.mp4",
+    "storyVideo": "short/portrait-9x16.mp4",
+    "reelCover": "instagram/reels-cover-420x654.png",
+    "feedVideo": "instagram/feed/video-3x4.mp4",
+    "carousel": [
+      "instagram/feed/carousel/01-hero.png",
+      "instagram/feed/carousel/02-drag-drop-burst.png",
+      "instagram/feed/carousel/03-plan-every-piece.png",
+      "instagram/feed/carousel/04-chain-big-combos.png",
+      "instagram/feed/carousel/05-beat-your-best.png"
+    ],
+    "caption": "Drag a piece. Burst a line. Save room for what comes next.\n\nBlock Burst turns a simple 8x8 grid into a high-score puzzle where every placement matters. Complete rows and columns, clear again before the combo fades, and keep the board alive long enough to beat your best.\n\nFree in your browser. No download.\n\n#BlockPuzzle #PuzzleGame #MobileGaming #CasualGames #IndieGame",
+    "pinnedComment": "What is your best combo so far? Find Block Burst on playdrop.ai.",
+    "reelAltText": "Real Block Burst gameplay shows a hand dragging colorful jewel pieces onto an 8-by-8 navy grid. Rows and columns burst in gold light while captions read Drag. Drop. Burst., Plan Every Piece, Chain Big Combos, and Beat Your Best.",
+    "carouselAltText": [
+      "Block Burst title above an eight-by-eight jewel block grid exploding in a cross of gold light.",
+      "A red jewel piece arcs toward a glowing gap on an eight-by-eight Block Burst board beneath the words Drag. Drop. Burst.",
+      "Three jewel pieces wait below a partly filled eight-by-eight grid beneath the words Plan Every Piece.",
+      "A crossed row-and-column clear bursts through an eight-by-eight grid beneath the words Chain Big Combos.",
+      "A score of 18,950 and the word Best appear above a bright eight-by-eight jewel grid beneath the words Beat Your Best."
+    ]
+  },
+  "pinterest": {
+    "video": "short/pinterest-2x3.mp4",
+    "board": "Block Puzzle and Casual Games",
+    "boardDescription": "Free browser block puzzles, drag-and-drop strategy games, jewel grid games, satisfying line clears, combo challenges, and high-score games you can play with no download.",
+    "relatedTopics": [
+      "Block Puzzle Games",
+      "Puzzle Games",
+      "Casual Games",
+      "Mobile Games",
+      "Browser Games",
+      "High Score Games"
+    ],
+    "videoTitle": "Block Burst: Free Jewel Block Puzzle Game",
+    "videoDescription": "Drag jewel-bright pieces onto an 8x8 grid, burst complete rows and columns, plan around the remaining shapes, chain combos, and beat your best. Play Block Burst free in your browser, no download.",
+    "videoUtmContent": "video_pin",
+    "images": [
+      {
+        "file": "pinterest/static/01-hero.png",
+        "title": "Block Burst: Free Block Puzzle Game",
+        "description": "Play a bright jewel block puzzle free in your browser. Build complete lines, burst the grid in gold light, and chase a new personal best with no download.",
+        "utm_content": "hero_pin",
+        "altText": "Block Burst title above a colorful eight-by-eight jewel grid with a bright golden cross-shaped clear."
+      },
+      {
+        "file": "pinterest/static/02-drag-drop-burst.png",
+        "title": "Drag, Drop, and Burst the Line",
+        "description": "Drag one of three colorful pieces onto the 8x8 board and complete a row or column to make it burst. Try Block Burst free online.",
+        "utm_content": "drag_drop_burst_pin",
+        "altText": "A red block piece moves toward a glowing board gap under the words Drag. Drop. Burst."
+      },
+      {
+        "file": "pinterest/static/03-plan-every-piece.png",
+        "title": "Block Puzzle Strategy: Plan Every Piece",
+        "description": "Every placement changes what fits next. Leave room for awkward shapes, protect useful gaps, and keep your Block Burst run alive.",
+        "utm_content": "plan_every_piece_pin",
+        "altText": "Three different jewel pieces wait below a partly filled eight-by-eight board under the words Plan Every Piece."
+      },
+      {
+        "file": "pinterest/static/04-chain-big-combos.png",
+        "title": "Chain Big Combos in Block Burst",
+        "description": "Clear again before the combo fades and turn careful planning into a brilliant crossed row-and-column burst. Play free in your browser.",
+        "utm_content": "chain_big_combos_pin",
+        "altText": "A gold cross-shaped row and column clear explodes through a jewel grid under the words Chain Big Combos."
+      },
+      {
+        "file": "pinterest/static/05-beat-your-best.png",
+        "title": "High-Score Block Puzzle: Beat Your Best",
+        "description": "Keep finding space, build bigger clears, and chase a new saved personal best in Block Burst, a free no-download browser puzzle game.",
+        "utm_content": "beat_your_best_pin",
+        "altText": "The score 18,950 appears above a colorful jewel grid and three pieces under the words Beat Your Best."
+      }
+    ]
+  },
+  "x": {
+    "video": "trailer/landscape-16x9.mp4",
+    "copy": "One piece can save the board—or end the run.\n\nDrag. Drop. Burst. Then clear again before the combo fades.\n\nBlock Burst is playable now. Link in the first reply.",
+    "linkReply": "Play Block Burst free in your browser, no download:\nhttps://www.playdrop.ai/creators/autonomoustudio/apps/game/block-burst?utm_source=x&utm_medium=organic_social&utm_campaign=block_burst_launch&utm_content=trailer_reply",
+    "altText": "One continuous Block Burst session shows seven legal jewel-piece moves on an eight-by-eight board. An opening clear and a careful mid-game row clear build toward a final red three-by-three placement that clears six lines and detonates two bombs, with captions about planning, bursting, chaining combos, and beating your best.",
+    "pinPost": true
+  }
+}

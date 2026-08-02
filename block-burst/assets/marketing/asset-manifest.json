@@ -1,26 +1,32 @@
 {
   "version": 1,
+  "preparedAt": "2026-08-02",
+  "gameVersion": "1.0.7",
+  "productionMode": {
+    "stills": "built-in OpenAI ImageGen with protected identity and real-gameplay references",
+    "video": "PlayDrop CLI 0.14.5 native 60 fps ScreenCaptureKit gameplay capture plus deterministic FFmpeg assembly"
+  },
   "assets": [
     {
       "id": "video-landscape",
       "kind": "playdrop-listing-video",
-      "path": "assets/marketing/videos/landscape.mp4",
-      "source": "assets/marketing/captures/mobile-landscape.mp4",
+      "path": "assets/marketing/playdrop/capture/landscape-listing.mp4",
+      "source": "assets/marketing/video-campaign/source-captures/landscape-continuous-native-v1/desktop-listing.mp4",
       "width": 1920,
       "height": 1080,
       "fps": 60,
-      "durationSeconds": 14.37,
+      "durationSeconds": 17,
       "audioPolicy": "sfx-only"
     },
     {
       "id": "video-portrait",
       "kind": "playdrop-listing-video",
-      "path": "assets/marketing/videos/portrait.mp4",
-      "source": "assets/marketing/captures/mobile-portrait.mp4",
+      "path": "assets/marketing/playdrop/capture/portrait-listing.mp4",
+      "source": "assets/marketing/video-campaign/source-captures/physics-debris-native-v1/desktop-listing.mp4",
       "width": 1080,
       "height": 1920,
       "fps": 60,
-      "durationSeconds": 14.33,
+      "durationSeconds": 12,
       "audioPolicy": "sfx-only"
     },
     {
@@ -55,5 +61,178 @@
       "artworkSource": "playdrop-ai",
       "aiGenerated": true
     }
-  ]
+  ],
+  "protectedIdentity": {
+    "icon": {
+      "path": "playdrop/icon.png",
+      "dimensions": "512x512"
+    },
+    "heroPortrait": {
+      "path": "playdrop/hero-portrait.png",
+      "dimensions": "1080x1920",
+      "sha256": "01f1b9fed946bd9df58dd9405267dae5f685aae8b88836351aab3f2918a4e872"
+    },
+    "heroLandscape": {
+      "path": "playdrop/hero-landscape.png",
+      "dimensions": "1920x1080"
+    }
+  },
+  "playdrop": {
+    "portraitScreenshots": {
+      "directory": "playdrop/screenshots/portrait",
+      "count": 4,
+      "dimensions": "1080x1920",
+      "order": [
+        "01-drag-drop-burst.png",
+        "02-plan-every-piece.png",
+        "03-chain-big-combos.png",
+        "04-beat-your-best.png"
+      ]
+    },
+    "landscapeScreenshots": {
+      "directory": "playdrop/screenshots/landscape",
+      "count": 4,
+      "dimensions": "1920x1080",
+      "order": [
+        "01-drag-drop-burst.png",
+        "02-plan-every-piece.png",
+        "03-chain-big-combos.png",
+        "04-beat-your-best.png"
+      ]
+    },
+    "portraitVideo": {
+      "path": "playdrop/capture/portrait-listing.mp4",
+      "spec": "1080x1920, H.264 High, 60 fps, yuv420p, SAR 1:1, AAC LC 48 kHz stereo, 12.000 s",
+      "bytes": 2252693,
+      "sha256": "26b089dc634eae2a4343a056c7ea22cb6c763a74a926624c0d1bcab956329799",
+      "story": "caption-free five-move continuous native session from 1.0.7; every clear emits color-matched physics debris and the final 3x3 placement clears six lines and detonates two bombs"
+    },
+    "landscapeVideo": {
+      "path": "playdrop/capture/landscape-listing.mp4",
+      "spec": "1920x1080, H.264 High, 60 fps, yuv420p, SAR 1:1, AAC LC 48 kHz stereo, 17.000 s",
+      "bytes": 1550575,
+      "sha256": "d335c4746bdec55a8ec86b5f648546e23fe57c78f62b9bc4474bc0241f48f2bd",
+      "story": "caption-free seven-move continuous native session with an opening clear, a mid-session row clear, and a final six-line/two-bomb payoff"
+    }
+  },
+  "appLovin": {
+    "video": {
+      "path": "applovin-interstitial/portrait/video.mp4",
+      "spec": "1080x1920, H.264 High, 30 fps, yuv420p, SAR 1:1, AAC LC 48 kHz stereo, 12.000 s",
+      "bytes": 3706399,
+      "sha256": "25960b83ccab1add4149cf44ed074bc48a2041bbdddc1a01dababbf3903d834b",
+      "endingProof": "one continuous native-captured 1x play session shows five legal placements: an opening clear, a repair move, two compact corner moves, and the shipped 3x3 piece clearing six counted lines and detonating two bombs; final commit is approximately 9.8 seconds"
+    },
+    "endCard": {
+      "path": "applovin-interstitial/portrait/end-card.png",
+      "dimensions": "1080x1920",
+      "bytes": 864958,
+      "sha256": "01f1b9fed946bd9df58dd9405267dae5f685aae8b88836351aab3f2918a4e872",
+      "matchesProtectedPortraitHero": true
+    },
+    "poster": {
+      "path": "applovin-interstitial/portrait/poster.png",
+      "dimensions": "1080x1920",
+      "timestampSeconds": 10.1,
+      "bytes": 655995,
+      "sha256": "f69a84ab01a972e84b03e03028e9dbc20485e1fec62e07ea2cc73317167624d2"
+    },
+    "sourceEvidence": {
+      "videoPath": "video-campaign/source-captures/applovin-continuous-native-v8/desktop-listing.mp4",
+      "reportPath": "video-campaign/source-captures/applovin-continuous-native-v8/capture-report.json",
+      "capturePipeline": "PlayDrop CLI 0.14.5 native macOS ScreenCaptureKit",
+      "captureSurface": "DESKTOP portrait canvas",
+      "sourceSpec": "540x960, 60 fps, H.264/AAC, 12.867 s",
+      "captureWarnings": 0,
+      "continuousSession": true,
+      "speed": 1,
+      "visiblePlacements": 5,
+      "finalCommitSeconds": 9.8,
+      "finalMoveLines": 6,
+      "cumulativeLinesRun": 7,
+      "bombsBefore": 2,
+      "bombsAfter": 0,
+      "videoSha256": "a086d0b953b42fd1e8650b172339e84df838dc0ba0f799b33815df9f1f2bdf61",
+      "reportSha256": "6d5de5154d66481402bde8c2e50b854d8d4eedfdf3c9ac22de15779957417b97"
+    }
+  },
+  "social": {
+    "portraitVideo": {
+      "path": "social-media/short/portrait-9x16.mp4",
+      "spec": "1080x1920, H.264 High, 60 fps, yuv420p, SAR 1:1, AAC LC 48 kHz stereo, 12.000 s",
+      "bytes": 4263899,
+      "sha256": "78e3b773160fa65429d4ff6ac7c98697f9c680508871134004cb71aed662988a",
+      "destinations": ["TikTok", "Instagram Reels", "Instagram Stories", "YouTube Shorts"],
+      "continuousSession": true,
+      "visiblePlacements": 5
+    },
+    "landscapeVideo": {
+      "path": "social-media/trailer/landscape-16x9.mp4",
+      "spec": "1920x1080, H.264 High, 60 fps, yuv420p, SAR 1:1, AAC LC 48 kHz stereo, 17.000 s",
+      "bytes": 4597906,
+      "sha256": "9547e539a559df25ebacbe43f7aca6189f9673405a0769a761011f7aca565dbf",
+      "destinations": ["YouTube", "X"],
+      "continuousSession": true,
+      "visiblePlacements": 7,
+      "finalCommitSeconds": 14.5,
+      "finalMoveLines": 6,
+      "bombsDetonatedByFinalMove": 2,
+      "sourceEvidence": {
+        "videoPath": "video-campaign/source-captures/landscape-continuous-native-v1/desktop-listing.mp4",
+        "reportPath": "video-campaign/source-captures/landscape-continuous-native-v1/capture-report.json",
+        "sourceSpec": "1280x720, 60 fps, H.264/AAC, 19.033 s",
+        "captureWarnings": 0,
+        "videoSha256": "bed65bc378f2a51960ff9675f1e542a0f49a2b962171d74917486ac13f283146",
+        "reportSha256": "ec7cae7947484f8231604e73192521bbe98de719240ef539b91bd87c84b4b181"
+      }
+    },
+    "instagramFeedVideo": {
+      "path": "social-media/instagram/feed/video-3x4.mp4",
+      "spec": "1080x1440, 14.000 s",
+      "sha256": "3da86d5b06d9412ddc1a41d9a6336e0905e83d90076e9528bcb97b22565a2509"
+    },
+    "pinterestVideo": {
+      "path": "social-media/short/pinterest-2x3.mp4",
+      "spec": "1000x1500, 14.000 s",
+      "sha256": "dd3af9b58d830899bd0bf7e5d4c0d262b07b0a1afe9b7335512abfe8642c2e01"
+    },
+    "instagramCarousel": {
+      "directory": "social-media/instagram/feed/carousel",
+      "count": 5,
+      "dimensions": "1080x1440"
+    },
+    "pinterestStatic": {
+      "directory": "social-media/pinterest/static",
+      "count": 5,
+      "dimensions": "1000x1500"
+    },
+    "reelsCover": {
+      "path": "social-media/instagram/reels-cover-420x654.png",
+      "dimensions": "420x654"
+    },
+    "youtubeThumbnail": {
+      "path": "social-media/youtube/trailer-thumbnail-1280x720.png",
+      "dimensions": "1280x720"
+    }
+  },
+  "review": {
+    "directorComposite": "review/director-composite.png",
+    "videoComposite": "video-campaign/review/video-package-contact.png",
+    "revisedPortraitVideoContact": "video-campaign/review/portrait-teaser-contact.png",
+    "revisedLandscapeVideoContact": "video-campaign/review/landscape-trailer-contact.png",
+    "playdropPortraitVideoContact": "video-campaign/review/playdrop-portrait-debris-contact.png",
+    "playdropLandscapeVideoContact": "video-campaign/review/playdrop-landscape-listing-contact.png",
+    "listingPortraitContact": "playdrop/screenshots/portrait-contact.png",
+    "listingLandscapeContact": "playdrop/screenshots/landscape-contact.png",
+    "socialStaticContact": "social-media/static-package-contact.png"
+  },
+  "validation": {
+    "npmValidate": "passed: 13 tests",
+    "socialPackageValidator": "passed: 16 media checks plus manifest mapping",
+    "visualReview": "passed: all listing, social, crop-proof, and video contact sheets inspected",
+    "audioPeak": "maximum -0.9 to -1.0 dBFS across final social and paid videos",
+    "frameCadence": "100% unique consecutive frames across the four revised portrait and landscape deliverables",
+    "blackFrameReview": "passed: no black intervals detected in the four revised deliverables",
+    "playdropCli": "0.14.5 native portrait and landscape captures passed all three surfaces at 60 fps with synchronized audio and zero warnings; authenticated actor playdrop (prod, ADMIN), workspace owner autonomoustudio"
+  }
 }

@@ -1,6 +1,6 @@
 {
   "name": "block-burst",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "type": "module",
   "private": true,
   "scripts": {
@@ -9,6 +9,10 @@
     "test": "tsx --test tests/**/*.test.ts",
     "validate": "tsc --noEmit && npm run build && npm run test",
     "capture:screens": "node scripts/capture-screens.mjs",
+    "capture:marketing-video": "node scripts/capture-marketing-video.mjs",
+    "capture:trailer-story": "node scripts/capture-trailer-story.mjs",
+    "capture:applovin-story": "node scripts/capture-applovin-native.mjs",
+    "capture:landscape-native": "node scripts/capture-landscape-native.mjs",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json}\""
   },
   "devDependencies": {

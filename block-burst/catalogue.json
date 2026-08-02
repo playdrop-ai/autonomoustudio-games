@@ -2,12 +2,12 @@
   "apps": [
     {
       "name": "block-burst",
-      "version": "1.0.6",
-      "releaseNotes": "Refines the first-run line-clear lesson, refreshes the icon and hero art, and fixes rewarded revives after long ads.",
+      "version": "1.0.7",
+      "releaseNotes": "Adds color-matched physics debris to every clear, scales the burst with combos, and refreshes the portrait listing video from the new build.",
       "license": "PLAYDROP",
       "displayName": "Block Burst",
       "subtitle": "Build lines. Burst blocks. Chase combos.",
-      "description": "Drag chunky pieces onto the grid, complete rows and columns, watch the blocks burst, and chase the highest combo score before the board locks up.",
+      "description": "Drag jewel-bright pieces onto the 8x8 grid, complete rows and columns, and watch every line burst. Plan ahead, chain combo clears, and chase a new personal best.",
       "type": "GAME",
       "authMode": "OPTIONAL",
       "controllerMode": "UNSUPPORTED",
@@ -32,77 +32,47 @@
           "sort": "DESC"
         }
       ],
-      "ownedAssets": [
-        {
-          "name": "cinder-plum-background-portrait",
-          "runtimeKey": "background-mobile-portrait",
-          "displayName": "Cinder Plum Portrait Background",
-          "description": "Neutral portrait background plate used behind the animated gameplay field.",
-          "category": "IMAGE",
-          "subcategory": "generic",
-          "format": "PNG",
-          "files": {
-            "primary": "assets/generated/background-mobile-portrait.png"
+      "uses": {
+        "assets": [
+          {
+            "ref": "asset:autonomoustudio/cinder-plum-background-portrait@r1",
+            "runtimeKey": "background-mobile-portrait"
           },
-          "license": "PLAYDROP"
-        },
-        {
-          "name": "cinder-plum-background-desktop",
-          "runtimeKey": "background-desktop",
-          "displayName": "Cinder Plum Desktop Background",
-          "description": "Neutral landscape background plate used behind the animated gameplay field.",
-          "category": "IMAGE",
-          "subcategory": "generic",
-          "format": "PNG",
-          "files": {
-            "primary": "assets/generated/background-desktop.png"
+          {
+            "ref": "asset:autonomoustudio/cinder-plum-background-desktop@r1",
+            "runtimeKey": "background-desktop"
           },
-          "license": "PLAYDROP"
-        },
-        {
-          "name": "hammer",
-          "runtimeKey": "hammer",
-          "displayName": "Block Burst Hammer",
-          "description": "Transparent silver and gold hammer rendered in the gameplay HUD.",
-          "category": "IMAGE",
-          "subcategory": "generic",
-          "format": "PNG",
-          "files": {
-            "primary": "assets/generated/hammer.png"
+          {
+            "ref": "asset:autonomoustudio/hammer@r1",
+            "runtimeKey": "hammer"
           },
-          "license": "PLAYDROP"
-        },
-        {
-          "name": "block-burst-ui-preview-hand",
-          "runtimeKey": "preview-hand",
-          "displayName": "Block Burst Preview Hand",
-          "description": "Approved hand cursor shown during the automated gameplay preview.",
-          "category": "IMAGE",
-          "subcategory": "generic",
-          "format": "PNG",
-          "visibility": "PUBLIC",
-          "tags": [],
-          "files": {
-            "primary": "assets/ui/preview-hand.png"
-          },
-          "license": "PLAYDROP"
-        }
-      ],
+          {
+            "ref": "asset:autonomoustudio/block-burst-ui-preview-hand@r1",
+            "runtimeKey": "preview-hand"
+          }
+        ]
+      },
       "listing": {
         "icon": "assets/marketing/playdrop/icon.png",
         "heroLandscape": "assets/marketing/playdrop/hero-landscape.png",
         "heroPortrait": "assets/marketing/playdrop/hero-portrait.png",
         "screenshotsLandscape": [
-          "assets/marketing/screenshots/landscape-1.png"
+          "assets/marketing/playdrop/screenshots/landscape/01-drag-drop-burst.png",
+          "assets/marketing/playdrop/screenshots/landscape/02-plan-every-piece.png",
+          "assets/marketing/playdrop/screenshots/landscape/03-chain-big-combos.png",
+          "assets/marketing/playdrop/screenshots/landscape/04-beat-your-best.png"
         ],
         "screenshotsPortrait": [
-          "assets/marketing/screenshots/portrait-1.png"
+          "assets/marketing/playdrop/screenshots/portrait/01-drag-drop-burst.png",
+          "assets/marketing/playdrop/screenshots/portrait/02-plan-every-piece.png",
+          "assets/marketing/playdrop/screenshots/portrait/03-chain-big-combos.png",
+          "assets/marketing/playdrop/screenshots/portrait/04-beat-your-best.png"
         ],
         "videosLandscape": [
-          "assets/marketing/videos/landscape.mp4"
+          "assets/marketing/playdrop/capture/landscape-listing.mp4"
         ],
         "videosPortrait": [
-          "assets/marketing/videos/portrait.mp4"
+          "assets/marketing/playdrop/capture/portrait-listing.mp4"
         ]
       },
       "surfaceTargets": {

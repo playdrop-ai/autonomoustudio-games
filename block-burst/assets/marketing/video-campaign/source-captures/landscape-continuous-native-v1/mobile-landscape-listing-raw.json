@@ -1,0 +1,21 @@
+{
+  "applicationName" : "Google Chrome for Testing",
+  "contentRectPoints" : {
+    "height" : 1440,
+    "width" : 2560,
+    "x" : 0,
+    "y" : 0
+  },
+  "pointPixelScale" : 2,
+  "processID" : 5730,
+  "recordedDurationSeconds" : 19,
+  "recordedFileSizeBytes" : 40723460,
+  "windowFramePoints" : {
+    "height" : 800,
+    "width" : 1282,
+    "x" : 22,
+    "y" : 52
+  },
+  "windowID" : 21914,
+  "windowTitle" : "Dev Preview block-burst | PlayDrop"
+}

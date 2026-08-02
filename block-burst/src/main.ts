@@ -6,7 +6,7 @@ import { PlaydropServices } from "./services/playdrop";
 declare global {
   interface Window {
     __listingCapture?: {
-      prepare?: (payload?: PreviewPayload) => Promise<void> | void;
+      prepare?: (payload?: PreviewPayload | string) => Promise<void> | void;
       startAudioCapture?: () => Promise<void> | void;
       stopAudioCapture?: () => Promise<{ mimeType: string; base64: string }> | { mimeType: string; base64: string };
     };
@@ -43,9 +43,14 @@ async function boot(): Promise<void> {
     backgroundColor: "#111119",
     disableContextMenu: true,
     render: { preserveDrawingBuffer: true, antialias: true, roundPixels: true },
+    physics: {
+      default: "arcade",
+      arcade: { gravity: { x: 0, y: 0 }, debug: false },
+    },
     scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
     scene,
   });
+  let listingCapturePrepared = false;
 
   window.addEventListener("resize", () => {
     const next = computeDesign();
@@ -57,21 +62,30 @@ async function boot(): Promise<void> {
   window.addEventListener("blockburst:host-phase", (event) => {
     const phase = (event as CustomEvent<{ phase?: string }>).detail?.phase;
     if (phase === "preview") {
-      void scene.preparePreview({ active: true, sceneId: "sdk-preview", audioPolicy: "sfx-only" });
+      if (!listingCapturePrepared) {
+        void scene.preparePreview({ active: true, sceneId: "sdk-preview", audioPolicy: "sfx-only" });
+      }
     } else {
+      listingCapturePrepared = false;
       void scene.preparePreview({ active: false });
     }
   });
 
   window.__listingCapture = {
-    prepare: (payload) => scene.preparePreview(payload),
+    prepare: (payload) => {
+      const normalized = typeof payload === "string"
+        ? { active: true, sceneId: payload, audioPolicy: "sfx-only" as const }
+        : payload;
+      listingCapturePrepared = normalized?.active !== false && Boolean(normalized?.sceneId?.startsWith("listing-"));
+      return scene.preparePreview(normalized);
+    },
     startAudioCapture: () => scene.startAudioCapture(),
     stopAudioCapture: () => scene.stopAudioCapture(),
   };
   window.render_game_to_text = () => JSON.stringify(scene.getPreviewDebugState());
 
   await scene.whenReady();
-  if (services.isPreviewPhase()) {
+  if (services.isPreviewPhase() && !listingCapturePrepared) {
     await scene.preparePreview({ active: true, sceneId: "sdk-preview", audioPolicy: "sfx-only" });
   }
   services.markReady();

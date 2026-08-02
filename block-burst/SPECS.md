@@ -70,6 +70,14 @@ player selects it later.
 Only combo streaks may show transient gameplay text (`COMBO xN`, for `N >= 2`).
 Do not show generic praise, score-gain, new-best, or availability toasts.
 
+Every cleared block emits small beveled fragments in that block's own color.
+Fragments use Phaser Arcade Physics: they launch outward with varied size,
+rotation, and velocity, fall under gravity, collide with one another and the
+screen bounds, then fade after a short lifetime. Use 2-4 fragments per block at
+combo x1, 2-5 at x2, 2-6 at x3, 3-6 at x4, and 4-6 at x5 or above. Apply a
+bounded per-clear safety ceiling only for unusually large clears so the effect
+does not overwhelm the board or mobile frame time.
+
 PlayDrop preview mode is a deterministic, self-playing presentation of real game
 actions. Hide the score, best, hammer controls, hints, result overlays, and all
 other HUD while it runs. Show the approved studio hand with its fingertip anchored

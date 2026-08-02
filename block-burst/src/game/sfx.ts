@@ -4,6 +4,7 @@ export class Sfx {
   private ctx: AudioContext | null = null;
   private captureDest: MediaStreamAudioDestinationNode | null = null;
   private captureRecorder: MediaRecorder | null = null;
+  private captureClock: ConstantSourceNode | null = null;
   private captureChunks: Blob[] = [];
   muted = false;
 
@@ -24,19 +25,29 @@ export class Sfx {
     if (typeof MediaRecorder === "undefined") throw new Error("[block-burst] MediaRecorder unavailable for preview audio capture");
     if (this.captureRecorder?.state === "recording") this.captureRecorder.stop();
     this.captureDest = this.ctx.createMediaStreamDestination();
+    this.captureClock = this.ctx.createConstantSource();
+    this.captureClock.offset.value = 0;
+    this.captureClock.connect(this.captureDest);
+    this.captureClock.start();
     this.captureChunks = [];
     const preferred = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"].find((type) => MediaRecorder.isTypeSupported(type));
     this.captureRecorder = preferred ? new MediaRecorder(this.captureDest.stream, { mimeType: preferred }) : new MediaRecorder(this.captureDest.stream);
     this.captureRecorder.ondataavailable = (event) => {
       if (event.data.size > 0) this.captureChunks.push(event.data);
     };
-    this.captureRecorder.start();
+    // Emit short, regular chunks so the native listing recorder receives the
+    // complete WebAudio timeline instead of one late, truncated final chunk.
+    this.captureRecorder.start(100);
   }
 
   async stopCapture(): Promise<{ mimeType: string; base64: string }> {
     const recorder = this.captureRecorder;
     if (!recorder) throw new Error("[block-burst] Preview audio capture was not started");
     if (recorder.state === "inactive") return this.encodeCapture(recorder.mimeType || "audio/webm");
+    recorder.requestData();
+    await new Promise<void>((resolve) => window.setTimeout(resolve, 500));
+    recorder.requestData();
+    await new Promise<void>((resolve) => window.setTimeout(resolve, 100));
     await new Promise<void>((resolve) => {
       recorder.addEventListener("stop", () => resolve(), { once: true });
       recorder.stop();
@@ -78,6 +89,10 @@ export class Sfx {
       const chunk = bytes.subarray(i, i + 0x8000);
       binary += String.fromCharCode(...chunk);
     }
+    this.captureClock?.stop();
+    this.captureClock?.disconnect();
+    this.captureClock = null;
+    this.captureDest?.stream.getTracks().forEach((track) => track.stop());
     this.captureDest = null;
     this.captureRecorder = null;
     this.captureChunks = [];

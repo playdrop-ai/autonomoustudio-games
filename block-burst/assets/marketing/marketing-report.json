@@ -1,34 +1,55 @@
 {
   "appName": "block-burst",
-  "createdAt": "2026-08-01T23:11:39Z",
-  "status": "passed",
-  "durationSeconds": 15,
+  "createdAt": "2026-08-02T02:02:31Z",
+  "status": "review-ready",
   "gates": [
+    {
+      "id": "campaign-truth",
+      "status": "passed",
+      "summary": "All campaign claims map to shipped 1.0.7 mechanics, score state, or leaderboard configuration."
+    },
     {
       "id": "marketing-capture",
       "status": "passed",
-      "summary": "Portrait and desktop listing videos captured from the deterministic shipped preview and visually reviewed."
+      "summary": "The revised portrait and landscape masters were captured from the shipped preview with PlayDrop CLI 0.14.5 native ScreenCaptureKit at 60 fps. The PlayDrop portrait listing shows five legal moves plus color-matched physics debris in 12 seconds; landscape shows seven legal moves in 17 seconds. Both remain on one board at 1x and finish on a six-line, two-bomb payoff."
+    },
+    {
+      "id": "package-validation",
+      "status": "passed",
+      "summary": "Typecheck, build, 13 tests, JSON parsing, ffprobe, frame-cadence, black-frame, audio-peak, safe-zone, and contact-sheet checks pass."
+    },
+    {
+      "id": "playdrop-cli-validation",
+      "status": "passed",
+      "summary": "The local PlayDrop CLI 0.14.5 captured DESKTOP, MOBILE_LANDSCAPE, and MOBILE_PORTRAIT for both revised masters at 60 fps with synchronized audio and zero warnings. Auth confirmed playdrop (prod, ADMIN) acting for the autonomoustudio workspace. No upload was attempted."
     }
   ],
   "assetCounts": {
-    "captures": 2,
-    "videos": 2,
-    "images": 0,
-    "listingArt": 0
+    "ratioNativeGameplayCaptures": 4,
+    "listingVideos": 2,
+    "campaignVideoFiles": 5,
+    "listingScreenshots": 8,
+    "socialStaticImages": 12,
+    "protectedIdentityAssets": 3
   },
   "captureValidation": {
     "surfaces": [
       "mobile-portrait",
-      "desktop"
+      "mobile-landscape",
+      "instagram-3x4",
+      "pinterest-2x3"
     ],
-    "fps": 30,
+    "revisedMasterFps": 60,
+    "revisedPortraitDurationSeconds": 12,
+    "revisedLandscapeDurationSeconds": 17,
+    "consecutiveDuplicateFrames": 0,
+    "blackIntervals": 0,
     "audioValidated": true,
-    "excitingMomentValidated": true
+    "excitingMomentValidated": true,
+    "browserChrome": false,
+    "barsOrFiller": false
   },
-  "timings": {
-    "captureSeconds": 31,
-    "assetRenderSeconds": 0,
-    "documentationSeconds": 0
-  },
-  "warnings": []
+  "warnings": [
+    "Owner and marketing-director approval are required before publication or paid spend."
+  ]
 }

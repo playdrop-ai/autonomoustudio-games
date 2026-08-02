@@ -72,7 +72,7 @@ visual target, not a claim that every lighting detail is already implemented.
 
 ## Artifacts
 
-- Selected gameplay mockup: `assets/art-direction/mockup-background-cinder-plum.png`
+- Selected gameplay mockup: `assets/art-direction-source/mockup-background-cinder-plum.png`
 - Mobile portrait background: `assets/generated/background-mobile-portrait.png`
 - Desktop and landscape background: `assets/generated/background-desktop.png`
 - Transparent hammer: `assets/generated/hammer.png`

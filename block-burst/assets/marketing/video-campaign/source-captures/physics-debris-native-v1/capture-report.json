@@ -1,0 +1,276 @@
+{
+  "appName": "block-burst",
+  "outputDir": "/Users/olivier/Documents/autonomoustudio-games/block-burst/assets/marketing/video-campaign/source-captures/physics-debris-native-v1",
+  "captures": [
+    {
+      "surface": "DESKTOP",
+      "targetUrl": "https://www.playdrop.ai/creators/autonomoustudio/apps/game/block-burst/dev-preview?launchCheck=1&captureShell=listing&mobileFrameHost=admin",
+      "command": {
+        "durationSeconds": 12,
+        "width": 540,
+        "height": 960,
+        "fps": 60,
+        "posterAtSeconds": 10,
+        "audio": true,
+        "keepRaw": false
+      },
+      "measurement": {
+        "outerWidth": 540,
+        "outerHeight": 1047,
+        "innerWidth": 540,
+        "innerHeight": 960,
+        "devicePixelRatio": 2,
+        "iframeRect": {
+          "x": 0,
+          "y": 0,
+          "width": 540,
+          "height": 960,
+          "top": 0,
+          "left": 0,
+          "right": 540,
+          "bottom": 960
+        }
+      },
+      "recorder": {
+        "applicationName": "Google Chrome for Testing",
+        "contentRectPoints": {
+          "height": 1440,
+          "width": 2560,
+          "x": 0,
+          "y": 0
+        },
+        "pointPixelScale": 2,
+        "processID": 15807,
+        "recordedDurationSeconds": 12,
+        "recordedFileSizeBytes": 27900334,
+        "windowFramePoints": {
+          "height": 1047,
+          "width": 540,
+          "x": 22,
+          "y": 52
+        },
+        "windowID": 22149,
+        "windowTitle": "Dev Preview block-burst | PlayDrop"
+      },
+      "crop": {
+        "x": 0,
+        "y": 174,
+        "width": 1080,
+        "height": 1920
+      },
+      "rawVideo": {
+        "path": null,
+        "width": 1080,
+        "height": 2094,
+        "durationSeconds": 12.466667,
+        "audioTrackCount": 0
+      },
+      "finalVideo": {
+        "path": "/Users/olivier/Documents/autonomoustudio-games/block-burst/assets/marketing/video-campaign/source-captures/physics-debris-native-v1/desktop-listing.mp4",
+        "width": 540,
+        "height": 960,
+        "durationSeconds": 12.466667,
+        "audioTrackCount": 1,
+        "fps": 60
+      },
+      "posterPath": "/Users/olivier/Documents/autonomoustudio-games/block-burst/assets/marketing/video-campaign/source-captures/physics-debris-native-v1/desktop-poster.png",
+      "validation": {
+        "status": "passed",
+        "referenceFrameSimilarity": 0.96684,
+        "firstFrameMeanLuma": 0.21093558517156863,
+        "firstFrameVisiblePixelRatio": 0.7998046875,
+        "posterFrameMeanLuma": 0.19065372242647058,
+        "posterFrameVisiblePixelRatio": 0.862548828125,
+        "motionMeanDelta": 0.12658164828431373,
+        "motionChangedPixelRatio": 0.346435546875
+      },
+      "warnings": []
+    },
+    {
+      "surface": "MOBILE_LANDSCAPE",
+      "targetUrl": "https://www.playdrop.ai/creators/autonomoustudio/apps/game/block-burst/dev-preview?launchCheck=1&captureShell=listing&mobileFrameHost=admin",
+      "command": {
+        "durationSeconds": 12,
+        "width": 540,
+        "height": 960,
+        "fps": 60,
+        "posterAtSeconds": 10,
+        "audio": true,
+        "keepRaw": false
+      },
+      "measurement": {
+        "outerWidth": 540,
+        "outerHeight": 960,
+        "innerWidth": 540,
+        "innerHeight": 960,
+        "devicePixelRatio": 2,
+        "iframeRect": {
+          "x": 0,
+          "y": 0,
+          "width": 540,
+          "height": 960,
+          "top": 0,
+          "left": 0,
+          "right": 540,
+          "bottom": 960
+        }
+      },
+      "recorder": {
+        "applicationName": "Google Chrome for Testing",
+        "contentRectPoints": {
+          "height": 1440,
+          "width": 2560,
+          "x": 0,
+          "y": 0
+        },
+        "pointPixelScale": 2,
+        "processID": 15932,
+        "recordedDurationSeconds": 12,
+        "recordedFileSizeBytes": 27430304,
+        "windowFramePoints": {
+          "height": 1040,
+          "width": 542,
+          "x": 22,
+          "y": 52
+        },
+        "windowID": 22167,
+        "windowTitle": "Dev Preview block-burst | PlayDrop"
+      },
+      "crop": {
+        "x": 0,
+        "y": 160,
+        "width": 1080,
+        "height": 1920
+      },
+      "rawVideo": {
+        "path": null,
+        "width": 1084,
+        "height": 2080,
+        "durationSeconds": 12.266667,
+        "audioTrackCount": 0
+      },
+      "finalVideo": {
+        "path": "/Users/olivier/Documents/autonomoustudio-games/block-burst/assets/marketing/video-campaign/source-captures/physics-debris-native-v1/mobile-landscape-listing.mp4",
+        "width": 540,
+        "height": 960,
+        "durationSeconds": 12.266667,
+        "audioTrackCount": 1,
+        "fps": 60
+      },
+      "posterPath": "/Users/olivier/Documents/autonomoustudio-games/block-burst/assets/marketing/video-campaign/source-captures/physics-debris-native-v1/mobile-landscape-poster.png",
+      "validation": {
+        "status": "passed",
+        "referenceFrameSimilarity": 0.879682,
+        "firstFrameMeanLuma": 0.21560968137254902,
+        "firstFrameVisiblePixelRatio": 0.779541015625,
+        "posterFrameMeanLuma": 0.18920132506127452,
+        "posterFrameVisiblePixelRatio": 0.820068359375,
+        "motionMeanDelta": 0.1254748774509804,
+        "motionChangedPixelRatio": 0.35205078125
+      },
+      "warnings": []
+    },
+    {
+      "surface": "MOBILE_PORTRAIT",
+      "targetUrl": "https://www.playdrop.ai/creators/autonomoustudio/apps/game/block-burst/dev-preview?launchCheck=1&captureShell=listing&mobileFrameHost=admin",
+      "command": {
+        "durationSeconds": 12,
+        "width": 540,
+        "height": 960,
+        "fps": 60,
+        "posterAtSeconds": 10,
+        "audio": true,
+        "keepRaw": false
+      },
+      "measurement": {
+        "outerWidth": 540,
+        "outerHeight": 960,
+        "innerWidth": 540,
+        "innerHeight": 960,
+        "devicePixelRatio": 2,
+        "iframeRect": {
+          "x": 0,
+          "y": 0,
+          "width": 540,
+          "height": 960,
+          "top": 0,
+          "left": 0,
+          "right": 540,
+          "bottom": 960
+        }
+      },
+      "recorder": {
+        "applicationName": "Google Chrome for Testing",
+        "contentRectPoints": {
+          "height": 1440,
+          "width": 2560,
+          "x": 0,
+          "y": 0
+        },
+        "pointPixelScale": 2,
+        "processID": 16069,
+        "recordedDurationSeconds": 12,
+        "recordedFileSizeBytes": 27381616,
+        "windowFramePoints": {
+          "height": 1040,
+          "width": 542,
+          "x": 22,
+          "y": 52
+        },
+        "windowID": 22185,
+        "windowTitle": "Dev Preview block-burst | PlayDrop"
+      },
+      "crop": {
+        "x": 0,
+        "y": 160,
+        "width": 1080,
+        "height": 1920
+      },
+      "rawVideo": {
+        "path": null,
+        "width": 1084,
+        "height": 2080,
+        "durationSeconds": 12.866667,
+        "audioTrackCount": 0
+      },
+      "finalVideo": {
+        "path": "/Users/olivier/Documents/autonomoustudio-games/block-burst/assets/marketing/video-campaign/source-captures/physics-debris-native-v1/mobile-portrait-listing.mp4",
+        "width": 540,
+        "height": 960,
+        "durationSeconds": 12.866667,
+        "audioTrackCount": 1,
+        "fps": 60
+      },
+      "posterPath": "/Users/olivier/Documents/autonomoustudio-games/block-burst/assets/marketing/video-campaign/source-captures/physics-debris-native-v1/mobile-portrait-poster.png",
+      "validation": {
+        "status": "passed",
+        "referenceFrameSimilarity": 0.882565,
+        "firstFrameMeanLuma": 0.21626359528186276,
+        "firstFrameVisiblePixelRatio": 0.77978515625,
+        "posterFrameMeanLuma": 0.20429878982843136,
+        "posterFrameVisiblePixelRatio": 0.854248046875,
+        "motionMeanDelta": 0.12338771446078431,
+        "motionChangedPixelRatio": 0.34375
+      },
+      "warnings": []
+    }
+  ],
+  "warnings": [],
+  "binding": {
+    "artifactHashes": {
+      "desktop-listing.mp4": "ee7ef87102bc265b40cc544c6fabacaa44cd56e24496127931e0e3e5f6d13957",
+      "desktop-poster.png": "8a19ff06e65ae9710f006c7c0ca5cf1e272c4f7fdbf80eeee1d5c7a6d698c94f",
+      "mobile-landscape-listing.mp4": "2bcb379b0e5e5cde7562d2192d2a643933c4f63af813322a5aae8667e2609fea",
+      "mobile-landscape-poster.png": "2eda12a83506922513126e71ec4716d2908f81569e5e4523421daa569ec08573",
+      "mobile-portrait-listing.mp4": "aaf0e1bfcb44d9a9cb3dec3c076253df3d20e40c0261c0f52773c147c380d8ff",
+      "mobile-portrait-poster.png": "c8031c77ce7f19288c5aac73e67bc0a5215ee6e3d0d09a42b45178f246daea51"
+    },
+    "capturedSurfaces": [
+      "DESKTOP",
+      "MOBILE_LANDSCAPE",
+      "MOBILE_PORTRAIT"
+    ],
+    "pixelValidation": "passed",
+    "runtimeBundleHash": "b5ae8439c17140e30ffad0188e488098d07e2a891454efac3db5cc1b956b2792"
+  }
+}

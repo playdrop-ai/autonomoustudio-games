@@ -52,7 +52,7 @@ All proposals were generated with built-in ImageGen using only project-owned
 references:
 
 - `assets/marketing/captures/mobile-portrait-reference.png`
-- `assets/art-direction/mockup-gameplay-primary.png`
+- `assets/art-direction-source/mockup-gameplay-primary.png`
 - `assets/marketing/proofs/hammer-icon.png`
 
 ## 4. Pixel Quarry 2D
