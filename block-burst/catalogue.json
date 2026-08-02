@@ -2,8 +2,8 @@
   "apps": [
     {
       "name": "block-burst",
-      "version": "1.0.7",
-      "releaseNotes": "Adds color-matched physics debris to every clear, scales the burst with combos, and refreshes the portrait listing video from the new build.",
+      "version": "1.0.8",
+      "releaseNotes": "Makes bomb clears more satisfying with extra cube debris, distance-based physics shockwaves, overlapping chained blasts, and refreshed gameplay videos for every marketing format.",
       "license": "PLAYDROP",
       "displayName": "Block Burst",
       "subtitle": "Build lines. Burst blocks. Chase combos.",

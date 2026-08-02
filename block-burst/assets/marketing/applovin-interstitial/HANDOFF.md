@@ -35,9 +35,13 @@ https://support.applovin.com/en/growth/promoting-your-apps/welcome-to-applovin/c
 5. The final legal 3x3 placement commits at approximately 9.8 seconds, completes
    three rows and three columns, detonates two shipped bombs, and leaves just
    over two seconds for the full payoff and end hold.
-6. Sound-off captions: `DRAG. DROP. BURST.`, `PLAN EVERY PIECE`,
+6. That final clear spawns twice the normal fragment density across all cleared
+   blocks and four times the normal density on both bomb cells. Both fragment
+   clouds appear before the two distance-based physics shockwaves push them
+   outward, so the effect remains organic, readable, and especially satisfying.
+7. Sound-off captions: `DRAG. DROP. BURST.`, `PLAN EVERY PIECE`,
    `CHAIN BIG COMBOS`, and `BEAT YOUR BEST`.
-7. AppLovin presents the separate protected hero end card and native CTA.
+8. AppLovin presents the separate protected hero end card and native CTA.
 
 ## Continuous-take policy
 
@@ -54,14 +58,14 @@ formula, or resulting gameplay is changed.
 
 ## Native capture method
 
-- Source: `../video-campaign/source-captures/applovin-continuous-native-v8/desktop-listing.mp4`
-- Source format: 540x960, 60 fps, H.264/AAC, 12.867 seconds.
+- Source: `../video-campaign/source-captures/bomb-physics-wave-native-v4/mobile-portrait-listing.mp4`
+- Source format: 540x960, 60 fps, H.264/AAC, 12.683 seconds.
 - Recorder: PlayDrop CLI 0.14.5 native macOS ScreenCaptureKit pipeline, matching
   the proven Flighty Saucer workflow.
 - The in-app WebAudio recorder emits 100 ms chunks, performs the same explicit
   500 ms + 100 ms flush/drain used by Flighty Saucer, and keeps an inaudible
   capture clock so quiet holds retain their full real duration.
-- Capture report: `../video-campaign/source-captures/applovin-continuous-native-v8/capture-report.json`
+- Capture report: `../video-campaign/source-captures/bomb-physics-wave-native-v4/capture-report.json`
 - Report result: all three captured surfaces passed at 60 fps with synchronized
   audio and zero warnings.
 
@@ -73,6 +77,6 @@ install badge, rating, reward, device frame, browser chrome, or network UI.
 - `../video-campaign/review/applovin-portrait-contact.png`
 - `../video-campaign/review/applovin-interaction-contact.png`
 - `portrait/poster.png` at 10.10 seconds, inside the six-line/two-bomb payoff
-- `../video-campaign/source-captures/applovin-continuous-native-v8/capture-report.json`
+- `../video-campaign/source-captures/bomb-physics-wave-native-v4/capture-report.json`
 
 Checksums and final file sizes are recorded in `../asset-manifest.json`.

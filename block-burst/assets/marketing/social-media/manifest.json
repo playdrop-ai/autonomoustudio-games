@@ -24,7 +24,7 @@
     ]
   },
   "creativePolicy": {
-    "gameplay": "Real shipped 1.0.6 gameplay with synchronized in-game SFX. The shared 9:16 short is one continuous 12-second, five-move native session. The 16:9 trailer is one continuous 17-second, seven-move native session with an opening clear, a mid-session row clear, and a final 3x3 placement that clears six lines and detonates two bombs. Every gameplay frame plays at 1x with no cuts, resets, repeated footage, or time warps.",
+    "gameplay": "Real shipped 1.0.8 gameplay with synchronized in-game SFX. The shared 9:16 short is one continuous 12-second, five-move native session. The 16:9 trailer is one continuous 17-second, seven-move native session with an opening clear, a mid-session row clear, and a final 3x3 placement that clears six lines and detonates two bombs. The native 3:4 and 2:3 videos use the same five-move bomb-payoff story. Every gameplay frame plays at 1x with no cuts, resets, repeated footage, or time warps; bomb-triggering clears show the shipped high-density debris and distance-based physics shockwaves.",
     "videoIdentity": "Four approved transparent caption plates carry the sound-off story over real gameplay. The caption-free versions of the same native sessions are reserved for the PlayDrop listing.",
     "staticArt": "Native 3:4 ImageGen campaign compositions use protected hero, icon, and real-gameplay references. Verified 2:3 variants remove only empty side scenery.",
     "barsOrFiller": false,

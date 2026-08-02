@@ -8,13 +8,13 @@
   "captures": [
     {
       "surface": "mobile-portrait",
-      "sourcePath": "assets/marketing/video-campaign/source-captures/physics-debris-native-v1/desktop-listing.mp4",
+      "sourcePath": "assets/marketing/video-campaign/source-captures/bomb-physics-wave-native-v4/mobile-portrait-listing.mp4",
       "listingPath": "assets/marketing/playdrop/capture/portrait-listing.mp4",
       "width": 1080,
       "height": 1920,
       "fps": 60,
       "durationSeconds": 12,
-      "sourceDurationSeconds": 12.467,
+      "sourceDurationSeconds": 12.683,
       "editRangeSeconds": [0, 12],
       "captureMode": "one continuous native-captured board at 1x with five legal placements",
       "hasAudio": true,
@@ -42,13 +42,13 @@
     },
     {
       "surface": "mobile-landscape",
-      "sourcePath": "assets/marketing/video-campaign/source-captures/landscape-continuous-native-v1/desktop-listing.mp4",
+      "sourcePath": "assets/marketing/video-campaign/source-captures/bomb-physics-wave-landscape-native-v1/mobile-landscape-listing.mp4",
       "listingPath": "assets/marketing/playdrop/capture/landscape-listing.mp4",
       "width": 1920,
       "height": 1080,
       "fps": 60,
       "durationSeconds": 17,
-      "sourceDurationSeconds": 19.033,
+      "sourceDurationSeconds": 18.65,
       "editRangeSeconds": [0, 17],
       "captureMode": "one continuous native-captured board at 1x with seven legal placements",
       "hasAudio": true,
@@ -77,16 +77,16 @@
   ],
   "nativeCaptureEvidence": {
     "portrait": {
-      "reportPath": "assets/marketing/video-campaign/source-captures/physics-debris-native-v1/capture-report.json",
-      "sourceVideoSha256": "ee7ef87102bc265b40cc544c6fabacaa44cd56e24496127931e0e3e5f6d13957",
-      "reportSha256": "8eb8086dcf66a2e0935ecbc81a8e26adfb3dff1993496e9978d40a991af296b7",
+      "reportPath": "assets/marketing/video-campaign/source-captures/bomb-physics-wave-native-v4/capture-report.json",
+      "sourceVideoSha256": "f9a6ff5279af881895a80862a1712d276ef17a8e84b4648ac250f63ef76788ce",
+      "reportSha256": "5b9d38a0e3441aafc403315e28e4eb8cf3af4317e58261d3be86cce402cfcbf4",
       "capturedSurfaces": 3,
       "warnings": 0
     },
     "landscape": {
-      "reportPath": "assets/marketing/video-campaign/source-captures/landscape-continuous-native-v1/capture-report.json",
-      "sourceVideoSha256": "bed65bc378f2a51960ff9675f1e542a0f49a2b962171d74917486ac13f283146",
-      "reportSha256": "ec7cae7947484f8231604e73192521bbe98de719240ef539b91bd87c84b4b181",
+      "reportPath": "assets/marketing/video-campaign/source-captures/bomb-physics-wave-landscape-native-v1/capture-report.json",
+      "sourceVideoSha256": "73d90241bfa719a1c7d19454ae0b8951b833c131c5aad99920cdd9f5f249bd4f",
+      "reportSha256": "077d52db29adf0d04ada8f76d1ebba109b8544c96a2f7d390695bc5ce2016297",
       "capturedSurfaces": 3,
       "warnings": 0
     }
@@ -94,17 +94,25 @@
   "ratioNativeCampaignCaptures": [
     {
       "surface": "instagram-3x4",
-      "path": "assets/marketing/video-campaign/source-captures/instagram-3x4/instagram-3x4-gameplay.mp4",
+      "path": "assets/marketing/video-campaign/source-captures/bomb-physics-wave-instagram-native-v1/mobile-portrait-listing.mp4",
       "width": 1080,
       "height": 1440,
-      "durationSeconds": 15
+      "fps": 60,
+      "durationSeconds": 14.833,
+      "reportPath": "assets/marketing/video-campaign/source-captures/bomb-physics-wave-instagram-native-v1/capture-report.json",
+      "sourceVideoSha256": "439199db0d058a539c4b9fba3b6dda030b3c5e9bcf83ab63eb71130e834bb2f4",
+      "reportSha256": "58e5345f515a4dfcb87679b24075b04a3c966894e03b10b3d5571f82ff35326e"
     },
     {
       "surface": "pinterest-2x3",
-      "path": "assets/marketing/video-campaign/source-captures/pinterest-2x3/pinterest-2x3-gameplay.mp4",
+      "path": "assets/marketing/video-campaign/source-captures/bomb-physics-wave-pinterest-native-v1/mobile-portrait-listing.mp4",
       "width": 1000,
       "height": 1500,
-      "durationSeconds": 15
+      "fps": 60,
+      "durationSeconds": 14.65,
+      "reportPath": "assets/marketing/video-campaign/source-captures/bomb-physics-wave-pinterest-native-v1/capture-report.json",
+      "sourceVideoSha256": "150e75209d9a57d4aa289b584c447d187e67ecdeb92f7176035cff2bfbcdbb0a",
+      "reportSha256": "83b4c5b39754e7b75d1f95f911cb46db4763e092d8613aa62c77d2b0db883a1f"
     }
   ]
 }

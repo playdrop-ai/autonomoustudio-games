@@ -36,10 +36,17 @@ placement that clears six counted lines and detonates two bombs. The move
 commits at approximately 9.8 seconds so the full burst and board-clear hold
 remain readable.
 
+All revised videos now show the shipped 1.0.8 bomb treatment. A bomb-triggering
+move doubles the debris across every cleared block and quadruples it on each
+bomb cell; the debris appears first, then each bomb emits a strong expanding
+physics shockwave with near, mid, and far distance bands. Chained bombs produce
+overlapping waves, making the finale visibly more energetic without fabricating
+pieces, clears, scoring, or outcomes.
+
 That approved five-move session powers the shared TikTok, Instagram Reels and
 Stories, and YouTube Shorts video at 60 fps. The PlayDrop portrait listing is a
 refreshed native take with the same truthful five-move story and the new
-color-matched physics debris from `1.0.7`. The PlayDrop landscape listing uses
+high-density physics shockwaves from `1.0.8`. The PlayDrop landscape listing uses
 the same native seven-move session as the YouTube/X trailer without captions.
 
 ## Recommended channel roles
@@ -59,7 +66,7 @@ the same native seven-move session as the YouTube/X trailer without captions.
 - 8 PlayDrop listing screenshots
 - 2 clean PlayDrop gameplay videos
 - 1 AppLovin video, 1 protected end card, and paid-copy variants
-- 4 native social video ratios
+- 4 native social video ratios, all including the six-line/two-bomb shockwave payoff
 - 5 Instagram carousel cards
 - 5 Pinterest Pins
 - 1 Instagram Reel cover
@@ -97,19 +104,18 @@ The AppLovin end card is the canonical portrait hero copied byte-for-byte.
 
 ## Validation and release gate
 
-Local typecheck, build, all 13 tests, social package validation, media probing,
+Local typecheck, build, all 16 tests, social package validation, media probing,
 alpha/crop review, audio peak review, and visual contact-sheet review pass.
 
-The portrait and landscape sources were captured successfully with the local
+The portrait, landscape, Instagram 3:4, and Pinterest 2:3 sources were captured successfully with the local
 PlayDrop CLI `0.14.5` native ScreenCaptureKit pipeline. `playdrop auth whoami`
 confirmed the authenticated `playdrop (prod, ADMIN)` actor and
-`autonomoustudio` workspace owner. All three surfaces passed for both native
-captures at 60 fps with synchronized audio and zero capture warnings. The four
-revised final deliverables have 100% unique consecutive-frame cadence, no
-detected black intervals, and audio peaks between -1.0 and -0.9 dBFS. The
-PlayDrop game and listing package were uploaded as public version `1.0.7` on
-August 2, 2026; social publishing and paid spend remain pending
-marketing-director approval.
+`autonomoustudio` workspace owner. All three surfaces passed for all native
+captures at 60 fps with synchronized audio and zero capture warnings. The seven
+final video deliverables show continuous active physics motion with no capture
+stutter, no detected black intervals, and audio peaks between -1.0 and -0.6
+dBFS. Version `1.0.8` is release-ready; social publishing and paid spend remain
+pending marketing-director approval.
 
 ## Requested decision
 

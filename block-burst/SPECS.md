@@ -78,6 +78,17 @@ combo x1, 2-5 at x2, 2-6 at x3, 3-6 at x4, and 4-6 at x5 or above. Apply a
 bounded per-clear safety ceiling only for unusually large clears so the effect
 does not overwhelm the board or mobile frame time.
 
+Bombs have a distinct physical payoff on top of ordinary clear debris. When a
+move triggers one or more bombs, every cleared block emits twice its usual cube
+fragments and each triggered bomb cell emits four times its usual count. All of
+those fragments must exist before the first bomb wave fires. After roughly 300 ms,
+release a thin gold-and-white shockwave, low-impact sound, dark casing fragments,
+short hit-stop, and restrained camera shake. Apply one distance-based radial
+impulse to every live fragment as the wave reaches it: very strong at one to two
+cells, clearly visible at three to four cells, and subtler beyond five. Stagger
+chained bombs by roughly 120 ms and let their waves overlap so later detonations
+can visibly redirect earlier debris.
+
 PlayDrop preview mode is a deterministic, self-playing presentation of real game
 actions. Hide the score, best, hammer controls, hints, result overlays, and all
 other HUD while it runs. Show the approved studio hand with its fingertip anchored

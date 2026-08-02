@@ -1,7 +1,7 @@
 {
   "version": 1,
   "preparedAt": "2026-08-02",
-  "gameVersion": "1.0.7",
+  "gameVersion": "1.0.8",
   "productionMode": {
     "stills": "built-in OpenAI ImageGen with protected identity and real-gameplay references",
     "video": "PlayDrop CLI 0.14.5 native 60 fps ScreenCaptureKit gameplay capture plus deterministic FFmpeg assembly"
@@ -11,7 +11,7 @@
       "id": "video-landscape",
       "kind": "playdrop-listing-video",
       "path": "assets/marketing/playdrop/capture/landscape-listing.mp4",
-      "source": "assets/marketing/video-campaign/source-captures/landscape-continuous-native-v1/desktop-listing.mp4",
+      "source": "assets/marketing/video-campaign/source-captures/bomb-physics-wave-landscape-native-v1/mobile-landscape-listing.mp4",
       "width": 1920,
       "height": 1080,
       "fps": 60,
@@ -22,7 +22,7 @@
       "id": "video-portrait",
       "kind": "playdrop-listing-video",
       "path": "assets/marketing/playdrop/capture/portrait-listing.mp4",
-      "source": "assets/marketing/video-campaign/source-captures/physics-debris-native-v1/desktop-listing.mp4",
+      "source": "assets/marketing/video-campaign/source-captures/bomb-physics-wave-native-v4/mobile-portrait-listing.mp4",
       "width": 1080,
       "height": 1920,
       "fps": 60,
@@ -103,25 +103,25 @@
     "portraitVideo": {
       "path": "playdrop/capture/portrait-listing.mp4",
       "spec": "1080x1920, H.264 High, 60 fps, yuv420p, SAR 1:1, AAC LC 48 kHz stereo, 12.000 s",
-      "bytes": 2252693,
-      "sha256": "26b089dc634eae2a4343a056c7ea22cb6c763a74a926624c0d1bcab956329799",
-      "story": "caption-free five-move continuous native session from 1.0.7; every clear emits color-matched physics debris and the final 3x3 placement clears six lines and detonates two bombs"
+      "bytes": 3204549,
+      "sha256": "618adec41e54a660fd269cfcb139512d88378702b3064d12c200d98169aac6bb",
+      "story": "caption-free five-move continuous native session from 1.0.8; the final 3x3 placement clears six lines and detonates two bombs with double-density cleared-block debris, quadruple-density bomb debris, and distance-based physics shockwaves"
     },
     "landscapeVideo": {
       "path": "playdrop/capture/landscape-listing.mp4",
       "spec": "1920x1080, H.264 High, 60 fps, yuv420p, SAR 1:1, AAC LC 48 kHz stereo, 17.000 s",
-      "bytes": 1550575,
-      "sha256": "d335c4746bdec55a8ec86b5f648546e23fe57c78f62b9bc4474bc0241f48f2bd",
-      "story": "caption-free seven-move continuous native session with an opening clear, a mid-session row clear, and a final six-line/two-bomb payoff"
+      "bytes": 2727085,
+      "sha256": "9bba43dc0589cb64904a58bbe173ed171cfffe4c97247ce46eecd2e77890a7a4",
+      "story": "caption-free seven-move continuous native 1.0.8 session with an opening clear, a mid-session row clear, and a final six-line/two-bomb physics-shockwave payoff"
     }
   },
   "appLovin": {
     "video": {
       "path": "applovin-interstitial/portrait/video.mp4",
       "spec": "1080x1920, H.264 High, 30 fps, yuv420p, SAR 1:1, AAC LC 48 kHz stereo, 12.000 s",
-      "bytes": 3706399,
-      "sha256": "25960b83ccab1add4149cf44ed074bc48a2041bbdddc1a01dababbf3903d834b",
-      "endingProof": "one continuous native-captured 1x play session shows five legal placements: an opening clear, a repair move, two compact corner moves, and the shipped 3x3 piece clearing six counted lines and detonating two bombs; final commit is approximately 9.8 seconds"
+      "bytes": 5903611,
+      "sha256": "60f029f7d53fea72ad3f5a7e4b0eaba5b86c3d1a11cd2f4c200880db1e8ed1ba",
+      "endingProof": "one continuous native-captured 1x play session shows five legal placements: an opening clear, a repair move, two compact corner moves, and the shipped 3x3 piece clearing six counted lines and detonating two bombs with high-density debris and distance-based physics shockwaves; final commit is approximately 9.8 seconds"
     },
     "endCard": {
       "path": "applovin-interstitial/portrait/end-card.png",
@@ -134,15 +134,15 @@
       "path": "applovin-interstitial/portrait/poster.png",
       "dimensions": "1080x1920",
       "timestampSeconds": 10.1,
-      "bytes": 655995,
-      "sha256": "f69a84ab01a972e84b03e03028e9dbc20485e1fec62e07ea2cc73317167624d2"
+      "bytes": 815182,
+      "sha256": "70d47d100e8965fd72ac85a69887074d0f10aa1266329dd29f60b99a6267d7e3"
     },
     "sourceEvidence": {
-      "videoPath": "video-campaign/source-captures/applovin-continuous-native-v8/desktop-listing.mp4",
-      "reportPath": "video-campaign/source-captures/applovin-continuous-native-v8/capture-report.json",
+      "videoPath": "video-campaign/source-captures/bomb-physics-wave-native-v4/mobile-portrait-listing.mp4",
+      "reportPath": "video-campaign/source-captures/bomb-physics-wave-native-v4/capture-report.json",
       "capturePipeline": "PlayDrop CLI 0.14.5 native macOS ScreenCaptureKit",
-      "captureSurface": "DESKTOP portrait canvas",
-      "sourceSpec": "540x960, 60 fps, H.264/AAC, 12.867 s",
+      "captureSurface": "MOBILE_PORTRAIT portrait canvas",
+      "sourceSpec": "540x960, 60 fps, H.264/AAC, 12.683 s",
       "captureWarnings": 0,
       "continuousSession": true,
       "speed": 1,
@@ -152,16 +152,16 @@
       "cumulativeLinesRun": 7,
       "bombsBefore": 2,
       "bombsAfter": 0,
-      "videoSha256": "a086d0b953b42fd1e8650b172339e84df838dc0ba0f799b33815df9f1f2bdf61",
-      "reportSha256": "6d5de5154d66481402bde8c2e50b854d8d4eedfdf3c9ac22de15779957417b97"
+      "videoSha256": "f9a6ff5279af881895a80862a1712d276ef17a8e84b4648ac250f63ef76788ce",
+      "reportSha256": "5b9d38a0e3441aafc403315e28e4eb8cf3af4317e58261d3be86cce402cfcbf4"
     }
   },
   "social": {
     "portraitVideo": {
       "path": "social-media/short/portrait-9x16.mp4",
       "spec": "1080x1920, H.264 High, 60 fps, yuv420p, SAR 1:1, AAC LC 48 kHz stereo, 12.000 s",
-      "bytes": 4263899,
-      "sha256": "78e3b773160fa65429d4ff6ac7c98697f9c680508871134004cb71aed662988a",
+      "bytes": 7044976,
+      "sha256": "966b9bfa8275cc92c724367a313f0c7eefd1a8a7abc439f8b1cea3270c527c33",
       "destinations": ["TikTok", "Instagram Reels", "Instagram Stories", "YouTube Shorts"],
       "continuousSession": true,
       "visiblePlacements": 5
@@ -169,8 +169,8 @@
     "landscapeVideo": {
       "path": "social-media/trailer/landscape-16x9.mp4",
       "spec": "1920x1080, H.264 High, 60 fps, yuv420p, SAR 1:1, AAC LC 48 kHz stereo, 17.000 s",
-      "bytes": 4597906,
-      "sha256": "9547e539a559df25ebacbe43f7aca6189f9673405a0769a761011f7aca565dbf",
+      "bytes": 6769478,
+      "sha256": "db7819772d09f3a6e551ef92f4351637d59e34bc5a42bbde12946ce5d1db6365",
       "destinations": ["YouTube", "X"],
       "continuousSession": true,
       "visiblePlacements": 7,
@@ -178,23 +178,23 @@
       "finalMoveLines": 6,
       "bombsDetonatedByFinalMove": 2,
       "sourceEvidence": {
-        "videoPath": "video-campaign/source-captures/landscape-continuous-native-v1/desktop-listing.mp4",
-        "reportPath": "video-campaign/source-captures/landscape-continuous-native-v1/capture-report.json",
-        "sourceSpec": "1280x720, 60 fps, H.264/AAC, 19.033 s",
+        "videoPath": "video-campaign/source-captures/bomb-physics-wave-landscape-native-v1/mobile-landscape-listing.mp4",
+        "reportPath": "video-campaign/source-captures/bomb-physics-wave-landscape-native-v1/capture-report.json",
+        "sourceSpec": "1280x720, 60 fps, H.264/AAC, 18.650 s",
         "captureWarnings": 0,
-        "videoSha256": "bed65bc378f2a51960ff9675f1e542a0f49a2b962171d74917486ac13f283146",
-        "reportSha256": "ec7cae7947484f8231604e73192521bbe98de719240ef539b91bd87c84b4b181"
+        "videoSha256": "73d90241bfa719a1c7d19454ae0b8951b833c131c5aad99920cdd9f5f249bd4f",
+        "reportSha256": "077d52db29adf0d04ada8f76d1ebba109b8544c96a2f7d390695bc5ce2016297"
       }
     },
     "instagramFeedVideo": {
       "path": "social-media/instagram/feed/video-3x4.mp4",
       "spec": "1080x1440, 14.000 s",
-      "sha256": "3da86d5b06d9412ddc1a41d9a6336e0905e83d90076e9528bcb97b22565a2509"
+      "sha256": "8044b879327cfc3f86c9be473b4eb1a11080fa92daaac81c40baf79d351351f3"
     },
     "pinterestVideo": {
       "path": "social-media/short/pinterest-2x3.mp4",
       "spec": "1000x1500, 14.000 s",
-      "sha256": "dd3af9b58d830899bd0bf7e5d4c0d262b07b0a1afe9b7335512abfe8642c2e01"
+      "sha256": "d05408d279bd31f7485f70b643a41dda8373e4adbb2a4321f6feca988d7badd1"
     },
     "instagramCarousel": {
       "directory": "social-media/instagram/feed/carousel",
@@ -227,12 +227,12 @@
     "socialStaticContact": "social-media/static-package-contact.png"
   },
   "validation": {
-    "npmValidate": "passed: 13 tests",
+    "npmValidate": "passed: 16 tests",
     "socialPackageValidator": "passed: 16 media checks plus manifest mapping",
     "visualReview": "passed: all listing, social, crop-proof, and video contact sheets inspected",
-    "audioPeak": "maximum -0.9 to -1.0 dBFS across final social and paid videos",
-    "frameCadence": "100% unique consecutive frames across the four revised portrait and landscape deliverables",
-    "blackFrameReview": "passed: no black intervals detected in the four revised deliverables",
-    "playdropCli": "0.14.5 native portrait and landscape captures passed all three surfaces at 60 fps with synchronized audio and zero warnings; authenticated actor playdrop (prod, ADMIN), workspace owner autonomoustudio"
+    "audioPeak": "maximum -0.6 to -1.0 dBFS across final social and paid videos",
+    "frameCadence": "passed: native 60 fps masters and final exports show continuous active physics motion with no capture stutter; intentional planning holds remain",
+    "blackFrameReview": "passed: no black intervals detected in any of the seven final video deliverables",
+    "playdropCli": "0.14.5 native portrait, landscape, Instagram 3:4, and Pinterest 2:3 captures passed all three surfaces at 60 fps with synchronized audio and zero warnings; authenticated actor playdrop (prod, ADMIN), workspace owner autonomoustudio"
   }
 }

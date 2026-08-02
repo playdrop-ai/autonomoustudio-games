@@ -111,6 +111,12 @@ export class Sfx {
   }
   fanfare(): void { [523, 659, 784, 1047].forEach((f, i) => window.setTimeout(() => this.beep(f, 0.16, "triangle", 0.12), i * 70)); }
   special(): void { [660, 990, 1320].forEach((f, i) => window.setTimeout(() => this.beep(f, 0.1, "triangle", 0.13), i * 45)); }
+  bomb(chainIndex: number): void {
+    const lift = Math.min(Math.max(chainIndex, 0), 3);
+    this.beep(150 + lift * 12, 0.2, "sawtooth", 0.15, 62 + lift * 4);
+    this.beep(78 + lift * 5, 0.24, "sine", 0.18, 46 + lift * 3);
+    window.setTimeout(() => this.beep(720 + lift * 90, 0.08, "square", 0.09, 1180 + lift * 120), 22);
+  }
   coin(): void { this.beep(880, 0.05, "square", 0.06, 1320); }
   hammer(): void { this.beep(220, 0.07, "square", 0.1, 90); this.beep(90, 0.13, "sine", 0.09); }
   heartbeat(): void { this.beep(72, 0.12, "sine", 0.13); window.setTimeout(() => this.beep(60, 0.12, "sine", 0.1), 135); }

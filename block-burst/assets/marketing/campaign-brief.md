@@ -6,7 +6,7 @@ Status: production lock for owner and marketing-director review.
 
 Turn the released Block Burst build into a complete, reusable launch campaign
 for the PlayDrop listing, AppLovin, YouTube, TikTok, Instagram, Pinterest, and
-X. Every claim must be visible in the shipped `1.0.7` game or its real preview
+X. Every claim must be visible in the shipped `1.0.8` game or its real preview
 capture.
 
 ## Audience
@@ -132,7 +132,7 @@ must not replace or modify the protected hero files.
 - Pacing: the same continuous 1x native gameplay take as the approved AppLovin
   video, with social caption plates and no hero insert, cut, reset, or time
   warp. The clean PlayDrop portrait listing is a refreshed take with the same
-  five-move story captured from the debris-enabled `1.0.7` build.
+  five-move story captured from the shockwave-enabled `1.0.8` build.
 - Sound-off message: `DRAG. DROP. BURST.` -> `PLAN EVERY PIECE` ->
   `CHAIN BIG COMBOS` -> `BEAT YOUR BEST`.
 

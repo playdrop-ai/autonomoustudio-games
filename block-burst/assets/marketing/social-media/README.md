@@ -10,7 +10,7 @@ Destination: https://www.playdrop.ai/creators/autonomoustudio/apps/game/block-bu
 Drag a piece, burst a line, keep the grid alive, chain the next combo, and beat
 your best.
 
-The campaign stays within the shipped `1.0.6` game: an 8x8 board, three current
+The campaign stays within the shipped `1.0.8` game: an 8x8 board, three current
 pieces, row and column clears, combo payoffs, a saved best score, and the
 `highest_score` leaderboard.
 
@@ -43,6 +43,11 @@ a final 3x3 placement that clears six lines and detonates two bombs. It also
 plays continuously at 1x. No browser chrome, device frame, bars, duplicated
 fill, nonuniform stretch, blind cross-ratio gameplay crop, or repeated footage
 is used.
+
+The 3:4 Instagram and 2:3 Pinterest videos are also native 60 fps captures of
+the same five-move six-line/two-bomb session. All four videos show the shipped
+1.0.8 bomb treatment: double debris for a bomb-triggering clear, quadruple
+debris on bomb cells, then strong distance-based physics shockwaves.
 
 The five 3:4 stills are complete built-in ImageGen campaign compositions based
 on protected identity art and real gameplay references. The 2:3 Pins remove 60

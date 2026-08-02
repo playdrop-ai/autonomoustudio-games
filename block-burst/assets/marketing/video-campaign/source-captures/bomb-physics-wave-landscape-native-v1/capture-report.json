@@ -1,0 +1,276 @@
+{
+  "appName": "block-burst",
+  "outputDir": "/Users/olivier/Documents/autonomoustudio-games/block-burst/assets/marketing/video-campaign/source-captures/bomb-physics-wave-landscape-native-v1",
+  "captures": [
+    {
+      "surface": "DESKTOP",
+      "targetUrl": "https://www.playdrop.ai/creators/autonomoustudio/apps/game/block-burst/dev-preview?launchCheck=1&captureShell=listing&mobileFrameHost=admin",
+      "command": {
+        "durationSeconds": 18,
+        "width": 1280,
+        "height": 720,
+        "fps": 60,
+        "posterAtSeconds": 16,
+        "audio": true,
+        "keepRaw": false
+      },
+      "measurement": {
+        "outerWidth": 1280,
+        "outerHeight": 807,
+        "innerWidth": 1280,
+        "innerHeight": 720,
+        "devicePixelRatio": 2,
+        "iframeRect": {
+          "x": 0,
+          "y": 0,
+          "width": 1280,
+          "height": 720,
+          "top": 0,
+          "left": 0,
+          "right": 1280,
+          "bottom": 720
+        }
+      },
+      "recorder": {
+        "applicationName": "Google Chrome for Testing",
+        "contentRectPoints": {
+          "height": 1440,
+          "width": 2560,
+          "x": 0,
+          "y": 0
+        },
+        "pointPixelScale": 2,
+        "processID": 89855,
+        "recordedDurationSeconds": 18,
+        "recordedFileSizeBytes": 63461190,
+        "windowFramePoints": {
+          "height": 807,
+          "width": 1280,
+          "x": 22,
+          "y": 52
+        },
+        "windowID": 23111,
+        "windowTitle": "Dev Preview block-burst | PlayDrop"
+      },
+      "crop": {
+        "x": 0,
+        "y": 174,
+        "width": 2560,
+        "height": 1440
+      },
+      "rawVideo": {
+        "path": null,
+        "width": 2560,
+        "height": 1614,
+        "durationSeconds": 18.461667,
+        "audioTrackCount": 0
+      },
+      "finalVideo": {
+        "path": "/Users/olivier/Documents/autonomoustudio-games/block-burst/assets/marketing/video-campaign/source-captures/bomb-physics-wave-landscape-native-v1/desktop-listing.mp4",
+        "width": 1280,
+        "height": 720,
+        "durationSeconds": 18.466667,
+        "audioTrackCount": 1,
+        "fps": 60
+      },
+      "posterPath": "/Users/olivier/Documents/autonomoustudio-games/block-burst/assets/marketing/video-campaign/source-captures/bomb-physics-wave-landscape-native-v1/desktop-poster.png",
+      "validation": {
+        "status": "passed",
+        "referenceFrameSimilarity": 0.990013,
+        "firstFrameMeanLuma": 0.16427696078431372,
+        "firstFrameVisiblePixelRatio": 0.95849609375,
+        "posterFrameMeanLuma": 0.14212718290441176,
+        "posterFrameVisiblePixelRatio": 0.9375,
+        "motionMeanDelta": 0.05538641237745098,
+        "motionChangedPixelRatio": 0.1640625
+      },
+      "warnings": []
+    },
+    {
+      "surface": "MOBILE_LANDSCAPE",
+      "targetUrl": "https://www.playdrop.ai/creators/autonomoustudio/apps/game/block-burst/dev-preview?launchCheck=1&captureShell=listing&mobileFrameHost=admin",
+      "command": {
+        "durationSeconds": 18,
+        "width": 1280,
+        "height": 720,
+        "fps": 60,
+        "posterAtSeconds": 16,
+        "audio": true,
+        "keepRaw": false
+      },
+      "measurement": {
+        "outerWidth": 1280,
+        "outerHeight": 720,
+        "innerWidth": 1280,
+        "innerHeight": 720,
+        "devicePixelRatio": 2,
+        "iframeRect": {
+          "x": 0,
+          "y": 0,
+          "width": 1280,
+          "height": 720,
+          "top": 0,
+          "left": 0,
+          "right": 1280,
+          "bottom": 720
+        }
+      },
+      "recorder": {
+        "applicationName": "Google Chrome for Testing",
+        "contentRectPoints": {
+          "height": 1440,
+          "width": 2560,
+          "x": 0,
+          "y": 0
+        },
+        "pointPixelScale": 2,
+        "processID": 90104,
+        "recordedDurationSeconds": 18,
+        "recordedFileSizeBytes": 63542423,
+        "windowFramePoints": {
+          "height": 800,
+          "width": 1282,
+          "x": 22,
+          "y": 52
+        },
+        "windowID": 23128,
+        "windowTitle": "Dev Preview block-burst | PlayDrop"
+      },
+      "crop": {
+        "x": 0,
+        "y": 160,
+        "width": 2560,
+        "height": 1440
+      },
+      "rawVideo": {
+        "path": null,
+        "width": 2564,
+        "height": 1600,
+        "durationSeconds": 18.65,
+        "audioTrackCount": 0
+      },
+      "finalVideo": {
+        "path": "/Users/olivier/Documents/autonomoustudio-games/block-burst/assets/marketing/video-campaign/source-captures/bomb-physics-wave-landscape-native-v1/mobile-landscape-listing.mp4",
+        "width": 1280,
+        "height": 720,
+        "durationSeconds": 18.65,
+        "audioTrackCount": 1,
+        "fps": 60
+      },
+      "posterPath": "/Users/olivier/Documents/autonomoustudio-games/block-burst/assets/marketing/video-campaign/source-captures/bomb-physics-wave-landscape-native-v1/mobile-landscape-poster.png",
+      "validation": {
+        "status": "passed",
+        "referenceFrameSimilarity": 0.929219,
+        "firstFrameMeanLuma": 0.1711770450367647,
+        "firstFrameVisiblePixelRatio": 0.948486328125,
+        "posterFrameMeanLuma": 0.15163622089460785,
+        "posterFrameVisiblePixelRatio": 0.92529296875,
+        "motionMeanDelta": 0.0533758425245098,
+        "motionChangedPixelRatio": 0.153564453125
+      },
+      "warnings": []
+    },
+    {
+      "surface": "MOBILE_PORTRAIT",
+      "targetUrl": "https://www.playdrop.ai/creators/autonomoustudio/apps/game/block-burst/dev-preview?launchCheck=1&captureShell=listing&mobileFrameHost=admin",
+      "command": {
+        "durationSeconds": 18,
+        "width": 1280,
+        "height": 720,
+        "fps": 60,
+        "posterAtSeconds": 16,
+        "audio": true,
+        "keepRaw": false
+      },
+      "measurement": {
+        "outerWidth": 1280,
+        "outerHeight": 720,
+        "innerWidth": 1280,
+        "innerHeight": 720,
+        "devicePixelRatio": 2,
+        "iframeRect": {
+          "x": 0,
+          "y": 0,
+          "width": 1280,
+          "height": 720,
+          "top": 0,
+          "left": 0,
+          "right": 1280,
+          "bottom": 720
+        }
+      },
+      "recorder": {
+        "applicationName": "Google Chrome for Testing",
+        "contentRectPoints": {
+          "height": 1440,
+          "width": 2560,
+          "x": 0,
+          "y": 0
+        },
+        "pointPixelScale": 2,
+        "processID": 90285,
+        "recordedDurationSeconds": 19,
+        "recordedFileSizeBytes": 64770755,
+        "windowFramePoints": {
+          "height": 800,
+          "width": 1282,
+          "x": 22,
+          "y": 52
+        },
+        "windowID": 23145,
+        "windowTitle": "Dev Preview block-burst | PlayDrop"
+      },
+      "crop": {
+        "x": 0,
+        "y": 160,
+        "width": 2560,
+        "height": 1440
+      },
+      "rawVideo": {
+        "path": null,
+        "width": 2564,
+        "height": 1600,
+        "durationSeconds": 19.183333,
+        "audioTrackCount": 0
+      },
+      "finalVideo": {
+        "path": "/Users/olivier/Documents/autonomoustudio-games/block-burst/assets/marketing/video-campaign/source-captures/bomb-physics-wave-landscape-native-v1/mobile-portrait-listing.mp4",
+        "width": 1280,
+        "height": 720,
+        "durationSeconds": 19.183333,
+        "audioTrackCount": 1,
+        "fps": 60
+      },
+      "posterPath": "/Users/olivier/Documents/autonomoustudio-games/block-burst/assets/marketing/video-campaign/source-captures/bomb-physics-wave-landscape-native-v1/mobile-portrait-poster.png",
+      "validation": {
+        "status": "passed",
+        "referenceFrameSimilarity": 0.929804,
+        "firstFrameMeanLuma": 0.17183191636029413,
+        "firstFrameVisiblePixelRatio": 0.948486328125,
+        "posterFrameMeanLuma": 0.15127144607843138,
+        "posterFrameVisiblePixelRatio": 0.92333984375,
+        "motionMeanDelta": 0.053786573223039216,
+        "motionChangedPixelRatio": 0.155517578125
+      },
+      "warnings": []
+    }
+  ],
+  "warnings": [],
+  "binding": {
+    "artifactHashes": {
+      "desktop-listing.mp4": "0665a3267137db7775049b33972622cbb25349e4f2a1f67e65ff2f25db84d271",
+      "desktop-poster.png": "43889cdec3986ca1593bd67e47451a4eeae0e919c23004f1caa9c541d6be6978",
+      "mobile-landscape-listing.mp4": "73d90241bfa719a1c7d19454ae0b8951b833c131c5aad99920cdd9f5f249bd4f",
+      "mobile-landscape-poster.png": "c179020b061e34dd61a70b01d64889019848893cb26ec9626a39f7bb63e4b581",
+      "mobile-portrait-listing.mp4": "1ae657b1c746af6c6cf7cae2b518a46aab84f036b90eb4fb52bf460a20fe2b4f",
+      "mobile-portrait-poster.png": "71f2eb2fa43bdb05e73e1974e93b36b8a9f8591ec4c3b0deb6d69e0fd13ec3f6"
+    },
+    "capturedSurfaces": [
+      "DESKTOP",
+      "MOBILE_LANDSCAPE",
+      "MOBILE_PORTRAIT"
+    ],
+    "pixelValidation": "passed",
+    "runtimeBundleHash": "c7d7245bce0452da79232f134a2434d3de1da50e7c2da86bf17a2cfd65107626"
+  }
+}

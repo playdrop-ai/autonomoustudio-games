@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const gameDir = resolve(scriptDir, "..");
 const cli = resolve(gameDir, "../../playdrop/packages/playdrop-cli/bin/playdrop");
-const outputDir = "assets/marketing/video-campaign/source-captures/landscape-continuous-native-v1";
+const outputDir = "assets/marketing/video-campaign/source-captures/bomb-physics-wave-landscape-native-v1";
 
 const result = spawnSync(process.execPath, [
   cli,

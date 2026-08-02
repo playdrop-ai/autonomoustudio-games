@@ -20,17 +20,19 @@ const plates = [
   resolve(plateDir, "04-beat-your-best.png"),
 ];
 
-const appLovinContinuousSource = resolve(campaignDir, "source-captures/applovin-continuous-native-v8/desktop-listing.mp4");
-const playdropPortraitSource = resolve(campaignDir, "source-captures/physics-debris-native-v1/desktop-listing.mp4");
-const landscapeContinuousSource = resolve(campaignDir, "source-captures/landscape-continuous-native-v1/desktop-listing.mp4");
-const instagramSource = resolve(campaignDir, "source-captures/instagram-3x4/instagram-3x4-gameplay.mp4");
-const pinterestSource = resolve(campaignDir, "source-captures/pinterest-2x3/pinterest-2x3-gameplay.mp4");
+const appLovinContinuousSource = resolve(campaignDir, "source-captures/bomb-physics-wave-native-v4/mobile-portrait-listing.mp4");
+const playdropPortraitSource = resolve(campaignDir, "source-captures/bomb-physics-wave-native-v4/mobile-portrait-listing.mp4");
+const landscapeContinuousSource = resolve(campaignDir, "source-captures/bomb-physics-wave-landscape-native-v1/mobile-landscape-listing.mp4");
+const instagramSource = resolve(campaignDir, "source-captures/bomb-physics-wave-instagram-native-v1/mobile-portrait-listing.mp4");
+const pinterestSource = resolve(campaignDir, "source-captures/bomb-physics-wave-pinterest-native-v1/mobile-portrait-listing.mp4");
 
 const portraitOutput = resolve(marketingDir, "social-media/short/portrait-9x16.mp4");
 const landscapeOutput = resolve(marketingDir, "social-media/trailer/landscape-16x9.mp4");
 const instagramOutput = resolve(marketingDir, "social-media/instagram/feed/video-3x4.mp4");
 const pinterestOutput = resolve(marketingDir, "social-media/short/pinterest-2x3.mp4");
 const appLovinDir = resolve(marketingDir, "applovin-interstitial/portrait");
+const playdropPortraitOutput = resolve(marketingDir, "playdrop/capture/portrait-listing.mp4");
+const playdropLandscapeOutput = resolve(marketingDir, "playdrop/capture/landscape-listing.mp4");
 
 for (const path of [reviewDir, dirname(portraitOutput), dirname(landscapeOutput), dirname(instagramOutput), dirname(pinterestOutput), appLovinDir, resolve(marketingDir, "playdrop/capture")]) {
   mkdirSync(path, { recursive: true });
@@ -234,17 +236,17 @@ function contactSheet(input, output, filter) {
 const only = process.argv.find((arg) => arg.startsWith("--only="))?.split("=")[1];
 if (!only) {
   renderContinuousPortrait();
-  renderCleanListing({ source: playdropPortraitSource, output: resolve(marketingDir, "playdrop/capture/portrait-listing.mp4"), width: 1080, height: 1920, duration: 12 });
+  renderCleanListing({ source: playdropPortraitSource, output: playdropPortraitOutput, width: 1080, height: 1920, duration: 12 });
   renderShort({ source: instagramSource, hero: heroInstagram, width: 1080, height: 1440, plateWidth: 920, plateY: 1180, output: instagramOutput });
   renderShort({ source: pinterestSource, hero: heroPinterest, width: 1000, height: 1500, plateWidth: 860, plateY: 1250, output: pinterestOutput });
   renderContinuousLandscape();
-  renderCleanListing({ source: landscapeContinuousSource, output: resolve(marketingDir, "playdrop/capture/landscape-listing.mp4"), width: 1920, height: 1080, duration: 17 });
+  renderCleanListing({ source: landscapeContinuousSource, output: playdropLandscapeOutput, width: 1920, height: 1080, duration: 17 });
 }
 if (only === "core") {
   renderContinuousPortrait();
-  renderCleanListing({ source: playdropPortraitSource, output: resolve(marketingDir, "playdrop/capture/portrait-listing.mp4"), width: 1080, height: 1920, duration: 12 });
+  renderCleanListing({ source: playdropPortraitSource, output: playdropPortraitOutput, width: 1080, height: 1920, duration: 12 });
   renderContinuousLandscape();
-  renderCleanListing({ source: landscapeContinuousSource, output: resolve(marketingDir, "playdrop/capture/landscape-listing.mp4"), width: 1920, height: 1080, duration: 17 });
+  renderCleanListing({ source: landscapeContinuousSource, output: playdropLandscapeOutput, width: 1920, height: 1080, duration: 17 });
 }
 if (only === "playdrop-portrait" || only === "playdrop-listings") {
   const portraitListingOutput = resolve(marketingDir, "playdrop/capture/portrait-listing.mp4");
@@ -277,6 +279,18 @@ if (!only || only === "core") {
     "-filter_complex", "[0:v]scale=1600:-2[p];[1:v]scale=1600:-2[l];[2:v]scale=1600:-2[i];[3:v]scale=1600:-2[n];[p][l][i][n]vstack=inputs=4[v]",
     "-map", "[v]", "-frames:v", "1", "-update", "1", resolve(reviewDir, "video-package-contact.png"),
   ]);
+}
+
+if (!only || only === "core" || only === "playdrop-listings") {
+  for (const [source, destination] of [
+    [playdropPortraitOutput, resolve(marketingDir, "videos/portrait.mp4")],
+    [playdropPortraitOutput, resolve(marketingDir, "captures/mobile-portrait.mp4")],
+    [playdropLandscapeOutput, resolve(marketingDir, "videos/landscape.mp4")],
+    [playdropLandscapeOutput, resolve(marketingDir, "captures/mobile-landscape.mp4")],
+  ]) {
+    mkdirSync(dirname(destination), { recursive: true });
+    copyFileSync(source, destination);
+  }
 }
 
 console.log(JSON.stringify({ portraitOutput, landscapeOutput, instagramOutput, pinterestOutput, appLovinDir, reviewDir }, null, 2));

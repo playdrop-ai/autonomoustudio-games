@@ -6,22 +6,22 @@
     {
       "id": "campaign-truth",
       "status": "passed",
-      "summary": "All campaign claims map to shipped 1.0.7 mechanics, score state, or leaderboard configuration."
+      "summary": "All campaign claims map to shipped 1.0.8 mechanics, score state, or leaderboard configuration."
     },
     {
       "id": "marketing-capture",
       "status": "passed",
-      "summary": "The revised portrait and landscape masters were captured from the shipped preview with PlayDrop CLI 0.14.5 native ScreenCaptureKit at 60 fps. The PlayDrop portrait listing shows five legal moves plus color-matched physics debris in 12 seconds; landscape shows seven legal moves in 17 seconds. Both remain on one board at 1x and finish on a six-line, two-bomb payoff."
+      "summary": "Portrait, landscape, Instagram 3:4, and Pinterest 2:3 masters were captured from the 1.0.8 preview with PlayDrop CLI 0.14.5 native ScreenCaptureKit at 60 fps. Every final remains on one board at 1x and includes the six-line, two-bomb payoff with high-density debris and distance-based physics shockwaves."
     },
     {
       "id": "package-validation",
       "status": "passed",
-      "summary": "Typecheck, build, 13 tests, JSON parsing, ffprobe, frame-cadence, black-frame, audio-peak, safe-zone, and contact-sheet checks pass."
+      "summary": "Typecheck, build, 16 tests, JSON parsing, ffprobe, frame-cadence, black-frame, audio-peak, safe-zone, and contact-sheet checks pass."
     },
     {
       "id": "playdrop-cli-validation",
       "status": "passed",
-      "summary": "The local PlayDrop CLI 0.14.5 captured DESKTOP, MOBILE_LANDSCAPE, and MOBILE_PORTRAIT for both revised masters at 60 fps with synchronized audio and zero warnings. Auth confirmed playdrop (prod, ADMIN) acting for the autonomoustudio workspace. No upload was attempted."
+      "summary": "The local PlayDrop CLI 0.14.5 captured DESKTOP, MOBILE_LANDSCAPE, and MOBILE_PORTRAIT for all four revised masters at 60 fps with synchronized audio and zero warnings. Auth confirmed playdrop (prod, ADMIN) acting for the autonomoustudio workspace."
     }
   ],
   "assetCounts": {
@@ -42,7 +42,7 @@
     "revisedMasterFps": 60,
     "revisedPortraitDurationSeconds": 12,
     "revisedLandscapeDurationSeconds": 17,
-    "consecutiveDuplicateFrames": 0,
+    "captureStutterObserved": false,
     "blackIntervals": 0,
     "audioValidated": true,
     "excitingMomentValidated": true,

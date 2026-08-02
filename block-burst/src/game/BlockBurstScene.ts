@@ -21,7 +21,14 @@ import {
   type PieceDef,
 } from "./constants";
 import { clamp01, hexStr, lerp, mix, mul } from "./color";
-import { boundedDebrisCountRange } from "./debris";
+import {
+  bombClearSpawnDelay,
+  bombDebrisMultiplier,
+  bombImpulseStrengthCells,
+  BOMB_CHAIN_STAGGER_MS,
+  BOMB_WAVE_DELAY_MS,
+  boundedDebrisCountRange,
+} from "./debris";
 import { calculatePreviewGestureFrame, PREVIEW_GESTURE_TOTAL_MS } from "./preview";
 import { Sfx } from "./sfx";
 
@@ -105,6 +112,31 @@ interface BackgroundSquareSpec {
   delay: number;
 }
 
+interface BombBlast {
+  r: number;
+  c: number;
+  x: number;
+  y: number;
+  delayMs: number;
+  chainIndex: number;
+}
+
+interface BombPhysicsWave {
+  id: number;
+  x: number;
+  y: number;
+  startedAt: number;
+  durationMs: number;
+  maxRadius: number;
+  chainIndex: number;
+  graphics: Phaser.GameObjects.Graphics;
+}
+
+interface SpecialExpansion {
+  detonated: number;
+  bombBlasts: BombBlast[];
+}
+
 const GRID_STROKE_COLOR = 0x0a0e1a;
 const GRID_EMPTY_CELL_COLOR = 0x181c2f;
 const GRID_EMPTY_CELL_TOP_COLOR = 0x181f33;
@@ -121,7 +153,7 @@ const TUTORIAL_PIECE: PieceData = {
   key: "yellow",
 };
 const TUTORIAL_GUIDE_PAUSE_MS = 700;
-const MAX_ACTIVE_DEBRIS = 240;
+const MAX_ACTIVE_DEBRIS = 480;
 
 function formatScore(score: number): string {
   return Math.max(0, Math.floor(score)).toLocaleString("en-US");
@@ -384,6 +416,8 @@ export class BlockBurstScene extends Phaser.Scene {
   private boardGfx!: Phaser.GameObjects.Graphics;
   private debrisGroup!: Phaser.Physics.Arcade.Group;
   private debrisCollider!: Phaser.Physics.Arcade.Collider;
+  private bombPhysicsWaves: BombPhysicsWave[] = [];
+  private nextBombPhysicsWaveId = 1;
   private vignette!: Phaser.GameObjects.Image;
   private ghost!: Phaser.GameObjects.Graphics;
   private hintGfx!: Phaser.GameObjects.Graphics;
@@ -486,6 +520,7 @@ export class BlockBurstScene extends Phaser.Scene {
   }
 
   override update(time: number, delta: number): void {
+    this.updateBombPhysicsWaves(time);
     this.drawBackgroundMotion(time);
     if (this.tutorialActive) this.updateTutorialGuide(time);
     if (!this.previewMode) return;
@@ -683,6 +718,8 @@ export class BlockBurstScene extends Phaser.Scene {
 
   private resetRun(): void {
     this.debrisGroup?.clear(true, true);
+    for (const wave of this.bombPhysicsWaves) wave.graphics.destroy();
+    this.bombPhysicsWaves = [];
     for (const slot of this.slots) slot?.destroy();
     this.slots = [null, null, null];
     this.pieceData = [null, null, null];
@@ -1079,6 +1116,20 @@ export class BlockBurstScene extends Phaser.Scene {
       ctx.fillRect(0, 0, 320, 320);
     });
     mk("ring", 128, 128, (ctx) => { ctx.strokeStyle = "rgba(255,255,255,0.9)"; ctx.lineWidth = 9; ctx.beginPath(); ctx.arc(64, 64, 52, 0, Math.PI * 2); ctx.stroke(); });
+    mk("bomb_shard", 48, 48, (ctx) => {
+      ctx.fillStyle = "#17213b";
+      ctx.strokeStyle = "#ffd36a";
+      ctx.lineWidth = 5;
+      ctx.lineJoin = "round";
+      ctx.beginPath();
+      ctx.moveTo(9, 7);
+      ctx.lineTo(40, 13);
+      ctx.lineTo(34, 41);
+      ctx.lineTo(12, 35);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    });
     mk("pop", 96, 96, (ctx) => {
       const g = ctx.createRadialGradient(48, 48, 0, 48, 48, 48);
       g.addColorStop(0, "rgba(255,255,255,0.95)");
@@ -1498,23 +1549,27 @@ export class BlockBurstScene extends Phaser.Scene {
     for (const r of fullRows) for (let c = 0; c < COLS; c++) set.add(r * COLS + c);
     for (const c of fullCols) for (let r = 0; r < ROWS; r++) set.add(r * COLS + c);
     const base = set.size;
-    const detonated = this.expandWithSpecials(set);
-    this.clearCells([...set].map((idx) => [Math.floor(idx / COLS), idx % COLS] as [number, number]));
-    const magnitude = lines + detonated;
+    const expansion = this.expandWithSpecials(set);
+    this.clearCells(
+      [...set].map((idx) => [Math.floor(idx / COLS), idx % COLS] as [number, number]),
+      expansion.bombBlasts,
+    );
+    const magnitude = lines + expansion.detonated;
     this.cameras.main.shake(150 + magnitude * 80, Math.min(0.014, 0.0035 + magnitude * 0.0026));
-    this.sfx.clear(lines + this.combo - 1 + detonated);
+    this.sfx.clear(lines + this.combo - 1 + expansion.detonated);
     const extra = set.size - base;
     const points = (lines * 10 + (lines - 1) * 10 + extra * 5) * Math.max(1, this.combo);
     this.addScore(points);
-    this.celebrate(lines, this.combo, detonated);
+    this.celebrate(lines, this.combo, expansion.detonated);
     if (!this.previewMode && lines >= 2) this.spawnSpecialAfterClear(lines);
     this.updateDanger();
   }
 
-  private clearCells(list: Array<[number, number]>): void {
+  private clearCells(list: Array<[number, number]>, bombBlasts: BombBlast[] = []): void {
     const blockScale = (this.L.cell - this.L.gap) / TEX;
     const shards = list.length > 18 ? 6 : 10;
     const debrisRange = boundedDebrisCountRange(this.combo, list.length);
+    const bombTriggered = bombBlasts.length > 0;
     for (const [r, c] of list) {
       const sprite = this.sprites[r]?.[c];
       const key = this.grid[r]?.[c];
@@ -1527,7 +1582,10 @@ export class BlockBurstScene extends Phaser.Scene {
       if (!sprite || !key) continue;
       const cx = sprite.x;
       const cy = sprite.y;
-      this.time.delayedCall((c + r) * 16, () => {
+      const isBombCell = bombBlasts.some((blast) => blast.r === r && blast.c === c);
+      const debrisMultiplier = bombDebrisMultiplier(bombTriggered, isBombCell);
+      const spawnDelay = bombTriggered ? bombClearSpawnDelay(r, c) : (c + r) * 16;
+      this.time.delayedCall(spawnDelay, () => {
         sprite.setTintFill(0xffffff);
         this.tweens.add({
           targets: sprite,
@@ -1541,13 +1599,23 @@ export class BlockBurstScene extends Phaser.Scene {
           },
         });
         this.burst(cx, cy, PALETTE[key].face, shards);
-        this.spawnBlockDebris(cx, cy, key, Phaser.Math.Between(debrisRange.min, debrisRange.max));
+        this.spawnBlockDebris(
+          cx,
+          cy,
+          key,
+          Phaser.Math.Between(debrisRange.min, debrisRange.max) * debrisMultiplier,
+        );
         this.popFlash(cx, cy);
       });
     }
   }
 
-  private spawnBlockDebris(x: number, y: number, key: ColorKey, requestedCount: number): void {
+  private spawnBlockDebris(
+    x: number,
+    y: number,
+    key: ColorKey,
+    requestedCount: number,
+  ): void {
     const activeCount = this.debrisGroup.countActive(true);
     const count = Math.max(0, Math.min(requestedCount, MAX_ACTIVE_DEBRIS - activeCount));
     for (let index = 0; index < count; index++) {
@@ -1610,8 +1678,10 @@ export class BlockBurstScene extends Phaser.Scene {
     return out;
   }
 
-  private expandWithSpecials(set: Set<number>): number {
+  private expandWithSpecials(set: Set<number>): SpecialExpansion {
     let detonated = 0;
+    let bombChainIndex = 0;
+    const bombBlasts: BombBlast[] = [];
     const queue = [...set];
     while (queue.length) {
       const idx = queue.pop()!;
@@ -1621,7 +1691,9 @@ export class BlockBurstScene extends Phaser.Scene {
       if (!type) continue;
       this.special[r]![c] = null;
       detonated++;
-      this.detonateFX(r, c, type);
+      const chainIndex = type === "bomb" ? bombChainIndex++ : 0;
+      const blast = this.detonateFX(r, c, type, chainIndex);
+      if (blast) bombBlasts.push(blast);
       for (const [rr, cc] of this.specialCells(r, c, type)) {
         if (rr < 0 || rr >= ROWS || cc < 0 || cc >= COLS) continue;
         const next = rr * COLS + cc;
@@ -1631,11 +1703,12 @@ export class BlockBurstScene extends Phaser.Scene {
         }
       }
     }
-    return detonated;
+    return { detonated, bombBlasts };
   }
 
-  private detonateFX(r: number, c: number, type: SpecialType): void {
+  private detonateFX(r: number, c: number, type: SpecialType, chainIndex: number): BombBlast | undefined {
     const [x, y] = this.cellXY(c, r);
+    if (type === "bomb") return this.bombDetonateFX(r, c, x, y, chainIndex);
     this.popFlash(x, y);
     this.shockwave(x, y);
     this.burst(x, y, 0xffffff, 16);
@@ -1644,6 +1717,143 @@ export class BlockBurstScene extends Phaser.Scene {
       this.lineFlash(this.L.boardLeft + c * this.L.cell, this.L.boardTop, this.L.cell, this.L.board);
     }
     this.sfx.special();
+    return undefined;
+  }
+
+  private bombDetonateFX(r: number, c: number, x: number, y: number, chainIndex: number): BombBlast {
+    const delayMs = BOMB_WAVE_DELAY_MS + chainIndex * BOMB_CHAIN_STAGGER_MS;
+    const charge = this.add.container(x, y).setDepth(100).setScale(0.78);
+    const chargeGlow = this.add.image(0, 0, "glow")
+      .setScale(this.L.cell / 360)
+      .setAlpha(0.66)
+      .setBlendMode(Phaser.BlendModes.ADD);
+    const chargeCore = this.add.circle(0, 0, this.L.cell * 0.25, 0x18223e, 0.98)
+      .setStrokeStyle(Math.max(3, this.L.cell * 0.055), 0xffd36a, 1);
+    const chargeGlyph = this.add.image(0, 0, "sp_bomb").setScale((this.L.cell * 0.52) / 64);
+    charge.add([chargeGlow, chargeCore, chargeGlyph]);
+    this.tweens.add({
+      targets: charge,
+      scale: 1.12,
+      angle: chainIndex % 2 === 0 ? 7 : -7,
+      duration: delayMs,
+      ease: "Quad.easeIn",
+    });
+    this.time.delayedCall(delayMs, () => {
+      charge.destroy();
+      this.beginBombHitStop();
+      this.popFlash(x, y, 101);
+      this.startBombPhysicsShockwave(x, y, chainIndex);
+      this.burst(x, y, 0xffe39a, 22 + Math.min(chainIndex, 3) * 4, 100);
+      this.spawnBombCasingDebris(x, y, 10 + Math.min(chainIndex, 3) * 2, chainIndex);
+      this.cameras.main.shake(105 + Math.min(chainIndex, 3) * 24, 0.006 + Math.min(chainIndex, 3) * 0.0015);
+      this.sfx.bomb(chainIndex);
+    });
+    return { r, c, x, y, delayMs, chainIndex };
+  }
+
+  private beginBombHitStop(): void {
+    const priorTweenScale = this.tweens.timeScale;
+    const priorPhysicsScale = this.physics.world.timeScale;
+    this.tweens.timeScale = 0.08;
+    this.physics.world.timeScale = 4;
+    window.setTimeout(() => {
+      if (!this.scene.isActive()) return;
+      this.tweens.timeScale = priorTweenScale;
+      this.physics.world.timeScale = priorPhysicsScale;
+    }, 42);
+  }
+
+  private startBombPhysicsShockwave(x: number, y: number, chainIndex: number): BombPhysicsWave {
+    const wave: BombPhysicsWave = {
+      id: this.nextBombPhysicsWaveId++,
+      x,
+      y,
+      startedAt: this.time.now,
+      durationMs: 720 + Math.min(chainIndex, 3) * 55,
+      maxRadius: this.L.cell * (10.5 + Math.min(chainIndex, 3) * 0.25),
+      chainIndex,
+      graphics: this.add.graphics().setDepth(99),
+    };
+    this.bombPhysicsWaves.push(wave);
+    return wave;
+  }
+
+  private updateBombPhysicsWaves(time: number): void {
+    if (this.bombPhysicsWaves.length === 0 || !this.debrisGroup) return;
+    const activeWaves: BombPhysicsWave[] = [];
+    for (const wave of this.bombPhysicsWaves) {
+      const progress = clamp01((time - wave.startedAt) / wave.durationMs);
+      const radius = wave.maxRadius * progress;
+      const band = this.L.cell * 0.28;
+      const hitKey = `bomb-wave-${wave.id}`;
+      const alpha = (0.82 + Math.min(wave.chainIndex, 3) * 0.04) * (1 - progress);
+      const width = Math.max(3, this.L.cell * 0.065);
+      wave.graphics.clear();
+      if (radius > width) {
+        wave.graphics.lineStyle(width, 0xffd36a, alpha);
+        wave.graphics.strokeCircle(wave.x, wave.y, radius);
+        wave.graphics.lineStyle(Math.max(1.5, width * 0.38), 0xffffff, alpha * 0.9);
+        wave.graphics.strokeCircle(wave.x, wave.y, Math.max(0, radius - width * 0.8));
+      }
+      for (const child of this.debrisGroup.getChildren()) {
+        if (!(child instanceof Phaser.Physics.Arcade.Image) || !child.active || child.getData(hitKey)) continue;
+        const body = child.body as Phaser.Physics.Arcade.Body;
+        if (!body.enable) continue;
+        const dx = child.x - wave.x;
+        const dy = child.y - wave.y;
+        const distance = Math.max(this.L.cell * 0.12, Math.hypot(dx, dy));
+        if (distance > radius + band) continue;
+        child.setData(hitKey, true);
+        const angle = Math.atan2(dy, dx) + Phaser.Math.FloatBetween(-0.08, 0.08);
+        const distanceCells = distance / this.L.cell;
+        const impulse = this.L.cell * bombImpulseStrengthCells(distanceCells, wave.chainIndex);
+        body.setMaxVelocity(this.L.cell * 15, this.L.cell * 16);
+        body.velocity.x += Math.cos(angle) * impulse;
+        body.velocity.y += Math.sin(angle) * impulse - this.L.cell * 0.3;
+        child.setAngularVelocity(body.angularVelocity + Phaser.Math.Between(-180, 180));
+      }
+      if (progress < 1) activeWaves.push(wave);
+      else wave.graphics.destroy();
+    }
+    this.bombPhysicsWaves = activeWaves;
+  }
+
+  private spawnBombCasingDebris(x: number, y: number, requestedCount: number, chainIndex: number): void {
+    const activeCount = this.debrisGroup.countActive(true);
+    const count = Math.max(0, Math.min(requestedCount, MAX_ACTIVE_DEBRIS - activeCount));
+    for (let index = 0; index < count; index++) {
+      const angle = Phaser.Math.FloatBetween(0, Math.PI * 2);
+      const speed = this.L.cell * Phaser.Math.FloatBetween(4.6, 7.2) * (1 + Math.min(chainIndex, 3) * 0.07);
+      const size = this.L.cell * Phaser.Math.FloatBetween(0.1, 0.17);
+      const fragment = this.physics.add.image(x, y, "bomb_shard");
+      this.debrisGroup.add(fragment);
+      fragment
+        .setDepth(98)
+        .setDisplaySize(size, size)
+        .setCollideWorldBounds(true)
+        .setBounce(Phaser.Math.FloatBetween(0.38, 0.62), Phaser.Math.FloatBetween(0.34, 0.56))
+        .setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed - this.L.cell * 1.4)
+        .setAngularVelocity(Phaser.Math.Between(-680, 680))
+        .setDrag(this.L.cell * 0.08, 0)
+        .setGravityY(this.L.cell * Phaser.Math.FloatBetween(11.5, 14.5))
+        .setMaxVelocity(this.L.cell * 8, this.L.cell * 9);
+      const body = fragment.body as Phaser.Physics.Arcade.Body;
+      body.setSize(34, 34, true);
+      body.setMass(0.3);
+      this.time.delayedCall(Phaser.Math.Between(1900, 2600), () => {
+        if (!fragment.active) return;
+        fragment.disableBody();
+        this.tweens.add({
+          targets: fragment,
+          alpha: 0,
+          scaleX: fragment.scaleX * 0.25,
+          scaleY: fragment.scaleY * 0.25,
+          duration: 300,
+          ease: "Quad.easeIn",
+          onComplete: () => fragment.destroy(),
+        });
+      });
+    }
   }
 
   private placeIcon(r: number, c: number, type: SpecialType): void {
@@ -1700,8 +1910,11 @@ export class BlockBurstScene extends Phaser.Scene {
     this.hammers--;
     this.sfx.hammer();
     const set = new Set([r * COLS + c]);
-    this.expandWithSpecials(set);
-    this.clearCells([...set].map((i) => [Math.floor(i / COLS), i % COLS] as [number, number]));
+    const expansion = this.expandWithSpecials(set);
+    this.clearCells(
+      [...set].map((i) => [Math.floor(i / COLS), i % COLS] as [number, number]),
+      expansion.bombBlasts,
+    );
     this.cameras.main.shake(140, 0.006);
     this.hammerMode = false;
     this.drawHammer();
@@ -1755,7 +1968,7 @@ export class BlockBurstScene extends Phaser.Scene {
     this.tweens.add({ targets: g, alpha: 0.3, duration: 950, yoyo: true, repeat: 3, ease: "Sine.easeInOut", onComplete: () => g.clear() });
   }
 
-  private burst(x: number, y: number, color: number, count: number): void {
+  private burst(x: number, y: number, color: number, count: number, depth = 60): void {
     const particles = this.add.particles(x, y, "spark", {
       speed: { min: this.L.cell, max: this.L.cell * 3.4 },
       angle: { min: 0, max: 360 },
@@ -1767,13 +1980,13 @@ export class BlockBurstScene extends Phaser.Scene {
       tint: color,
       quantity: count,
       emitting: false,
-    }).setDepth(60);
+    }).setDepth(depth);
     particles.explode(count);
     this.time.delayedCall(820, () => particles.destroy());
   }
 
-  private popFlash(x: number, y: number): void {
-    const f = this.add.image(x, y, "pop").setDepth(62).setScale(this.L.cell / 300).setAlpha(0.9).setBlendMode(Phaser.BlendModes.ADD);
+  private popFlash(x: number, y: number, depth = 62): void {
+    const f = this.add.image(x, y, "pop").setDepth(depth).setScale(this.L.cell / 300).setAlpha(0.9).setBlendMode(Phaser.BlendModes.ADD);
     this.tweens.add({ targets: f, scale: this.L.cell / 68, alpha: 0, duration: 300, ease: "Quad.easeOut", onComplete: () => f.destroy() });
   }
 
@@ -2536,7 +2749,9 @@ export class BlockBurstScene extends Phaser.Scene {
   private isSixLineMarketingPreview(): boolean {
     return this.lastPreviewPayload?.sceneId === "listing-applovin-six-line"
       || this.lastPreviewPayload?.sceneId === "listing-portrait"
-      || this.lastPreviewPayload?.sceneId === "listing-landscape";
+      || this.lastPreviewPayload?.sceneId === "listing-landscape"
+      || this.lastPreviewPayload?.sceneId === "listing-instagram-3x4"
+      || this.lastPreviewPayload?.sceneId === "listing-pinterest-2x3";
   }
 
   private findPreviewMove(): { slot: number; cells: Array<[number, number]>; c0: number; r0: number } | null {

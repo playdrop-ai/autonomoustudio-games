@@ -9,7 +9,7 @@ Status: revised for owner review. Do not upload or publish.
 - Export: 1920x1080, H.264 High, 60 fps, yuv420p, SAR 1:1, AAC LC 48 kHz
   stereo, exactly 17 seconds
 - Audio: synchronized shipped-game SFX at 1x, -0.9 dBFS peak
-- Source: `source-captures/landscape-continuous-native-v1/desktop-listing.mp4`
+- Source: `source-captures/bomb-physics-wave-landscape-native-v1/mobile-landscape-listing.mp4`
 - Geometry: native 16:9 source, uniform scale only, no crop, bars, filler, or
   nonuniform stretch
 
@@ -25,6 +25,11 @@ Status: revised for owner review. Do not upload or publish.
 All seven placements occur at 1x in one uninterrupted native capture. There is
 no gameplay cut, board reset, repeated footage, hero insert, or time warp. The
 caption-free PlayDrop landscape listing uses the same first 17 seconds.
+
+Every bomb-triggering clear uses the shipped 1.0.8 treatment: cleared blocks
+emit twice the normal debris, bomb cells emit four times the normal debris, all
+fragments are present before detonation, and each bomb sends its own expanding
+distance-based physics shockwave through the live fragments.
 
 ## Captions
 
@@ -43,8 +48,8 @@ HUD. Review evidence is in `review/landscape-native-v1-seconds.png`,
 ## Native capture evidence
 
 - Pipeline: PlayDrop CLI 0.14.5 native macOS ScreenCaptureKit.
-- Source: 1280x720, 60 fps, H.264/AAC, 19.033 seconds.
-- Capture report: `source-captures/landscape-continuous-native-v1/capture-report.json`.
+- Source: 1280x720, 60 fps, H.264/AAC, 18.650 seconds.
+- Capture report: `source-captures/bomb-physics-wave-landscape-native-v1/capture-report.json`.
 - Result: DESKTOP, MOBILE_LANDSCAPE, and MOBILE_PORTRAIT all passed at
   60 fps with synchronized audio and zero warnings.
 - Final cadence: 1,020 frames with zero consecutive duplicates.
