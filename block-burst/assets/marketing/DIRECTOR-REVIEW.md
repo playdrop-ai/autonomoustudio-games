@@ -1,7 +1,8 @@
 # Block Burst marketing director review
 
-Status: prepared for review. Nothing has been published, uploaded, registered,
-funded, or sent externally.
+Status: Block Burst and its refreshed PlayDrop listing are public as version
+`1.0.8`. Social assets and paid creative remain prepared for review and have not
+been published, registered, funded, or sent externally.
 
 ## Recommendation
 
@@ -114,8 +115,11 @@ confirmed the authenticated `playdrop (prod, ADMIN)` actor and
 captures at 60 fps with synchronized audio and zero capture warnings. The seven
 final video deliverables show continuous active physics motion with no capture
 stutter, no detected black intervals, and audio peaks between -1.0 and -0.6
-dBFS. Version `1.0.8` is release-ready; social publishing and paid spend remain
-pending marketing-director approval.
+dBFS. The PlayDrop game and listing package were uploaded as public version
+`1.0.8` on August 2, 2026. Both refreshed listing videos return HTTP 200 from
+their versioned production URLs with byte sizes matching the approved local
+masters. Social publishing and paid spend remain pending marketing-director
+approval.
 
 ## Requested decision
 

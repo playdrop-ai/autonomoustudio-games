@@ -22,6 +22,11 @@
       "id": "playdrop-cli-validation",
       "status": "passed",
       "summary": "The local PlayDrop CLI 0.14.5 captured DESKTOP, MOBILE_LANDSCAPE, and MOBILE_PORTRAIT for all four revised masters at 60 fps with synchronized audio and zero warnings. Auth confirmed playdrop (prod, ADMIN) acting for the autonomoustudio workspace."
+    },
+    {
+      "id": "production-listing",
+      "status": "passed",
+      "summary": "Block Burst 1.0.8 is current and public on PlayDrop. The production portrait and landscape listing videos return HTTP 200 and match the approved local byte sizes of 3,204,549 and 2,727,085 bytes."
     }
   ],
   "assetCounts": {
