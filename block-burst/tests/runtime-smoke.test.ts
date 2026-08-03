@@ -97,6 +97,65 @@ test("built game renders and exposes listing preview hook", async () => {
   }
 });
 
+test("preview-to-play transition replaces preview tray pieces without overlap", async () => {
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const page = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    await page.route("https://assets.playdrop.ai/sdk/playdrop.js", (route) => route.fulfill({
+      contentType: "application/javascript",
+      body: `
+        window.__blockBurstSetPhase = null;
+        window.playdrop = {
+          init: async () => ({
+            host: {
+              phase: "preview",
+              ready: () => undefined,
+              onPhaseChange: (callback) => { window.__blockBurstSetPhase = callback; },
+            },
+            me: {
+              appData: { data: { hammers: 2 } },
+              updateAppData: async () => undefined,
+            },
+          }),
+        };
+      `,
+    }));
+    await page.addInitScript(() => {
+      window.localStorage.setItem("block_burst_tutorial_complete", "1");
+    });
+    const appUrl = new URL(APP_URL);
+    appUrl.searchParams.set("playdrop_channel", "preview-transition-test");
+    await page.goto(appUrl.href, { waitUntil: "networkidle" });
+    await page.waitForFunction(() => {
+      const state = JSON.parse(window.render_game_to_text?.() ?? "{}");
+      return state.previewMode === true && state.renderedTrayPieceCount === 3;
+    });
+
+    await page.evaluate(() => {
+      const hostWindow = window as typeof window & { __blockBurstSetPhase?: (phase: string) => void };
+      if (!hostWindow.__blockBurstSetPhase) throw new Error("missing PlayDrop host phase callback");
+      hostWindow.__blockBurstSetPhase("play");
+    });
+    await page.waitForFunction(() => {
+      const state = JSON.parse(window.render_game_to_text?.() ?? "{}");
+      return state.previewMode === false
+        && state.boardOccupied === 0
+        && state.trayPieceCount === 3
+        && state.renderedTrayPieceCount === 3;
+    });
+    const gameplayState = await page.evaluate(() => JSON.parse(window.render_game_to_text?.() ?? "{}"));
+    assert.equal(gameplayState.previewPresentation, false);
+    assert.equal(gameplayState.trayPieceCount, 3);
+    assert.equal(gameplayState.renderedTrayPieceCount, 3);
+    assert.equal(gameplayState.boardOccupied, 0);
+    assert.deepEqual(errors, []);
+  } finally {
+    await browser.close();
+  }
+});
+
 test("an active PlayDrop rewarded ad timeout closes the result overlay and resumes the round", async () => {
   const browser = await chromium.launch({ headless: true });
   try {

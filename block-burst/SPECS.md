@@ -97,3 +97,8 @@ press, lift, drag, release, and then commit through the normal placement and cle
 logic. Cycle through authored line-clear and combo moments with a quiet transition,
 without accepting player input, showing ads, or writing preview progress to local
 or PlayDrop persistence. Static named QA capture states may keep their HUD.
+
+When the PlayDrop host changes from preview to play, destroy all three preview
+tray containers and clear their drag state before restarting the scene and dealing
+the real gameplay set. The first playable frame must contain exactly three rendered
+tray pieces with no preview placeholders left underneath them.

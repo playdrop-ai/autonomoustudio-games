@@ -1,6 +1,6 @@
 {
   "name": "block-burst",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "type": "module",
   "private": true,
   "scripts": {
@@ -34,6 +34,6 @@
   },
   "playdrop": {
     "platformVersion": "0.14.3",
-    "sdkTypesVersion": "0.14.3"
+    "sdkTypesVersion": "0.14.5"
   }
 }

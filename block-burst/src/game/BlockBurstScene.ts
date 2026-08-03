@@ -545,6 +545,7 @@ export class BlockBurstScene extends Phaser.Scene {
     if (payload?.active === false) {
       if (!this.previewMode) return;
       this.stopPreviewGesture();
+      this.destroyTrayPieces();
       this.previewMode = false;
       this.previewPresentation = false;
       this.lastPreviewPayload = null;
@@ -614,6 +615,11 @@ export class BlockBurstScene extends Phaser.Scene {
     const gestureFrame = this.previewGesture
       ? calculatePreviewGestureFrame(this.time.now - this.previewGesture.startedAt)
       : null;
+    const renderedTrayPieceCount = this.children?.list.filter((object) => (
+      object instanceof Phaser.GameObjects.Container
+      && object.active
+      && Number.isInteger(object.getData("slot"))
+    )).length ?? 0;
     const debris = this.debrisGroup?.getChildren()
       .filter((child): child is Phaser.Physics.Arcade.Image => child instanceof Phaser.Physics.Arcade.Image && child.active)
       .slice(0, 6)
@@ -644,6 +650,7 @@ export class BlockBurstScene extends Phaser.Scene {
       tutorialActive: this.tutorialActive,
       boardOccupied: this.filledCount(),
       trayPieceCount: this.slots.filter(Boolean).length,
+      renderedTrayPieceCount,
       draggingSlot: this.dragging?.getData("slot") ?? null,
       dropTarget: this.dropTarget,
       score: this.score,
@@ -720,9 +727,7 @@ export class BlockBurstScene extends Phaser.Scene {
     this.debrisGroup?.clear(true, true);
     for (const wave of this.bombPhysicsWaves) wave.graphics.destroy();
     this.bombPhysicsWaves = [];
-    for (const slot of this.slots) slot?.destroy();
-    this.slots = [null, null, null];
-    this.pieceData = [null, null, null];
+    this.destroyTrayPieces();
     for (const row of this.sprites) for (const sprite of row) sprite?.destroy();
     for (const row of this.iconSprites) for (const icon of row) icon?.destroy();
     this.resetBoard();
@@ -740,6 +745,20 @@ export class BlockBurstScene extends Phaser.Scene {
     this.gameOverActive = false;
     this.interstitialPending = false;
     this.rewardedRevivePending = false;
+  }
+
+  private destroyTrayPieces(): void {
+    for (const slot of this.slots) {
+      if (!slot) continue;
+      this.tweens.killTweensOf(slot);
+      slot.destroy();
+    }
+    this.slots = [null, null, null];
+    this.pieceData = [null, null, null];
+    this.dragging = null;
+    this.dragPointerId = -1;
+    this.dropTarget = null;
+    this.ghost?.clear();
   }
 
   private startTutorial(): void {

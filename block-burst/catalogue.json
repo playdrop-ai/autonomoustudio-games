@@ -2,8 +2,8 @@
   "apps": [
     {
       "name": "block-burst",
-      "version": "1.0.8",
-      "releaseNotes": "Makes bomb clears more satisfying with extra cube debris, distance-based physics shockwaves, overlapping chained blasts, and refreshed gameplay videos for every marketing format.",
+      "version": "1.0.9",
+      "releaseNotes": "Hotfixes the PlayDrop preview-to-play transition so preview tray pieces are destroyed before the real gameplay pieces are dealt, preventing overlapping draggable pieces on iOS.",
       "license": "PLAYDROP",
       "displayName": "Block Burst",
       "subtitle": "Build lines. Burst blocks. Chase combos.",
