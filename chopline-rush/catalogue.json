@@ -67,6 +67,122 @@
           ]
         }
       },
+      "achievements": [
+        {
+          "key": "first_slice",
+          "displayName": "First Cut",
+          "description": "Slice your first shape.",
+          "kind": "STANDARD",
+          "hidden": false,
+          "icon": "assets/marketing/playdrop/achievements/first-slice.png"
+        },
+        {
+          "key": "combo_twelve",
+          "displayName": "Clean Chain",
+          "description": "Reach a 12x combo in one run.",
+          "kind": "STANDARD",
+          "hidden": false,
+          "icon": "assets/marketing/playdrop/achievements/combo-twelve.png"
+        },
+        {
+          "key": "combo_twentyfive",
+          "displayName": "Rush Tempo",
+          "description": "Reach a 25x combo in one run.",
+          "kind": "STANDARD",
+          "hidden": false,
+          "icon": "assets/marketing/playdrop/achievements/combo-twentyfive.png"
+        },
+        {
+          "key": "first_revive",
+          "displayName": "Second Serve",
+          "description": "Revive once during a run.",
+          "kind": "STANDARD",
+          "hidden": false,
+          "icon": "assets/marketing/playdrop/achievements/first-revive.png"
+        },
+        {
+          "key": "first_upgrade",
+          "displayName": "Sharper Look",
+          "description": "Unlock your first cosmetic knife.",
+          "kind": "STANDARD",
+          "hidden": false,
+          "icon": "assets/marketing/playdrop/achievements/first-upgrade.png"
+        },
+        {
+          "key": "all_knives",
+          "displayName": "Full Knife Roll",
+          "description": "Unlock the full ordered knife track.",
+          "kind": "STANDARD",
+          "hidden": false,
+          "icon": "assets/marketing/playdrop/achievements/all-knives.png"
+        },
+        {
+          "key": "level_five",
+          "displayName": "Five Boards",
+          "description": "Clear level 5.",
+          "kind": "STANDARD",
+          "hidden": false,
+          "icon": "assets/marketing/playdrop/achievements/level-five.png"
+        },
+        {
+          "key": "level_fifteen",
+          "displayName": "Prep Cook",
+          "description": "Clear level 15.",
+          "kind": "STANDARD",
+          "hidden": false,
+          "icon": "assets/marketing/playdrop/achievements/level-fifteen.png"
+        },
+        {
+          "key": "level_thirty",
+          "displayName": "Line Chef",
+          "description": "Clear level 30.",
+          "kind": "STANDARD",
+          "hidden": false,
+          "icon": "assets/marketing/playdrop/achievements/level-thirty.png"
+        },
+        {
+          "key": "endless_1000",
+          "displayName": "Endless Starter",
+          "description": "Score 1,000 in endless mode.",
+          "kind": "STANDARD",
+          "hidden": false,
+          "icon": "assets/marketing/playdrop/achievements/endless-1000.png"
+        },
+        {
+          "key": "endless_2500",
+          "displayName": "Endless Rush",
+          "description": "Score 2,500 in endless mode.",
+          "kind": "STANDARD",
+          "hidden": false,
+          "icon": "assets/marketing/playdrop/achievements/endless-2500.png"
+        },
+        {
+          "key": "ten_runs",
+          "displayName": "Regular Service",
+          "description": "Finish 10 runs.",
+          "kind": "STANDARD",
+          "hidden": false,
+          "icon": "assets/marketing/playdrop/achievements/ten-runs.png"
+        },
+        {
+          "key": "thousand_slices",
+          "displayName": "Thousand Slices",
+          "description": "Make 1,000 lifetime slices.",
+          "kind": "INCREMENTAL",
+          "hidden": false,
+          "maxProgress": 1000,
+          "icon": "assets/marketing/playdrop/achievements/thousand-slices.png"
+        },
+        {
+          "key": "coin_bank",
+          "displayName": "Coin Bank",
+          "description": "Earn 5,000 lifetime coins.",
+          "kind": "INCREMENTAL",
+          "hidden": false,
+          "maxProgress": 5000,
+          "icon": "assets/marketing/playdrop/achievements/coin-bank.png"
+        }
+      ],
       "leaderboards": [
         {
           "key": "max_level",

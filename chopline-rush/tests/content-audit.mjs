@@ -51,7 +51,12 @@ function auditCatalogue() {
   const leaderboards = app.leaderboards ?? [];
   assert(JSON.stringify(leaderboards.map((entry) => entry.key)) === JSON.stringify(["max_level", "endless_score"]), "Level progress and endless score leaderboards must both be configured");
   assert(leaderboards.every((entry) => entry.scoreType === "INTEGER" && entry.sort === "DESC"), "Leaderboards must rank integer scores descending");
-  assert((app.achievements ?? []).length === 0, "The simplified product must not expose achievements");
+  const legacyAchievementKeys = [
+    "first_slice", "combo_twelve", "combo_twentyfive", "first_revive", "first_upgrade",
+    "all_knives", "level_five", "level_fifteen", "level_thirty", "endless_1000",
+    "endless_2500", "ten_runs", "thousand_slices", "coin_bank",
+  ];
+  assert(JSON.stringify((app.achievements ?? []).map((entry) => entry.key)) === JSON.stringify(legacyAchievementKeys), "Published achievement definitions must remain compatible with existing player metadata");
   assert(JSON.stringify(app.design) === JSON.stringify({
     genre: "game-genre/arcade",
     coreGameplay: "core-gameplay/rhythm",
