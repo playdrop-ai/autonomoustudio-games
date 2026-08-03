@@ -1,0 +1,265 @@
+{
+  "version": 1,
+  "destinationUrl": "https://www.playdrop.ai/creators/autonomoustudio/apps/game/block-burst",
+  "featuredPlacement": {
+    "status": "verified",
+    "environment": "prod",
+    "collectionSlug": "featured",
+    "position": 1,
+    "gameId": 421,
+    "creatorUsername": "autonomoustudio",
+    "appName": "block-burst",
+    "appVersion": "1.0.8",
+    "reviewStateAtVerification": "GOOD",
+    "reviewCompletedAt": "2026-08-02T21:40:41.760Z",
+    "evidenceUrl": "https://api.playdrop.ai/home/games/collections/featured_games?limit=24&offset=0&auth=optional&surface=mobile-portrait",
+    "ownerInstruction": "Feature Block Burst at number 1 before publishing the approved launch campaign.",
+    "verifiedAt": "2026-08-02T21:25:11Z"
+  },
+  "publications": [
+    {
+      "provider": "pinterest",
+      "status": "published",
+      "account": "playdropai",
+      "board": {
+        "name": "Block Puzzle and Casual Games",
+        "publicUrl": "https://www.pinterest.com/playdropai/block-puzzle-and-casual-games/",
+        "description": "Free browser block puzzles, drag-and-drop strategy games, jewel grid games, satisfying line clears, combo challenges, and high-score games you can play with no download.",
+        "visibility": "public"
+      },
+      "pins": [
+        {
+          "format": "video_2x3",
+          "status": "published",
+          "media": "assets/marketing/social-media/short/pinterest-2x3.mp4",
+          "title": "Block Burst: Free Jewel Block Puzzle Game",
+          "description": "Drag jewel-bright pieces onto an 8x8 grid, burst complete rows and columns, plan around the remaining shapes, chain combos, and beat your best. Play Block Burst free in your browser, no download.",
+          "publicUrl": "https://www.pinterest.com/pin/1100778333952960058/",
+          "publishedAt": "2026-08-02T23:12:28Z",
+          "topics": [],
+          "aiModifiedDisclosure": true,
+          "utm_content": "video_pin"
+        },
+        {
+          "format": "image_2x3",
+          "status": "published",
+          "media": "assets/marketing/social-media/pinterest/static/01-hero.png",
+          "title": "Block Burst: Free Block Puzzle Game",
+          "description": "Play a bright jewel block puzzle free in your browser. Build complete lines, burst the grid in gold light, and chase a new personal best with no download.",
+          "publicUrl": "https://www.pinterest.com/pin/1100778333952960180/",
+          "publishedAt": "2026-08-02T23:12:28Z",
+          "aiModifiedDisclosure": true,
+          "utm_content": "hero_pin"
+        },
+        {
+          "format": "image_2x3",
+          "status": "published",
+          "media": "assets/marketing/social-media/pinterest/static/02-drag-drop-burst.png",
+          "title": "Drag, Drop, and Burst the Line",
+          "description": "Drag one of three colorful pieces onto the 8x8 board and complete a row or column to make it burst. Try Block Burst free online.",
+          "publicUrl": "https://www.pinterest.com/pin/1100778333952960238/",
+          "publishedAt": "2026-08-02T23:12:28Z",
+          "aiModifiedDisclosure": true,
+          "utm_content": "drag_drop_burst_pin"
+        },
+        {
+          "format": "image_2x3",
+          "status": "published",
+          "media": "assets/marketing/social-media/pinterest/static/03-plan-every-piece.png",
+          "title": "Block Puzzle Strategy: Plan Every Piece",
+          "description": "Every placement changes what fits next. Leave room for awkward shapes, protect useful gaps, and keep your Block Burst run alive.",
+          "publicUrl": "https://www.pinterest.com/pin/1100778333952960269/",
+          "publishedAt": "2026-08-02T23:12:28Z",
+          "aiModifiedDisclosure": true,
+          "utm_content": "plan_every_piece_pin"
+        },
+        {
+          "format": "image_2x3",
+          "status": "published",
+          "media": "assets/marketing/social-media/pinterest/static/04-chain-big-combos.png",
+          "title": "Chain Big Combos in Block Burst",
+          "description": "Clear again before the combo fades and turn careful planning into a brilliant crossed row-and-column burst. Play free in your browser.",
+          "publicUrl": "https://www.pinterest.com/pin/1100778333952960317/",
+          "publishedAt": "2026-08-02T23:12:28Z",
+          "aiModifiedDisclosure": true,
+          "utm_content": "chain_big_combos_pin"
+        },
+        {
+          "format": "image_2x3",
+          "status": "published",
+          "media": "assets/marketing/social-media/pinterest/static/05-beat-your-best.png",
+          "title": "High-Score Block Puzzle: Beat Your Best",
+          "description": "Keep finding space, build bigger clears, and chase a new saved personal best in Block Burst, a free no-download browser puzzle game.",
+          "publicUrl": "https://www.pinterest.com/pin/1100778333952960358/",
+          "publishedAt": "2026-08-02T23:12:28Z",
+          "aiModifiedDisclosure": true,
+          "utm_content": "beat_your_best_pin"
+        }
+      ],
+      "utm_source": "pinterest",
+      "utm_medium": "organic_social",
+      "utm_campaign": "block_burst_launch",
+      "verifiedAt": "2026-08-02T23:12:28Z",
+      "destinationVerification": "All six public Pin pages expose the expected PlayDrop destination URL and per-Pin utm_content value.",
+      "topicSelectionNote": "The approved topic labels did not return a reliable exact match in Pinterest's current taxonomy, so no unrelated topics were attached.",
+      "measurements": []
+    },
+    {
+      "provider": "x",
+      "format": "trailer_landscape",
+      "status": "published",
+      "account": "@playdropai",
+      "media": "assets/marketing/social-media/trailer/landscape-16x9.mp4",
+      "copy": "One piece can save the board—or end the run.\n\nDrag. Drop. Burst. Then clear again before the combo fades.\n\nBlock Burst is playable now. Link in the first reply.",
+      "publicUrl": "https://x.com/playdropai/status/2084055284486381873",
+      "publishedAt": "2026-08-02T23:15:41Z",
+      "linkReply": {
+        "status": "published",
+        "copy": "Play Block Burst free in your browser, no download:\nhttps://www.playdrop.ai/creators/autonomoustudio/apps/game/block-burst?utm_source=x&utm_medium=organic_social&utm_campaign=block_burst_launch&utm_content=trailer_reply",
+        "publicUrl": "https://x.com/playdropai/status/2084055437687607312"
+      },
+      "pinned": true,
+      "altTextStatus": "not_supported_for_video_in_x_web_composer",
+      "utm_source": "x",
+      "utm_medium": "organic_social",
+      "utm_campaign": "block_burst_launch",
+      "utm_content": "trailer_reply",
+      "measurements": []
+    },
+    {
+      "provider": "tiktok",
+      "format": "short_portrait",
+      "status": "published",
+      "account": "@playdropai",
+      "media": "assets/marketing/social-media/short/portrait-9x16.mp4",
+      "copy": "One piece can save the board—or end the run. Drag, burst, chain the combo, and beat your best in Block Burst. Free in your browser, no download. #BlockPuzzle #PuzzleGame #MobileGaming #IndieGame",
+      "publicUrl": "https://www.tiktok.com/@playdropai/video/7669572482122124558",
+      "publishedAt": "2026-08-02T22:58:00Z",
+      "creatorComment": {
+        "status": "published",
+        "copy": "What is the piece that always ruins your setup? Play Block Burst on playdrop.ai.",
+        "pinned": false,
+        "pinNote": "TikTok's web comment controls did not offer a Pin action for the creator's own comment."
+      },
+      "visibility": "everyone",
+      "reviewStatus": "cleared",
+      "utm_source": "tiktok",
+      "utm_medium": "organic_social",
+      "utm_campaign": "block_burst_launch",
+      "utm_content": "short",
+      "verifiedAt": "2026-08-02T23:18:00Z",
+      "measurements": []
+    },
+    {
+      "provider": "instagram",
+      "format": "reel",
+      "status": "published",
+      "account": "@playdrop.ai",
+      "media": "assets/marketing/social-media/short/portrait-9x16.mp4",
+      "cover": "assets/marketing/social-media/instagram/reels-cover-420x654.png",
+      "copy": "Drag a piece. Burst a line. Save room for what comes next.\n\nBlock Burst turns a simple 8x8 grid into a high-score puzzle where every placement matters. Complete rows and columns, clear again before the combo fades, and keep the board alive long enough to beat your best.\n\nFree in your browser. No download.\n\n#BlockPuzzle #PuzzleGame #MobileGaming #CasualGames #IndieGame",
+      "publicUrl": "https://www.instagram.com/reel/DbjlX3Pu3k8/?igsh=MTBhbW1wYjdqZG9xNg==",
+      "publishedAt": "2026-08-02T23:25:00Z",
+      "linkIncluded": false,
+      "audience": "everyone",
+      "utm_source": "instagram",
+      "utm_medium": "organic_social",
+      "utm_campaign": "block_burst_launch",
+      "utm_content": "reel",
+      "verifiedAt": "2026-08-02T23:28:00Z",
+      "measurements": []
+    },
+    {
+      "provider": "instagram",
+      "format": "story",
+      "status": "published",
+      "account": "@playdrop.ai",
+      "media": "assets/marketing/social-media/short/portrait-9x16.mp4",
+      "publicUrl": null,
+      "publishedAt": "2026-08-02T23:31:00Z",
+      "linkIncluded": false,
+      "verification": "Verified in the official Instagram app as playdrop.ai's active story immediately after publishing; no URL or link sticker was included.",
+      "measurements": []
+    },
+    {
+      "provider": "youtube",
+      "format": "trailer_landscape",
+      "status": "published",
+      "account": "@playdropai",
+      "media": "assets/marketing/social-media/trailer/landscape-16x9.mp4",
+      "thumbnail": "assets/marketing/social-media/youtube/trailer-thumbnail-1280x720.png",
+      "title": "Block Burst: Jewel Block Puzzle & Combo Game | Play Free Online",
+      "publicUrl": "https://youtu.be/kcf1UeDsT5w",
+      "videoId": "kcf1UeDsT5w",
+      "publishedAt": "2026-08-02T23:46:00Z",
+      "visibility": "public",
+      "checks": {
+        "copyright": "no_issues_found",
+        "communityGuidelines": "no_issues_found"
+      },
+      "creatorComment": {
+        "status": "published",
+        "copy": "Play Block Burst free in your browser, no download:\nhttps://www.playdrop.ai/creators/autonomoustudio/apps/game/block-burst?utm_source=youtube&utm_medium=organic_social&utm_campaign=block_burst_launch&utm_content=trailer_comment\n\nWhat is your best combo so far?",
+        "publicUrl": "https://www.youtube.com/watch?v=kcf1UeDsT5w&lc=Ugx8Fyk3gRBhP11yM1V4AaABAg",
+        "pinned": true
+      },
+      "utm_source": "youtube",
+      "utm_medium": "organic_social",
+      "utm_campaign": "block_burst_launch",
+      "utm_content": "trailer",
+      "verifiedAt": "2026-08-02T23:58:03Z",
+      "measurements": []
+    },
+    {
+      "provider": "youtube",
+      "format": "short_portrait",
+      "status": "published",
+      "account": "@playdropai",
+      "media": "assets/marketing/social-media/short/portrait-9x16.mp4",
+      "title": "One Piece Starts the Combo | Block Burst",
+      "description": "Drag a piece. Burst a line. Keep enough room for the next move, chain brighter combo clears, and beat your best. Block Burst is free to play in your browser, no download. Watch the full trailer through the linked video. #BlockPuzzle #PuzzleGame #IndieGame",
+      "publicUrl": "https://www.youtube.com/shorts/oTvIetC8ld8",
+      "videoId": "oTvIetC8ld8",
+      "publishedAt": "2026-08-03T01:57:00Z",
+      "visibility": "public",
+      "checks": {
+        "copyright": "no_issues_found",
+        "communityGuidelines": "no_issues_found"
+      },
+      "relatedVideo": {
+        "status": "linked",
+        "videoId": "kcf1UeDsT5w",
+        "publicUrl": "https://youtu.be/kcf1UeDsT5w"
+      },
+      "creatorComment": {
+        "status": "published",
+        "copy": "What is your best combo: x2, x3, or higher? Play Block Burst free in your browser:\nhttps://www.playdrop.ai/creators/autonomoustudio/apps/game/block-burst?utm_source=youtube&utm_medium=organic_social&utm_campaign=block_burst_launch&utm_content=short_comment",
+        "publicUrl": "https://www.youtube.com/watch?v=oTvIetC8ld8&lc=UgyX_pwf57SAgHlqdXx4AaABAg",
+        "pinned": true
+      },
+      "utm_source": "youtube",
+      "utm_medium": "organic_social",
+      "utm_campaign": "block_burst_launch",
+      "utm_content": "short",
+      "verifiedAt": "2026-08-03T02:01:05Z",
+      "measurements": []
+    }
+  ],
+  "deviceTransfers": [
+    {
+      "provider": "instagram",
+      "device": "Pixel 8",
+      "serial": "39271FDJH00CFW",
+      "destination": "/sdcard/DCIM/BlockBurst/",
+      "status": "verified",
+      "completedAt": "2026-08-02T23:20:00Z",
+      "files": [
+        "assets/marketing/social-media/instagram/feed/carousel/01-hero.png",
+        "assets/marketing/social-media/instagram/feed/carousel/02-drag-drop-burst.png",
+        "assets/marketing/social-media/instagram/feed/carousel/03-plan-every-piece.png",
+        "assets/marketing/social-media/instagram/feed/carousel/04-chain-big-combos.png",
+        "assets/marketing/social-media/instagram/feed/carousel/05-beat-your-best.png"
+      ]
+    }
+  ]
+}
