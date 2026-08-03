@@ -102,3 +102,9 @@ When the PlayDrop host changes from preview to play, destroy all three preview
 tray containers and clear their drag state before restarting the scene and dealing
 the real gameplay set. The first playable frame must contain exactly three rendered
 tray pieces with no preview placeholders left underneath them.
+
+Every normal three-piece deal must keep adjacent tray footprints separated in
+both portrait and landscape. Adjacent pieces may span at most seven cells across
+either axis: a five-wide or five-tall piece therefore sits only beside a piece no
+more than two cells wide or tall on that axis. The two outer tray slots may both
+hold large pieces when the middle piece keeps both neighboring pairs safe.

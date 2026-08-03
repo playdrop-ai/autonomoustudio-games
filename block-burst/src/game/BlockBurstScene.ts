@@ -12,7 +12,6 @@ import {
   PALETTE,
   PIECES,
   PIECES_BY_SIZE,
-  PIECES_BY_TIER,
   REVIVES_PER_GAME,
   ROWS,
   TEX,
@@ -30,6 +29,7 @@ import {
   boundedDebrisCountRange,
 } from "./debris";
 import { calculatePreviewGestureFrame, PREVIEW_GESTURE_TOTAL_MS } from "./preview";
+import { pickTrayPieceSet } from "./piece-selection";
 import { Sfx } from "./sfx";
 
 type SpecialType = "bomb" | "cross" | "laser";
@@ -1274,7 +1274,7 @@ export class BlockBurstScene extends Phaser.Scene {
   private dealNewSet(): void {
     const difficulty = clamp01(this.score / 3500);
     const fill = this.filledCount() / 64;
-    const picks = [this.pickPiece(difficulty, fill), this.pickPiece(difficulty, fill), this.pickPiece(difficulty, fill)];
+    const picks = pickTrayPieceSet(difficulty, fill);
     if (!picks.some((piece) => this.pieceFitsAnywhere(piece.cells))) {
       const fit = PIECES_BY_SIZE.find((piece) => this.pieceFitsAnywhere(piece.cells));
       if (fit) picks[Phaser.Math.Between(0, 2)] = fit;
@@ -1294,21 +1294,6 @@ export class BlockBurstScene extends Phaser.Scene {
     let n = 0;
     for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) if (this.grid[r]?.[c]) n++;
     return n;
-  }
-
-  private pickPiece(difficulty: number, fill: number): PieceDef {
-    let wE = lerp(70, 15, difficulty);
-    const wM = lerp(28, 50, difficulty);
-    let wH = lerp(2, 35, difficulty);
-    if (fill > 0.55) {
-      const k = (fill - 0.55) / 0.45;
-      wE *= 1 + 2.5 * k;
-      wH *= Math.max(0, 1 - 1.4 * k);
-    }
-    const roll = Math.random() * (wE + wM + wH);
-    const tier = roll < wE ? 0 : roll < wE + wM ? 1 : 2;
-    const pool = PIECES_BY_TIER[tier] ?? PIECES;
-    return pool[Math.floor(Math.random() * pool.length)] ?? PIECES[0]!;
   }
 
   private buildTrayPiece(slot: number, data: PieceData, animate: boolean): void {
