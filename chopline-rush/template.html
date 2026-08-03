@@ -599,13 +599,13 @@
   .hidden {
     display: none !important;
   }
-  /* Endless-only presentation: gameplay stays visible behind every lightweight overlay. */
+  /* Gameplay stays visible behind every lightweight overlay. */
   #stage {
     background: #78dce7;
   }
-  #endless-timer,
   #menu-screen,
-  #coin-list + h3 {
+  #coin-list + h3,
+  #iap-list {
     display: none !important;
   }
   #score-pill {
@@ -676,6 +676,7 @@
     bottom: 84px;
   }
   #tap-hint .tap-circle {
+    display: none;
     width: 62px;
     height: 62px;
     border-width: 5px;
@@ -688,6 +689,60 @@
     letter-spacing: 0;
     text-shadow: 0 3px 0 rgba(48, 104, 78, 0.28);
   }
+  #level-progress {
+    position: absolute;
+    top: 90px;
+    left: 50%;
+    width: min(220px, 46vw);
+    height: 9px;
+    transform: translateX(-50%);
+    overflow: hidden;
+    border: 3px solid rgba(255,255,255,.92);
+    border-radius: 999px;
+    background: rgba(23,61,120,.18);
+    box-shadow: 0 4px 0 rgba(37,102,141,.12);
+  }
+  #level-progress-bar {
+    width: 0;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #ffd74d, #ff8a5b);
+    transition: width 120ms linear;
+  }
+  #hud[data-mode="endless"] #level-progress { display: none; }
+  #hud[data-tutorial="true"] #score-pill,
+  #hud[data-tutorial="true"] #coin-pill,
+  #hud[data-tutorial="true"] #pause-btn,
+  #hud[data-tutorial="true"] #shop-btn,
+  #hud[data-tutorial="true"] #level-progress,
+  #hud[data-tutorial="true"] #tap-hint { display: none !important; }
+  #hud[data-tutorial="true"] #tap-hint { bottom: 84px; }
+  #hud[data-tutorial="true"] #tap-hint div:last-child { font-size: 30px; }
+  #endless-timer {
+    display: none;
+    margin-top: 7px;
+    flex-direction: column;
+    min-width: 150px;
+  }
+  #hud[data-mode="endless"][data-timer-active="true"] #endless-timer { display: flex; }
+  #hud[data-mode="endless"][data-timer-active="true"] #score-pill {
+    min-width: 164px;
+    padding-inline: 16px;
+  }
+  #hud[data-mode="endless"] #endless-timer-bar-wrap {
+    width: 100%;
+    height: 5px;
+    background: rgba(23,61,120,.14);
+  }
+  #hud[data-mode="endless"] #endless-timer-text,
+  #hud[data-mode="endless"] #endless-timer-hint {
+    color: #64809a;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.1;
+    text-shadow: none;
+  }
+  #hud[data-mode="endless"] #endless-timer-text { color: #173d78; font-size: 15px; }
   .screen {
     background: rgba(15, 51, 73, 0.34);
     backdrop-filter: blur(4px);
@@ -829,10 +884,11 @@
         <span id="endless-timer-hint">Score to survive!</span>
       </div>
     </div>
+    <div id="level-progress"><div id="level-progress-bar"></div></div>
     <div id="coin-pill"><span class="coin-icon"></span><span id="coin-count">0</span></div>
     <button class="top-button" id="pause-btn" aria-label="Pause">&#10074;&#10074;</button>
     <button class="top-button" id="shop-btn" aria-label="Knives and themes" title="Knives and themes">&#9881;&#xfe0e;</button>
-    <div id="tap-hint"><div class="tap-circle"></div><div>TAP TO FLIP</div></div>
+    <div id="tap-hint"><div class="tap-circle"></div><div id="tap-hint-label">TAP TO FLIP</div></div>
   </div>
   <div class="screen visible" id="menu-screen">
     <div class="card">
@@ -865,6 +921,8 @@
       <div class="menu-buttons" style="margin-top: 24px;">
         <button class="primary-button" data-action="resume">Continue</button>
         <button class="secondary-button" data-action="restart">Retry</button>
+        <button class="secondary-button" data-action="play-levels">Levels</button>
+        <button class="secondary-button" data-action="play-endless">Endless</button>
         <button class="secondary-button" data-action="open-shop">Gear</button>
       </div>
     </div>

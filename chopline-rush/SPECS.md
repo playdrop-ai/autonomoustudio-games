@@ -1,74 +1,111 @@
-# Chopline Rush - SPECS
+# Chopline Rush — Production Core Specs
 
-`catalogue.json.design` is the canonical product definition. This file records the user-facing
-acceptance criteria and the exact motion model the game must implement. The tuning table in
-`src/main.ts` mirrors these numbers; change them here first.
+`catalogue.json.design` is the canonical product definition. This document records the playable
+contract for the production core: player control, physics, level design, visuals, and juice.
 
-## Product
+## Product Contract
 
-- Mobile portrait is the primary surface; desktop is compatibility mode.
-- One mode only: an endless run for the best score.
-- Submit the best score to the PlayDrop `endless_score` leaderboard.
-- Every successful cut awards one score point and one soft coin.
-- Coins unlock knife models and world themes. There are no levels, quests, revives, ad rewards,
-  or paid coin packs anywhere in the game.
+- Mobile portrait is primary; desktop is a centered portrait compatibility frame.
+- Authored progression is primary: 60 finite levels across five 12-level acts.
+- Endless is the secondary mastery mode and retains the reviewed 41-chunk generator.
+- Every cut awards one score point and one soft coin.
+- Level progress submits to `max_level`; endless best submits to `endless_score`.
+- A run boots directly into the current level. Retry and next-level actions take one tap.
+- The core result flow has no interstitial or rewarded prompt.
+
+## First-Time User Experience
+
+The canonical reference is the clean first session of Poki's Slice Master, captured from
+<https://poki.com/en/g/slice-master>. Level 1 must copy that integrated lesson:
+
+1. The knife begins blade-first in a tall white start block. A second white runway begins after one
+   narrow, clearly visible gap.
+2. The only instruction is a large white world-space message above the knife and runway:
+   `TAP ANYWHERE / TO JUMP AND FLIP!`. It has no card, hand icon, ring, arrow, modal, or detached DOM
+   treatment. Because it is anchored in the level, it naturally scrolls left as the camera follows.
+3. The regular game HUD is hidden while the lesson is active, matching the reference's Level 0
+   interface state.
+4. Input is accepted on pointer release. The first tap launches and spins the knife across the gap.
+   It lands blade-first on the runway immediately before the first green apple. It does not score and
+   it does not fail.
+5. The second tap launches from that planted position and cuts the green apple. The apple becomes two
+   physical halves with a bright cut face, cube debris, a pale segmented arc, and a floating `+1$`.
+6. Red and yellow apples continue the learned planted-jump rhythm without adding another instruction.
+   Tutorial completion persists only when the first green apple is physically sliced.
+
+No thirteen-slab opening wall, forced airborne follow-up, separate landing target, glowing gate,
+ghost knife, or additional tutorial copy is allowed in Level 1.
 
 ## Motion Model
 
-The knife moves in the Y-Z plane and rotates about X. Physics is 2D; visuals are 3D.
+The knife moves in the Y-Z plane and rotates about X. Physics is deterministic 2D; visuals are 3D.
 
 | Constant | Value |
 |---|---|
-| Launch velocity (up / forward) | 10 / 8 |
-| Gravity | -20 (knife), -15 (cut fragments) |
-| Rotation speed | 7 rad/s (8 rad/s easing during a slice-lock) |
-| Tap cooldown | 0.4 s |
+| Level 1 launch velocity (up / forward) | 11.7 / 8 (forward is scaled to Chopline world units) |
+| Level 1 gravity / rotation / cooldown | -23 / 560 degrees/s / 0.15 s |
+| Later-level launch / gravity / rotation / cooldown | 10 / -20 / 7 rad/s / 0.4 s |
+| Air-tap vertical impulse | +15, capped at the active launch speed; forward speed renews to 8 |
+| Cut fragment gravity | -15 |
 | Integration | 1/120 s substeps with swept mid-sample collision checks |
-| Canonical angle | 120 degrees; every rotation target is `n * 360 + 120` |
-| Blade / handle reach | 1.7 / handle from model anchors; half-widths per model |
+| Canonical angle | 120 degrees; targets are `n * 360 + 120` |
+| Blade / handle reach | Derived from semantic model anchors |
 | Embed depth (top / side) | 0.15 / 0.4 |
-| Stick alignment | reject when `cos * dir > 0.3` (top/bottom) or `sin * dir > 0.3`; side faces need `abs(sin) >= 0.5` |
-| Ceiling / ground | y <= 30; y < 0 fails the run |
-| No-score timeout | 10 s |
+| Endless no-score timer | 10 s, visible whenever active |
 
 Rules:
 
-- **Tap** (any state, cooldown-gated): velocities are set absolutely (10 up, 8 forward). Launching
-  from a bottom stick uses a small downward push (roof 0.25, else 0.1 coefficient); a side stick
-  launches up and away from the face (front faces at half forward speed). The rotation target
-  advances to the next canonical angle at least half a turn ahead; the knife spins at 7 rad/s and
-  settles exactly blade-down-forward.
-- **Cut**: any blade contact on a sliceable cuts it. If the blade is within [-130, +45] degrees of
-  canonical, the knife enters slice-lock: forward speed drops to zero when a stack sibling is
-  below (otherwise 30 percent), rotation eases to canonical at 8 rad/s, and every substep
-  batch-cuts what the blade sweeps while vertical speed damps by 0.85 per batch. The knife carves
-  down through the stack and plants in whatever is beneath.
-- **Handle-first on a sliceable**: look ahead up to half a turn of rotation; if the blade would
-  sweep the target, cut it anyway. Otherwise bounce: forward speed reverses and halves, fall
-  speed is preserved, spin continues to the next canonical target.
-- **Landing**: aligned blade contact sticks with an embed, impact squash, particles, camera kick,
-  and haptic pulse. Misaligned contact enters rotating-to-stick: the knife spins in place riding
-  the surface and plants the moment the blade qualifies, giving up after 2.25 turns and falling.
-  A platform the knife just launched from cannot be re-contacted until geometrically clear, and a
-  platform that exhausted a rotate-to-stick cannot be re-caught until cleared.
-- **Fragments**: each cut spawns two halves with visible interior caps. They slide apart on the
-  cut axis with friction, tumble off the platform edge, fall at -15, then spring-settle onto the
-  ground and persist until the camera passes them.
+- Level 1 uses the captured 11.7-up / -23-gravity / 560-degrees-per-second reference motion. Later
+  authored levels retain their validated 10-up / -20-gravity / 7-radians-per-second model so the
+  existing 60-level geometry remains playable. An airborne tap adds 15 vertical velocity, capped at
+  the active launch speed, and renews forward speed to 8, so early taps preserve height while later taps produce lower cutting
+  arcs. Bottom and side sticks apply their authored escape coefficients. Every accepted tap advances
+  at least half a turn to the next canonical blade-down-forward angle.
+- Blade contact cuts. Valid approach angles enter slice-lock, reduce forward travel, ease to the
+  canonical angle, and batch-cut a stack as the blade carves downward.
+- Handle-first contact looks ahead through half a turn. It cuts if the blade sweep is imminent;
+  otherwise it bounces, reverses half the forward speed, and preserves the fall.
+- An aligned blade landing sticks. A recoverable bad angle rotates in place toward a valid stick,
+  then gives up after 2.25 turns. Launch surfaces cannot be re-caught until geometrically clear.
+- Each cut creates two persistent capped halves that slide, fall, tumble, and spring-settle.
 
-## Visual Target
+The baseline anti-spam contract remains mandatory: the paced test bot must materially outperform
+the spam bot.
 
-- Bright low-poly world: cyan sky, green ground, white course blocks, mountain and pine bands.
-- Original authored endless opening: pedestal, thirteen-course wall, orange stacks, face
-  target, camera props, then the reviewed reusable chunks in `buildEndlessCourseTemplates`.
-- The starter knife is the two-tone cooking knife (bright blade, wooden handle) with semantic
-  anchors; collision geometry derives from the real tip, hilt, and handle end. The blade carries
-  a scoped environment map so rotation reads through specular movement.
-- HUD contains only score, best, coins, pause, gear, and the initial tap prompt.
-- Cuts show `+1`, occasional praise, a brief hit stop, flash, and restrained camera feedback.
+## Level Design
 
-## Release Bar
+`src/game/levels.ts` defines all 60 levels as explicit sequences of validated course chunks.
 
+- Act 1 — Picnic Meadow: launch, re-launch, air-tap, landing, and readable stack rhythms.
+- Act 2 — Orchard Steps: height changes and the first moving targets.
+- Act 3 — Brick Alley: spikes, roofs, and deliberate over/under decisions.
+- Act 4 — Windy Shelves: moving platforms and tighter timing combinations.
+- Act 5 — Chef's Gauntlet: mixed mastery sequences with no new hidden rules.
+
+Each level has a name, accent, cut requirement, and authored gaps. Every level terminates in a
+physical chopping-board station with a marked brick stack. A run only clears after the player cuts
+through that stack, satisfies the level's cut requirement, and plants the blade into the board.
+Crossing a coordinate cannot award a win; overshooting the final station fails the run. Every
+referenced chunk must also remain individually playable in the 41-chunk validation sweep.
+
+## Visual and Juice Hierarchy
+
+- Readability first: cyan sky, green ground, white platforms, strong hazard red, and one act accent.
+- Action feedback: specular knife rotation, trajectory trail, individual `+1` labels, physical split
+  halves, cut flash, 40 ms hit stop, restrained camera trauma, haptic pulse, and material-specific SFX.
+- Landing feedback: blade embed, impact squash, sparks, an expanding accent ring, camera kick, and
+  haptic weight proportional to impact speed.
+- Milestones: occasional combo praise and act callouts in endless. Level endings use a staged final
+  chop: cascading stack destruction, board compression, hit stop, close camera, shockwaves,
+  fragments, confetti, and a world-space `PERFECT CHOP` card before results.
+- UI communicates only the current decision: score/requirement, level progress, wallet, and controls.
+  Pause/gear/wallet are hidden while the FTUE is actively teaching.
+
+## Deterministic and Release Contract
+
+- `window.render_game_to_text()` returns compact gameplay state and nearby interactables.
+- `window.advanceTime(ms)` advances the fixed-step simulation deterministically.
 - `npm run validate:local` and `npm run proof:mechanics` pass.
-- Portrait playtest proves startup, repeated airborne taps, a successful cut, a tip landing,
-  failure, restart, knife selection, theme selection, and the leaderboard submission path.
-- Portrait listing media shows the real endless run with visible split geometry.
+- PlayDrop project check validates both declared surfaces and their tap tapes.
+- Final portrait playtest covers: clean boot, complete FTUE, level clear, failure/retry, airborne tap,
+  tip landing, stack cut, Level 2 unlock, endless timer, shop selection, and both leaderboards.

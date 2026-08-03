@@ -3,9 +3,9 @@
     {
       "name": "chopline-rush",
       "username": "autonomoustudio",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "displayName": "Chopline Rush",
-      "description": "Tap to flip a 3D knife through an endless course, split targets, collect coins, chase the PlayDrop leaderboard, and unlock knives and world themes.",
+      "description": "Master a three-tap knife flip, carve through 60 handcrafted levels, then chase a high score in the endless mastery course.",
       "license": "PLAYDROP",
       "visibility": "PUBLIC",
       "tags": [
@@ -28,7 +28,53 @@
         "mobileLandscape": false,
         "mobilePortrait": true
       },
+      "primarySurface": "MOBILE_PORTRAIT",
+      "playtestTapes": {
+        "MOBILE_PORTRAIT": {
+          "version": 1,
+          "primaryVerb": "tap",
+          "durationMs": 4600,
+          "startOnlyEventCount": 0,
+          "successSignals": [
+            {
+              "kind": "VISIBLE_PROGRESS",
+              "description": "The first tap flips across the narrow gap and lands before the green apple; the second planted jump slices it, then paced planted jumps continue through the three-apple runway toward the final chop."
+            }
+          ],
+          "events": [
+            { "type": "tap", "atMs": 300, "x": 0.5, "y": 0.62 },
+            { "type": "tap", "atMs": 1500, "x": 0.5, "y": 0.62 },
+            { "type": "tap", "atMs": 2700, "x": 0.5, "y": 0.62 },
+            { "type": "tap", "atMs": 3900, "x": 0.5, "y": 0.62 }
+          ]
+        },
+        "DESKTOP": {
+          "version": 1,
+          "primaryVerb": "tap",
+          "durationMs": 4600,
+          "startOnlyEventCount": 0,
+          "successSignals": [
+            {
+              "kind": "VISIBLE_PROGRESS",
+              "description": "The first tap flips across the narrow gap and lands before the green apple; the second planted jump slices it, then paced planted jumps continue through the three-apple runway toward the final chop."
+            }
+          ],
+          "events": [
+            { "type": "tap", "atMs": 300, "x": 0.5, "y": 0.62 },
+            { "type": "tap", "atMs": 1500, "x": 0.5, "y": 0.62 },
+            { "type": "tap", "atMs": 2700, "x": 0.5, "y": 0.62 },
+            { "type": "tap", "atMs": 3900, "x": 0.5, "y": 0.62 }
+          ]
+        }
+      },
       "leaderboards": [
+        {
+          "key": "max_level",
+          "displayName": "Level Progress",
+          "description": "Highest Chopline level reached.",
+          "scoreType": "INTEGER",
+          "sort": "DESC"
+        },
         {
           "key": "endless_score",
           "displayName": "Endless Score",
@@ -51,10 +97,10 @@
         "perspective": "perspective/3d-third-person",
         "controls": "game-controls/tap",
         "visualStyle": "visual-style/stylized",
-        "progression": "game-progression/endless",
+        "progression": "game-progression/levels",
         "feel": "game-feel/juicy"
       },
-      "releaseNotes": "Rebuilt as a portrait-first endless knife-flip game with responsive midair taps, one-point cuts, visible split pieces, coin progression, knife upgrades, world themes, and one PlayDrop best-score leaderboard.",
+      "releaseNotes": "Copies the real Poki Slice Master tutorial: planted knife, narrow gap, exact world-space TAP ANYWHERE TO JUMP AND FLIP instruction, safe first landing before the green apple, and a second planted jump that slices it with physical halves, debris, trail, and +1$. No invented tutorial UI or gate is used. Endless remains the mastery mode.",
       "templateSource": "playdrop/template/typescript_template"
     }
   ]

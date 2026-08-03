@@ -2,10 +2,11 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { normalizeKnifeModel, type KnifeGeometry, type KnifeModelDefinition } from "./game/knifeModel";
+import { TOTAL_LEVELS, levelForNumber, type LevelBlueprint } from "./game/levels";
 
 export {};
 
-type Mode = "endless";
+type Mode = "level" | "endless";
 type Screen = "boot" | "menu" | "shop" | "playing" | "paused" | "result";
 type RunOutcome = "won" | "lost";
 type PreviewSurface = "desktop" | "mobile-landscape" | "mobile-portrait";
@@ -74,6 +75,8 @@ type PlaydropSdk = {
 
 declare global {
   interface Window {
+    render_game_to_text: () => string;
+    advanceTime: (ms: number) => void;
     __listingCapture?: {
       prepare?: (payload?: PreviewPayload) => Promise<void> | void;
       startAudioCapture?: () => Promise<void> | void;
@@ -82,6 +85,7 @@ declare global {
     __choplineTest?: {
       setProfile: (overrides: Partial<Profile>) => void;
       startEndless: () => void;
+      startLevel: (level?: number) => void;
       forceLoss: (score?: number) => void;
       stageLandingProof: () => void;
       stageSideLandingProof: () => void;
@@ -244,7 +248,9 @@ interface EndlessSpawnPlan {
 }
 
 type KnifeState = "stuck" | "flying" | "bouncing" | "rotating-stick" | "tumbling" | "dead";
-type RunFailCause = "fall" | "spikes" | "timeout" | "crash";
+type RunFailCause = "fall" | "spikes" | "timeout" | "missed" | "crash";
+type TutorialStep = "launch" | "relaunch" | "air-tap" | "land" | "complete";
+type FinaleState = "approach" | "armed" | "complete";
 type StuckFace = "top" | "bottom" | "side";
 type PlatformKind = "platform" | "roof";
 type CollisionAxis = "y" | "z";
@@ -336,6 +342,19 @@ interface Particle {
   velocity: THREE.Vector3;
   life: number;
   maxLife: number;
+  gravity?: number;
+  spin?: number;
+  expand?: number;
+}
+
+interface WorldCue {
+  step: "final-chop" | "final-stick" | "level-clear";
+  group: THREE.Group;
+  label: THREE.Mesh;
+  baseY: number;
+  phase: number;
+  ghostKnife: THREE.Group | null;
+  pulseRing: THREE.Mesh | null;
 }
 
 interface SlicePiece {
@@ -419,6 +438,10 @@ interface Profile {
   totalSlices: number;
   totalCoinsEarned: number;
   achievements: string[];
+  currentLevel: number;
+  highestLevel: number;
+  ftueCompleted: boolean;
+  tutorialStep: TutorialStep;
 }
 
 interface RunState {
@@ -437,6 +460,15 @@ interface RunState {
   startedAt: number;
   outcome: RunOutcome | null;
   coinsAwarded: number;
+  levelNumber: number;
+  levelName: string;
+  levelFinishZ: number;
+  tapCount: number;
+  tutorialStep: TutorialStep;
+  tutorialPromptAt: number;
+  finishDelay: number;
+  finaleState: FinaleState;
+  newBest: boolean;
 }
 
 const PROFILE_KEY = "chopline-rush-v2-profile";
@@ -643,6 +675,10 @@ const DEFAULT_PROFILE: Profile = {
   totalSlices: 0,
   totalCoinsEarned: 0,
   achievements: [],
+  currentLevel: 1,
+  highestLevel: 1,
+  ftueCompleted: false,
+  tutorialStep: "launch",
 };
 
 
@@ -679,10 +715,14 @@ const endlessTimer = requireElement("endless-timer", HTMLDivElement);
 const endlessTimerBar = requireElement("endless-timer-bar", HTMLDivElement);
 const endlessTimerText = requireElement("endless-timer-text", HTMLSpanElement);
 const endlessTimerHint = requireElement("endless-timer-hint", HTMLSpanElement);
+const levelProgressBar = requireElement("level-progress-bar", HTMLDivElement);
 const coinPill = requireElement("coin-pill", HTMLDivElement);
 const coinCount = requireElement("coin-count", HTMLSpanElement);
 const shopCoins = requireElement("shop-coins", HTMLDivElement);
 const tapHint = requireElement("tap-hint", HTMLDivElement);
+const tapHintLabel = requireElement("tap-hint-label", HTMLDivElement);
+const pauseButton = requireElement("pause-btn", HTMLButtonElement);
+const shopButton = requireElement("shop-btn", HTMLButtonElement);
 const resultTitle = requireElement("result-title", HTMLHeadingElement);
 const resultSubtitle = requireElement("result-subtitle", HTMLParagraphElement);
 const resultScore = requireElement("result-score", HTMLElement);
@@ -702,6 +742,10 @@ function cloneProfile(input: Profile): Profile {
     totalSlices: input.totalSlices,
     totalCoinsEarned: input.totalCoinsEarned,
     achievements: [...input.achievements],
+    currentLevel: input.currentLevel,
+    highestLevel: input.highestLevel,
+    ftueCompleted: input.ftueCompleted,
+    tutorialStep: input.tutorialStep,
   };
 }
 
@@ -717,6 +761,10 @@ function sanitizeProfile(value: unknown): Profile {
     : STARTER_THEME_ID;
   const sanitizedOwnedThemes = Array.from(new Set([STARTER_THEME_ID, ...ownedThemes]));
   const equippedTheme = sanitizedOwnedThemes.includes(equippedThemeCandidate) ? equippedThemeCandidate : STARTER_THEME_ID;
+  const tutorialSteps: readonly TutorialStep[] = ["launch", "relaunch", "air-tap", "land", "complete"];
+  const tutorialStep = tutorialSteps.includes(source.tutorialStep as TutorialStep) ? source.tutorialStep as TutorialStep : "launch";
+  const highestLevel = safeInt(source.highestLevel, 1, TOTAL_LEVELS);
+  const currentLevel = Math.min(highestLevel, safeInt(source.currentLevel, 1, TOTAL_LEVELS));
   return {
     coins: safeInt(source.coins, 0, 999999999),
     ownedKnives: Array.from(new Set([STARTER_KNIFE_ID, ...owned])),
@@ -729,6 +777,10 @@ function sanitizeProfile(value: unknown): Profile {
     totalSlices: safeInt(source.totalSlices, 0, 999999999),
     totalCoinsEarned: safeInt(source.totalCoinsEarned, 0, 999999999),
     achievements,
+    currentLevel,
+    highestLevel,
+    ftueCompleted: source.ftueCompleted === true,
+    tutorialStep,
   };
 }
 
@@ -748,6 +800,10 @@ function mergeProfile(a: Profile, b: Profile): Profile {
     totalSlices: Math.max(a.totalSlices, b.totalSlices),
     totalCoinsEarned: Math.max(a.totalCoinsEarned, b.totalCoinsEarned),
     achievements,
+    currentLevel: Math.max(a.currentLevel, b.currentLevel),
+    highestLevel: Math.max(a.highestLevel, b.highestLevel),
+    ftueCompleted: a.ftueCompleted || b.ftueCompleted,
+    tutorialStep: a.ftueCompleted ? a.tutorialStep : b.tutorialStep,
   };
 }
 
@@ -1035,7 +1091,7 @@ const audio = new GameAudio();
 let profile = loadLocalProfile();
 let screen: Screen = "boot";
 let previousScreen: Screen = "menu";
-let selectedMode: Mode = "endless";
+let selectedMode: Mode = "level";
 let currentRun: RunState | null = null;
 let isolatedVisualRandomSeed = 0x9e3779b9;
 let endlessZones: ZoneDef[] = [];
@@ -1055,8 +1111,6 @@ let autoFlipTimer = 0;
 let previewAudioPolicy: PreviewAudioPolicy = "music-and-sfx";
 let frameCounter = 0;
 let endlessTimerLastCount = 0;
-let sessionDeaths = 0;
-let lastInterstitialAt = Number.NEGATIVE_INFINITY;
 let gameTime = 0;
 
 function setPreviewMode(active: boolean): void {
@@ -1113,13 +1167,24 @@ const sliceGroup = new THREE.Group();
 const obstacleGroup = new THREE.Group();
 const particleGroup = new THREE.Group();
 const zoneGateGroup = new THREE.Group();
-world.add(platformGroup, sliceGroup, obstacleGroup, particleGroup, zoneGateGroup);
+const finaleGroup = new THREE.Group();
+const tutorialGroup = new THREE.Group();
+world.add(platformGroup, sliceGroup, obstacleGroup, particleGroup, zoneGateGroup, finaleGroup, tutorialGroup);
 
 const platformEntities: PlatformEntity[] = [];
 const sliceEntities: SliceEntity[] = [];
 const obstacleEntities: ObstacleEntity[] = [];
 const particles: Particle[] = [];
 const slicePieces: SlicePiece[] = [];
+const finaleSliceIds = new Set<string>();
+let finaleBoardVisual: THREE.Group | null = null;
+let finaleBoardRing: THREE.Mesh | null = null;
+let finaleChopCue: WorldCue | null = null;
+let finaleStickCue: WorldCue | null = null;
+let finaleClearCue: WorldCue | null = null;
+let finaleCascadeActive = false;
+let tutorialInstruction: THREE.Mesh | null = null;
+let tutorialTargetId: string | null = null;
 const tempBox = new THREE.Box3();
 const tempVector = new THREE.Vector3();
 const cameraShakeVector = new THREE.Vector3();
@@ -1193,7 +1258,10 @@ function sharedLambertMaterial(color: number, options: { emissive?: number; emis
 }
 
 function disposeMaterial(material: THREE.Material): void {
-  if (!sharedMaterialSet.has(material)) material.dispose();
+  if (sharedMaterialSet.has(material)) return;
+  const mapped = material as THREE.Material & { map?: THREE.Texture | null };
+  mapped.map?.dispose();
+  material.dispose();
 }
 
 function disposeObject(object: THREE.Object3D): void {
@@ -1292,17 +1360,20 @@ const knifeModelCrossSection = 0.58;
 const KNIFE_TIP_EMBED = 0.08;
 const BASE_FLIP_Y = 10;
 const BASE_FLIP_Z = 8;
+const AIR_FLIP_IMPULSE_Y = 15;
 const GRAVITY = -20;
 const ROTATION_SPEED = 7;
 const FLIP_COOLDOWN = 0.4;
+const TUTORIAL_BASE_FLIP_Y = 11.7;
+const TUTORIAL_GRAVITY = -23;
+const TUTORIAL_ROTATION_SPEED = THREE.MathUtils.degToRad(560);
+const TUTORIAL_FLIP_COOLDOWN = 0.15;
 const MIN_STICK_ALIGNMENT = 0.3;
 const SLICE_ROT_SPEED = 8;
 const SLICE_HALFZ_BONUS = 0.3;
 const SLICE_LOCK_MIN_ANGLE = (-130 * Math.PI) / 180;
 const SLICE_LOCK_MAX_ANGLE = (45 * Math.PI) / 180;
 const FRAGMENT_GRAVITY = -15;
-const INTERSTITIAL_EVERY_N_DEATHS = 3;
-const INTERSTITIAL_MIN_INTERVAL_S = 90;
 const CAMERA_TRAUMA_DECAY = 2.4;
 const CAMERA_SHAKE_MAX = 0.3;
 const MAX_SUB_STEP = 1 / 120;
@@ -1325,7 +1396,10 @@ const SPHERE_STACK_HEIGHT = 1.5;
 const BAGUETTE_STACK_HEIGHT = 0.35;
 const SAUSAGE_STACK_HEIGHT = 0.4;
 const CAM_OFFSET = new THREE.Vector3(-8, 2, -8);
+const TUTORIAL_CAM_OFFSET = new THREE.Vector3(-7, 2.8, -6.4);
+const FINALE_CAM_OFFSET = new THREE.Vector3(-5.6, 2.8, -4.4);
 const CAM_LOOK_AHEAD = 4.5;
+const TUTORIAL_CAM_LOOK_AHEAD = 3.8;
 const KNIFE_VISUAL_X = 0;
 const KNIFE_VISUAL_YAW = 0;
 let activeKnifeGeometry: KnifeGeometry = {
@@ -1341,6 +1415,26 @@ let activeKnifeGeometry: KnifeGeometry = {
 };
 const TRAJECTORY_POINT_LIMIT = 42;
 const TRAJECTORY_WIDTH = 0.065;
+
+function usesReferenceTutorialMotion(): boolean {
+  return currentRun?.mode === "level" && currentRun.levelNumber === 1;
+}
+
+function activeBaseFlipY(): number {
+  return usesReferenceTutorialMotion() ? TUTORIAL_BASE_FLIP_Y : BASE_FLIP_Y;
+}
+
+function activeGravity(): number {
+  return usesReferenceTutorialMotion() ? TUTORIAL_GRAVITY : GRAVITY;
+}
+
+function activeRotationSpeed(): number {
+  return usesReferenceTutorialMotion() ? TUTORIAL_ROTATION_SPEED : ROTATION_SPEED;
+}
+
+function activeFlipCooldown(): number {
+  return usesReferenceTutorialMotion() ? TUTORIAL_FLIP_COOLDOWN : FLIP_COOLDOWN;
+}
 const trajectoryGeometry = new THREE.BufferGeometry();
 const trajectoryPositionAttribute = new THREE.BufferAttribute(new Float32Array(TRAJECTORY_POINT_LIMIT * 2 * 3), 3);
 const trajectoryColorAttribute = new THREE.BufferAttribute(new Float32Array(TRAJECTORY_POINT_LIMIT * 2 * 3), 3);
@@ -1403,6 +1497,7 @@ async function init(): Promise<void> {
   newRun(true);
   setupPreviewHooks();
   setupTestHooks();
+  setupDeterministicHooks();
   requestAnimationFrame(frame);
 }
 
@@ -1483,16 +1578,39 @@ function renderShop(): void {
 
 function updateHud(): void {
   const run = currentRun;
-  coinPill.classList.add("endless-pos");
+  const tutorialActive = Boolean(run?.mode === "level" && run.levelNumber === 1);
+  hud.dataset.mode = run?.mode ?? selectedMode;
+  hud.dataset.tutorial = String(tutorialActive);
+  hud.dataset.timerActive = String(Boolean(run?.mode === "endless" && run.endlessTimerActive));
+  coinPill.classList.toggle("endless-pos", run?.mode === "endless");
   const score = run?.score ?? 0;
   const scoreStrong = scorePill.querySelector("strong");
   if (scoreStrong) scoreStrong.textContent = formatNumber(score);
   scoreRequired.style.display = "block";
-  scoreRequired.classList.remove("goal-ready");
-  scoreRequired.textContent = `BEST ${formatNumber(Math.max(profile.endlessBest, score))}`;
-  endlessTimer.style.display = "none";
+  if (run?.mode === "level") {
+    const ready = score >= run.targetScore;
+    scoreRequired.classList.toggle("goal-ready", ready);
+    scoreRequired.textContent = `LEVEL ${run.levelNumber} · ${score}/${run.targetScore}`;
+    const finish = Math.max(1, run.levelFinishZ);
+    levelProgressBar.style.width = `${Math.max(0, Math.min(100, (knife.position.z / finish) * 100))}%`;
+  } else {
+    scoreRequired.classList.remove("goal-ready");
+    scoreRequired.textContent = `BEST ${formatNumber(Math.max(profile.endlessBest, score))}`;
+    levelProgressBar.style.width = "0%";
+  }
+  endlessTimer.style.display = run?.mode === "endless" && run.endlessTimerActive ? "flex" : "none";
   coinCount.textContent = formatNumber(profile.coins);
-  tapHint.classList.toggle("hidden", !(screen === "playing" && knife.state === "stuck" && !previewMode && !run?.tapHintConsumed));
+  let hint = "";
+  if (screen === "playing" && !previewMode && run) {
+    const referenceTutorial = run.mode === "level" && run.levelNumber === 1;
+    if (knife.state === "stuck" && !run.tapHintConsumed && !referenceTutorial) {
+      hint = "TAP TO FLIP";
+    }
+  }
+  tapHintLabel.textContent = hint;
+  tapHint.classList.toggle("hidden", hint.length === 0);
+  pauseButton.disabled = false;
+  shopButton.disabled = false;
 }
 
 function loadKnifeSourceModel(skin: KnifeSkin): Promise<THREE.Object3D> {
@@ -1568,8 +1686,9 @@ async function buildKnife(): Promise<void> {
 }
 
 function clearWorld(): void {
+  clearTransientUi();
   hitStopTime = 0;
-  for (const group of [platformGroup, sliceGroup, obstacleGroup, particleGroup]) {
+  for (const group of [platformGroup, sliceGroup, obstacleGroup, particleGroup, zoneGateGroup, finaleGroup, tutorialGroup]) {
     while (group.children.length) {
       const child = group.children[0];
       if (child) removeAndDispose(group, child);
@@ -1580,23 +1699,35 @@ function clearWorld(): void {
   obstacleEntities.length = 0;
   particles.length = 0;
   slicePieces.length = 0;
+  finaleSliceIds.clear();
+  finaleBoardVisual = null;
+  finaleBoardRing = null;
+  finaleChopCue = null;
+  finaleStickCue = null;
+  finaleClearCue = null;
+  finaleCascadeActive = false;
+  tutorialInstruction = null;
+  tutorialTargetId = null;
   sliceProofEvents.length = 0;
   endlessPlanProofEvents.length = 0;
   stickProofEvents.length = 0;
 }
 
-function newRun(makeActive = true): void {
-  selectedMode = "endless";
+function newRun(makeActive = true, mode: Mode = selectedMode, requestedLevel = profile.currentLevel): void {
+  selectedMode = mode;
   gameTime = 0;
+  const level = mode === "level" ? levelForNumber(requestedLevel) : null;
+  const tutorialStep: TutorialStep = level?.number === 1 && !profile.ftueCompleted ? "launch" : "complete";
+  if (tutorialStep !== "complete") profile.tutorialStep = tutorialStep;
   currentRun = {
-    mode: "endless",
+    mode,
     score: 0,
-    zoneReached: 1,
+    zoneReached: level?.act ?? 1,
     failCause: null,
     doubled: false,
     combo: 0,
     bestCombo: 0,
-    targetScore: 0,
+    targetScore: level?.targetScore ?? 0,
     endlessScoreTimer: ENDLESS_SCORE_TIMEOUT,
     endlessTimerActive: false,
     tapHintConsumed: false,
@@ -1604,9 +1735,19 @@ function newRun(makeActive = true): void {
     startedAt: performance.now(),
     outcome: null,
     coinsAwarded: 0,
+    levelNumber: level?.number ?? 0,
+    levelName: level?.name ?? "Endless",
+    levelFinishZ: 0,
+    tapCount: 0,
+    tutorialStep,
+    tutorialPromptAt: 0,
+    finishDelay: 0,
+    finaleState: "approach",
+    newBest: false,
   };
   clearWorld();
-  buildEndlessWorld();
+  if (level) buildLevelWorld(level);
+  else buildEndlessWorld();
   resetKnife();
   updateHud();
   if (makeActive) {
@@ -1670,19 +1811,33 @@ function resetKnife(): void {
   knife.landingPunch = 0;
   resetTrajectoryTrail();
   syncKnifeTransform();
-  camera.position.copy(knife.position).add(CAM_OFFSET);
-  cameraTarget.set(knife.position.x, knife.position.y, knife.position.z + CAM_LOOK_AHEAD);
+  const tutorialActive = currentRun?.mode === "level" && currentRun.levelNumber === 1;
+  const cameraOffset = tutorialActive ? TUTORIAL_CAM_OFFSET : CAM_OFFSET;
+  const cameraLookAhead = tutorialActive ? TUTORIAL_CAM_LOOK_AHEAD : CAM_LOOK_AHEAD;
+  camera.position.copy(knife.position).add(cameraOffset);
+  cameraTarget.set(knife.position.x, knife.position.y, knife.position.z + cameraLookAhead);
   camera.lookAt(cameraTarget);
+  if (tutorialInstruction) {
+    tutorialInstruction.lookAt(camera.position);
+    tutorialInstruction.rotateZ(-0.035);
+  }
 }
 
 function snapCameraToKnife(): void {
-  camera.position.copy(knife.position).add(CAM_OFFSET);
+  const tutorialActive = currentRun?.mode === "level" && currentRun.levelNumber === 1;
+  const cameraOffset = tutorialActive ? TUTORIAL_CAM_OFFSET : CAM_OFFSET;
+  const cameraLookAhead = tutorialActive ? TUTORIAL_CAM_LOOK_AHEAD : CAM_LOOK_AHEAD;
+  camera.position.copy(knife.position).add(cameraOffset);
   cameraTarget.set(
-    camera.position.x - CAM_OFFSET.x,
-    camera.position.y - CAM_OFFSET.y,
-    camera.position.z - CAM_OFFSET.z + CAM_LOOK_AHEAD,
+    camera.position.x - cameraOffset.x,
+    camera.position.y - cameraOffset.y,
+    camera.position.z - cameraOffset.z + cameraLookAhead,
   );
   camera.lookAt(cameraTarget);
+  if (tutorialInstruction) {
+    tutorialInstruction.lookAt(camera.position);
+    tutorialInstruction.rotateZ(-0.035);
+  }
   dirLight.position.set(knife.position.x - 8, knife.position.y + 12, knife.position.z - 4);
   dirLight.target.position.copy(knife.position);
   rimLight.position.set(knife.position.x + 6, knife.position.y + 8, knife.position.z - 4);
@@ -2090,18 +2245,7 @@ function chooseZoneChunkIndex(zoneIndex: number): number {
   return candidates[Math.floor(Math.random() * candidates.length)]!;
 }
 
-function spawnNextEndlessPlatform(): void {
-  if (endlessZones.length === 0) throw new Error("[chopline-rush] Endless zones are not initialized");
-
-  if (endlessSpawnPlans.length === 0) {
-    prepareEndlessSpawnPlans(endlessPlanCursorZ + 0.001);
-  }
-  const plan = endlessSpawnPlans.shift();
-  if (!plan) throw new Error("[chopline-rush] Endless spawn plan was not prepared");
-  const { gap, template } = plan;
-
-  const platformId = `endless_${endlessPlatformCounter}`;
-  endlessPlatformCounter += 1;
+function spawnAuthoredChunk(template: EndlessTemplate, gap: number, platformId: string, cursorZ: number): number {
   const previousPlatform = [...platformEntities].reverse().find((item) => item.kind === "platform");
   const previousTop = previousPlatform ? getPlatformTop(previousPlatform) : 1;
   const authoredTop = (template.platform.y ?? 0) + template.platform.height;
@@ -2110,7 +2254,7 @@ function spawnNextEndlessPlatform(): void {
     ...template.platform,
     id: platformId,
     y: reachableTop - template.platform.height,
-    z: endlessCursorZ + gap,
+    z: cursorZ + gap,
   };
   const platformEntity = withIsolatedVisualRandom(() => createPlatform(platformDef, platformEntities.length));
   platformEntities.push(platformEntity);
@@ -2137,8 +2281,22 @@ function spawnNextEndlessPlatform(): void {
       endlessObstacleCounter += 1;
     }
   });
+  return platformDef.z + platformDef.depth;
+}
 
-  endlessCursorZ = platformDef.z + platformDef.depth;
+function spawnNextEndlessPlatform(): void {
+  if (endlessZones.length === 0) throw new Error("[chopline-rush] Endless zones are not initialized");
+
+  if (endlessSpawnPlans.length === 0) {
+    prepareEndlessSpawnPlans(endlessPlanCursorZ + 0.001);
+  }
+  const plan = endlessSpawnPlans.shift();
+  if (!plan) throw new Error("[chopline-rush] Endless spawn plan was not prepared");
+  const { gap, template } = plan;
+
+  const platformId = `endless_${endlessPlatformCounter}`;
+  endlessPlatformCounter += 1;
+  endlessCursorZ = spawnAuthoredChunk(template, gap, platformId, endlessCursorZ);
 
   const boundaries = zoneBoundaries();
   while (endlessGateBoundaryIndex < boundaries.length - 1 && boundaries[endlessGateBoundaryIndex]! <= endlessCursorZ) {
@@ -2200,6 +2358,382 @@ function buildEndlessWorld(): void {
     spawnNextEndlessPlatform();
   }
   buildBackground();
+}
+
+function drawRoundedRect(context: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number): void {
+  const r = Math.min(radius, width / 2, height / 2);
+  context.beginPath();
+  context.moveTo(x + r, y);
+  context.lineTo(x + width - r, y);
+  context.quadraticCurveTo(x + width, y, x + width, y + r);
+  context.lineTo(x + width, y + height - r);
+  context.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+  context.lineTo(x + r, y + height);
+  context.quadraticCurveTo(x, y + height, x, y + height - r);
+  context.lineTo(x, y + r);
+  context.quadraticCurveTo(x, y, x + r, y);
+  context.closePath();
+}
+
+function createWorldLabel(title: string, subtitle: string, accent: number, width = 4.6): THREE.Mesh {
+  const canvas = document.createElement("canvas");
+  canvas.width = 1024;
+  canvas.height = 384;
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("[chopline-rush] Canvas 2D is required for world labels");
+  const accentCss = `#${accent.toString(16).padStart(6, "0")}`;
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  context.shadowColor = "rgba(12, 34, 72, .24)";
+  context.shadowBlur = 30;
+  context.shadowOffsetY = 18;
+  drawRoundedRect(context, 52, 34, 920, 300, 56);
+  context.fillStyle = "rgba(255,255,255,.96)";
+  context.fill();
+  context.shadowColor = "transparent";
+  drawRoundedRect(context, 72, 55, 34, 258, 17);
+  context.fillStyle = accentCss;
+  context.fill();
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+  context.fillStyle = "#173d78";
+  context.font = "900 116px system-ui, -apple-system, sans-serif";
+  context.fillText(title, 548, 154, 790);
+  context.fillStyle = "#5b7198";
+  context.font = "800 46px system-ui, -apple-system, sans-serif";
+  context.fillText(subtitle, 548, 258, 790);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.minFilter = THREE.LinearFilter;
+  const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, depthTest: false, depthWrite: false, side: THREE.DoubleSide, toneMapped: false });
+  const label = new THREE.Mesh(new THREE.PlaneGeometry(width, width * 0.375), material);
+  label.renderOrder = 8;
+  label.userData.worldLabel = true;
+  return label;
+}
+
+function createTutorialInstruction(): THREE.Mesh {
+  const canvas = document.createElement("canvas");
+  canvas.width = 1400;
+  canvas.height = 620;
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("[chopline-rush] Canvas 2D is required for the tutorial instruction");
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+  context.fillStyle = "#ffffff";
+  context.strokeStyle = "rgba(255,255,255,.95)";
+  context.lineJoin = "round";
+  context.lineWidth = 7;
+  context.font = "900 154px Impact, Haettenschweiler, Arial Black, sans-serif";
+  context.strokeText("TAP ANYWHERE", 700, 215, 1260);
+  context.fillText("TAP ANYWHERE", 700, 215, 1260);
+  context.strokeText("TO JUMP AND FLIP!", 700, 405, 1260);
+  context.fillText("TO JUMP AND FLIP!", 700, 405, 1260);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.minFilter = THREE.LinearFilter;
+  const material = new THREE.MeshBasicMaterial({
+    map: texture,
+    transparent: true,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+    toneMapped: false,
+  });
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(7.8, 3.45), material);
+  mesh.position.set(0, 7.15, 5.6);
+  mesh.renderOrder = 6;
+  mesh.userData.tutorialInstruction = true;
+  tutorialGroup.add(mesh);
+  return mesh;
+}
+
+function styleReferencePlatform(platform: PlatformEntity): void {
+  const side = new THREE.MeshStandardMaterial({ color: 0xd8e7eb, roughness: 0.82 });
+  const top = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.72 });
+  platform.mesh.material = [side, side, top, top, top, top];
+}
+
+function createGhostKnifeCue(accent: number, gesture: "flip" | "plant"): THREE.Group {
+  const group = new THREE.Group();
+  const material = new THREE.MeshBasicMaterial({ color: accent, transparent: true, opacity: 0.58, depthWrite: false, toneMapped: false });
+  const blade = new THREE.Mesh(new THREE.BoxGeometry(0.18, 1.25, 0.08), material);
+  blade.position.y = 0.48;
+  const point = new THREE.Mesh(new THREE.ConeGeometry(0.13, 0.34, 4), material.clone());
+  point.position.y = 1.27;
+  point.rotation.z = Math.PI;
+  const handle = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.7, 0.13), material.clone());
+  handle.position.y = -0.5;
+  group.add(blade, point, handle);
+  group.userData.gesture = gesture;
+  return group;
+}
+
+function createWorldCue(
+  parent: THREE.Group,
+  step: WorldCue["step"],
+  title: string,
+  subtitle: string,
+  accent: number,
+  position: THREE.Vector3,
+  options: { ring?: "horizontal" | "vertical"; ghost?: "flip" | "plant"; labelWidth?: number } = {},
+): WorldCue {
+  const group = new THREE.Group();
+  group.position.copy(position);
+  const label = createWorldLabel(title, subtitle, accent, options.labelWidth);
+  label.position.set(-0.72, options.ring === "horizontal" ? 4.15 : options.ring ? 3.05 : 0, 0);
+  group.add(label);
+  let pulseRing: THREE.Mesh | null = null;
+  if (options.ring) {
+    const ringMaterial = new THREE.MeshBasicMaterial({ color: accent, transparent: true, opacity: 0.8, depthWrite: false, toneMapped: false });
+    pulseRing = new THREE.Mesh(new THREE.TorusGeometry(options.ring === "vertical" ? 1.15 : 0.88, 0.09, 8, 48), ringMaterial);
+    if (options.ring === "horizontal") pulseRing.rotation.x = Math.PI / 2;
+    group.add(pulseRing);
+    const innerRing = new THREE.Mesh(new THREE.TorusGeometry(options.ring === "vertical" ? 0.82 : 0.58, 0.035, 6, 36), ringMaterial.clone());
+    if (options.ring === "horizontal") innerRing.rotation.x = Math.PI / 2;
+    group.add(innerRing);
+  }
+  const arrowMaterial = new THREE.MeshBasicMaterial({ color: accent, transparent: true, opacity: 0.86, toneMapped: false });
+  const arrow = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.62, 5), arrowMaterial);
+  arrow.position.y = options.ring === "vertical" ? 1.55 : options.ring === "horizontal" ? 1.6 : -1.25;
+  arrow.rotation.z = Math.PI;
+  group.add(arrow);
+  const ghostKnife = options.ghost ? createGhostKnifeCue(accent, options.ghost) : null;
+  if (ghostKnife) {
+    ghostKnife.position.set(-1.45, options.ring ? 1.45 : -1.45, 0);
+    group.add(ghostKnife);
+  }
+  parent.add(group);
+  return { step, group, label, baseY: position.y, phase: Math.random() * Math.PI * 2, ghostKnife, pulseRing };
+}
+
+function markFinaleTargets(startIndex: number): void {
+  for (let index = startIndex; index < sliceEntities.length; index += 1) {
+    const slice = sliceEntities[index];
+    if (!slice) continue;
+    finaleSliceIds.add(slice.id);
+    slice.group.userData.finaleTarget = true;
+  }
+}
+
+function finaleTargetsCleared(): boolean {
+  return finaleSliceIds.size > 0 && [...finaleSliceIds].every((id) => sliceEntities.find((slice) => slice.id === id)?.sliced === true);
+}
+
+function finaleTargetForAct(act: number): { type: string; count: number } {
+  return { type: "brick", count: 6 + Math.max(1, Math.min(5, act)) };
+}
+
+function buildFinalChopStation(startZ: number, level: LevelBlueprint, targetOffset = 1.8): number {
+  const finish = withIsolatedVisualRandom(() => createPlatform({
+    id: "level_finish",
+    y: 0,
+    z: startZ,
+    depth: 8,
+    height: 1.4,
+  }, platformEntities.length));
+  platformEntities.push(finish);
+  const topY = getPlatformTop(finish);
+
+  const board = new THREE.Group();
+  board.position.set(0, topY + 0.025, startZ + 4);
+  const boardMaterial = new THREE.MeshStandardMaterial({ color: 0xf2c879, roughness: 0.58, metalness: 0, emissive: level.accent, emissiveIntensity: 0.035 });
+  const boardSlab = new THREE.Mesh(new THREE.BoxGeometry(3.65, 0.1, 6.8), boardMaterial);
+  boardSlab.castShadow = true;
+  boardSlab.receiveShadow = true;
+  board.add(boardSlab);
+  const railMaterial = new THREE.MeshStandardMaterial({ color: 0xb96d32, roughness: 0.68 });
+  for (const side of [-1, 1]) {
+    const rail = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.15, 6.85), railMaterial);
+    rail.position.x = side * 1.77;
+    rail.position.y = 0.04;
+    rail.castShadow = true;
+    board.add(rail);
+  }
+  const ringMaterial = new THREE.MeshBasicMaterial({ color: level.accent, transparent: true, opacity: 0.72, depthWrite: false, toneMapped: false });
+  finaleBoardRing = new THREE.Mesh(new THREE.TorusGeometry(0.78, 0.07, 8, 48), ringMaterial);
+  finaleBoardRing.rotation.x = Math.PI / 2;
+  const targetLocalZ = -4 + targetOffset;
+  finaleBoardRing.position.set(0, 0.09, targetLocalZ);
+  board.add(finaleBoardRing);
+  const cutLine = new THREE.Mesh(new THREE.BoxGeometry(2.75, 0.025, 0.09), ringMaterial.clone());
+  cutLine.position.set(0, 0.1, targetLocalZ);
+  board.add(cutLine);
+  finaleGroup.add(board);
+  finaleBoardVisual = board;
+
+  const platformById = new Map<string, PlatformEntity>([[finish.id, finish]]);
+  const target = finaleTargetForAct(level.act);
+  const firstTargetIndex = sliceEntities.length;
+  withIsolatedVisualRandom(() => createSliceable({ type: target.type, count: target.count, y: 0.54, z: targetOffset, platformId: finish.id }, 9000 + level.number, platformById));
+  markFinaleTargets(firstTargetIndex);
+
+  const cuePosition = new THREE.Vector3(0, topY + 4.6, startZ + targetOffset);
+  finaleChopCue = createWorldCue(finaleGroup, "final-chop", "FINAL CHOP", "CUT THE MARKED STACK", level.accent, cuePosition, { labelWidth: 5.2 });
+  finaleStickCue = createWorldCue(finaleGroup, "final-stick", "STICK IT", "PLANT THE BLADE TO FINISH", 0x72f1b8, cuePosition, { ghost: "plant", labelWidth: 5.2 });
+  finaleStickCue.group.visible = false;
+  if (!currentRun) throw new Error("[chopline-rush] Missing run while building final chop station");
+  currentRun.levelFinishZ = startZ + targetOffset;
+  return startZ + 8;
+}
+
+function buildReferenceOpeningLevel(level: LevelBlueprint): void {
+  // Direct Slice Master FTUE parity: planted knife, a narrow visible gap, one
+  // safe first flip, then a green/red/yellow apple cadence on one white runway.
+  const start = withIsolatedVisualRandom(() => createPlatform({ id: "level_start", y: -2.6, z: 0, depth: 3.8, height: 4 }, 0));
+  const runway = withIsolatedVisualRandom(() => createPlatform({ id: "tutorial_runway", y: 0, z: 4.4, depth: 27.6, height: 1.4 }, 1));
+  platformEntities.push(start, runway);
+  const platformById = new Map<string, PlatformEntity>(platformEntities.map((platform) => [platform.id, platform]));
+  withIsolatedVisualRandom(() => {
+    const firstTargetIndex = sliceEntities.length;
+    createSliceable({ type: "apple_green", y: 0.5, z: 11.3, platformId: runway.id }, 7001, platformById);
+    tutorialTargetId = sliceEntities[firstTargetIndex]?.id ?? null;
+    createSliceable({ type: "apple_red", y: 0.5, z: 16.6, platformId: runway.id }, 7002, platformById);
+    createSliceable({ type: "apple_yellow", y: 0.5, z: 21.9, platformId: runway.id }, 7003, platformById);
+  });
+  buildBackground();
+  styleReferencePlatform(start);
+  styleReferencePlatform(runway);
+  tutorialInstruction = createTutorialInstruction();
+  buildFinalChopStation(35.2, level, 0.2);
+}
+
+function buildLevelWorld(level: LevelBlueprint): void {
+  if (endlessZones.length === 0) endlessZones = buildEndlessZones();
+  endlessPlatformCounter = 0;
+  endlessSliceableCounter = 0;
+  endlessObstacleCounter = 0;
+  if (level.number === 1) {
+    buildReferenceOpeningLevel(level);
+    return;
+  }
+  const startPlatform = withIsolatedVisualRandom(() => createPlatform({ id: "level_start", y: 0, z: 0, depth: 3.6, height: 1.4 }, 0));
+  platformEntities.push(startPlatform);
+  let cursorZ = 3.6;
+  for (let index = 0; index < level.chunks.length; index += 1) {
+    const [zoneIndex, chunkIndex, gap] = level.chunks[index]!;
+    const template = endlessZones[zoneIndex]?.chunks[chunkIndex];
+    if (!template) throw new Error(`[chopline-rush] Level ${level.number} references missing chunk ${zoneIndex}:${chunkIndex}`);
+    cursorZ = spawnAuthoredChunk(template, gap, `level_${level.number}_${index}`, cursorZ);
+  }
+  buildFinalChopStation(cursorZ + 2.1, level);
+  buildBackground();
+}
+
+function spawnShockwave(position: THREE.Vector3, color: number, horizontal = true): void {
+  for (let index = 0; index < 3; index += 1) {
+    const material = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.78 - index * 0.15, depthWrite: false, toneMapped: false });
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.42 + index * 0.16, 0.045, 6, 36), material);
+    if (horizontal) ring.rotation.x = Math.PI / 2;
+    ring.position.copy(position);
+    ring.position.y += index * 0.04;
+    particleGroup.add(ring);
+    particles.push({
+      mesh: ring,
+      velocity: new THREE.Vector3(),
+      life: 0.58 + index * 0.1,
+      maxLife: 0.58 + index * 0.1,
+      gravity: 0,
+      spin: 0,
+      expand: 4.2 - index * 0.5,
+    });
+  }
+}
+
+function spawnFinaleConfetti(position: THREE.Vector3, accent: number): void {
+  const colors = [accent, 0x72f1b8, 0xffd166, 0xffffff, 0xff71aa];
+  const spawned = withIsolatedVisualRandom(() => Array.from({ length: 38 }, (_, index) => {
+    const material = new THREE.MeshBasicMaterial({ color: colors[index % colors.length]!, transparent: true, toneMapped: false });
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.08 + Math.random() * 0.08, 0.2 + Math.random() * 0.18, 0.035), material);
+    const angle = (index / 38) * Math.PI * 2 + Math.random() * 0.3;
+    const speed = 2.8 + Math.random() * 4.5;
+    const velocity = new THREE.Vector3(Math.cos(angle) * speed, 5 + Math.random() * 5, Math.sin(angle) * speed);
+    return { mesh, velocity };
+  }));
+  for (const { mesh, velocity } of spawned) {
+    mesh.position.copy(position);
+    mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+    particleGroup.add(mesh);
+    particles.push({ mesh, velocity, life: 1.6, maxLife: 1.6, gravity: 11, spin: 1.8 });
+  }
+}
+
+function spawnFinaleCelebration(level: LevelBlueprint): void {
+  const impact = knifeBladeTip();
+  spawnParticles(impact, level.accent, 28);
+  spawnParticles(impact, 0xffffff, 18);
+  spawnShockwave(impact, level.accent, true);
+  spawnFinaleConfetti(impact.clone().add(new THREE.Vector3(0, 1.1, 0)), level.accent);
+  if (finaleBoardVisual) finaleBoardVisual.scale.y = 0.32;
+  finaleClearCue = createWorldCue(
+    finaleGroup,
+    "level-clear",
+    "PERFECT CHOP",
+    level.name.toUpperCase(),
+    level.accent,
+    new THREE.Vector3(0, knife.position.y + 2.35, knife.position.z + 0.6),
+    { labelWidth: 3 },
+  );
+  finaleClearCue.label.position.x = 0.6;
+}
+
+function updateWorldPresentation(dt: number): void {
+  const finaleState = currentRun?.finaleState ?? "approach";
+  const finaleNear = currentRun?.mode === "level" && knife.position.z >= currentRun.levelFinishZ - 9;
+  if (finaleChopCue) finaleChopCue.group.visible = finaleNear && finaleState === "approach" && currentRun?.outcome == null;
+  if (finaleStickCue) finaleStickCue.group.visible = finaleState === "armed" && currentRun?.outcome == null;
+  if (finaleClearCue) finaleClearCue.group.visible = currentRun?.outcome === "won";
+  for (const cue of [finaleChopCue, finaleStickCue, finaleClearCue]) {
+    if (!cue?.group.visible) continue;
+    cue.label.lookAt(camera.position);
+    cue.label.scale.setScalar(1 + Math.sin(gameTime * 4 + cue.phase) * 0.045);
+    if (cue.ghostKnife) {
+      cue.ghostKnife.rotation.x = Math.PI;
+      cue.ghostKnife.position.y = -1.15 - Math.abs(Math.sin(gameTime * 3.4)) * 0.48;
+    }
+  }
+  if (finaleBoardRing) {
+    const armed = finaleState === "armed";
+    finaleBoardRing.scale.setScalar(1 + Math.sin(gameTime * (armed ? 8 : 3.8)) * (armed ? 0.16 : 0.08));
+    const material = finaleBoardRing.material as THREE.MeshBasicMaterial;
+    material.opacity = armed ? 0.98 : 0.62 + Math.sin(gameTime * 3.8) * 0.12;
+  }
+  if (finaleBoardVisual && finaleBoardVisual.scale.y < 0.999) {
+    finaleBoardVisual.scale.y += (1 - finaleBoardVisual.scale.y) * Math.min(1, dt * 7);
+  }
+}
+
+function completeLevel(): void {
+  if (!currentRun || currentRun.mode !== "level" || currentRun.outcome) return;
+  currentRun.outcome = "won";
+  currentRun.finaleState = "complete";
+  currentRun.finishDelay = 1.55;
+  currentRun.combo = 0;
+  knife.velocity.set(0, 0, 0);
+  knife.angularVelocity = 0;
+  knife.state = "stuck";
+  resetTrajectoryTrail();
+  const level = levelForNumber(currentRun.levelNumber);
+  clearTransientUi();
+  spawnFinaleCelebration(level);
+  flashFeedback("success");
+  hitStopTime = Math.max(hitStopTime, 0.075);
+  startCameraShake(0.82);
+  pulseHaptic(34);
+  audio.play("victory", 0.8);
+  updateHud();
+}
+
+function updateLevelWorld(dt: number): void {
+  if (!currentRun || currentRun.mode !== "level") return;
+  const ratio = Math.max(0, Math.min(1, knife.position.z / Math.max(1, currentRun.levelFinishZ)));
+  levelProgressBar.style.width = `${ratio * 100}%`;
+  if (currentRun.outcome === "won") {
+    currentRun.finishDelay = Math.max(0, currentRun.finishDelay - dt);
+    if (currentRun.finishDelay <= 0 && screen === "playing") finishRun();
+    return;
+  }
+  if (currentRun.outcome || screen !== "playing") return;
+  if (knife.position.z > currentRun.levelFinishZ + 10) failRun("missed");
 }
 
 function updateEndlessWorld(): void {
@@ -2397,12 +2931,23 @@ function createSliceable(def: ThingDef, index: number, platformById: Map<string,
   }
 }
 
+function isAppleType(type: string): boolean {
+  return type === "apple" || type === "apple_green" || type === "apple_red" || type === "apple_yellow";
+}
+
+function appleColorForType(type: string): number {
+  if (type === "apple_green") return 0x8fe336;
+  if (type === "apple_yellow") return 0xffc735;
+  return 0xff4757;
+}
+
 function sliceCollisionAABB(type: string): CollisionAABB {
   if (type === "brick") return { bottomY: 0, topY: 0.2 * SLICEABLE_VISUAL_SCALE, halfZ: 0.5 * SLICEABLE_VISUAL_SCALE };
   if (type === "wooden_stake") return { bottomY: 0, topY: 1.5 * SLICEABLE_VISUAL_SCALE, halfZ: 0.25 * SLICEABLE_VISUAL_SCALE };
   if (type === "book") return { bottomY: 0, topY: BOOK_HEIGHT * SLICEABLE_VISUAL_SCALE, halfZ: 0.3 * SLICEABLE_VISUAL_SCALE };
   if (type === "watermelon") return { bottomY: 0, topY: 1.0 * SLICEABLE_VISUAL_SCALE, halfZ: 0.5 * SLICEABLE_VISUAL_SCALE };
   if (type === "apple") return { bottomY: 0, topY: 0.95 * SLICEABLE_VISUAL_SCALE, halfZ: 0.4 * SLICEABLE_VISUAL_SCALE };
+  if (isAppleType(type)) return { bottomY: 0, topY: 1.4 * SLICEABLE_VISUAL_SCALE, halfZ: 0.48 * SLICEABLE_VISUAL_SCALE };
   if (type === "orange") return { bottomY: 0, topY: 0.9 * SLICEABLE_VISUAL_SCALE, halfZ: 0.42 * SLICEABLE_VISUAL_SCALE };
   if (type === "emoji") return { bottomY: 0, topY: 1.0 * SLICEABLE_VISUAL_SCALE, halfZ: 0.5 * SLICEABLE_VISUAL_SCALE };
   if (type === "camera") return { bottomY: 0, topY: 1.55 * SLICEABLE_VISUAL_SCALE, halfZ: 0.62 * SLICEABLE_VISUAL_SCALE };
@@ -2420,7 +2965,7 @@ function getStackGap(type: string): number {
   if (type === "book") return BOOK_STACK_GAP;
   if (type === "wooden_stake") return STAKE_STACK_HEIGHT;
   if (type === "watermelon") return WATERMELON_STACK_HEIGHT;
-  if (type === "apple") return APPLE_STACK_HEIGHT;
+  if (isAppleType(type)) return APPLE_STACK_HEIGHT;
   if (type === "orange") return 0.82;
   if (type === "emoji") return 1;
   if (type === "camera") return 1.6;
@@ -2509,15 +3054,18 @@ function buildSliceMesh(type: string, index: number): THREE.Group {
       group.add(stripe);
     }
     if (Math.random() < 0.35) addFruitFace(group, 0.5, 0.5);
-  } else if (type === "apple") {
-    const apple = new THREE.Mesh(new THREE.SphereGeometry(0.4, 16, 16), materials.apple);
+  } else if (isAppleType(type)) {
+    const appleMaterial = type === "apple"
+      ? materials.apple
+      : new THREE.MeshPhongMaterial({ color: appleColorForType(type), shininess: 40 });
+    const apple = new THREE.Mesh(new THREE.SphereGeometry(0.4, 16, 16), appleMaterial);
     apple.position.y = 0.4;
     apple.castShadow = true;
     group.add(apple);
     const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.2, 6), materials.wood);
     stem.position.y = 0.85;
     group.add(stem);
-    if (Math.random() < 0.35) addFruitFace(group, 0.4, 0.4);
+    if (type === "apple" && Math.random() < 0.35) addFruitFace(group, 0.4, 0.4);
   } else if (type === "orange" || type === "emoji") {
     const radius = type === "orange" ? 0.42 : 0.5;
     const fruit = new THREE.Mesh(new THREE.SphereGeometry(radius, 20, 16), type === "orange" ? materials.orange : materials.emoji);
@@ -3020,6 +3568,7 @@ function update(dt: number, elapsed: number): void {
   if (hitStopTime > 0) {
     hitStopTime = Math.max(0, hitStopTime - dt);
     updateParticles(dt);
+    updateWorldPresentation(dt);
     updateCamera(dt);
     return;
   }
@@ -3027,11 +3576,14 @@ function update(dt: number, elapsed: number): void {
   updateMovingWorld(dt);
   updateKnife(dt);
   updateGameOverTumble(dt);
+  updateLevelWorld(dt);
   updateEndlessWorld();
   updateEndlessTimer(dt);
+  if (currentRun?.mode === "level" && currentRun.tutorialStep !== "complete") updateHud();
   updateTrajectoryTrail();
   updateParticles(dt);
   updateSlicePieces(dt);
+  updateWorldPresentation(dt);
   updateCamera(dt);
   if (previewMode && screen === "playing") {
     autoFlipTimer -= dt;
@@ -3080,7 +3632,7 @@ function updateKnife(dt: number): void {
 
 function updateKnifePhysics(dt: number): void {
   if (knife.state === "rotating-stick") {
-    knife.angularVelocity = ROTATION_SPEED;
+    knife.angularVelocity = activeRotationSpeed();
     knife.rotation += knife.angularVelocity * dt;
     knife.rotatingStickAccumAngle += knife.angularVelocity * dt;
     if (knife.rotatingStickPlatform) {
@@ -3107,7 +3659,7 @@ function updateKnifePhysics(dt: number): void {
     knife.angularVelocity = 0;
   }
 
-  knife.velocity.y += GRAVITY * dt;
+  knife.velocity.y += activeGravity() * dt;
   knife.position.addScaledVector(knife.velocity, dt);
   if (knife.position.y > KNIFE_CEILING_DEFAULT) {
     knife.position.y = KNIFE_CEILING_DEFAULT;
@@ -3137,9 +3689,17 @@ function syncKnifeTransform(): void {
 function flipKnife(): void {
   if (screen !== "playing" || knife.state === "dead" || currentRun?.outcome) return;
   const wasAirborne = knife.state !== "stuck";
-  if (gameTime - knife.lastFlipAt < FLIP_COOLDOWN) return;
+  if (gameTime - knife.lastFlipAt < activeFlipCooldown()) return;
   knife.lastFlipAt = gameTime;
-  if (currentRun) currentRun.tapHintConsumed = true;
+  if (currentRun) {
+    currentRun.tapHintConsumed = true;
+    currentRun.tapCount += 1;
+    if (currentRun.mode === "level" && currentRun.levelNumber === 1 && currentRun.tutorialStep === "launch") {
+      currentRun.tutorialStep = "land";
+    } else if (currentRun.mode === "level" && currentRun.levelNumber === 1 && currentRun.tutorialStep === "relaunch" && !wasAirborne) {
+      currentRun.tutorialStep = "air-tap";
+    }
+  }
   tapHint.classList.add("hidden");
 
   knife.flipSourcePlatform = knife.stuckPlatform;
@@ -3171,7 +3731,7 @@ function flipKnife(): void {
   knife.stuckPlatform = null;
   knife.slicing = false;
   restoreWidenedObjects();
-  if (currentRun && !currentRun.endlessTimerActive) {
+  if (currentRun?.mode === "endless" && !currentRun.endlessTimerActive) {
     currentRun.endlessTimerActive = true;
     currentRun.endlessScoreTimer = ENDLESS_SCORE_TIMEOUT;
     endlessTimerLastCount = 0;
@@ -3181,19 +3741,20 @@ function flipKnife(): void {
   knife.rotatingStickExhaustedPlatform = null;
   knife.previousPosition.copy(knife.position);
   knife.previousRotation = knife.rotation;
+  const launchY = activeBaseFlipY();
   if (wasAirborne) {
-    knife.velocity.set(0, BASE_FLIP_Y, BASE_FLIP_Z);
+    knife.velocity.set(0, Math.min(launchY, knife.velocity.y + AIR_FLIP_IMPULSE_Y), BASE_FLIP_Z);
   } else if (knife.stuckFace === "bottom") {
     const bottomCoeff = knife.flipSourcePlatform?.kind === "roof" ? 0.25 : 0.1;
-    knife.velocity.set(0, -BASE_FLIP_Y * bottomCoeff, BASE_FLIP_Z);
+    knife.velocity.set(0, -launchY * bottomCoeff, BASE_FLIP_Z);
   } else if (knife.stuckFace === "side") {
     const sideZScale = knife.stuckSideDir < 0 ? 0.5 : 1;
-    knife.velocity.set(0, BASE_FLIP_Y, BASE_FLIP_Z * knife.stuckSideDir * sideZScale);
+    knife.velocity.set(0, launchY, BASE_FLIP_Z * knife.stuckSideDir * sideZScale);
   } else {
-    knife.velocity.set(0, BASE_FLIP_Y, BASE_FLIP_Z);
+    knife.velocity.set(0, launchY, BASE_FLIP_Z);
   }
   knife.stuckFace = "top";
-  knife.angularVelocity = ROTATION_SPEED;
+  knife.angularVelocity = activeRotationSpeed();
   knife.rotationTarget = nextRotationTarget(knife.rotation);
   knife.lastPlatformId = "";
   knife.landingPunch = 0;
@@ -3202,6 +3763,7 @@ function flipKnife(): void {
   audio.play("knifeFlip", 0.5);
   pulseHaptic(5);
   void audio.startMusic();
+  updateHud();
 }
 
 function nextRotationTarget(rotation: number): number {
@@ -3248,7 +3810,8 @@ function updateTrajectoryTrail(): void {
     const perpY = tangentZ / length;
     const perpZ = -tangentY / length;
     const t = 1 - i / Math.max(1, points.length - 1);
-    const brightness = t * t;
+    const segment = Math.floor(i / 3) % 2 === 0 ? 1 : 0.08;
+    const brightness = t * t * segment;
     const width = TRAJECTORY_WIDTH * brightness;
     const base = i * 2;
     trajectoryPositionAttribute.setXYZ(base, point.x, point.y + perpY * width, point.z + perpZ * width);
@@ -3435,8 +3998,27 @@ function stickToFace(faceAxis: CollisionAxis, faceDir: CollisionDir, faceCoord: 
   resetTrajectoryTrail();
   audio.play("knifeStick", 0.7);
   spawnParticles(knifeBladeTip(), 0xfff5d6, 3);
+  spawnLandingRing(knifeBladeTip(), currentRun?.mode === "level" ? levelForNumber(currentRun.levelNumber).accent : 0xfff5d6);
   startCameraShake(0.28 + impactSpeed * 0.22);
   pulseHaptic(Math.round(10 + impactSpeed * 14));
+  const plantedBladeOnTop = faceAxis === "y" && faceDir > 0;
+  if (
+    currentRun?.mode === "level"
+    && currentRun.levelNumber === 1
+    && currentRun.tutorialStep === "land"
+    && currentRun.tapCount === 1
+    && plantedBladeOnTop
+    && platformEntity.id === "tutorial_runway"
+  ) {
+    currentRun.tutorialStep = "relaunch";
+  }
+  if (currentRun?.mode === "level" && plantedBladeOnTop && platformEntity.id === "level_finish") {
+    const tutorialReady = currentRun.levelNumber !== 1 || currentRun.tutorialStep === "complete";
+    if (finaleTargetsCleared() && tutorialReady) {
+      if (currentRun.score >= currentRun.targetScore) completeLevel();
+      else failRun("missed");
+    }
+  }
   syncKnifeTransform();
   updateHud();
 }
@@ -3444,7 +4026,7 @@ function stickToFace(faceAxis: CollisionAxis, faceDir: CollisionDir, faceCoord: 
 function enterRotatingStick(platformEntity: PlatformEntity): void {
   knife.state = "rotating-stick";
   knife.velocity.set(0, 0, 0);
-  knife.angularVelocity = ROTATION_SPEED;
+  knife.angularVelocity = activeRotationSpeed();
   knife.slicing = false;
   restoreWidenedObjects();
   knife.rotatingStickPlatform = platformEntity;
@@ -3458,7 +4040,7 @@ function bounceKnife(source: SliceEntity | null): void {
   knife.slicing = false;
   restoreWidenedObjects();
   knife.velocity.z = -knife.velocity.z * 0.5;
-  knife.angularVelocity = ROTATION_SPEED;
+  knife.angularVelocity = activeRotationSpeed();
   knife.rotationTarget = nextRotationTarget(knife.rotation);
   knife.state = "bouncing";
   knife.lastBounceEntity = source;
@@ -3490,15 +4072,24 @@ function sliceObject(slice: SliceEntity, playJuice = true): void {
   slice.sliced = true;
   slice.collisionEnabled = false;
   currentRun.score += points;
-  currentRun.endlessScoreTimer = ENDLESS_SCORE_TIMEOUT;
-  endlessTimerLastCount = 0;
+  if (currentRun.mode === "endless") {
+    currentRun.endlessScoreTimer = ENDLESS_SCORE_TIMEOUT;
+    endlessTimerLastCount = 0;
+  }
   currentRun.coinsAwarded += 1;
   currentRun.combo += 1;
   currentRun.bestCombo = Math.max(currentRun.bestCombo, currentRun.combo);
   profile.coins += 1;
   profile.totalSlices += 1;
   profile.totalCoinsEarned += 1;
+  const tutorialCompleted = currentRun.mode === "level" && currentRun.levelNumber === 1 && slice.id === tutorialTargetId;
+  if (tutorialCompleted) {
+    currentRun.tutorialStep = "complete";
+    profile.ftueCompleted = true;
+    profile.tutorialStep = "complete";
+  }
   localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+  const finaleHit = finaleSliceIds.has(slice.id);
   spawnParticles(position, colorForSlice(slice.type), slice.type === "brick" ? 3 : slice.type === "wooden_stake" ? 7 : 5);
   spawnSlicePieces(slice);
   slice.group.visible = false;
@@ -3512,12 +4103,32 @@ function sliceObject(slice: SliceEntity, playJuice = true): void {
     pulseHaptic(12);
     audio.play(slice.type === "wooden_stake" ? "sliceWood" : "sliceSoft", 0.7);
   }
+  if (finaleHit) {
+    hitStopTime = Math.max(hitStopTime, 0.035);
+    startCameraShake(0.3);
+    spawnParticles(position, 0xffffff, 5);
+    const finaleSliced = [...finaleSliceIds].filter((id) => sliceEntities.find((target) => target.id === id)?.sliced === true).length;
+    const finaleBreakPoint = 1;
+    if (!finaleCascadeActive && finaleSliced >= finaleBreakPoint) {
+      finaleCascadeActive = true;
+      for (const targetId of finaleSliceIds) {
+        const remaining = sliceEntities.find((target) => target.id === targetId);
+        if (remaining && !remaining.sliced) sliceObject(remaining, false);
+      }
+      finaleCascadeActive = false;
+      currentRun.finaleState = "armed";
+      spawnShockwave(position, 0x72f1b8, false);
+      flashFeedback("success");
+      pulseHaptic(20);
+    }
+  }
   if (proofEvent) {
     proofEvent.afterRandom = randomWindow.__rngCount ?? null;
     proofEvent.afterPieces = slicePieces.length;
     proofEvent.score = currentRun.score;
     sliceProofEvents.push(proofEvent);
   }
+  if (tutorialCompleted) saveProfile();
   updateHud();
 }
 
@@ -3718,7 +4329,7 @@ function checkRotatingStick(bladeOBB: KnifeOBB, midBladeOBB: KnifeOBB): boolean 
     knife.state = "flying";
     knife.rotatingStickExhaustedPlatform = knife.rotatingStickPlatform;
     knife.rotatingStickPlatform = null;
-    knife.angularVelocity = ROTATION_SPEED;
+    knife.angularVelocity = activeRotationSpeed();
     knife.rotationTarget = nextRotationTarget(knife.rotation);
     return false;
   }
@@ -3726,6 +4337,7 @@ function checkRotatingStick(bladeOBB: KnifeOBB, midBladeOBB: KnifeOBB): boolean 
 }
 
 function checkPlatformCollisions(bladeOBB: KnifeOBB, handleOBB: KnifeOBB, midBladeOBB: KnifeOBB, midHandleOBB: KnifeOBB): void {
+  if (!currentRun) return;
   const cosR = Math.cos(knife.rotation);
   const sinR = Math.sin(knife.rotation);
   const inFlipGuardWindow = knife.flipSourcePlatform !== null && gameTime - knife.lastFlipAt <= 0.2;
@@ -3821,7 +4433,8 @@ function scoreForSlice(type: string): number {
 function colorForSlice(type: string): number {
   if (type === "brick") return 0xf28b5f;
   if (type === "watermelon") return 0xff776e;
-  if (type === "apple") return 0xe83f46;
+  if (type === "apple_green") return 0xffe45f;
+  if (isAppleType(type)) return appleColorForType(type);
   if (type === "orange") return 0xffa52f;
   if (type === "emoji") return 0xffdc54;
   if (type === "camera") return 0x626873;
@@ -3844,7 +4457,7 @@ const BRICK_INTERIOR_COLORS = [
 function interiorColorForSlice(type: string, stackIndex = 0): number {
   if (type === "brick") return BRICK_INTERIOR_COLORS[stackIndex % BRICK_INTERIOR_COLORS.length] ?? 0xff3f76;
   if (type === "watermelon") return 0xff4f63;
-  if (type === "apple") return 0xffedb5;
+  if (isAppleType(type)) return type === "apple_green" ? 0xeaff59 : 0xffed91;
   if (type === "orange") return 0xffb429;
   if (type === "emoji") return 0xffe56b;
   if (type === "book") return 0xfff4cf;
@@ -3909,9 +4522,9 @@ function buildSliceHalf(type: string, dir: -1 | 1, stackIndex = 0): THREE.Group 
     cap.position.y = BOOK_HEIGHT / 2;
     cap.rotation.y = Math.PI / 2;
     group.add(cap);
-  } else if (type === "watermelon" || type === "apple") {
+  } else if (type === "watermelon" || isAppleType(type)) {
     const radius = type === "watermelon" ? 0.5 : 0.4;
-    const half = new THREE.Mesh(new THREE.SphereGeometry(radius, 16, 16, 0, Math.PI), new THREE.MeshPhongMaterial({ color: type === "watermelon" ? 0x228b22 : 0xff4757 }));
+    const half = new THREE.Mesh(new THREE.SphereGeometry(radius, 16, 16, 0, Math.PI), new THREE.MeshPhongMaterial({ color: type === "watermelon" ? 0x228b22 : appleColorForType(type) }));
     half.rotation.y = dir > 0 ? Math.PI / 2 : -Math.PI / 2;
     half.position.y = radius;
     half.castShadow = true;
@@ -3923,7 +4536,7 @@ function buildSliceHalf(type: string, dir: -1 | 1, stackIndex = 0): THREE.Group 
     cutFace.position.y = radius;
     cutFace.rotation.y = dir > 0 ? -Math.PI / 2 : Math.PI / 2;
     group.add(cutFace);
-    if (type === "apple" && dir > 0) {
+    if (isAppleType(type) && dir > 0) {
       const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.2, 6), new THREE.MeshPhongMaterial({ color: 0x8b4513 }));
       stem.position.y = 0.85;
       stem.castShadow = true;
@@ -4189,7 +4802,7 @@ function slicePieceLocalBounds(type: string, direction: -1 | 1): SlicePiece["loc
   });
   if (type === "brick") return sided(0.5, 0, 0.2 * s, -0.24, 0.24);
   if (type === "watermelon") return { xMin: -0.5 * s, xMax: 0.5 * s, yMin: 0, yMax: 1.0 * s };
-  if (type === "apple") return { xMin: -0.4 * s, xMax: 0.4 * s, yMin: 0, yMax: 0.95 * s };
+  if (isAppleType(type)) return { xMin: -0.4 * s, xMax: 0.4 * s, yMin: 0, yMax: 0.95 * s };
   if (type === "orange") return { xMin: -0.42 * s, xMax: 0.42 * s, yMin: 0, yMax: 0.9 * s };
   if (type === "emoji") return { xMin: -0.5 * s, xMax: 0.5 * s, yMin: 0, yMax: 1.0 * s };
   if (type === "camera") return sided(0.42, 0, 1.55 * s, -0.42, 0.42);
@@ -4219,7 +4832,26 @@ function spawnParticles(position: THREE.Vector3, color: number, count = 10): voi
   }
 }
 
+function spawnLandingRing(position: THREE.Vector3, color: number): void {
+  const material = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.82, depthWrite: false });
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.48, 0.055, 6, 24), material);
+  ring.rotation.x = Math.PI / 2;
+  ring.position.copy(position);
+  ring.position.y += 0.04;
+  particleGroup.add(ring);
+  particles.push({
+    mesh: ring,
+    velocity: new THREE.Vector3(),
+    life: 0.42,
+    maxLife: 0.42,
+    gravity: 0,
+    spin: 0,
+    expand: 3.2,
+  });
+}
+
 function spawnScorePopup(position: THREE.Vector3, points: number): void {
+  if (root.querySelectorAll(".score-pop").length >= 5) return;
   const screenPosition = position.clone().project(camera);
   if (screenPosition.z < -1 || screenPosition.z > 1) return;
   const bounds = renderer.domElement.getBoundingClientRect();
@@ -4227,7 +4859,7 @@ function spawnScorePopup(position: THREE.Vector3, points: number): void {
   const top = bounds.top + ((-screenPosition.y + 1) / 2) * bounds.height;
   const node = document.createElement("div");
   node.className = "score-pop";
-  node.textContent = `+${points}`;
+  node.textContent = `+${points}` + String.fromCharCode(36);
   node.style.left = `${Math.round(left)}px`;
   node.style.top = `${Math.round(top)}px`;
   root.append(node);
@@ -4253,6 +4885,7 @@ function spawnCountdownPop(count: number): void {
 }
 
 function spawnZoneCallout(title: string, subtitle: string, accent: number): void {
+  for (const existing of root.querySelectorAll(".zone-pop")) existing.remove();
   const node = document.createElement("div");
   node.className = "zone-pop";
   const accentHex = `#${accent.toString(16).padStart(6, "0")}`;
@@ -4262,6 +4895,7 @@ function spawnZoneCallout(title: string, subtitle: string, accent: number): void
 }
 
 function spawnPraise(position: THREE.Vector3, label: string): void {
+  if (root.querySelector(".praise-pop")) return;
   const screenPosition = position.clone().project(camera);
   const bounds = renderer.domElement.getBoundingClientRect();
   const node = document.createElement("div");
@@ -4273,14 +4907,20 @@ function spawnPraise(position: THREE.Vector3, label: string): void {
   window.setTimeout(() => node.remove(), 900);
 }
 
+function clearTransientUi(): void {
+  for (const node of root.querySelectorAll(".score-pop, .praise-pop, .zone-pop, .count-pop")) node.remove();
+}
+
 function updateParticles(dt: number): void {
   for (let i = particles.length - 1; i >= 0; i -= 1) {
     const particle = particles[i];
     if (!particle) continue;
-    particle.velocity.y -= 15 * dt;
+    particle.velocity.y -= (particle.gravity ?? 15) * dt;
     particle.mesh.position.addScaledVector(particle.velocity, dt);
-    particle.mesh.rotation.x += dt * 5;
-    particle.mesh.rotation.z += dt * 4;
+    const spin = particle.spin ?? 1;
+    particle.mesh.rotation.x += dt * 5 * spin;
+    particle.mesh.rotation.z += dt * 4 * spin;
+    if (particle.expand) particle.mesh.scale.addScalar(particle.expand * dt);
     particle.life -= dt;
     const opacity = Math.max(0, particle.life / particle.maxLife);
     particle.mesh.traverse((node) => {
@@ -4427,15 +5067,30 @@ function updateSlicePieces(dt: number): void {
 }
 
 function updateCamera(dt: number): void {
-  tempVector.copy(knife.position).add(CAM_OFFSET);
-  camera.position.x += (tempVector.x - camera.position.x) * 5 * dt;
-  camera.position.y += (tempVector.y - camera.position.y) * 5 * dt;
-  camera.position.z += (tempVector.z - camera.position.z) * 5 * dt;
-  cameraTarget.set(
-    camera.position.x - CAM_OFFSET.x,
-    camera.position.y - CAM_OFFSET.y,
-    camera.position.z - CAM_OFFSET.z + CAM_LOOK_AHEAD,
-  );
+  const finaleActive = currentRun?.mode === "level" && currentRun.outcome === "won";
+  const tutorialActive = currentRun?.mode === "level" && currentRun.levelNumber === 1;
+  const offset = finaleActive ? FINALE_CAM_OFFSET : tutorialActive ? TUTORIAL_CAM_OFFSET : CAM_OFFSET;
+  const lookAhead = tutorialActive ? TUTORIAL_CAM_LOOK_AHEAD : CAM_LOOK_AHEAD;
+  tempVector.copy(knife.position).add(offset);
+  const follow = Math.min(1, (finaleActive ? 7 : 5) * dt);
+  camera.position.x += (tempVector.x - camera.position.x) * follow;
+  camera.position.y += (tempVector.y - camera.position.y) * follow;
+  camera.position.z += (tempVector.z - camera.position.z) * follow;
+  if (finaleActive) {
+    cameraTarget.set(knife.position.x, knife.position.y + 0.55, knife.position.z + 0.45);
+  } else {
+    cameraTarget.set(
+      camera.position.x - offset.x,
+      camera.position.y - offset.y,
+      camera.position.z - offset.z + lookAhead,
+    );
+  }
+  const targetFov = finaleActive ? 52 : 70;
+  const nextFov = THREE.MathUtils.lerp(camera.fov, targetFov, Math.min(1, dt * 7));
+  if (Math.abs(nextFov - camera.fov) > 0.001) {
+    camera.fov = nextFov;
+    camera.updateProjectionMatrix();
+  }
   if (cameraTrauma > 0) {
     const clock = gameTime;
     const strength = cameraTrauma * cameraTrauma * CAMERA_SHAKE_MAX;
@@ -4516,7 +5171,7 @@ function updateGameOverTumble(dt: number): void {
   if (!currentRun || knife.state !== "tumbling" || screen !== "playing") return;
 
   if (!tumbleLanded) {
-    tumbleVelocityY += GRAVITY * dt;
+    tumbleVelocityY += activeGravity() * dt;
     knife.position.y += tumbleVelocityY * dt;
     knifeGroup.position.copy(knife.position);
     const fallen = tumbleStartY - knife.position.y;
@@ -4620,60 +5275,66 @@ function findNearestPlatformBehind(): PlatformEntity | null {
 }
 
 function finishRun(): void {
-  if (!currentRun) return;
+  if (!currentRun || screen === "result") return;
   const run = currentRun;
   profile.totalRuns += 1;
-  profile.endlessBest = Math.max(profile.endlessBest, run.score);
-  profile.bestZone = Math.max(profile.bestZone, run.zoneReached);
+  if (run.mode === "level") {
+    if (run.outcome === "won") {
+      const nextLevel = Math.min(TOTAL_LEVELS, run.levelNumber + 1);
+      profile.highestLevel = Math.max(profile.highestLevel, nextLevel);
+      profile.currentLevel = nextLevel;
+      const completionReward = 8 + levelForNumber(run.levelNumber).act * 2;
+      profile.coins += completionReward;
+      profile.totalCoinsEarned += completionReward;
+      run.coinsAwarded += completionReward;
+    }
+  } else {
+    run.newBest = run.score > profile.endlessBest;
+    profile.endlessBest = Math.max(profile.endlessBest, run.score);
+    profile.bestZone = Math.max(profile.bestZone, run.zoneReached);
+  }
   saveProfile();
+  clearTransientUi();
   renderResult(run);
   void submitMeta(run);
   showScreen("result");
-  sessionDeaths += 1;
-  maybeShowInterstitial();
-}
-
-function maybeShowInterstitial(): void {
-  if (previewMode) return;
-  if (sessionDeaths < 2) return;
-  if (sessionDeaths % INTERSTITIAL_EVERY_N_DEATHS !== 0) return;
-  const now = performance.now() / 1000;
-  if (now - lastInterstitialAt < INTERSTITIAL_MIN_INTERVAL_S) return;
-  lastInterstitialAt = now;
-  window.setTimeout(() => {
-    if (screen !== "result") return;
-    void platform.showInterstitial().catch(() => undefined);
-  }, 700);
 }
 
 const FAIL_CAUSE_LABELS: Record<RunFailCause, string> = {
   fall: "Fell off the course!",
   spikes: "Spiked!",
   timeout: "Too slow, chef!",
+  missed: "Final chop missed!",
   crash: "Run over!",
 };
 
 function renderResult(run: RunState): void {
-  resultScreen.classList.toggle("endless-game-over", true);
-  const newBest = run.score >= profile.endlessBest && run.score > 0;
-  resultTitle.textContent = newBest ? "New Best!" : FAIL_CAUSE_LABELS[run.failCause ?? "crash"];
-  const causeLine = newBest && run.failCause ? `${FAIL_CAUSE_LABELS[run.failCause]} ` : "";
-  resultSubtitle.innerHTML = `${causeLine}Zone ${run.zoneReached} · Score <span>${formatNumber(run.score)}</span> · Best ${formatNumber(profile.endlessBest)}`;
-  resultContinue.textContent = "Try Again";
+  resultScreen.classList.toggle("endless-game-over", run.mode === "endless");
+  if (run.mode === "level") {
+    const won = run.outcome === "won";
+    resultTitle.textContent = won ? `Level ${run.levelNumber} Clear!` : FAIL_CAUSE_LABELS[run.failCause ?? "crash"];
+    resultSubtitle.innerHTML = won
+      ? `${run.levelName} · <span>${formatNumber(run.score)}</span> cuts`
+      : `${run.levelName} · ${formatNumber(run.score)}/${formatNumber(run.targetScore)} cuts`;
+    resultContinue.textContent = won && run.levelNumber < TOTAL_LEVELS ? "Next Level" : won ? "Play Again" : "Try Again";
+  } else {
+    resultTitle.textContent = run.newBest ? "New Best!" : FAIL_CAUSE_LABELS[run.failCause ?? "crash"];
+    resultSubtitle.innerHTML = `Zone ${run.zoneReached} · Score <span>${formatNumber(run.score)}</span> · Best ${formatNumber(profile.endlessBest)}`;
+    resultContinue.textContent = "Try Again";
+  }
   resultScore.textContent = formatNumber(run.score);
   resultCoins.textContent = `+${formatNumber(run.coinsAwarded)}`;
   const doubleButton = resultScreen.querySelector<HTMLButtonElement>('[data-action="double-coins"]');
   if (doubleButton) {
-    const usable = !run.doubled && run.coinsAwarded > 0 && platform.canUseRewardedAds();
-    doubleButton.style.display = usable ? "" : "none";
-    doubleButton.disabled = !usable;
-    doubleButton.textContent = `Double Coins (+${formatNumber(run.coinsAwarded)})`;
+    doubleButton.style.display = "none";
+    doubleButton.disabled = true;
   }
 }
 
 async function submitMeta(run: RunState): Promise<void> {
   try {
-    await platform.submitLeaderboard(LEADERBOARD_ENDLESS, profile.endlessBest);
+    if (run.mode === "level") await platform.submitLeaderboard(LEADERBOARD_LEVEL, profile.highestLevel);
+    else await platform.submitLeaderboard(LEADERBOARD_ENDLESS, profile.endlessBest);
   } catch {
     // The run remains valid if network meta submission fails.
   }
@@ -4764,13 +5425,18 @@ async function buyCoins(product: CoinProduct): Promise<void> {
 }
 
 function nextRun(): void {
-  void startRun();
+  if (currentRun?.mode === "level") {
+    const level = currentRun.outcome === "won" ? profile.currentLevel : currentRun.levelNumber;
+    void startRun("level", level);
+  } else {
+    void startRun("endless");
+  }
 }
 
-async function startRun(): Promise<void> {
-  selectedMode = "endless";
+async function startRun(mode: Mode = selectedMode, level = profile.currentLevel): Promise<void> {
+  selectedMode = mode;
   previousScreen = "playing";
-  newRun(true);
+  newRun(true, mode, level);
   await audio.startMusic();
 }
 
@@ -4787,8 +5453,12 @@ function closeShop(): void {
 function handleAction(action: string, button: HTMLElement): void {
   audio.play("button", 0.28);
   void button;
-  if (action === "show-menu" || action === "start-endless" || action === "restart") {
-    void startRun();
+  if (action === "show-menu" || action === "play-levels") {
+    void startRun("level", profile.currentLevel);
+  } else if (action === "start-endless" || action === "play-endless") {
+    void startRun("endless");
+  } else if (action === "restart") {
+    void startRun(currentRun?.mode ?? selectedMode, currentRun?.levelNumber || profile.currentLevel);
   } else if (action === "open-shop") {
     showShop();
   } else if (action === "close-shop") {
@@ -4822,7 +5492,7 @@ root.addEventListener("click", (event) => {
 
 requireElement("pause-btn", HTMLButtonElement).addEventListener("click", () => handleAction("pause", requireElement("pause-btn", HTMLButtonElement)));
 requireElement("shop-btn", HTMLButtonElement).addEventListener("click", () => handleAction("open-shop", requireElement("shop-btn", HTMLButtonElement)));
-window.addEventListener("pointerdown", (event) => {
+window.addEventListener("pointerup", (event) => {
   const target = event.target;
   if (target instanceof HTMLElement && target.closest("button")) return;
   if (screen === "playing") flipKnife();
@@ -4833,7 +5503,7 @@ window.addEventListener("keydown", (event) => {
     event.preventDefault();
     flipKnife();
   }
-  if (event.code === "KeyR") void startRun();
+  if (event.code === "KeyR") void startRun(currentRun?.mode ?? selectedMode, currentRun?.levelNumber || profile.currentLevel);
   if (event.code === "Escape" && screen === "playing") showScreen("paused");
 });
 
@@ -4889,7 +5559,7 @@ function setupPreviewHooks(): void {
 function stageLandingProof(): void {
   proofFrozen = false;
   setPreviewMode(false);
-  newRun(true);
+  newRun(true, "endless");
   const platformEntity = platformEntities[1] ?? platformEntities[0];
   if (!platformEntity) throw new Error("[chopline-rush] No platform available for landing proof");
   const top = getPlatformTop(platformEntity);
@@ -4922,7 +5592,7 @@ function stageLandingProof(): void {
 function stageFlatLandingProof(): void {
   proofFrozen = false;
   setPreviewMode(false);
-  newRun(true);
+  newRun(true, "endless");
   const platformEntity = platformEntities[0];
   if (!platformEntity) throw new Error("[chopline-rush] No platform available for flat landing proof");
   const top = getPlatformTop(platformEntity);
@@ -4954,7 +5624,7 @@ function stageFlatLandingProof(): void {
 function stageSideLandingProof(): void {
   proofFrozen = false;
   setPreviewMode(false);
-  newRun(true);
+  newRun(true, "endless");
   const platformEntity = platformEntities[1] ?? platformEntities[0];
   if (!platformEntity) throw new Error("[chopline-rush] No platform available for side landing proof");
   const { zMin } = platformExtents(platformEntity);
@@ -4983,7 +5653,7 @@ function stageSideLandingProof(): void {
 function stageHandleLandingProof(): void {
   proofFrozen = false;
   setPreviewMode(false);
-  newRun(true);
+  newRun(true, "endless");
   const platformEntity = platformEntities[0];
   if (!platformEntity) throw new Error("[chopline-rush] No platform available for handle landing proof");
   const top = getPlatformTop(platformEntity);
@@ -5015,7 +5685,7 @@ function stageHandleLandingProof(): void {
 function stageHandleSliceProof(): void {
   proofFrozen = false;
   setPreviewMode(false);
-  newRun(true);
+  newRun(true, "endless");
   if (!currentRun) throw new Error("[chopline-rush] No active run for handle slice proof");
   const slice = sliceEntities.find((item) => !item.sliced && item.type === "emoji");
   if (!slice) throw new Error("[chopline-rush] No sliceable available for handle slice proof");
@@ -5085,7 +5755,7 @@ function stageCutContact(slice: SliceEntity, rotation: number): void {
 function stageSliceProof(): void {
   proofFrozen = false;
   setPreviewMode(false);
-  newRun(true);
+  newRun(true, "endless");
   if (!currentRun) throw new Error("[chopline-rush] No active run for slice proof");
   const slice = [...sliceEntities]
     .filter((item) => !item.sliced)
@@ -5098,7 +5768,7 @@ function stageSliceProof(): void {
 function stageInvalidSliceProof(): void {
   proofFrozen = false;
   setPreviewMode(false);
-  newRun(true);
+  newRun(true, "endless");
   if (!currentRun) throw new Error("[chopline-rush] No active run for invalid slice proof");
   const slice = sliceEntities.find((item) => !item.sliced);
   if (!slice) throw new Error("[chopline-rush] No sliceable available for invalid slice proof");
@@ -5110,7 +5780,7 @@ function stageSplitVisualProof(reuseActiveRun = false, preferredType?: string): 
   proofFrozen = false;
   setPreviewMode(false);
   if (!reuseActiveRun || !currentRun || screen !== "playing") {
-    newRun(true);
+    newRun(true, "endless");
   }
   if (!currentRun) throw new Error("[chopline-rush] No active run for split proof");
   const slice = (preferredType
@@ -5193,6 +5863,61 @@ function backgroundProbeSummary(): { counts: Record<string, number>; objects: Ar
   return { counts, objects: objects.slice(0, 40) };
 }
 
+function advanceSimulation(milliseconds: number): void {
+  let remaining = Math.max(0, milliseconds) / 1000;
+  const previousFrozen = proofFrozen;
+  proofFrozen = false;
+  while (remaining > 0.000001) {
+    const step = Math.min(1 / 120, remaining);
+    update(step, 0);
+    remaining -= step;
+  }
+  syncKnifeTransform();
+  renderer.render(scene, camera);
+  proofFrozen = previousFrozen;
+}
+
+function setupDeterministicHooks(): void {
+  window.render_game_to_text = () => JSON.stringify({
+    coordinateSystem: "Y is up; Z advances through the course; the knife is constrained to X=0",
+    screen,
+    mode: currentRun?.mode ?? selectedMode,
+    level: currentRun?.mode === "level" ? {
+      number: currentRun.levelNumber,
+      name: currentRun.levelName,
+      score: currentRun.score,
+      targetScore: currentRun.targetScore,
+      finishZ: Number(currentRun.levelFinishZ.toFixed(2)),
+      tutorialStep: currentRun.tutorialStep,
+      finaleState: currentRun.finaleState,
+      finaleTargetsRemaining: [...finaleSliceIds].filter((id) => sliceEntities.find((slice) => slice.id === id)?.sliced !== true).length,
+    } : null,
+    endless: currentRun?.mode === "endless" ? {
+      score: currentRun.score,
+      best: profile.endlessBest,
+      zone: currentRun.zoneReached,
+      timer: Number(currentRun.endlessScoreTimer.toFixed(2)),
+      timerActive: currentRun.endlessTimerActive,
+    } : null,
+    knife: {
+      state: knife.state,
+      y: Number(knife.position.y.toFixed(2)),
+      z: Number(knife.position.z.toFixed(2)),
+      velocityY: Number(knife.velocity.y.toFixed(2)),
+      velocityZ: Number(knife.velocity.z.toFixed(2)),
+      rotation: Number(knife.rotation.toFixed(3)),
+      stuckPlatform: knife.stuckPlatform?.id ?? null,
+    },
+    nearby: [
+      ...sliceEntities.filter((item) => !item.sliced && item.group.position.z >= knife.position.z - 2 && item.group.position.z <= knife.position.z + 14)
+        .map((item) => ({ kind: "sliceable", type: item.type, y: Number(item.group.position.y.toFixed(2)), z: Number(item.group.position.z.toFixed(2)) })),
+      ...obstacleEntities.filter((item) => !item.cleared && item.group.position.z >= knife.position.z - 2 && item.group.position.z <= knife.position.z + 14)
+        .map((item) => ({ kind: "hazard", type: "spikes", y: Number(item.group.position.y.toFixed(2)), z: Number(item.group.position.z.toFixed(2)) })),
+    ].slice(0, 12),
+  });
+  window.advanceTime = advanceSimulation;
+}
+
 function setupTestHooks(): void {
   if (!new URLSearchParams(window.location.search).has("chopline_test")) return;
   window.__choplineTest = {
@@ -5203,7 +5928,11 @@ function setupTestHooks(): void {
     },
     startEndless: () => {
       setPreviewMode(false);
-      newRun(true);
+      newRun(true, "endless");
+    },
+    startLevel: (level = profile.currentLevel) => {
+      setPreviewMode(false);
+      newRun(true, "level", level);
     },
     forceLoss: (score) => {
       if (!currentRun) throw new Error("[chopline-rush] No active run to fail");
@@ -5263,17 +5992,7 @@ function setupTestHooks(): void {
       knife.lastFlipAt = Number.NEGATIVE_INFINITY;
     },
     advance: (seconds) => {
-      const total = Math.max(0, seconds);
-      const step = 1 / 120;
-      const steps = Math.ceil(total / step);
-      const previousFrozen = proofFrozen;
-      proofFrozen = false;
-      for (let i = 0; i < steps; i += 1) {
-        update(i === steps - 1 ? total - step * (steps - 1) : step, 0);
-      }
-      syncKnifeTransform();
-      renderer.render(scene, camera);
-      proofFrozen = previousFrozen;
+      advanceSimulation(seconds * 1000);
     },
     setProofFrozen: (frozen) => {
       proofFrozen = frozen;

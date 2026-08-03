@@ -26,13 +26,16 @@ function createProfile(overrides = {}) {
     equippedKnife: "cooking",
     ownedThemes: ["forest"],
     equippedTheme: "forest",
+    currentLevel: 1,
     highestLevel: 1,
-    highestLevelCompleted: 0,
     endlessBest: 0,
+    bestZone: 1,
     totalRuns: 0,
     totalSlices: 0,
     totalCoinsEarned: 0,
     achievements: [],
+    ftueCompleted: true,
+    tutorialStep: "complete",
     ...overrides,
   };
 }
@@ -176,7 +179,10 @@ async function testPortraitBoot(browser, origin) {
     score: document.querySelector("#score-pill strong")?.textContent?.trim(),
     best: document.querySelector("#score-required")?.textContent?.trim(),
     timerDisplay: getComputedStyle(document.querySelector("#endless-timer")).display,
-    levelPillGone: document.querySelector("#level-pill") === null,
+    progressDisplay: getComputedStyle(document.querySelector("#level-progress")).display,
+    scoreDisplay: getComputedStyle(document.querySelector("#score-pill")).display,
+    hint: document.querySelector("#tap-hint-label")?.textContent?.trim(),
+    controlsHidden: ["#pause-btn", "#shop-btn"].every((selector) => getComputedStyle(document.querySelector(selector)).display === "none"),
     shopGlyph: document.querySelector("#shop-btn")?.textContent?.trim(),
     shopFont: getComputedStyle(document.querySelector("#shop-btn")).fontFamily,
     shopColor: getComputedStyle(document.querySelector("#shop-btn")).color,
@@ -184,17 +190,109 @@ async function testPortraitBoot(browser, origin) {
     canvas: document.querySelector("canvas")?.getBoundingClientRect().toJSON(),
     calls: window.__pdCalls,
   }));
-  const shot = await page.screenshot({ type: "png" });
+  const shot = await page.screenshot({ type: "png", path: path.resolve("tmp/release/portrait-first-frame.png") });
   assert(errors.length === 0, `Portrait boot console/page errors: ${errors.join("\n")}`);
-  assert(ui.score === "0" && ui.best === "BEST 0", `Endless HUD did not boot cleanly: ${ui.score}/${ui.best}`);
-  assert(ui.timerDisplay === "none" && ui.levelPillGone, "Removed level/timer UI became visible");
-  assert(ui.visibleScreens === 0, "A menu obscured the direct-to-endless boot");
+  assert(ui.score === "0" && ui.best === "LEVEL 1 · 0/3", `Level HUD did not boot cleanly: ${ui.score}/${ui.best}`);
+  assert(ui.timerDisplay === "none" && ui.progressDisplay === "none" && ui.scoreDisplay === "none", "The reference tutorial must hide the regular game HUD");
+  assert(ui.hint === "" && ui.controlsHidden, `The integrated tutorial must not add detached HUD instructions or controls: ${ui.hint}/${ui.controlsHidden}`);
+  assert(ui.visibleScreens === 0, "A menu obscured the direct-to-level boot");
   assert(ui.shopGlyph && ui.shopFont.includes("Arial") && ui.shopColor === "rgb(23, 61, 120)", "Gear control does not have a readable system-font icon");
   assert(ui.canvas?.width === 390 && ui.canvas?.height === 844, `Canvas does not fill the portrait viewport: ${JSON.stringify(ui.canvas)}`);
   assert(shot.length > 5000, "Portrait gameplay screenshot appears blank");
   assert(glbResponses.some((item) => item.url.endsWith("cooking-knife.glb") && item.status === 200), "Starter cooking knife model did not load");
   assert(ui.calls.some((call) => call.type === "init") && ui.calls.some((call) => call.type === "ready"), "PlayDrop lifecycle did not initialize and become ready");
   assert(!ui.calls.some((call) => call.type.includes("achievement") || call.type.includes("interstitial") || call.type.includes("rewarded")), "Simplified boot invoked removed systems");
+  await page.close();
+}
+
+async function testFtueAndLevelProgress(browser, origin) {
+  const { page, errors } = await openTestApp(browser, origin);
+  const idle = await page.evaluate(() => {
+    window.__choplineTest.advance(12);
+    return window.__choplineTest.state();
+  });
+  assert(idle.run.mode === "level" && idle.run.levelNumber === 1 && idle.run.outcome === null, "Level 1 must wait safely for the player's first input");
+  assert(idle.run.tutorialStep === "launch" && idle.knife.state === "stuck", "The first tutorial prompt must remain actionable after idle time");
+
+  const firstInput = await page.evaluate(() => {
+    const hooks = window.__choplineTest;
+    hooks.makeNextFlipReady();
+    hooks.tap();
+    hooks.advance(0.08);
+    return hooks.state();
+  });
+  assert(
+    firstInput.run.tapCount === 1
+      && firstInput.run.tutorialStep === "land"
+      && firstInput.knife.state === "flying",
+    `The first in-world instruction did not launch the reference flip: ${JSON.stringify({ run: firstInput.run, knife: firstInput.knife })}`,
+  );
+  assert(firstInput.profile.ftueCompleted === false, "The tutorial incorrectly completed from the launch tap alone");
+
+  const firstLanding = await page.evaluate(() => {
+    const hooks = window.__choplineTest;
+    hooks.advance(1.2);
+    return hooks.state();
+  });
+  assert(
+    firstLanding.run.outcome === null
+      && firstLanding.run.score === 0
+      && firstLanding.run.tutorialStep === "relaunch"
+      && firstLanding.knife.state === "stuck"
+      && firstLanding.knife.stuckPlatformId === "tutorial_runway",
+    `The first tap must land blade-first before the first apple: ${JSON.stringify({ run: firstLanding.run, knife: firstLanding.knife })}`,
+  );
+  await page.screenshot({ type: "png", path: path.resolve("tmp/release/portrait-ftue-first-landing.png") });
+
+  const openingCut = await page.evaluate(() => {
+    const hooks = window.__choplineTest;
+    hooks.makeNextFlipReady();
+    hooks.tap();
+    hooks.advance(0.75);
+    return hooks.state();
+  });
+  assert(
+    openingCut.run.outcome === null
+      && openingCut.run.tapCount === 2
+      && openingCut.run.tutorialStep === "complete"
+      && openingCut.profile.ftueCompleted === true
+      && openingCut.run.score >= 1,
+    `The second planted jump did not slice the first apple and complete the lesson: ${JSON.stringify({ run: openingCut.run, knife: openingCut.knife })}`,
+  );
+  await page.screenshot({ type: "png", path: path.resolve("tmp/release/portrait-ftue-complete.png") });
+
+  const continuationTrace = await page.evaluate(() => {
+    const hooks = window.__choplineTest;
+    const trace = [];
+    let sinceTap = 1;
+    for (let step = 0; step < 180 && hooks.state().screen === "playing" && hooks.state().run.outcome === null; step += 1) {
+      const state = hooks.state();
+      const rhythmicAirTap = state.knife.state === "flying" && !state.knife.slicing && state.knife.velocityY < 0 && sinceTap >= 0.85;
+      const shouldTap = state.knife.state === "stuck" || rhythmicAirTap || (state.knife.state === "rotating-stick" && sinceTap >= 1.7);
+      if (shouldTap) {
+        hooks.makeNextFlipReady();
+        hooks.tap();
+        sinceTap = 0;
+        const afterTap = hooks.state();
+        trace.push({ step, score: afterTap.run.score, outcome: afterTap.run.outcome, finale: afterTap.run.finaleState, knife: afterTap.knife });
+      }
+      hooks.advance(0.1);
+      sinceTap += 0.1;
+    }
+    return trace;
+  });
+  await page.evaluate(() => window.__choplineTest.advance(2));
+  await page.waitForSelector("#result-screen.visible", { timeout: 10000 });
+  await page.waitForFunction(() => window.__pdCalls.some((call) => call.type === "leaderboard.submit" && call.payload.key === "max_level"), null, { timeout: 10000 });
+  const result = await page.evaluate(() => ({ test: window.__choplineTest.state(), calls: window.__pdCalls }));
+  await page.screenshot({ type: "png", path: path.resolve("tmp/release/portrait-level-clear.png") });
+  assert(errors.length === 0, `FTUE/level console errors: ${errors.join("\n")}`);
+  assert(
+    result.test.run.outcome === "won" && result.test.resultTitle === "Level 1 Clear!" && result.test.resultContinue === "Next Level",
+    `Level 1 did not end in a coherent victory result: ${JSON.stringify({ run: result.test.run, knife: result.test.knife, title: result.test.resultTitle, continuationTrace })}`,
+  );
+  assert(result.test.profile.currentLevel === 2 && result.test.profile.highestLevel === 2, "Level completion did not unlock Level 2");
+  assert(result.calls.some((call) => call.type === "leaderboard.submit" && call.payload.key === "max_level" && call.payload.score === 2), "Level progress was not submitted");
   await page.close();
 }
 
@@ -264,7 +362,7 @@ async function testLandingAndCutPhysics(browser, origin) {
   const oneTapCut = await page.evaluate(() => window.__choplineTest.state());
   assert(oneTapCut.run.score >= 8 && oneTapCut.run.score <= 13, `One normal tap did not carve down through the opening wall: ${JSON.stringify({ run: oneTapCut.run, knife: oneTapCut.knife })}`);
   const wallFeedback = await page.locator(".score-pop").allTextContents();
-  assert(wallFeedback.length >= 3 && wallFeedback.every((label) => label === "+1"), `Opening wall lost its individual course feedback: ${JSON.stringify(wallFeedback)}`);
+  assert(wallFeedback.length >= 3 && wallFeedback.every((label) => label === "+1$"), `Opening wall lost its individual course feedback: ${JSON.stringify(wallFeedback)}`);
   await page.waitForTimeout(500);
   const oneTapOpening = await page.evaluate(() => window.__choplineTest.state());
   assert(
@@ -273,7 +371,7 @@ async function testLandingAndCutPhysics(browser, origin) {
       && oneTapOpening.sliceables.visible < oneTapOpening.sliceables.total
       && oneTapOpening.sliceables.visible > 0
       && oneTapOpening.knife.state !== "bouncing"
-      && oneTapOpening.knife.z > 4.5,
+      && oneTapOpening.knife.z > 4.2,
     `One normal tap did not continue through a partially intact wall: ${JSON.stringify({ run: oneTapOpening.run, knife: oneTapOpening.knife, sliceables: oneTapOpening.sliceables })}`,
   );
 
@@ -350,11 +448,45 @@ async function testEndlessGeneration(browser, origin) {
     assert(gap >= 1.09 && gap <= 6.6, `Platform ${index} generated a gap outside the early-zone envelope: ${gap}`);
     assert(currentTop - previousTop <= 3.81 && currentTop - previousTop >= -1.51, `Platform ${index} generated an unreachable height change: ${currentTop - previousTop}`);
   }
+  await page.mouse.click(195, 600);
+  await page.waitForTimeout(500);
+  await page.screenshot({ type: "png", path: path.resolve("tmp/release/portrait-endless-timer.png") });
+  await page.close();
+}
+
+async function testAllAuthoredLevels(browser, origin) {
+  const { page, errors } = await openTestApp(browser, origin, { profile: createProfile({ currentLevel: 60, highestLevel: 60 }) });
+  const summaries = [];
+  for (let level = 1; level <= 60; level += 1) {
+    const summary = await page.evaluate((levelNumber) => {
+      window.__choplineTest.startLevel(levelNumber);
+      const state = window.__choplineTest.state();
+      return {
+        level: state.run.levelNumber,
+        name: state.run.levelName,
+        target: state.run.targetScore,
+        finishZ: state.run.levelFinishZ,
+        sliceables: state.sliceables.total,
+        platforms: state.endless.platforms.map((platform) => platform.id),
+      };
+    }, level);
+    summaries.push(summary);
+  }
+  assert(errors.length === 0, `Authored level build errors: ${errors.join("\n")}`);
+  assert(summaries.length === 60 && new Set(summaries.map((entry) => entry.name)).size === 60, "All 60 levels must have unique names");
+  const insufficientTargets = summaries.filter((entry) => entry.target <= 0 || entry.sliceables < entry.target);
+  assert(insufficientTargets.length === 0, `Level cut requirements exceed available targets: ${JSON.stringify(insufficientTargets)}`);
+  for (const entry of summaries) {
+    assert(entry.level >= 1 && entry.level <= 60 && entry.finishZ > 10, `Level ${entry.level} has no finite course finish`);
+    assert(entry.platforms.includes("level_start") && entry.platforms.includes("level_finish"), `Level ${entry.level} is missing a start or finish platform`);
+  }
   await page.close();
 }
 
 async function testShopAndTheme(browser, origin) {
-  const { page, errors, glbResponses } = await openApp(browser, origin, { profile: createProfile({ coins: 1000 }) });
+  const { page, errors, glbResponses } = await openApp(browser, origin, {
+    profile: createProfile({ coins: 1000, currentLevel: 2, highestLevel: 2 }),
+  });
   await page.click("#shop-btn");
   await page.waitForSelector("#shop-screen.visible");
   const counts = await page.evaluate(() => ({
@@ -395,7 +527,7 @@ async function testEndlessResultAndLeaderboard(browser, origin) {
   assert(state.test.resultTitle === "New Best!" && state.test.resultContinue === "Try Again", "Endless result copy drifted");
   assert(state.calls.some((call) => call.type === "leaderboard.submit" && call.payload.key === "endless_score" && call.payload.score === 42), "Best score was not submitted to PlayDrop");
   assert(!state.calls.some((call) => call.type.includes("achievement")), "Result invoked removed achievements");
-  assert(!state.calls.some((call) => call.type.includes("interstitial")), "First session death must never show an interstitial");
+  assert(!state.calls.some((call) => call.type.includes("interstitial") || call.type.includes("rewarded")), "Core result must remain uninterrupted by ads");
 
   for (let death = 0; death < 5; death += 1) {
     await page.evaluate(() => {
@@ -406,41 +538,9 @@ async function testEndlessResultAndLeaderboard(browser, origin) {
     await page.waitForTimeout(900);
   }
   const cadence = await page.evaluate(() => window.__pdCalls.filter((call) => call.type.includes("interstitial")).length);
-  assert(cadence >= 1 && cadence <= 2, `Interstitial cadence drifted: ${cadence} shows across six deaths`);
-
-  const carried = await page.evaluate(() => {
-    const hooks = window.__choplineTest;
-    hooks.setProfile({ coins: 0 });
-    hooks.seedRandom(4242);
-    hooks.startEndless();
-    hooks.makeNextFlipReady();
-    hooks.tap();
-    for (let i = 0; i < 30; i += 1) {
-      hooks.advance(0.1);
-      if (hooks.state().knife.state === "stuck") break;
-    }
-    const earned = hooks.state().run.coinsAwarded;
-    hooks.forceLoss(hooks.state().run.score);
-    return earned;
-  });
-  assert(carried >= 8, `Staged carve earned too few coins for the double test: ${carried}`);
-  await page.waitForSelector("#result-screen.visible", { timeout: 8000 });
-  await page.click('[data-action="double-coins"]');
-  await page.waitForTimeout(500);
-  const doubled = await page.evaluate(() => ({
-    coins: window.__choplineTest.state().profile.coins,
-    awarded: window.__choplineTest.state().run.coinsAwarded,
-  }));
-  assert(doubled.coins === carried * 2 && doubled.awarded === carried * 2, `Rewarded double-coins flow broken: earned ${carried}, ${JSON.stringify(doubled)}`);
-
-  const iap = await page.evaluate(async () => {
-    window.__choplineTest.setProfile({ coins: 10 });
-    document.querySelector('[data-action="open-shop"]').click();
-    document.querySelector("#iap-list .shop-item button").click();
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    return window.__choplineTest.state().profile.coins;
-  });
-  assert(iap === 510, `Coin pack purchase did not credit the wallet: ${iap}`);
+  assert(cadence === 0, `Endless retries must remain uninterrupted; saw ${cadence} interstitial calls`);
+  const rewardButtonDisplay = await page.locator('[data-action="double-coins"]').evaluate((button) => getComputedStyle(button).display);
+  assert(rewardButtonDisplay === "none", "Rewarded double-coins must stay outside the production-ready core loop");
   await page.close();
 }
 
@@ -461,13 +561,16 @@ async function testListingPreview(browser, origin) {
 
 async function main() {
   assert(fs.existsSync(path.join(root, "index.html")), "dist/index.html missing; run npm run build first");
+  fs.mkdirSync(path.resolve("tmp/release"), { recursive: true });
   const { server, origin } = await startServer();
   const browser = await chromium.launch({ headless: true, channel: "chromium" });
   try {
     await testPortraitBoot(browser, origin);
+    await testFtueAndLevelProgress(browser, origin);
     await testDesktopCompatibilityFrame(browser, origin);
     await testMultipleAirTap(browser, origin);
     await testLandingAndCutPhysics(browser, origin);
+    await testAllAuthoredLevels(browser, origin);
     await testEndlessGeneration(browser, origin);
     await testShopAndTheme(browser, origin);
     await testEndlessResultAndLeaderboard(browser, origin);

@@ -35,7 +35,7 @@ function auditCatalogue() {
   const app = catalogue.apps[0];
 
   assert(app.name === "chopline-rush", "Catalogue app name mismatch");
-  assert(app.version === pkg.version && app.version === "1.1.0", "Endless-only release version must be 1.1.0");
+  assert(app.version === pkg.version && app.version === "1.2.0", "Production progression release version must be 1.2.0");
   assert(app.type === "GAME", "Catalogue type must be GAME");
   assert(app.file === "dist/index.html", "Catalogue must point at dist/index.html");
   assert(app.visibility === "PUBLIC", "Catalogue visibility must be PUBLIC");
@@ -44,10 +44,13 @@ function auditCatalogue() {
   assert(app.surfaceTargets?.mobilePortrait === true, "Mobile portrait must be the primary supported surface");
   assert(app.surfaceTargets?.mobileLandscape === false, "Mobile landscape must stay disabled");
   assert(app.surfaceTargets?.desktop === true, "Desktop compatibility must remain available");
+  assert(app.primarySurface === "MOBILE_PORTRAIT", "Mobile portrait must be declared as the primary surface");
+  assert(app.playtestTapes?.MOBILE_PORTRAIT?.events?.length >= 3, "Portrait must have a multi-tap gameplay tape");
+  assert(app.playtestTapes?.DESKTOP?.events?.length >= 3, "Desktop compatibility must have a gameplay tape");
 
   const leaderboards = app.leaderboards ?? [];
-  assert(leaderboards.length === 1 && leaderboards[0].key === "endless_score", "Only endless_score may be configured");
-  assert(leaderboards[0].scoreType === "INTEGER" && leaderboards[0].sort === "DESC", "Endless leaderboard must rank integer scores descending");
+  assert(JSON.stringify(leaderboards.map((entry) => entry.key)) === JSON.stringify(["max_level", "endless_score"]), "Level progress and endless score leaderboards must both be configured");
+  assert(leaderboards.every((entry) => entry.scoreType === "INTEGER" && entry.sort === "DESC"), "Leaderboards must rank integer scores descending");
   assert((app.achievements ?? []).length === 0, "The simplified product must not expose achievements");
   assert(JSON.stringify(app.design) === JSON.stringify({
     genre: "game-genre/arcade",
@@ -55,9 +58,9 @@ function auditCatalogue() {
     perspective: "perspective/3d-third-person",
     controls: "game-controls/tap",
     visualStyle: "visual-style/stylized",
-    progression: "game-progression/endless",
+    progression: "game-progression/levels",
     feel: "game-feel/juicy",
-  }), "Catalogue design tags must describe the portrait endless knife runner");
+  }), "Catalogue design tags must describe the portrait level-based knife runner");
 
   assertFile(app.listing.icon);
   assertFile(app.listing.heroLandscape);
@@ -76,9 +79,24 @@ function auditOwnedAssets(source) {
   assert(source.includes('sourceAxis: "x"') && source.includes("bladeDirection: -1"), "Knife models must declare explicit visual axes and blade direction");
 }
 
-function auditEndlessContract(source) {
-  assert(source.includes('let selectedMode: Mode = "endless";'), "The app must boot into endless mode");
-  assert(source.includes("async function startRun(): Promise<void>") && source.includes("newRun(true);"), "Endless must be the only playable route");
+function auditProductContract(source, levelsSource) {
+  assert(source.includes('let selectedMode: Mode = "level";'), "The app must boot into authored level progression");
+  assert(source.includes('type Mode = "level" | "endless";'), "Levels must be primary while endless remains available");
+  assert((levelsSource.match(/^\s+\["/gm) ?? []).length === 60, "The release must contain exactly 60 named level seeds");
+  assert(source.includes("function buildLevelWorld(level: LevelBlueprint): void"), "Authored levels need a finite world builder");
+  assert(source.includes("function buildReferenceOpeningLevel(level: LevelBlueprint): void"), "Level 1 must copy the captured reference opening");
+  assert(source.includes('id: "tutorial_runway", y: 0, z: 4.4, depth: 27.6') && source.includes('type: "apple_green", y: 0.5, z: 11.3'), "The reference pedestal, narrow gap, runway, and first green apple composition is missing");
+  assert(source.includes('"TAP ANYWHERE"') && source.includes('"TO JUMP AND FLIP!"') && source.includes("function createTutorialInstruction()"), "The exact in-world Slice Master instruction is missing");
+  assert(source.includes('type: "apple_red"') && source.includes('type: "apple_yellow"'), "The green/red/yellow tutorial apple cadence is missing");
+  assert(!source.includes("tutorialCues") && !source.includes('"TAP IN AIR"') && !source.includes('"HIT THE GLOWING RING"'), "Invented multi-step tutorial choreography must not return");
+  assert(source.includes('currentRun.tutorialStep = "land";') && source.includes('platformEntity.id === "tutorial_runway"'), "The first tap must advance into a physically verified runway landing");
+  assert(source.includes('slice.id === tutorialTargetId') && source.includes('currentRun.tutorialStep = "complete";'), "The tutorial must complete only after the first green apple is sliced");
+  assert(source.includes("function buildFinalChopStation("), "Every level needs a physical final-chop station");
+  assert(source.includes('platformEntity.id === "level_finish"'), "Level completion must require a blade plant on the final board");
+  assert(source.includes("finaleTargetsCleared()"), "The final marked stack must be cut before completion");
+  assert(!source.includes("function spawnFinishGate("), "The rejected decorative finish gate must not return");
+  assert(source.includes("function completeLevel(): void"), "Authored levels need a dedicated completion path");
+  assert(source.includes('profile.ftueCompleted = true;'), "The FTUE must persist after the first reference apple cut");
   assert(source.includes('const openingSequence = [0, 1, 2, 3];'), "The curated opening sequence must remain deterministic");
   assert(source.includes("const openingGaps = [1.55, 1.1, 1.4, 1.6];"), "The learned opening cadence must remain deterministic");
   assert(source.includes("zone.gap[0] + Math.random() * (zone.gap[1] - zone.gap[0])"), "Post-opening gaps must come from the authored zone ranges");
@@ -89,15 +107,18 @@ function auditEndlessContract(source) {
   assert(source.includes("currentRun.coinsAwarded += 1;"), "Every cut must collect one coin");
   assert(source.includes("profile.coins += 1;"), "Collected coins must immediately update the persistent wallet");
   assert(source.includes('await platform.submitLeaderboard(LEADERBOARD_ENDLESS, profile.endlessBest);'), "Best endless score must submit to PlayDrop");
-  assert(!source.includes("await platform.submitLeaderboard(LEADERBOARD_LEVEL"), "The removed level leaderboard must not submit");
-  assert(source.includes('endlessTimer.style.display = "none";'), "Endless must not use the old survival timer");
+  assert(source.includes("await platform.submitLeaderboard(LEADERBOARD_LEVEL, profile.highestLevel);"), "Level progress must submit to PlayDrop");
+  assert(source.includes('run?.mode === "endless" && run.endlessTimerActive ? "flex" : "none"'), "Endless survival timer must be visible whenever active");
+  assert(source.includes("window.render_game_to_text ="), "The production build must expose deterministic textual game state");
+  assert(source.includes("window.advanceTime = advanceSimulation;"), "The production build must expose deterministic time advancement");
 }
 
 function auditGameplayParity(source) {
-  assert(source.includes("const FLIP_COOLDOWN = 0.4;"), "Taps must respect the 0.4s cooldown of the verified feel model");
-  assert(source.includes("const BASE_FLIP_Y = 10;") && source.includes("const BASE_FLIP_Z = 8;"), "Launch impulse must stay 10 up / 8 forward");
-  assert(source.includes("const GRAVITY = -20;") && source.includes("const ROTATION_SPEED = 7;"), "Gravity and rotation speed must stay -20 / 7");
-  assert(source.includes("knife.velocity.set(0, BASE_FLIP_Y, BASE_FLIP_Z);"), "Every accepted tap must refresh launch velocity absolutely, never add partial lift");
+  assert(source.includes("const FLIP_COOLDOWN = 0.4;") && source.includes("const TUTORIAL_FLIP_COOLDOWN = 0.15;"), "The tutorial must use the captured 0.15s cooldown without destabilizing later authored levels");
+  assert(source.includes("const BASE_FLIP_Y = 10;") && source.includes("const TUTORIAL_BASE_FLIP_Y = 11.7;") && source.includes("const BASE_FLIP_Z = 8;"), "The tutorial must use the captured 11.7 vertical feel while preserving the tuned later-level model");
+  assert(source.includes("const TUTORIAL_GRAVITY = -23;") && source.includes("const TUTORIAL_ROTATION_SPEED = THREE.MathUtils.degToRad(560);"), "Tutorial gravity and rotation must match the shipped Slice Master values");
+  assert(source.includes("function usesReferenceTutorialMotion()"), "Reference motion must be isolated to Level 1 so the 60-level course remains playable");
+  assert(source.includes("Math.min(launchY, knife.velocity.y + AIR_FLIP_IMPULSE_Y)"), "Air taps must add capped lift so cadence changes trajectory height without spam escalation");
   assert(source.includes("const minTarget = rotation + Math.PI;"), "Rotation targets must advance at least half a turn per tap");
   assert(source.includes("return n * Math.PI * 2 + ready;"), "Rotation targets must always land on the canonical blade-down angle");
   assert(source.includes("function nearestCanonicalAngle"), "Slice-lock must ease toward the nearest canonical angle");
@@ -134,8 +155,9 @@ function main() {
   auditWorkspace();
   auditCatalogue();
   const source = fs.readFileSync(path.join(root, "src/main.ts"), "utf8");
+  const levelsSource = fs.readFileSync(path.join(root, "src/game/levels.ts"), "utf8");
   auditOwnedAssets(source);
-  auditEndlessContract(source);
+  auditProductContract(source, levelsSource);
   auditGameplayParity(source);
   auditShopContract(source);
   assertFile("SPECS.md");

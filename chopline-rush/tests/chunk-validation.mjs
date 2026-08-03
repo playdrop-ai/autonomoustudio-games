@@ -135,6 +135,10 @@ async function main() {
             const canTap = step - lastTapStep >= 5;
             const bouncedBackward = s.knife.state === "flying" && !s.knife.slicing && s.knife.velocityZ < 0;
             const sinkingLow = s.knife.state === "flying" && !s.knife.slicing && s.knife.velocityY < 0 && s.knife.y < 2.6;
+            const rhythmicAirTap = s.knife.state === "flying"
+              && !s.knife.slicing
+              && s.knife.velocityY < 0
+              && (step - lastTapStep >= 9 || (step - lastTapStep >= 8 && s.knife.y < 4));
             const nextObstacle = hooks.obstaclesAhead()[0];
             const obstacleClose = Boolean(nextObstacle) && !nextObstacle.moving
               && s.knife.state === "flying" && !s.knife.slicing
@@ -146,7 +150,7 @@ async function main() {
               && s.knife.state === "stuck"
               && gateDist < 13
               && nextObstacle.y < s.knife.y + 2.8;
-            if ((s.knife.state === "stuck" && !gateBlocking) || (canTap && (bouncedBackward || sinkingLow || obstacleClose))) {
+            if ((s.knife.state === "stuck" && !gateBlocking) || rhythmicAirTap || (canTap && (bouncedBackward || sinkingLow || obstacleClose))) {
               hooks.tap();
               taps += 1;
               lastTapStep = step;
