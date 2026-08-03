@@ -93,12 +93,12 @@
       },
       "design": {
         "genre": "game-genre/arcade",
-        "coreGameplay": "core-gameplay/runner",
+        "coreGameplay": "core-gameplay/rhythm",
         "perspective": "perspective/3d-third-person",
         "controls": "game-controls/tap",
         "visualStyle": "visual-style/stylized",
         "progression": "game-progression/levels",
-        "feel": "game-feel/juicy"
+        "feel": "game-feel/snappy"
       },
       "releaseNotes": "Copies the real Poki Slice Master tutorial: planted knife, narrow gap, exact world-space TAP ANYWHERE TO JUMP AND FLIP instruction, safe first landing before the green apple, and a second planted jump that slices it with physical halves, debris, trail, and +1$. No invented tutorial UI or gate is used. Endless remains the mastery mode.",
       "templateSource": "playdrop/template/typescript_template"

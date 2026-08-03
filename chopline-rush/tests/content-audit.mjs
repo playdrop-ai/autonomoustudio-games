@@ -54,12 +54,12 @@ function auditCatalogue() {
   assert((app.achievements ?? []).length === 0, "The simplified product must not expose achievements");
   assert(JSON.stringify(app.design) === JSON.stringify({
     genre: "game-genre/arcade",
-    coreGameplay: "core-gameplay/runner",
+    coreGameplay: "core-gameplay/rhythm",
     perspective: "perspective/3d-third-person",
     controls: "game-controls/tap",
     visualStyle: "visual-style/stylized",
     progression: "game-progression/levels",
-    feel: "game-feel/juicy",
+    feel: "game-feel/snappy",
   }), "Catalogue design tags must describe the portrait level-based knife runner");
 
   assertFile(app.listing.icon);
