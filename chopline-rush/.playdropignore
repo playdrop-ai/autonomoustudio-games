@@ -2,6 +2,8 @@ output/
 tmp/
 evidence/
 .playwright-cli/
+references/
+progress.md
 node_modules/
 tests/
 scripts/
@@ -18,6 +20,7 @@ listing/
 
 # Marketing capture working files stay local; catalogue.json references the
 # final PlayDrop listing assets separately.
+assets/marketing/
 assets/marketing/captures/
 assets/marketing/social/
 assets/marketing/videos/
